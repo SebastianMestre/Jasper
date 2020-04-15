@@ -33,3 +33,19 @@ __invoke := fn () {
 	print(obj.f("Programmer"));
 };
 ```
+
+And here is one last one, where we restore the old interface.
+
+```c++
+f := {
+	greeting := "Hello, ";
+	__invoke := fn (name) {
+		return greeting + name;
+	};
+};
+
+__invoke := fn () {
+	f.greeting = "Hey, ";
+	print(f("Programmer"));
+};
+```
