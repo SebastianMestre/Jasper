@@ -11,7 +11,6 @@
 #include <cassert>
 #include <cstdlib>
 
-/* data ParseError = P String [ParseError] deriving Show */
 struct ParseError {
 	std::string m_text;
 	std::vector<ParseError> m_sub_errors;
@@ -36,7 +35,6 @@ struct ParseError {
 	}
 };
 
-/* data Writer a = Value a | Error ParseError */
 template<typename T>
 struct Writer {
 	ParseError m_error {};
@@ -47,7 +45,6 @@ struct Writer {
 	}
 };
 
-/* writer_return a -> Writer a */
 template<typename T>
 Writer<T> make_writer (T x) {
 	return {{}, std::move(x)};

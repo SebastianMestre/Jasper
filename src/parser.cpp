@@ -109,12 +109,10 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression () {
 	return result;
 }
 
-Writer<Token const*> Parser::require (token_type t){
-	/* got */
+Writer<Token const*> Parser::require (token_type expected_type){
 	Token const* current_token = &m_lexer->current_token();
 
-	/* expected */
-	if(current_token->m_type != t){
+	if(current_token->m_type != expected_type){
 
 		std::stringstream ss;
 		ss

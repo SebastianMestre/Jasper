@@ -119,7 +119,7 @@ enum class token_type {
 struct Token {
 	/* internal representation of token */
 	token_type m_type;
-	/* printable representation of token */
+	/* source code representation of token */
 	std::string m_text;
 
 	/* beggining of token in source */

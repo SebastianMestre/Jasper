@@ -113,14 +113,14 @@ void Lexer::consume_token () {
 		case ';': push_token(token_type::SEMICOLON, 1); break;
 
 		default:
-			if( isalpha(current_char()) ){
+			if(isalpha(current_char())){
 				std::string text;
 
 				/* consume letters */
 				do {
 					text.push_back(current_char());
 					m_source_index++;
-				} while( isalpha(current_char()) );
+				} while(isalpha(current_char()));
 
 				/* adjust column pointer */
 				m_curent_column += text.size();
@@ -129,14 +129,14 @@ void Lexer::consume_token () {
 						token_type::IDENTIFIER,
 						text
 						});
-			} else if( isdigit(current_char()) ) {
+			} else if(isdigit(current_char())) {
 				std::string text;
 
 				/* consume numbers */
 				do {
 					text.push_back(current_char());
 					m_source_index++;
-				} while( isdigit(current_char()) );
+				} while(isdigit(current_char()));
 
 				/* it's a float */
 				if(next_char() == '.'){
@@ -145,7 +145,7 @@ void Lexer::consume_token () {
 				}
 
 				/* consume more numbers, if any. If not, it's wrong */
-				while( isdigit(current_char()) ) {
+				while(isdigit(current_char())) {
 					text.push_back(current_char());
 					m_source_index++;
 				}
