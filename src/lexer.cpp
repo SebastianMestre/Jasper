@@ -113,53 +113,53 @@ void Lexer::consume_token () {
 		case ';': push_token(token_type::SEMICOLON, 1); break;
 
 		default:
-			if(isalpha(current_char())){
+			if( isalpha(current_char()) ){
 				std::string text;
-				text.push_back(current_char());
 
-				while(isalpha(next_char())){
-					m_source_index += 1;
+				/* consume letters */
+				do {
 					text.push_back(current_char());
-				}
+					m_source_index++;
+				} while( isalpha(current_char()) );
 
-				m_source_index += 1;
-				m_current_column += text.size();
+				/* adjust column pointer */
+				m_curent_column += text.size();
 
 				m_tokens.push_back({
 						token_type::IDENTIFIER,
 						text
 						});
-			} else if(isdigit(current_char())) {
+			} else if( isdigit(current_char()) ) {
 				std::string text;
-				text.push_back(current_char());
 
-				while(isdigit(next_char())){
-					m_source_index += 1;
-					m_current_column += 1;
+				/* consume numbers */
+				do {
 					text.push_back(current_char());
-				}
+					m_source_index++;
+				} while( isdigit(current_char()) );
 
+				/* it's a float */
 				if(next_char() == '.'){
-					m_source_index += 1;
-					m_current_column += 1;
 					text.push_back(current_char());
+					m_source_index++;
 				}
 
-				while(isdigit(next_char())){
-					m_source_index += 1;
-					m_current_column += 1;
+				/* consume more numbers, if any. If not, it's wrong */
+				while( isdigit(current_char()) ) {
 					text.push_back(current_char());
+					m_source_index++;
 				}
 
-				m_source_index += 1;
-				m_current_column += 1;
+				/* adjust column pointer */
+				m_current_column += text.size();
+
 				m_tokens.push_back({
 						token_type::NUMBER,
 						text
 						});
 
 			} else {
-				if(current_char() == '\n'){
+				if(current_char() == '\n') {
 					m_current_line += 1;
 					m_current_column = 0;
 				}else{

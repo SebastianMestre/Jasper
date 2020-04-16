@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cctype>
 
+/* printable representation */
 inline const char* token_type_string[] = {
 	"+",
 	"-",
@@ -60,6 +61,7 @@ inline const char* token_type_string[] = {
 	"KEYWORD",
 };
 
+/* internal representation */
 enum class token_type {
 	ADD,
 	SUB,
@@ -115,12 +117,23 @@ enum class token_type {
 };
 
 struct Token {
+	/* internal representation of token */
 	token_type m_type;
+	/* printable representation of token */
 	std::string m_text;
+
+	/* beggining of token in source */
 	int m_line0, m_col0;
+	/* end of token in source */
 	int m_line1, m_col1;
 };
 
+/**
+ * Bucket-like token list
+ * that avoids reallocations,
+ * to preserve references of tokens
+ * given to other entities.
+ */
 struct TokenArray {
 	static constexpr int bucket_size = 16;
 	std::vector<std::vector<Token>> m_buckets;
@@ -146,6 +159,11 @@ struct TokenArray {
 	}
 };
 
+/**
+ * Contains source code and handles tokens.
+ * Has pointers to source code character and token,
+ * they stay at the same piece of code all the time.
+ */
 struct Lexer {
 	std::vector<char> m_source;
 	TokenArray m_tokens;
