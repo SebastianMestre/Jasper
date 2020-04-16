@@ -58,6 +58,8 @@ inline const char* token_type_string[] = {
 	"NUMBER",
 	"IDENTIFIER",
 	"KEYWORD",
+
+	"KEYWORD_FN",
 };
 
 enum class token_type {
@@ -112,6 +114,8 @@ enum class token_type {
 	NUMBER,
 	IDENTIFIER,
 	KEYWORD,
+
+	KEYWORD_FN,
 };
 
 struct Token {
@@ -159,6 +163,7 @@ struct Lexer {
 	char char_at(int index);
 	char current_char () { return char_at(m_source_index); }
 	char next_char () { return char_at(m_source_index+1); }
+	char peek_char (int di = 0) { return char_at(m_source_index+di); }
 
 	bool done () { return current_char() == '\0'; }
 

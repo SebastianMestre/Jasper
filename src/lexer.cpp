@@ -26,6 +26,7 @@ void Lexer::push_token (token_type tt, int width) {
 }
 
 void Lexer::consume_token () {
+
 	switch(current_char()){
 
 		case '+':
@@ -113,6 +114,14 @@ void Lexer::consume_token () {
 		case ';': push_token(token_type::SEMICOLON, 1); break;
 
 		default:
+
+			if(peek_char(0) == 'f'){
+				if(peek_char(1) == 'n'){
+					push_token(token_type::KEYWORD_FN, 2);
+					return;
+				}
+			}
+
 			if(isalpha(current_char())){
 				std::string text;
 				text.push_back(current_char());
