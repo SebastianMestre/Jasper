@@ -66,3 +66,11 @@ struct ASTIdentifier : public AST {
 	}
 };
 
+struct ASTFunction : public AST {
+	void print (int d) override {
+		std::string stab(d-1, tabc);
+		std::string tab(d, tabc);
+		std::cout << stab << "[ Function\n";
+		std::cout << stab << "]\n";
+	}
+};

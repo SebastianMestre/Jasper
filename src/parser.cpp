@@ -106,7 +106,39 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression () {
 		return result;
 	}
 
+	auto function = parse_function();
+	if(not handle_error(result, function)){
+		return make_writer(std::move(function.m_result));
+	}
+
 	return result;
+}
+
+Writer<std::unique_ptr<AST>> Parser::parse_function () {
+	Writer<std::unique_ptr<AST>>  result = {
+		{"Parse Error: Failed to parse function"}
+	};
+
+	if(handle_error(result, require(token_type::KEYWORD_FN)))
+		return result;
+
+
+	if(handle_error(result, require(token_type::PAREN_OPEN)))
+		return result;
+	// TODO: parse arguments
+	if(handle_error(result, require(token_type::PAREN_CLOSE)))
+		return result;
+
+
+	if(handle_error(result, require(token_type::BRACE_OPEN)))
+		return result;
+	// TODO: parse function body
+	if(handle_error(result, require(token_type::BRACE_CLOSE)))
+		return result;
+
+
+	auto e = std::make_unique<ASTFunction>();
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
 Writer<Token const*> Parser::require (token_type t){
