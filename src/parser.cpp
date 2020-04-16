@@ -19,6 +19,31 @@ bool handle_error (Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
+
+Writer<Token const*> Parser::require (token_type t){
+	Token const* current_token = &m_lexer->current_token();
+
+	if(current_token->m_type != t){
+
+		std::stringstream ss;
+		ss
+			<< "Parse Error: @ "
+			<< current_token->m_line0+1 << ":" << current_token->m_col0+1
+			<< ": Expected "
+			<< token_type_string[int(t)]
+			<< " but got "
+			<< token_type_string[int(current_token->m_type)]
+			<< " instead";
+
+		return {ParseError{ss.str()}};
+	}
+
+	m_lexer->advance();
+
+	return make_writer(current_token);
+}
+
+
 Writer<std::unique_ptr<AST>> Parser::parse_top_level () {
 	Writer<std::unique_ptr<AST>>  result = {
 		{"Parse Error: Failed to parse top level program"}
@@ -141,25 +166,3 @@ Writer<std::unique_ptr<AST>> Parser::parse_function () {
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
-Writer<Token const*> Parser::require (token_type t){
-	Token const* current_token = &m_lexer->current_token();
-
-	if(current_token->m_type != t){
-
-		std::stringstream ss;
-		ss
-			<< "Parse Error: @ "
-			<< current_token->m_line0+1 << ":" << current_token->m_col0+1
-			<< ": Expected "
-			<< token_type_string[int(t)]
-			<< " but got "
-			<< token_type_string[int(current_token->m_type)]
-			<< " instead";
-
-		return {ParseError{ss.str()}};
-	}
-
-	m_lexer->advance();
-
-	return make_writer(current_token);
-}
