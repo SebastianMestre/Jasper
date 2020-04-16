@@ -52,6 +52,7 @@ struct Parser {
 	Writer<std::unique_ptr<AST>> parse_declaration ();
 	Writer<std::unique_ptr<AST>> parse_expression ();
 	Writer<std::unique_ptr<AST>> parse_function ();
+	Writer<std::unique_ptr<AST>> parse_block ();
 
 	Writer<Token const*> require (token_type t);
 };

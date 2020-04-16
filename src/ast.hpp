@@ -66,11 +66,23 @@ struct ASTIdentifier : public AST {
 	}
 };
 
+struct ASTBlock : public AST {
+	void print (int d) override {
+		std::string stab(d-1, tabc);
+		std::string tab(d, tabc);
+		std::cout << stab << "[ Block\n";
+		std::cout << stab << "]\n";
+	}
+};
+
 struct ASTFunction : public AST {
+	std::unique_ptr<AST> m_body;
+
 	void print (int d) override {
 		std::string stab(d-1, tabc);
 		std::string tab(d, tabc);
 		std::cout << stab << "[ Function\n";
+		if(m_body) m_body->print(d+1);
 		std::cout << stab << "]\n";
 	}
 };

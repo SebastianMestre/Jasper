@@ -154,15 +154,33 @@ Writer<std::unique_ptr<AST>> Parser::parse_function () {
 	if(handle_error(result, require(token_type::PAREN_CLOSE)))
 		return result;
 
-
-	if(handle_error(result, require(token_type::BRACE_OPEN)))
+	auto block = parse_block();
+	if(handle_error(result, block)){
 		return result;
-	// TODO: parse function body
-	if(handle_error(result, require(token_type::BRACE_CLOSE)))
-		return result;
-
+	}
 
 	auto e = std::make_unique<ASTFunction>();
+	e->m_body = std::move(block.m_result);
+
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
+Writer<std::unique_ptr<AST>> Parser::parse_block () {
+	Writer<std::unique_ptr<AST>>  result = {
+		{"Parse Error: Failed to parse block statement"}
+	};
+
+	if(handle_error(result, require(token_type::BRACE_OPEN))){
+		return result;
+	}
+
+	if(handle_error(result, require(token_type::BRACE_CLOSE))){
+		return result;
+	}
+
+	auto e = std::make_unique<ASTBlock>();
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+
+	return result;
+}
