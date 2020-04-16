@@ -1,26 +1,21 @@
+#pragma once
+
 #include <assert>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include "GarbageCollector.hpp"
 
+using namespace Type;
+
 /* types */
 using Identifier = std::string;
-using ObjectType = unordered_map<Identifier, Value>;
-using ListType = vector<Value>;
+using ObjectType = std::unordered_map<Identifier, Value*>;
+using ListType = vector<Value*>;
 // using FunctionType = <syntax tree>
 
 struct Value {
-	Identifier identifier;
 	int refcount;
-
-	Value(Identifier id) {
-		identifier = id;
-	}
-
-	~Value() {
-		GarbageCollector::soft_clean(this);
-	}
 
 	/* something has a new reference of this */
 	void added_reference() {
@@ -31,60 +26,73 @@ struct Value {
 	void lost_reference() {
 		assert(refcount > 0);
 		refcount--;
-		if(refcount > 0)
-			GarbageCollector::soft_clean(this);
 	}
-
-	virtual vector<Value*> references() = 0;
 };
 
 struct Integer : Value {
 	int value;
 
-	Integer(Identifier id, int v) : Value(id) {
-		value = v;
-	}
+	Integer(int v) : value(v) {}
 }
 
 struct String : Value {
 	std::string value;
 
-	String(Identifier id, std::string s) : Value(id) {
-		value = s;
-	}
+	String(std::string s = "") : value(s) {}
 }
 
 struct List : Value {
-	ListType value;
+	ListType* value;
 
-	List(Identifier id, ListType& l = {}) : Value(id) {
-		value = l; // no se hacer esto. (std::move?)
+	List(ListType* l = new ListType) : value(l) {}
+
+	append(Value* v) {
+		value->push_back(v);
+	}
+
+	at(int position) {
+		if (position < 0 or position >= value->size()) {
+			// return OutOfBounds
+		} else {
+			return *(value)[position];
+		}
 	}
 }
 
 struct Object : Value {
-	ObjectType value;
+	ObjectType* value;
 
-	List(Identifier id, ObjectType& l = {}) : Value(id) {
-		value = l; // no se hacer esto. (std::move?)
+	Object(ObjectType* o = new ObjectType) : value(o) {}
+
+	addMember(Identifier id, Value* v) {
+		*(value)[id] = v;
+	}
+
+	getMember(Identifier id) {
+		if( value->find(id) == value->end() ) {
+			// return ReferenceError
+		} else {
+			return *(value)[id];
+		}
 	}
 }
 
 //struct Function : Value {
-//	FunctionType value;
+//	FunctionType* value;
 //
-//	Function(Identifier id, FunctionType& f = {}) : Value(id) {
-//		value = f; // no se hacer esto. (std::move?)
-//	}
+//	Function(FunctionType* f) : value(f) {
 //}
+
 /**
  * Example:
  *
- * Types::Integer create_int(Identifier id, int value) {
- * 	return Types::Integer(id, value);
- * }
+ * using namespace Type;
+ *
+ * TopLevel = new Object;
+ * TopLevel.addMember(the_new_id, new Integer(10));
+ * TopLevel.addMember(
+ * 	the_other_new_id,
+ * 	new List( {new Integer(2), new Integer(2)} )
+ * );
  * 
- * Types::List create_list(Identifier id, vector<Value> &vv) {
- * 	return Types::List(id, vv);
- * }
  */

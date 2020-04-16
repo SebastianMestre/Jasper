@@ -1,18 +1,13 @@
+#pragma once
+
 #include "runtime.hpp";
 
 using namespace GarbageCollector;
 
-void soft_clean(Value* v) {
-	for(const Value* child : v->references()) {
-		/* we are freeing a value, its children lose a reference */
-		child->lost_reference();
-		soft_clean(child);
-	}
-
-	if (v.refcount == 0)
-		free(v);
-}
-
-void hard_clean(/* whole memory reference */) {
-	// dfs
+/**
+ * Take all memory and perform a DFS to free memory
+ * O(N) -> O(1) performed every N arbitrary steps
+ */
+void hard_clean(Type::Object* TopLevel) {
+	// dfs. WIS (will implement soon)
 }
