@@ -6,7 +6,7 @@ jobs:
       - image: gcc:latest
     steps:
       - checkout
-      - run: (cd src; make)
+      - run: (cd src; make -j)
 workflows:
   version: 2.1
   build:
