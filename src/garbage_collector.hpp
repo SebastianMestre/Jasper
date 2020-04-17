@@ -9,7 +9,6 @@ namespace GarbageCollector {
  * O(N) -> O(1) performed every N arbitrary steps
  */
 // void hard_clean(Type::Object* TopLevel) {
-	// dfs. WIS (will implement soon)
+// dfs. WIS (will implement soon)
 // }
-
 }

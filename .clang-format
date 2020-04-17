@@ -1,0 +1,30 @@
+BasedOnStyle: WebKit
+
+UseTab: ForIndentation
+IndentWidth: 4
+TabWidth: 4
+BreakBeforeBraces: Attach
+
+ColumnLimit: 80
+PenaltyExcessCharacter: 5
+
+ReflowComments: false
+PenaltyBreakComment: 50 
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+AlwaysBreakTemplateDeclarations: true
+
+BinPackArguments: true
+BinPackParameters: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+SpaceBeforeParens: ControlStatements
+
+SpacesInSquareBrackets: false
+SpacesInParentheses: false

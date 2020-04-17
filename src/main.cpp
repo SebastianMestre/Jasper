@@ -5,7 +5,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
-int main () {
+int main() {
 	std::vector<char> v;
 	std::string s = R"(
 	myfoo : int = 123123;
@@ -14,8 +14,9 @@ int main () {
 	z := fn () {};
 
 )";
-	for(char c : s) {v.push_back(c);}
-
+	for (char c : s) {
+		v.push_back(c);
+	}
 
 	Lexer l;
 	l.m_source = std::move(v);
@@ -26,9 +27,9 @@ int main () {
 	std::cout << s << '\n';
 
 	auto parse_result = p.parse_top_level();
-	if(not parse_result.ok()){
+	if (not parse_result.ok()) {
 		parse_result.m_error.print();
-	}else{
+	} else {
 		parse_result.m_result->print();
 	}
 

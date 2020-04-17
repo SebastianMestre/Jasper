@@ -2,8 +2,9 @@
 
 #include <cassert>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
 #include "garbage_collector.hpp"
 
 namespace Type {
@@ -20,9 +21,7 @@ struct Value {
 	int refcount;
 
 	/* something has a new reference of this */
-	void added_reference() {
-		refcount++;
-	}
+	void added_reference() { refcount++; }
 
 	/* something lost a reference to this */
 	void lost_reference() {
@@ -48,9 +47,7 @@ struct List : Value {
 
 	List(ListType l = ListType()) : value(l) {}
 
-	void append(Value* v) {
-		value.push_back(v);
-	}
+	void append(Value* v) { value.push_back(v); }
 
 	Value* at(int position) {
 		if (position < 0 or position >= int(value.size())) {
@@ -67,13 +64,12 @@ struct Object : Value {
 
 	Object(ObjectType o = ObjectType()) : value(o) {}
 
-	void addMember(Identifier id, Value* v) {
-		value[id] = v;
-	}
+	void addMember(Identifier id, Value* v) { value[id] = v; }
 
 	Value* getMember(Identifier id) {
-		if( value.find(id) == value.end() ) {
+		if (value.find(id) == value.end()) {
 			// return ReferenceError
+			return nullptr;
 		} else {
 			return value[id];
 		}
