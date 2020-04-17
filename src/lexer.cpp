@@ -124,15 +124,15 @@ void Lexer::consume_token () {
 
 			if(isalpha(current_char())){
 				std::string text;
+				text.push_back(current_char());
 
-				/* consume letters */
-				do {
+				while(isalpha(next_char())){
+					m_source_index += 1;
 					text.push_back(current_char());
-					m_source_index++;
-				} while(isalpha(current_char()));
+				}
 
-				/* adjust column pointer */
-				m_curent_column += text.size();
+				m_source_index += 1;
+				m_current_column += text.size();
 
 				m_tokens.push_back({
 						token_type::IDENTIFIER,
@@ -140,35 +140,35 @@ void Lexer::consume_token () {
 						});
 			} else if(isdigit(current_char())) {
 				std::string text;
+				text.push_back(current_char());
 
-				/* consume numbers */
-				do {
+				while(isdigit(next_char())){
+					m_source_index += 1;
+					m_current_column += 1;
 					text.push_back(current_char());
-					m_source_index++;
-				} while(isdigit(current_char()));
+				}
 
-				/* it's a float */
 				if(next_char() == '.'){
+					m_source_index += 1;
+					m_current_column += 1;
 					text.push_back(current_char());
-					m_source_index++;
 				}
 
-				/* consume more numbers, if any. If not, it's wrong */
-				while(isdigit(current_char())) {
+				while(isdigit(next_char())){
+					m_source_index += 1;
+					m_current_column += 1;
 					text.push_back(current_char());
-					m_source_index++;
 				}
 
-				/* adjust column pointer */
-				m_current_column += text.size();
-
+				m_source_index += 1;
+				m_current_column += 1;
 				m_tokens.push_back({
 						token_type::NUMBER,
 						text
 						});
 
 			} else {
-				if(current_char() == '\n') {
+				if(current_char() == '\n'){
 					m_current_line += 1;
 					m_current_column = 0;
 				}else{
