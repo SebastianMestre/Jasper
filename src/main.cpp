@@ -11,6 +11,7 @@ int main () {
 	myfoo : int = 123123;
 	x : dec = 1.4;
 	y : int = 3;
+	z := fn () {};
 
 )";
 	for(char c : s) {v.push_back(c);}
