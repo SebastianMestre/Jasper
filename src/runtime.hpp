@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include "GarbageCollector.hpp"
 
-using namespace Type;
+using namespace Type {
 
 /* types */
 using Identifier = std::string;
@@ -42,45 +42,45 @@ struct String : Value {
 }
 
 struct List : Value {
-	ListType* value;
+	ListType value;
 
-	List(ListType* l = new ListType) : value(l) {}
+	List(ListType l = ListType()) : value(l) {}
 
 	append(Value* v) {
-		value->push_back(v);
+		value.push_back(v);
 	}
 
 	at(int position) {
 		if (position < 0 or position >= value->size()) {
 			// return OutOfBounds
 		} else {
-			return *(value)[position];
+			return value[position];
 		}
 	}
 }
 
 struct Object : Value {
-	ObjectType* value;
+	ObjectType value;
 
-	Object(ObjectType* o = new ObjectType) : value(o) {}
+	Object(ObjectType o = ObjectType()) : value(o) {}
 
 	addMember(Identifier id, Value* v) {
-		*(value)[id] = v;
+		value[id] = v;
 	}
 
 	getMember(Identifier id) {
-		if( value->find(id) == value->end() ) {
+		if( value.find(id) == value.end() ) {
 			// return ReferenceError
 		} else {
-			return *(value)[id];
+			return value[id];
 		}
 	}
 }
 
 //struct Function : Value {
-//	FunctionType* value;
+//	FunctionType value;
 //
-//	Function(FunctionType* f) : value(f) {
+//	Function(FunctionType f = FunctionType()) : value(f) {
 //}
 
 /**
@@ -88,7 +88,7 @@ struct Object : Value {
  *
  * using namespace Type;
  *
- * TopLevel = new Object;
+ * TopLevel = Object();
  * TopLevel.addMember(the_new_id, new Integer(10));
  * TopLevel.addMember(
  * 	the_other_new_id,
@@ -96,3 +96,4 @@ struct Object : Value {
  * );
  * 
  */
+}
