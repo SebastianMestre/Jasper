@@ -2,7 +2,7 @@
 
 #include "runtime.hpp";
 
-using namespace GarbageCollector {
+namespace GarbageCollector {
 
 /**
  * Take all memory and perform a DFS to free memory
