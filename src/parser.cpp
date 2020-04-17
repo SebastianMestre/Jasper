@@ -181,6 +181,4 @@ Writer<std::unique_ptr<AST>> Parser::parse_block () {
 	auto e = std::make_unique<ASTBlock>();
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
-
-	return result;
 }
