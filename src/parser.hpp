@@ -20,10 +20,15 @@ struct ParseError {
 	}
 
 	void print (int d = 1) {
+		/* indent */
 		for(int i = 0; i < d; ++i)
 			std::cerr << '-';
+		
+		/* print error */
 		std::cerr << ' ';
 		std::cerr << m_text << '\n';
+
+		/* print suberrors one place further right */
 		for(auto& sub : m_sub_errors){
 			sub.print(d+1);
 		}
@@ -46,6 +51,7 @@ Writer<T> make_writer (T x) {
 }
 
 struct Parser {
+	/* token handler */
 	Lexer* m_lexer;
 
 	Writer<std::unique_ptr<AST>> parse_top_level ();

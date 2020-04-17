@@ -147,7 +147,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_function () {
 	if(handle_error(result, require(token_type::KEYWORD_FN)))
 		return result;
 
-
 	if(handle_error(result, require(token_type::PAREN_OPEN)))
 		return result;
 	// TODO: parse arguments
