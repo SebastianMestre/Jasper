@@ -166,11 +166,33 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_CLOSE))) {
-		return result;
+	std::vector<std::unique_ptr<AST>> statements;
+
+	while(1){
+		auto p0 = peek();
+
+		if(p0->m_type == token_type::END){
+			result.m_error.m_sub_errors.push_back(
+			    { { "Found EOF while parsing block statement" } });
+			return result;
+		}
+
+		if(p0->m_type == token_type::BRACE_CLOSE){
+			m_lexer->advance();
+			break;
+		}
+
+		auto statement = parse_statement();
+		if (handle_error(result, statement)){
+			return result;
+		} else {
+			statements.push_back(std::move(statement.m_result));
+		}
 	}
 
 	auto e = std::make_unique<ASTBlock>();
+
+	e->m_body = std::move(statements);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
