@@ -56,7 +56,10 @@ struct Parser {
 	Writer<std::unique_ptr<AST>> parse_expression();
 	Writer<std::unique_ptr<AST>> parse_function();
 	Writer<std::unique_ptr<AST>> parse_block();
+	Writer<std::unique_ptr<AST>> parse_statement();
 
 	Writer<Token const*> require(token_type t);
+
+	Token const* peek(int dt = 0) { return &m_lexer->peek_token(dt); }
 };
 

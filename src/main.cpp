@@ -8,10 +8,13 @@
 int main() {
 	std::vector<char> v;
 	std::string s = R"(
-	myfoo : int = 123123;
 	x : dec = 1.4;
 	y : int = 3;
-	z := fn () {};
+	z := fn () {
+		a := 2;
+		b : dec = 4.5;
+		c := a;
+	};
 
 )";
 	for (char c : s) {

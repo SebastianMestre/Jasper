@@ -19,15 +19,16 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-Writer<Token const*> Parser::require(token_type t) {
+
+Writer<Token const*> Parser::require(token_type expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 
-	if (current_token->m_type != t) {
+	if (current_token->m_type != expected_type) {
 
 		std::stringstream ss;
 		ss << "Parse Error: @ " << current_token->m_line0 + 1 << ":"
 		   << current_token->m_col0 + 1 << ": Expected "
-		   << token_type_string[int(t)] << " but got "
+		   << token_type_string[int(expected_type)] << " but got "
 		   << token_type_string[int(current_token->m_type)] << " instead";
 
 		return { ParseError{ ss.str() } };
@@ -37,6 +38,7 @@ Writer<Token const*> Parser::require(token_type t) {
 
 	return make_writer(current_token);
 }
+
 
 Writer<std::unique_ptr<AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST>> result
@@ -125,7 +127,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression() {
 
 	auto function = parse_function();
 	if (not handle_error(result, function)) {
-		return make_writer(std::move(function.m_result));
+		return function;
 	}
 
 	return result;
@@ -150,6 +152,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 	}
 
 	auto e = std::make_unique<ASTFunction>();
+
 	e->m_body = std::move(block.m_result);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
@@ -163,11 +166,82 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_CLOSE))) {
-		return result;
+	std::vector<std::unique_ptr<AST>> statements;
+
+	// loop until we find a matching closing bracket
+	while(1){
+		auto p0 = peek();
+
+		if(p0->m_type == token_type::END){
+			result.m_error.m_sub_errors.push_back(
+			    { { "Found EOF while parsing block statement" } });
+			return result;
+		}
+
+		if(p0->m_type == token_type::BRACE_CLOSE){
+			m_lexer->advance();
+			break;
+		}
+
+		auto statement = parse_statement();
+		if (handle_error(result, statement)){
+			return result;
+		} else {
+			statements.push_back(std::move(statement.m_result));
+		}
 	}
 
 	auto e = std::make_unique<ASTBlock>();
 
+	e->m_body = std::move(statements);
+
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
+/*
+ * Looks ahead a few tokens to predict what syntactic structure we are about to
+ * parse. This prevents us from backtracking and ensures the parser runs in
+ * linear time.
+ */
+Writer<std::unique_ptr<AST>> Parser::parse_statement() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse statement" } };
+
+	auto* p0 = peek(0);
+	if (p0->m_type == token_type::IDENTIFIER) {
+		auto* p1 = peek(1);
+
+		if (p1->m_type == token_type::DECLARE
+		    || p1->m_type == token_type::DECLARE_ASSIGN) {
+
+			auto declaration = parse_declaration();
+
+			if(handle_error(result, declaration)){
+				return result;
+			}
+
+			return declaration;
+		} else {
+			auto expression = parse_expression();
+
+			if(handle_error(result, expression)){
+				return result;
+			}
+
+			return expression;
+		}
+	} else {
+		// TODO: parse loops, conditionals, etc.
+
+		// TODO: clean up error reporting
+		std::stringstream ss;
+		ss << "Parse Error: @ " << p0->m_line0 + 1 << ":"
+		   << p0->m_col0 + 1 << ": Expected "
+		   << token_type_string[int(token_type::IDENTIFIER)] << " but got "
+		   << token_type_string[int(p0->m_type)] << " instead";
+
+		result.m_error.m_sub_errors.push_back({ { ss.str() } });
+	}
+
+	return result;
 }
