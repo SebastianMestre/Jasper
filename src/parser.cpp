@@ -19,6 +19,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
+
 Writer<Token const*> Parser::require(token_type t) {
 	Token const* current_token = &m_lexer->current_token();
 
@@ -37,6 +38,7 @@ Writer<Token const*> Parser::require(token_type t) {
 
 	return make_writer(current_token);
 }
+
 
 Writer<std::unique_ptr<AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST>> result
@@ -125,7 +127,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression() {
 
 	auto function = parse_function();
 	if (not handle_error(result, function)) {
-		return make_writer(std::move(function.m_result));
+		return function;
 	}
 
 	return result;
@@ -150,6 +152,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 	}
 
 	auto e = std::make_unique<ASTFunction>();
+
 	e->m_body = std::move(block.m_result);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
