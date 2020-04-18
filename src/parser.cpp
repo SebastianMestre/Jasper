@@ -104,11 +104,15 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 	return make_writer<std::unique_ptr<AST>>(std::move(p));
 }
 
+// These are important for infix expression parsing.
+// TODO: clean up
+
 struct binding_power {
 	int left, right;
 };
 
 bool is_binary_operator(token_type t){
+	// TODO: fill out this table
 	switch(t){
 	case token_type::ADD:
 	case token_type::SUB:
@@ -121,6 +125,7 @@ bool is_binary_operator(token_type t){
 }
 
 binding_power binding_power_of(token_type t){
+	// TODO: fill out this table
 	switch(t){
 	case token_type::ADD:
 	case token_type::SUB: // fallthrough
@@ -133,13 +138,16 @@ binding_power binding_power_of(token_type t){
 	}
 }
 
+/* If I am not mistaken, the algorithm used here is called 'Pratt Parsing'
+ * Here is an article with more information:
+ * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+ */
 Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse expression" } };
 
 	auto lhs = parse_terminal();
 	if(handle_error(result, lhs)){
-
 		return result;
 	}
 
@@ -175,6 +183,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 	return lhs;
 }
 
+/* We say a terminal is any expression that is not an infix expression.
+ * This is not what the term usually means in the literature.
+ */
 Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse terminal expression" } };
