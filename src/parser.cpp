@@ -20,15 +20,15 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 }
 
 
-Writer<Token const*> Parser::require(token_type t) {
+Writer<Token const*> Parser::require(token_type expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 
-	if (current_token->m_type != t) {
+	if (current_token->m_type != expected_type) {
 
 		std::stringstream ss;
 		ss << "Parse Error: @ " << current_token->m_line0 + 1 << ":"
 		   << current_token->m_col0 + 1 << ": Expected "
-		   << token_type_string[int(t)] << " but got "
+		   << token_type_string[int(expected_type)] << " but got "
 		   << token_type_string[int(current_token->m_type)] << " instead";
 
 		return { ParseError{ ss.str() } };
@@ -168,6 +168,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 
 	std::vector<std::unique_ptr<AST>> statements;
 
+	// loop until we find a matching closing bracket
 	while(1){
 		auto p0 = peek();
 
@@ -197,6 +198,11 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
+/*
+ * Looks ahead a few tokens to predict what syntactic structure we are about to
+ * parse. This prevents us from backtracking and ensures the parser runs in
+ * linear time.
+ */
 Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse statement" } };
