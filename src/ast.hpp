@@ -66,10 +66,14 @@ struct ASTIdentifier : public AST {
 };
 
 struct ASTBlock : public AST {
+	std::vector<std::unique_ptr<AST>> m_body;
+
 	void print(int d) override {
 		std::string stab(d - 1, tabc);
 		std::string tab(d, tabc);
 		std::cout << stab << "[ Block\n";
+		for (auto& child : m_body)
+			child->print(d + 1);
 		std::cout << stab << "]\n";
 	}
 };
