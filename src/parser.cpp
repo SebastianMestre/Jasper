@@ -312,9 +312,16 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 
 			return declaration;
 		} else {
+
+			// TODO: wrap in an ExpressionStatement ?
+
 			auto expression = parse_expression();
 
 			if(handle_error(result, expression)){
+				return result;
+			}
+
+			if(handle_error(result, require(token_type::SEMICOLON))){
 				return result;
 			}
 
