@@ -235,14 +235,23 @@ void Lexer::regress() {
 	m_token_index -= 1;
 }
 
+Token const& eof () {
+	static Token t = {
+		token_type::END,
+		"(EOF)",
+		-1,-1,
+		-1,-1
+	};
+	return t;
+}
+
 Token const& Lexer::token_at(int index) {
 	while (!done() && index >= int(m_tokens.size())) {
 		consume_token();
 	}
 
 	if (done() && index >= int(m_tokens.size())) {
-		std::cerr << "requested for token after EOF (" << index << ")\n";
-		exit(EXIT_FAILURE);
+		return eof();
 	}
 
 	return m_tokens.at(index);

@@ -61,6 +61,8 @@ inline const char* token_type_string[] = {
 	"KEYWORD",
 
 	"KEYWORD_FN",
+
+	"END",
 };
 
 /* internal representation */
@@ -118,6 +120,8 @@ enum class token_type {
 	KEYWORD,
 
 	KEYWORD_FN,
+
+	END,
 };
 
 struct Token {
@@ -192,4 +196,5 @@ struct Lexer {
 	Token const& token_at(int index);
 	Token const& current_token() { return token_at(m_token_index); }
 	Token const& next_token() { return token_at(m_token_index + 1); }
+	Token const& peek_token(int dt = 0) { return token_at(m_token_index + dt); }
 };
