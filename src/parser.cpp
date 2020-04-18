@@ -1,5 +1,9 @@
 #include "parser.hpp"
 
+#include <iostream>
+
+#include <cassert>
+
 // WHY DO I HAVE TO TYPE THIS TWICE!?
 template <typename T, typename U>
 bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
@@ -100,23 +104,95 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 	return make_writer<std::unique_ptr<AST>>(std::move(p));
 }
 
-Writer<std::unique_ptr<AST>> Parser::parse_expression() {
+struct binding_power {
+	int left, right;
+};
+
+bool is_binary_operator(token_type t){
+	switch(t){
+	case token_type::ADD:
+	case token_type::SUB:
+	case token_type::MUL:
+	case token_type::DIV: // fallthrough
+		return true;
+	default:
+		return false;
+	}
+}
+
+binding_power binding_power_of(token_type t){
+	switch(t){
+	case token_type::ADD:
+	case token_type::SUB: // fallthrough
+		return { 10, 11 };
+	case token_type::MUL:
+	case token_type::DIV: // fallthrough
+		return { 20, 21 };
+	default:
+		assert(false);
+	}
+}
+
+Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse expression" } };
+
+	auto lhs = parse_terminal();
+	if(handle_error(result, lhs)){
+
+		return result;
+	}
+
+	while(1){
+		auto op = peek();
+		if(op->m_type == token_type::SEMICOLON || op->m_type == token_type::END){
+			break;
+		}
+
+		if(not is_binary_operator(op->m_type)){
+			// TODO: improve error message
+			result.m_error.m_sub_errors.push_back(
+			    { { "failed to find a binary operator" } });
+			return result;
+		}
+
+		auto [lp, rp] = binding_power_of(op->m_type);
+
+		if(lp < bp) break;
+
+		m_lexer->advance();
+		auto rhs = parse_expression(rp);
+
+		auto e = std::make_unique<ASTBinaryExpression>();
+
+		e->m_op = op->m_type;
+		e->m_lhs = std::move(lhs.m_result);
+		e->m_rhs = std::move(rhs.m_result);
+
+		lhs.m_result = std::move(e);
+	}
+
+	return lhs;
+}
+
+Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse terminal expression" } };
 
 	auto number = require(token_type::NUMBER);
 
 	if (not handle_error(result, number)) {
+
 		auto e = std::make_unique<ASTNumberLiteral>();
 		e->m_text = number.m_result->m_text;
-		result = make_writer<std::unique_ptr<AST>>(std::move(e));
 
-		return result;
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
 	auto identifier = require(token_type::IDENTIFIER);
 
 	if (not handle_error(result, identifier)) {
+
 		auto e = std::make_unique<ASTIdentifier>();
 		e->m_text = identifier.m_result->m_text;
 
@@ -127,6 +203,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression() {
 
 	auto function = parse_function();
 	if (not handle_error(result, function)) {
+
 		return function;
 	}
 
@@ -142,7 +219,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 
 	if (handle_error(result, require(token_type::PAREN_OPEN)))
 		return result;
+
 	// TODO: parse arguments
+
 	if (handle_error(result, require(token_type::PAREN_CLOSE)))
 		return result;
 
