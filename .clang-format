@@ -17,14 +17,16 @@ AllowShortLoopsOnASingleLine: false
 
 AlwaysBreakTemplateDeclarations: true
 
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 
 DerivePointerAlignment: false
 PointerAlignment: Left
 
 SpaceBeforeParens: ControlStatements
-
 SpacesInSquareBrackets: false
 SpacesInParentheses: false
+
+BreakBeforeTernaryOperators: true
+AlignAfterOpenBracket: AlwaysBreak
