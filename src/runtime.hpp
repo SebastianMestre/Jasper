@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "garbage_collector.hpp"
-
 namespace Type {
 
 struct Value;
@@ -18,81 +16,75 @@ using ListType = std::vector<Value*>;
 // using FunctionType = <syntax tree>
 
 struct Value {
-	int refcount;
-
-	/* something has a new reference of this */
-	void added_reference() { refcount++; }
-
-	/* something lost a reference to this */
-	void lost_reference() {
-		assert(refcount > 0);
-		refcount--;
-	}
+	bool visited = false;
+	virtual void gc_visit() = 0;
+	virtual ~Value() = default;
 };
 
 struct Integer : Value {
-	int value;
+	int value = 0;
 
-	Integer(int v) : value(v) {}
+	Integer() = default;
+	Integer(int v);
+
+	void gc_visit() override;
 };
 
 struct String : Value {
-	std::string value;
+	std::string value = "";
 
-	String(std::string s = "") : value(s) {}
+	String() = default;
+	String(std::string s);
+
+	void gc_visit() override;
 };
 
 struct List : Value {
 	ListType value;
 
-	List(ListType l = ListType()) : value(l) {}
+	List() = default;
+	List(ListType l);
 
-	void append(Value* v) { value.push_back(v); }
+	void append(Value* v);
+	Value* at(int position);
 
-	Value* at(int position) {
-		if (position < 0 or position >= int(value.size())) {
-			// return OutOfBounds
-			return nullptr;
-		} else {
-			return value[position];
-		}
-	}
+	void gc_visit() override;
 };
 
 struct Object : Value {
 	ObjectType value;
 
-	Object(ObjectType o = ObjectType()) : value(o) {}
+	Object() = default;
+	Object(ObjectType);
 
-	void addMember(Identifier id, Value* v) { value[id] = v; }
+	void addMember(Identifier const& id, Value* v);
+	Value* getMember(Identifier const& id);
 
-	Value* getMember(Identifier id) {
-		if (value.find(id) == value.end()) {
-			// return ReferenceError
-			return nullptr;
-		} else {
-			return value[id];
-		}
-	}
+	void gc_visit() override;
 };
 
-//struct Function : Value {
-//	FunctionType value;
-//
-//	Function(FunctionType f = FunctionType()) : value(f) {}
-//};
+// TODO: define data representation of functions
 
 /**
  * Example:
  *
  * using namespace Type;
+ * using GarbageCollector::GC;
  *
- * TopLevel = Object();
- * TopLevel.addMember(the_new_id, new Integer(10));
- * TopLevel.addMember(
- * 	the_other_new_id,
- * 	new List( {new Integer(2), new Integer(2)} )
- * );
- * 
+ * GC gc;
+ *
+ * Object* top_level = gc.new_object();
+ * gc.add_root(top_level);
+ *
+ * TopLevel.add_member("myInt", gc.new_integer(10));
+ *
+ * TopLevel.add_member(
+ *     "myList",
+ *     gc.new_list({
+ *         gc.new_integer(2),
+ *         gc.new_integer(2)
+ * }));
+ *
  */
-}
+
+} // namespace Type
