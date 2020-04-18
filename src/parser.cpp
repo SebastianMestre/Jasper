@@ -174,3 +174,46 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
+
+Writer<std::unique_ptr<AST>> Parser::parse_statement() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse statement" } };
+
+	auto* p0 = peek(0);
+	if (p0->m_type == token_type::IDENTIFIER) {
+		auto* p1 = peek(1);
+
+		if (p1->m_type == token_type::DECLARE
+		    || p1->m_type == token_type::DECLARE_ASSIGN) {
+
+			auto declaration = parse_declaration();
+
+			if(handle_error(result, declaration)){
+				return result;
+			}
+
+			return declaration;
+		} else {
+			auto expression = parse_expression();
+
+			if(handle_error(result, expression)){
+				return result;
+			}
+
+			return expression;
+		}
+	} else {
+		// TODO: parse loops, conditionals, etc.
+
+		// TODO: clean up error reporting
+		std::stringstream ss;
+		ss << "Parse Error: @ " << p0->m_line0 + 1 << ":"
+		   << p0->m_col0 + 1 << ": Expected "
+		   << token_type_string[int(token_type::IDENTIFIER)] << " but got "
+		   << token_type_string[int(p0->m_type)] << " instead";
+
+		result.m_error.m_sub_errors.push_back({ { ss.str() } });
+	}
+
+	return result;
+}
