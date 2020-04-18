@@ -1,14 +1,20 @@
 #pragma once
 
+#include <vector>
+
 #include "runtime.hpp"
 
 namespace GarbageCollector {
 
-/**
- * Take all memory and perform a DFS to free memory
- * O(N) -> O(1) performed every N arbitrary steps
- */
-// void hard_clean(Type::Object* TopLevel) {
-// dfs. WIS (will implement soon)
-// }
+struct GC {
+	std::vector<Type::Value*> m_blocks;
+	std::vector<Type::Value*> m_roots;
+
+	void run ();
+	void add_root (Type::Value* new_root);
+
+	Type::Object* new_object ();
+	Type::List* new_list ();
+};
+
 }
