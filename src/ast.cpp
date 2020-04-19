@@ -93,3 +93,19 @@ void ASTFunction::print(int d) {
 Type::Value* ASTFunction::run(Type::Scope &s) {
 	return new Type::Null();
 };
+
+void ASTBinaryExpression::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ BinaryExpression\n"
+	          << tab << "Operator: " << token_type_string[int(m_op)] << '\n'
+	          << tab << "Left Operand:\n";
+	m_lhs->print(d + 1);
+	std::cout << tab << "Right Operand:\n";
+	m_rhs->print(d + 1);
+	std::cout << stab << "]\n";
+}
+
+Type::Value* ASTBinaryExpression::run(Type::Scope &s) {
+	return nullptr;
+}

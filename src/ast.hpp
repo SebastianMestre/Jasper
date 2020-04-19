@@ -50,17 +50,8 @@ struct ASTBinaryExpression : public AST {
 	std::unique_ptr<AST> m_lhs;
 	std::unique_ptr<AST> m_rhs;
 
-	void print(int d) override {
-		std::string stab(d - 1, tabc);
-		std::string tab(d, tabc);
-		std::cout << stab << "[ BinaryExpression\n"
-		          << tab << "Operator: " << token_type_string[int(m_op)] << '\n'
-		          << tab << "Left Operand:\n";
-		m_lhs->print(d+1);
-		std::cout << tab << "Right Operand:\n";
-		m_rhs->print(d+1);
-		std::cout << stab << "]\n";
-	}
+	void print(int d) override;
+	Type::Value* run(Type::Scope &s) override;
 };
 
 struct ASTBlock : public AST {
