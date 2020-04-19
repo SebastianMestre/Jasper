@@ -114,6 +114,12 @@ struct binding_power {
 bool is_binary_operator(token_type t){
 	// TODO: fill out this table
 	switch(t){
+	case token_type::LT:
+	case token_type::GT:
+	case token_type::LTE:
+	case token_type::GTE:
+	case token_type::EQUAL:
+	case token_type::NOT_EQUAL:
 	case token_type::ADD:
 	case token_type::SUB:
 	case token_type::MUL:
@@ -127,12 +133,19 @@ bool is_binary_operator(token_type t){
 binding_power binding_power_of(token_type t){
 	// TODO: fill out this table
 	switch(t){
+	case token_type::LT:
+	case token_type::GT:
+	case token_type::LTE:
+	case token_type::GTE:
+	case token_type::EQUAL:
+	case token_type::NOT_EQUAL: // fallthrough
+		return { 20, 21 };
 	case token_type::ADD:
 	case token_type::SUB: // fallthrough
-		return { 10, 11 };
+		return { 30, 31 };
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
-		return { 20, 21 };
+		return { 40, 41 };
 	default:
 		assert(false);
 	}
