@@ -10,10 +10,10 @@ inline const char* token_type_string[] = {
 	"|",
 	"^",
 
-	"LT",
-	"GT",
-	"LTE",
-	"GTE",
+	"<",
+	">",
+	"<=",
+	">=",
 
 	"COMPL",
 
@@ -21,8 +21,8 @@ inline const char* token_type_string[] = {
 	"LOGIC_AND",
 	"LOGIC_IOR",
 
-	"EQUAL",
-	"NOT_EQUAL",
+	"==",
+	"!=",
 
 	"=",
 	":=",
