@@ -13,6 +13,10 @@ using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using ListType = std::vector<Value*>;
 using FunctionType = ::AST*;
-using Scope = ObjectType;
+
+struct Scope {
+	Scope* m_parent;
+	ObjectType m_declarations;
+};
 
 }
