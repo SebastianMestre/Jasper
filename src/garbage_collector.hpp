@@ -15,6 +15,9 @@ struct GC {
 
 	Type::Object* new_object ();
 	Type::List* new_list ();
+
+	// TODO: keep one null stored all the time
+	Type::Null* null ();
 };
 
 }

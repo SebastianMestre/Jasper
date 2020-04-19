@@ -42,4 +42,10 @@ Type::List* GC::new_list() {
 	return result;
 }
 
+Type::Null* GC::null() {
+	auto result = new Type::Null;
+	m_blocks.push_back(result);
+	return result;
+}
+
 } // namespace GarbageCollector

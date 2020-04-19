@@ -5,20 +5,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include "types.hpp"
+
 namespace Type {
 
-struct Value;
+struct Null : Value {
 
-/* types */
-using Identifier = std::string;
-using ObjectType = std::unordered_map<Identifier, Value*>;
-using ListType = std::vector<Value*>;
-// using FunctionType = <syntax tree>
+	Null() = default;
 
-struct Value {
-	bool visited = false;
-	virtual void gc_visit() = 0;
-	virtual ~Value() = default;
+	void gc_visit() override;
 };
 
 struct Integer : Value {
@@ -63,7 +58,17 @@ struct Object : Value {
 	void gc_visit() override;
 };
 
-// TODO: define data representation of functions
+struct Function : Value {
+	FunctionType definition;
+	Scope scope;
+
+	Function() = default;
+	Function(FunctionType, Scope);
+
+	void gc_visit() override;
+};
+
+Value* call(Function* f, ListType args);
 
 /**
  * Example:

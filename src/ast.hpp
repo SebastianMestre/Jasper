@@ -4,10 +4,8 @@
 #include <memory>
 #include <vector>
 
-struct AST {
-	virtual void print(int d = 1) = 0;
-	virtual ~AST() = default;
-};
+#include "types.hpp"
+#include "runtime.hpp"
 
 constexpr char tabc = '\t';
 
@@ -22,6 +20,11 @@ struct ASTDeclarationList : public AST {
 			ast->print(d + 1);
 		std::cout << stab << "]\n";
 	}
+
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };
 
 struct ASTDeclaration : public AST {
@@ -39,6 +42,11 @@ struct ASTDeclaration : public AST {
 		m_value->print(d + 1);
 		std::cout << stab << "]\n";
 	}
+	
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };
 
 struct ASTNumberLiteral : public AST {
@@ -48,9 +56,14 @@ struct ASTNumberLiteral : public AST {
 		std::string stab(d - 1, tabc);
 		std::string tab(d, tabc);
 		std::cout << stab << "[ Number\n"
-		          << tab << "Value: " << m_text << "\n"
+		          << tab << "Type::Value: " << m_text << "\n"
 		          << stab << "]\n";
 	}
+	
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };
 
 struct ASTIdentifier : public AST {
@@ -63,6 +76,11 @@ struct ASTIdentifier : public AST {
 		          << tab << "Name: " << m_text << '\n'
 		          << stab << "]\n";
 	}
+	
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };
 
 struct ASTBlock : public AST {
@@ -76,6 +94,11 @@ struct ASTBlock : public AST {
 			child->print(d + 1);
 		std::cout << stab << "]\n";
 	}
+	
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };
 
 struct ASTFunction : public AST {
@@ -89,4 +112,9 @@ struct ASTFunction : public AST {
 			m_body->print(d + 1);
 		std::cout << stab << "]\n";
 	}
+	
+	// TODO: implement with GC and with actual values that make sense
+	virtual Type::Value* run(Type::Scope &s) override {
+		return new Type::Null();
+	};
 };

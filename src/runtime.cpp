@@ -2,6 +2,12 @@
 
 namespace Type {
 
+void Null::gc_visit() {
+	Value::visited = true;
+}
+
+
+
 Integer::Integer(int v) : value(v) {}
 
 void Integer::gc_visit() {
@@ -76,5 +82,8 @@ void Object::gc_visit() {
 		child.second->gc_visit();
 	}
 }
+
+// TODO: implement Function
+// TODO: implement call
 
 } // namespace Type

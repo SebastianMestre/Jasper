@@ -44,9 +44,9 @@ $(OBJDIR)/lexer.o: lexer.cpp lexer.hpp | $(OBJDIR)
 
 $(OBJDIR)/parser.o: parser.cpp parser.hpp lexer.hpp ast.hpp | $(OBJDIR)
 
-$(OBJDIR)/ast.o: ast.cpp ast.hpp | $(OBJDIR)
+$(OBJDIR)/ast.o: ast.cpp ast.hpp types.hpp | $(OBJDIR)
 
-$(OBJDIR)/runtime.o: runtime.cpp runtime.hpp | $(OBJDIR)
+$(OBJDIR)/runtime.o: runtime.cpp runtime.hpp types.hpp | $(OBJDIR)
 
 $(OBJDIR)/garbage_collector.o: garbage_collector.cpp garbage_collector.hpp runtime.hpp | $(OBJDIR)
 
