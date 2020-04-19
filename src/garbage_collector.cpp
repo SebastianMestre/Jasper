@@ -6,7 +6,7 @@ namespace GarbageCollector {
 
 void GC::run() {
 	for (auto* block : m_blocks) {
-		block->visited = false;
+		block->m_visited = false;
 	}
 
 	for (auto* root : m_roots) {
@@ -14,7 +14,7 @@ void GC::run() {
 	}
 
 	for (auto*& block : m_blocks) {
-		if (not block->visited) {
+		if (not block->m_visited) {
 			delete block;
 			block = nullptr;
 		}
@@ -38,6 +38,12 @@ Type::Object* GC::new_object() {
 
 Type::List* GC::new_list() {
 	auto result = new Type::List;
+	m_blocks.push_back(result);
+	return result;
+}
+
+Type::Null* GC::null() {
+	auto result = new Type::Null;
 	m_blocks.push_back(result);
 	return result;
 }

@@ -5,24 +5,25 @@
 #include <unordered_map>
 #include <vector>
 
+#include "types.hpp"
+
 namespace Type {
 
-struct Value;
-
-/* types */
-using Identifier = std::string;
-using ObjectType = std::unordered_map<Identifier, Value*>;
-using ListType = std::vector<Value*>;
-// using FunctionType = <syntax tree>
-
 struct Value {
-	bool visited = false;
+	bool m_visited = false;
 	virtual void gc_visit() = 0;
 	virtual ~Value() = default;
 };
 
+struct Null : Value {
+
+	Null() = default;
+
+	void gc_visit() override;
+};
+
 struct Integer : Value {
-	int value = 0;
+	int m_value = 0;
 
 	Integer() = default;
 	Integer(int v);
@@ -31,7 +32,7 @@ struct Integer : Value {
 };
 
 struct String : Value {
-	std::string value = "";
+	std::string m_value = "";
 
 	String() = default;
 	String(std::string s);
@@ -40,7 +41,7 @@ struct String : Value {
 };
 
 struct List : Value {
-	ListType value;
+	ListType m_value;
 
 	List() = default;
 	List(ListType l);
@@ -52,7 +53,7 @@ struct List : Value {
 };
 
 struct Object : Value {
-	ObjectType value;
+	ObjectType m_value;
 
 	Object() = default;
 	Object(ObjectType);
@@ -63,7 +64,17 @@ struct Object : Value {
 	void gc_visit() override;
 };
 
-// TODO: define data representation of functions
+struct Function : Value {
+	FunctionType m_definition;
+	Scope m_scope;
+
+	Function() = default;
+	Function(FunctionType, Scope);
+
+	void gc_visit() override;
+};
+
+Value* call(Function* f, ListType args);
 
 /**
  * Example:
