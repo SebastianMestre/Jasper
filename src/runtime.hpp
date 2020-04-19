@@ -9,6 +9,12 @@
 
 namespace Type {
 
+struct Value {
+	bool visited = false;
+	virtual void gc_visit() = 0;
+	virtual ~Value() = default;
+};
+
 struct Null : Value {
 
 	Null() = default;
