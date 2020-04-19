@@ -15,6 +15,7 @@ int main() {
 		b : dec = 3 * 1 + 4.5 * 2;
 		c := a;
 		a + b;
+		cmp : bool = a < c;
 	};
 
 )";
