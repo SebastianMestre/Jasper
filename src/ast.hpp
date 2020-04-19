@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "types.hpp"
+#include "token_type.hpp"
 
 struct AST {
 	virtual void print(int d = 1) = 0;
@@ -12,7 +13,7 @@ struct AST {
 	virtual ~AST() = default;
 };
 
-constexpr char tabc = '\t';
+constexpr char tabc = ' ';
 
 struct ASTDeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
@@ -42,6 +43,24 @@ struct ASTIdentifier : public AST {
 
 	void print(int d) override;
 	Type::Value* run(Type::Scope &s) override;
+};
+
+struct ASTBinaryExpression : public AST {
+	token_type m_op;
+	std::unique_ptr<AST> m_lhs;
+	std::unique_ptr<AST> m_rhs;
+
+	void print(int d) override {
+		std::string stab(d - 1, tabc);
+		std::string tab(d, tabc);
+		std::cout << stab << "[ BinaryExpression\n"
+		          << tab << "Operator: " << token_type_string[int(m_op)] << '\n'
+		          << tab << "Left Operand:\n";
+		m_lhs->print(d+1);
+		std::cout << tab << "Right Operand:\n";
+		m_rhs->print(d+1);
+		std::cout << stab << "]\n";
+	}
 };
 
 struct ASTBlock : public AST {

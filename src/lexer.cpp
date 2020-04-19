@@ -126,6 +126,26 @@ void Lexer::consume_token() {
 		}
 		break;
 
+	case '<':
+		switch (next_char()) {
+		case '=':
+			push_token(token_type::LTE, 2);
+			break;
+		default:
+			push_token(token_type::LT, 1);
+		}
+		break;
+
+	case '>':
+		switch (next_char()) {
+		case '=':
+			push_token(token_type::GTE, 2);
+			break;
+		default:
+			push_token(token_type::GT, 1);
+		}
+		break;
+
 	case '!':
 		switch (next_char()) {
 		case '=':

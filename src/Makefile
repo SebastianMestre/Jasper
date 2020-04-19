@@ -1,4 +1,6 @@
 
+# WARNING: This Makefile depends on GNU Make's Makefile regeneration feature
+
 BINDIR := ../bin
 OBJDIR := ../build
 OBJNAMES := \
@@ -14,6 +16,7 @@ OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 LIBS := -lasan
 
 CXXFLAGS := -std=c++17 -Wall -fsanitize=address -g
+CPPFLAGS := 
 
 all: $(BINDIR)/iseeaparse
 
@@ -24,6 +27,7 @@ clean:
 $(BINDIR)/iseeaparse: $(OBJS) | $(BINDIR)
 	$(CXX) -o $@ $^ $(LIBS)
 
+
 $(BINDIR):
 	mkdir $(BINDIR)
 
@@ -31,22 +35,15 @@ $(OBJS): | $(OBJDIR)
 
 $(OBJDIR):
 	mkdir $(OBJDIR)
+
+include $(OBJS:.o=.d)
 		
 $(OBJDIR)/%.o : %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-%.hpp:
-	touch $@
-
-$(OBJDIR)/main.o: main.cpp lexer.hpp parser.hpp ast.hpp | $(OBJDIR)
-
-$(OBJDIR)/lexer.o: lexer.cpp lexer.hpp | $(OBJDIR)
-
-$(OBJDIR)/parser.o: parser.cpp parser.hpp lexer.hpp ast.hpp | $(OBJDIR)
-
-$(OBJDIR)/ast.o: ast.cpp ast.hpp types.hpp | $(OBJDIR)
-
-$(OBJDIR)/runtime.o: runtime.cpp runtime.hpp types.hpp | $(OBJDIR)
-
-$(OBJDIR)/garbage_collector.o: garbage_collector.cpp garbage_collector.hpp runtime.hpp | $(OBJDIR)
+$(OBJDIR)/%.d: %.cpp | $(OBJDIR)
+	@set -e; rm -f $@; \
+	$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
 

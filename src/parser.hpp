@@ -53,7 +53,8 @@ struct Parser {
 
 	Writer<std::unique_ptr<AST>> parse_top_level();
 	Writer<std::unique_ptr<AST>> parse_declaration();
-	Writer<std::unique_ptr<AST>> parse_expression();
+	Writer<std::unique_ptr<AST>> parse_expression(int bp = 0);
+	Writer<std::unique_ptr<AST>> parse_terminal();
 	Writer<std::unique_ptr<AST>> parse_function();
 	Writer<std::unique_ptr<AST>> parse_block();
 	Writer<std::unique_ptr<AST>> parse_statement();
