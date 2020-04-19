@@ -39,7 +39,7 @@ void ASTNumberLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Number\n"
-		<< tab << "Type::Value: " << m_text << "\n"
+		<< tab << "Value: " << m_text << "\n"
 		<< stab << "]\n";
 }
 
