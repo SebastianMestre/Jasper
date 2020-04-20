@@ -4,6 +4,10 @@
 
 namespace GarbageCollector {
 
+GC::GC() {
+	m_null = new Type::Null;
+}
+
 void GC::run() {
 	for (auto* block : m_blocks) {
 		block->m_visited = false;
@@ -38,12 +42,6 @@ Type::Object* GC::new_object() {
 
 Type::List* GC::new_list() {
 	auto result = new Type::List;
-	m_blocks.push_back(result);
-	return result;
-}
-
-Type::Null* GC::null() {
-	auto result = new Type::Null;
 	m_blocks.push_back(result);
 	return result;
 }
