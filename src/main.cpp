@@ -16,9 +16,14 @@ int main() {
 		c := a;
 		a + b;
 		cmp : bool = a < c;
+		
 	};
 
+	y := fn () {
+		print(1,z(),4);
+	};
 )";
+
 	for (char c : s) {
 		v.push_back(c);
 	}
