@@ -160,6 +160,64 @@ binding_power binding_power_of(token_type t){
 	}
 }
 
+Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to argument list" } };
+
+	if (handle_error(result, require(token_type::PAREN_OPEN))) {
+		return result;
+	}
+
+	std::vector<std::unique_ptr<AST>> args;
+
+	if (peek()->m_type == token_type::PAREN_CLOSE) {
+		m_lexer->advance();
+	} else {
+		// loop until we find a matching paren
+		while (1) {
+			auto p0 = peek();
+
+			if (p0->m_type == token_type::END) {
+				result.m_error.m_sub_errors.push_back(
+				    { { "Found EOF while parsing a function call" } });
+				return result;
+			}
+
+			if (p0->m_type == token_type::PAREN_CLOSE) {
+				result.m_error.m_sub_errors.push_back(
+				    { { "Found a closing paren after a comma in a function "
+				        "call" } });
+				return result;
+			}
+
+			auto argument = parse_expression();
+			if (handle_error(result, argument)) {
+				return result;
+			} else {
+				args.push_back(std::move(argument.m_result));
+			}
+
+			auto p1 = peek();
+
+			if (p1->m_type == token_type::COMMA) {
+				m_lexer->advance();
+			} else if (p1->m_type == token_type::PAREN_CLOSE) {
+				m_lexer->advance();
+				break;
+			}else{
+				result.m_error.m_sub_errors.push_back(
+				    make_expected_error("',' or ')'", p1));
+				return result;
+			}
+		}
+	}
+
+	auto e = std::make_unique<ASTArgumentList>();
+	e->m_args = std::move(args);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
 /* If I am not mistaken, the algorithm used here is called 'Pratt Parsing'
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
@@ -179,10 +237,33 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 			break;
 		}
 
+		if(op->m_type == token_type::PAREN_OPEN){
+			auto args = parse_argument_list();
+
+			if(handle_error(result, args)){
+				return result;
+			}
+
+			auto e = std::make_unique<ASTCallExpression>();
+
+			e->m_callee = std::move(lhs.m_result);
+			e->m_args = std::move(args.m_result);
+			lhs.m_result = std::move(e);
+
+			continue;
+		}
+
+		if(op->m_type == token_type::PAREN_CLOSE){
+			break;
+		}
+
+		if(op->m_type == token_type::COMMA){
+			break;
+		}
+
 		if(not is_binary_operator(op->m_type)){
-			// TODO: improve error message
-			result.m_error.m_sub_errors.push_back(
-			    { { "failed to find a binary operator" } });
+			auto err = make_expected_error("a binary operator", op);
+			result.m_error.m_sub_errors.push_back(std::move(err));
 			return result;
 		}
 
