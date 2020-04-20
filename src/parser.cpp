@@ -212,33 +212,37 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse terminal expression" } };
 
-	auto number = require(token_type::NUMBER);
+	auto token = peek();
 
-	if (not handle_error(result, number)) {
-
+	if (token->m_type == token_type::NUMBER) {
 		auto e = std::make_unique<ASTNumberLiteral>();
-		e->m_text = number.m_result->m_text;
-
+		e->m_text = token->m_text;
+		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
-	auto identifier = require(token_type::IDENTIFIER);
-
-	if (not handle_error(result, identifier)) {
-
+	if (token->m_type == token_type::IDENTIFIER) {
 		auto e = std::make_unique<ASTIdentifier>();
-		e->m_text = identifier.m_result->m_text;
-
-		result = make_writer<std::unique_ptr<AST>>(std::move(e));
-
-		return result;
+		e->m_text = token->m_text;
+		m_lexer->advance();
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
-	auto function = parse_function();
-	if (not handle_error(result, function)) {
-
+	if(token->m_type == token_type::KEYWORD_FN){
+		auto function = parse_function();
+		if (handle_error(result, function))
+			return result;
 		return function;
 	}
+
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::KEYWORD_FN)], token) });
+
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::IDENTIFIER)], token) });
+
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::NUMBER)], token) });
 
 	return result;
 }
@@ -353,13 +357,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 		// TODO: parse loops, conditionals, etc.
 
 		// TODO: clean up error reporting
-		std::stringstream ss;
-		ss << "Parse Error: @ " << p0->m_line0 + 1 << ":"
-		   << p0->m_col0 + 1 << ": Expected "
-		   << token_type_string[int(token_type::IDENTIFIER)] << " but got "
-		   << token_type_string[int(p0->m_type)] << " instead";
-
-		result.m_error.m_sub_errors.push_back({ { ss.str() } });
+		auto err = make_expected_error(token_type_string[int(token_type::IDENTIFIER)], p0);
 	}
 
 	return result;
