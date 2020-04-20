@@ -3,6 +3,12 @@
 #include <vector>
 #include <unordered_map>
 
+namespace GarbageCollector {
+
+struct GC;
+
+}
+
 struct AST;
 
 namespace Type {
@@ -30,6 +36,11 @@ struct Scope {
 		// TODO: ReferenceError
 		return nullptr;
 	}
+};
+
+struct Environment {
+	GarbageCollector::GC* m_gc;
+	Scope* m_scope;
 };
 
 }
