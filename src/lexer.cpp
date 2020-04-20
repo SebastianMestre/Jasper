@@ -208,7 +208,14 @@ void Lexer::consume_token() {
 			m_source_index += 1;
 			m_current_column += text.size();
 
-			m_tokens.push_back({ token_type::IDENTIFIER, text });
+			m_tokens.push_back({
+				token_type::IDENTIFIER,
+				text,
+				m_current_line,
+				m_current_column - text.size(),
+				m_current_line,
+				m_current_column });
+
 		} else if (isdigit(current_char())) {
 			std::string text;
 			text.push_back(current_char());
