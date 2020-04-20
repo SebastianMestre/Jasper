@@ -180,6 +180,12 @@ void Lexer::consume_token() {
 	case ';':
 		push_token(token_type::SEMICOLON, 1);
 		break;
+	case '.':
+		push_token(token_type::DOT, 1);
+		break;
+	case ',':
+		push_token(token_type::COMMA, 1);
+		break;
 
 	default:
 
