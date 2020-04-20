@@ -22,6 +22,16 @@ int main() {
 	y := fn () {
 		print(1,z(),4);
 	};
+
+	f := fn () {
+		greeting := 0;
+		name := 0;
+		print(greeting + name);
+	};
+
+	__invoke := fn () {
+		f();
+	};
 )";
 
 	for (char c : s) {
