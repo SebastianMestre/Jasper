@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include <iostream>
+#include <string_view>
 
 #include <cassert>
 
@@ -23,19 +24,21 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
+ParseError make_expected_error (std::string_view expected, Token const* found_token) {
+	std::stringstream ss;
+	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
+		<< found_token->m_col0 + 1 << ": Expected "
+		<< expected << " but got "
+		<< token_type_string[int(found_token->m_type)] << ' ' << found_token->m_text << " instead";
+
+		return ParseError{ ss.str() };
+}
 
 Writer<Token const*> Parser::require(token_type expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 
 	if (current_token->m_type != expected_type) {
-
-		std::stringstream ss;
-		ss << "Parse Error: @ " << current_token->m_line0 + 1 << ":"
-		   << current_token->m_col0 + 1 << ": Expected "
-		   << token_type_string[int(expected_type)] << " but got "
-		   << token_type_string[int(current_token->m_type)] << " instead";
-
-		return { ParseError{ ss.str() } };
+		return { make_expected_error(token_type_string[int(expected_type)], current_token) };
 	}
 
 	m_lexer->advance();
