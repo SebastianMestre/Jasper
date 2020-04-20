@@ -11,7 +11,7 @@ void ASTDeclarationList::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTDeclarationList::run(Type::Scope &s) {
+Type::Value* ASTDeclarationList::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -29,7 +29,7 @@ void ASTDeclaration::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTDeclaration::run(Type::Scope &s) {
+Type::Value* ASTDeclaration::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -44,7 +44,7 @@ void ASTNumberLiteral::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTNumberLiteral::run(Type::Scope &s) {
+Type::Value* ASTNumberLiteral::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -59,7 +59,7 @@ void ASTIdentifier::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTIdentifier::run(Type::Scope &s) {
+Type::Value* ASTIdentifier::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -75,7 +75,7 @@ void ASTBlock::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTBlock::run(Type::Scope &s) {
+Type::Value* ASTBlock::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -91,7 +91,7 @@ void ASTFunction::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTFunction::run(Type::Scope &s) {
+Type::Value* ASTFunction::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -109,7 +109,7 @@ void ASTBinaryExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTBinaryExpression::run(Type::Scope &s) {
+Type::Value* ASTBinaryExpression::run(Type::Environment &e) {
 	return nullptr;
 }
 
@@ -125,7 +125,7 @@ void ASTCallExpression::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTCallExpression::run(Type::Scope &s) {
+Type::Value* ASTCallExpression::run(Type::Environment &e) {
 	return new Type::Null();
 };
 
@@ -142,6 +142,6 @@ void ASTArgumentList::print(int d) {
 }
 
 // TODO: implement with GC and with actual values that make sense
-Type::Value* ASTArgumentList::run(Type::Scope &s) {
+Type::Value* ASTArgumentList::run(Type::Environment &e) {
 	return new Type::Null();
 };
