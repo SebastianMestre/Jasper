@@ -197,10 +197,46 @@ void Lexer::consume_token() {
 
 	default:
 
+		// tokenize keywords
+		// TODO: make table based?
 		if (peek_char(0) == 'f') {
 			if (peek_char(1) == 'n') {
-				push_token(token_type::KEYWORD_FN, 2);
-				return;
+				if (not is_identifier_char(peek_char(2))){
+					push_token(token_type::KEYWORD_FN, 2);
+					return;
+				}
+			} else if (peek_char(1) == 'o') {
+				if (peek_char(2) == 'r') {
+					if (not is_identifier_char(peek_char(3))){
+						// FIXME: KEYWORD_FOR
+						push_token(token_type::KEYWORD, 3);
+						return;
+					}
+				}
+			}
+		}else if(peek_char(0) == 'i'){
+			if (peek_char(1) == 'f') {
+				if (not is_identifier_char(peek_char(2))){
+					// FIXME: KEYWORD_IF
+					push_token(token_type::KEYWORD, 2);
+					return;
+				}
+			}
+		}else if(peek_char(0) == 'r'){
+			if(peek_char(1) == 'e'){
+				if(peek_char(2) == 't'){
+					if(peek_char(3) == 'u'){
+						if(peek_char(4) == 'r'){
+							if(peek_char(5) == 'n'){
+								if (not is_identifier_char(peek_char(6))){
+									// FIXME: KEYWORD_RETURN
+									push_token(token_type::KEYWORD, 6);
+									return;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 
