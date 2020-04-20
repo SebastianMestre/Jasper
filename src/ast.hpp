@@ -54,6 +54,21 @@ struct ASTBinaryExpression : public AST {
 	Type::Value* run(Type::Scope &s) override;
 };
 
+struct ASTCallExpression : public AST {
+	std::unique_ptr<AST> m_callee;
+	std::unique_ptr<AST> m_args;
+
+	void print(int d) override;
+	Type::Value* run(Type::Scope &s) override;
+};
+
+struct ASTArgumentList : public AST {
+	std::vector<std::unique_ptr<AST>> m_args;
+
+	void print(int d) override;
+	Type::Value* run(Type::Scope &s) override;
+};
+
 struct ASTBlock : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
