@@ -5,6 +5,14 @@
 
 #include <cstdlib>
 
+bool is_identifier_start_char (char c) {
+	return isalpha(c) || c == '_';
+}
+
+bool is_identifier_char (char c) {
+	return isalpha(c) || c == '_' || isdigit(c);
+}
+
 char Lexer::char_at(int index) {
 	return index < int(m_source.size()) ? m_source[index] : '\0';
 }
@@ -196,11 +204,11 @@ void Lexer::consume_token() {
 			}
 		}
 
-		if (isalpha(current_char())) {
+		if (is_identifier_start_char(current_char())) {
 			std::string text;
 			text.push_back(current_char());
 
-			while (isalpha(next_char())) {
+			while (is_identifier_char(next_char())) {
 				m_source_index += 1;
 				text.push_back(current_char());
 			}
@@ -212,7 +220,7 @@ void Lexer::consume_token() {
 				token_type::IDENTIFIER,
 				text,
 				m_current_line,
-				m_current_column - text.size(),
+				m_current_column - int(text.size()),
 				m_current_line,
 				m_current_column });
 
@@ -240,7 +248,13 @@ void Lexer::consume_token() {
 
 			m_source_index += 1;
 			m_current_column += 1;
-			m_tokens.push_back({ token_type::NUMBER, text });
+			m_tokens.push_back({
+				token_type::NUMBER,
+				text,
+				m_current_line,
+				m_current_column - int(text.size()),
+				m_current_line,
+				m_current_column });
 
 		} else {
 			if (current_char() == '\n') {
