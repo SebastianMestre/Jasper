@@ -123,6 +123,8 @@ bool is_binary_operator(token_type t){
 	case token_type::GTE:
 	case token_type::EQUAL:
 	case token_type::NOT_EQUAL:
+	case token_type::ASSIGN:
+	case token_type::DOT:
 	case token_type::ADD:
 	case token_type::SUB:
 	case token_type::MUL:
@@ -136,6 +138,8 @@ bool is_binary_operator(token_type t){
 binding_power binding_power_of(token_type t){
 	// TODO: fill out this table
 	switch(t){
+	case token_type::ASSIGN:
+		return {10, 11};
 	case token_type::LT:
 	case token_type::GT:
 	case token_type::LTE:
@@ -149,6 +153,8 @@ binding_power binding_power_of(token_type t){
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
 		return { 40, 41 };
+	case token_type::DOT:
+		return { 50, 51 };
 	default:
 		assert(false);
 	}
