@@ -39,6 +39,9 @@ inline const char* token_type_string[] = {
 	"IOR_TO",
 	"XOR_TO",
 
+	"DOT",
+	"COMMA",
+
 	"BRACE_OPEN",
 	"BRACKET_OPEN",
 	"PAREN_OPEN",
@@ -97,6 +100,9 @@ enum class token_type {
 	AND_TO,
 	IOR_TO,
 	XOR_TO,
+
+	DOT,
+	COMMA,
 
 	BRACE_OPEN,
 	BRACKET_OPEN,
