@@ -6,7 +6,7 @@ jobs:
       - image: gcc:latest
     steps:
       - checkout
-      - run: (cd src; make -j)
+      - run: (cd src; make -j && ../bin/iseeaparse)
 workflows:
   version: 2.1
   build:
