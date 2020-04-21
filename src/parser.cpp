@@ -345,10 +345,61 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 	if (handle_error(result, require(token_type::PAREN_OPEN)))
 		return result;
 
-	// TODO: parse arguments
+	// TODO: refactor
+	std::vector<std::unique_ptr<AST>> args;
+	while (1) {
+		auto p0 = peek();
 
-	if (handle_error(result, require(token_type::PAREN_CLOSE)))
-		return result;
+		if (p0->m_type == token_type::PAREN_CLOSE) {
+			m_lexer->advance();
+			break;
+		} else if (p0->m_type == token_type::IDENTIFIER) {
+			// consume argument name
+
+			auto arg = std::make_unique<ASTDeclaration>();
+			arg->m_identifier = p0->m_text;
+
+			m_lexer->advance();
+			auto p1 = peek();
+			if (p1->m_type == token_type::DECLARE) {
+				// consume type separator (:)
+				// must be followed by a type
+
+				m_lexer->advance();
+				auto p2 = peek();
+				if (p2->m_type == token_type::IDENTIFIER) {
+					// consume type
+					arg->m_typename = p2->m_text;
+
+					m_lexer->advance();
+					p1 = peek();
+				} else {
+					// no type found, report error
+					result.m_error.m_sub_errors.push_back(
+					    make_expected_error("a type", p2));
+					return result;
+				}
+			}
+
+			args.push_back(std::move(arg));
+
+			if (p1->m_type == token_type::COMMA) {
+				m_lexer->advance();
+				continue;
+			} else if (p1->m_type == token_type::PAREN_CLOSE) {
+				m_lexer->advance();
+				break;
+			} else {
+				result.m_error.m_sub_errors.push_back(
+				    make_expected_error("',' or ')'", p1));
+				return result;
+			}
+		} else {
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("an argument name (IDENTIFIER)", p0));
+			return result;
+		}
+	}
 
 	auto block = parse_block();
 	if (handle_error(result, block)) {
@@ -358,6 +409,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 	auto e = std::make_unique<ASTFunction>();
 
 	e->m_body = std::move(block.m_result);
+	e->m_args = std::move(args);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
