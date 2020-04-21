@@ -9,7 +9,8 @@ OBJNAMES := \
 	parser.o \
 	ast.o \
 	runtime.o \
-	garbage_collector.o
+	garbage_collector.o \
+	error.o
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
