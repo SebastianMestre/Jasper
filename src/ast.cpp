@@ -50,6 +50,21 @@ Type::Value* ASTNumberLiteral::run(Type::Environment &e) {
 
 
 
+void ASTStringLiteral::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ StringLiteral\n"
+		<< tab << "Value: " << m_text << "\n"
+		<< stab << "]\n";
+}
+
+// TODO: implement with GC and with actual values that make sense
+Type::Value* ASTStringLiteral::run(Type::Environment &e) {
+	return new Type::Null();
+};
+
+
+
 void ASTIdentifier::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -112,6 +127,8 @@ void ASTBinaryExpression::print(int d) {
 Type::Value* ASTBinaryExpression::run(Type::Environment &e) {
 	return nullptr;
 }
+
+
 
 void ASTCallExpression::print(int d) {
 	std::string stab(d - 1, tabc);
