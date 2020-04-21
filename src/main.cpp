@@ -23,9 +23,10 @@ int main() {
 		print(1,z(),4);
 	};
 
-	f := fn () {
+	w := fn (a,b:int,c){};
+
+	f := fn (name : string) {
 		greeting := "Hello, ";
-		name := 0;
 		print(greeting + name);
 	};
 
