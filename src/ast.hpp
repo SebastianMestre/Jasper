@@ -38,6 +38,13 @@ struct ASTNumberLiteral : public AST {
 	Type::Value* run(Type::Environment &e) override;
 };
 
+struct ASTStringLiteral : public AST {
+	std::string m_text;
+
+	void print(int d) override;
+	Type::Value* run(Type::Environment &e) override;
+};
+
 struct ASTIdentifier : public AST {
 	std::string m_text;
 
