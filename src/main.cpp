@@ -24,13 +24,14 @@ int main() {
 	};
 
 	f := fn () {
-		greeting := 0;
+		greeting := "Hello, ";
 		name := 0;
 		print(greeting + name);
 	};
 
 	__invoke := fn () {
-		f();
+		f.greeting = "Hey, ";
+		f("Sailor");
 	};
 )";
 
