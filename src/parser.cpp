@@ -335,6 +335,12 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 	return result;
 }
 
+/*
+ * functions look like this:
+ * fn (x : int, y, z : string) {
+ *   print(x);
+ * }
+ */
 Writer<std::unique_ptr<AST>> Parser::parse_function() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse function" } };
@@ -359,6 +365,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 			auto arg = std::make_unique<ASTDeclaration>();
 			arg->m_identifier = p0->m_text;
 
+			// now we optionally consume a type hint
+			// NOTE: a type hint is a colon followed by a type name.
+			// Example: ': int'
 			m_lexer->advance();
 			auto p1 = peek();
 			if (p1->m_type == token_type::DECLARE) {
@@ -383,6 +392,10 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 
 			args.push_back(std::move(arg));
 
+			// continue parsing:
+			// if we find a comma, we have to parse another argument, so we loop again.
+			// if we find a closing paren, we are done parsing arguments, so we stop.
+			// Anything else is unexpected input, so we report an error.
 			if (p1->m_type == token_type::COMMA) {
 				m_lexer->advance();
 				continue;
