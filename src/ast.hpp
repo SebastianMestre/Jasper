@@ -85,6 +85,7 @@ struct ASTBlock : public AST {
 
 struct ASTFunction : public AST {
 	std::unique_ptr<AST> m_body;
+	std::vector<std::unique_ptr<AST>> m_args;
 
 	void print(int d) override; 
 	Type::Value* run(Type::Environment &e) override;

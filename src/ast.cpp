@@ -22,9 +22,11 @@ void ASTDeclaration::print(int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Declaration\n"
 		<< tab << "Name: " << m_identifier << '\n'
-		<< tab << "Type: " << m_typename << '\n'
-		<< tab << "Initializer:\n";
-	m_value->print(d + 1);
+		<< tab << "Type: " << m_typename << '\n';
+	if (m_value) {
+		std::cout << tab << "Initializer:\n";
+		m_value->print(d + 1);
+	}
 	std::cout << stab << "]\n";
 }
 
@@ -99,7 +101,12 @@ Type::Value* ASTBlock::run(Type::Environment &e) {
 void ASTFunction::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Function\n";
+	std::cout << stab << "[ Function\n"
+		<< tab << "Arguments:\n";
+	for(auto& arg : m_args){
+		arg->print(d+1);
+	}
+	std::cout << tab << "Body:\n";
 	if (m_body)
 		m_body->print(d + 1);
 	std::cout << stab << "]\n";
