@@ -194,6 +194,52 @@ void Lexer::consume_token() {
 	case ',':
 		push_token(token_type::COMMA, 1);
 		break;
+	case '"':
+		{
+			m_source_index += 1;
+			m_current_column += 1;
+
+			int i0 = m_source_index;
+			int c0 = m_current_column;
+			int l0 = m_current_line;
+
+			// TODO: support escape sequences
+			int len = 0;
+			while ((not done()) && current_char() != '"') {
+				len += 1;
+				m_source_index += 1;
+				if(current_char() == '\n'){
+					m_current_line += 1;
+					m_current_column = 0;
+				}else{
+					m_current_column += 1;
+				}
+			}
+
+			if(current_char() != '"'){
+				// TODO: report unmatched quote
+				assert(0);
+			}
+
+			std::string text;
+			assert(len == (m_source_index - i0));
+			text.reserve(len);
+			for(int i = i0; i != m_source_index; ++i){
+				text.push_back(m_source[i]);
+			}
+
+			m_tokens.push_back({
+				token_type::STRING,
+				text,
+				l0,
+				c0,
+				m_current_line,
+				m_current_column });
+
+			m_current_column += 1;
+			m_source_index += 1;
+		}
+		break;
 
 	default:
 

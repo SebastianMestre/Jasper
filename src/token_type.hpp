@@ -54,6 +54,7 @@ inline const char* token_type_string[] = {
 	"COLON",
 
 	"NUMBER",
+	"STRING",
 	"IDENTIFIER",
 	"KEYWORD",
 
@@ -116,6 +117,7 @@ enum class token_type {
 	COLON,
 
 	NUMBER,
+	STRING,
 	IDENTIFIER,
 	KEYWORD,
 
