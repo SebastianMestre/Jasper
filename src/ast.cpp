@@ -1,5 +1,8 @@
+#include <cassert>
+
 #include "ast.hpp"
 #include "runtime.hpp"
+#include "garbage_collector.hpp"
 
 void ASTDeclarationList::print(int d) {
 	std::string stab(d - 1, tabc);
@@ -10,9 +13,8 @@ void ASTDeclarationList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTDeclarationList::run(Type::Environment &e) {
-	return new Type::Null();
+	return e.m_gc->null();
 };
 
 
@@ -30,9 +32,9 @@ void ASTDeclaration::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTDeclaration::run(Type::Environment &e) {
-	return new Type::Null();
+	// TODO: type and mutable check -> return error
+	return e.m_gc->null();
 };
 
 
@@ -45,9 +47,10 @@ void ASTNumberLiteral::print(int d) {
 		<< stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTNumberLiteral::run(Type::Environment &e) {
-	return new Type::Null();
+	// TODO: float / dec / int ...
+	assert(0);
+	return e.m_gc->null();
 };
 
 
@@ -60,9 +63,8 @@ void ASTStringLiteral::print(int d) {
 		<< stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTStringLiteral::run(Type::Environment &e) {
-	return new Type::Null();
+	return e.m_gc->new_string(m_text);
 };
 
 
@@ -75,9 +77,8 @@ void ASTIdentifier::print(int d) {
 		<< stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTIdentifier::run(Type::Environment &e) {
-	return new Type::Null();
+	return e.m_scope->access(m_text);
 };
 
 
@@ -91,9 +92,8 @@ void ASTBlock::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTBlock::run(Type::Environment &e) {
-	return new Type::Null();
+	return e.m_gc->null();
 };
 
 
@@ -112,9 +112,10 @@ void ASTFunction::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTFunction::run(Type::Environment &e) {
-	return new Type::Null();
+	// TODO: create definition?
+	assert(0);
+	return e.m_gc->null();
 };
 
 
@@ -148,9 +149,10 @@ void ASTCallExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTCallExpression::run(Type::Environment &e) {
-	return new Type::Null();
+	// TODO: fetch function definition and scope and run
+	assert(0);
+	return e.m_gc->null();
 };
 
 
@@ -165,7 +167,8 @@ void ASTArgumentList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-// TODO: implement with GC and with actual values that make sense
 Type::Value* ASTArgumentList::run(Type::Environment &e) {
-	return new Type::Null();
+	// TODO: return as list?
+	assert(0);
+	return e.m_gc->null();
 };
