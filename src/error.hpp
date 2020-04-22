@@ -11,16 +11,10 @@ struct Error : Value {
 	Error(std::string);
 
 	void gc_visit() override;
+
 };
 
-struct ReferenceError : Error {
-
-	ReferenceError(Identifier);
-};
-
-struct RangeError : Error {
-
-	RangeError(int, int);
-};
+Error make_reference_error(const Identifier&);
+Error make_range_error(int,int);
 
 }
