@@ -34,6 +34,12 @@ void GC::add_root(Type::Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
+Type::Null* GC::null() {
+	return m_null;
+}
+
+
+
 Type::Object* GC::new_object() {
 	auto result = new Type::Object;
 	m_blocks.push_back(result);
