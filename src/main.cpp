@@ -12,7 +12,7 @@ int main() {
 	y : int = 3;
 	z := fn () {
 		a := 2;
-		b : dec = 3 * 1 + 4.5 * 2;
+		b : dec = (4 + 5) * 3 * 1 + 4.5 * 2;
 		c := a;
 		a + b;
 		cmp : bool = a < c;
