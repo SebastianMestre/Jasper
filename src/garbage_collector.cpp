@@ -46,4 +46,22 @@ Type::List* GC::new_list() {
 	return result;
 }
 
+Type::Integer* GC::new_integer(int i) {
+	auto result = new Type::Integer(i);
+	m_blocks.push_back(result);
+	return result;
+}
+
+Type::String* GC::new_string(std::string s) {
+	auto result = new Type::String(std::move(s));
+	m_blocks.push_back(result);
+	return result;
+}
+
+Type::Error* GC::new_error(std::string s) {
+	auto result = new Type::Error(std::move(s));
+	m_blocks.push_back(result);
+	return result;
+}
+
 } // namespace GarbageCollector
