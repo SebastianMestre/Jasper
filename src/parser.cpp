@@ -226,9 +226,31 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse expression" } };
 
-	auto lhs = parse_terminal();
-	if(handle_error(result, lhs)){
-		return result;
+	auto p0 = peek();
+
+	Writer<std::unique_ptr<AST>> lhs;
+
+	// parse a parenthesized expression.
+	if (p0->m_type == token_type::PAREN_OPEN) {
+		// consume '('
+		m_lexer->advance();
+
+		lhs = parse_expression();
+
+		if (handle_error(result, lhs)) {
+			return result;
+		}
+
+		// verify and consume ')'
+		if (handle_error(result, require(token_type::PAREN_CLOSE))) {
+			return result;
+		}
+
+	} else {
+		lhs = parse_terminal();
+		if (handle_error(result, lhs)) {
+			return result;
+		}
 	}
 
 	while(1){
