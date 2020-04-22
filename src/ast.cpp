@@ -42,9 +42,7 @@ Type::Value* ASTDeclaration::run(Type::Environment &e) {
 void ASTNumberLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Number\n"
-		<< tab << "Value: " << m_text << "\n"
-		<< stab << "]\n";
+	std::cout << stab << "[ Number " << m_text << " ]\n";
 }
 
 Type::Value* ASTNumberLiteral::run(Type::Environment &e) {
