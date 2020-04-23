@@ -64,7 +64,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminato
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse declaration list" } };
 
-	auto e = std::make_unique<ASTDeclarationList>();
+	std::vector<std::unique_ptr<AST>> declarations;
 
 	while (not m_lexer->done()) {
 		if(peek()->m_type == terminator)
@@ -79,8 +79,12 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminato
 		if (handle_error(result, declaration))
 			return result;
 
-		e->m_declarations.push_back(std::move(declaration.m_result));
+		declarations.push_back(std::move(declaration.m_result));
 	}
+
+	auto e = std::make_unique<ASTDeclarationList>();
+
+	e->m_declarations = std::move(declarations);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
