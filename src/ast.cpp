@@ -36,7 +36,7 @@ Type::Value* ASTDeclaration::run(Type::Environment &e) {
 	// TODO: type and mutable check -> return error
 	
 	if (m_value)
-		e.m_scope->declare(m_identifier, m_value);
+		e.m_scope->declare(m_identifier, m_value->run(e));
 
 	return e.m_gc->null();
 };

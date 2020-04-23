@@ -1,4 +1,5 @@
 #include "runtime.hpp"
+#include "ast.hpp"
 
 namespace Type {
 
@@ -87,8 +88,18 @@ void Object::gc_visit() {
 
 Function::Function(FunctionType def, Environment env) : m_def(std::move(def)), m_env(std::move(env)) {}
 
-Function::call(ListType args) {
+Value* Function::call(ListType args) {
+	// FIXME: how to declare argument values, given a definition?
 	return m_def->run(m_env);
+}
+
+void Function::gc_visit() {
+	if (Value::m_visited)
+		return;
+
+	Value::m_visited = true;
+	for(auto& child : m_env.m_scope->m_declarations)
+		child.second->gc_visit();
 }
 
 } // namespace Type

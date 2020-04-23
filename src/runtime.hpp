@@ -65,8 +65,8 @@ struct Object : Value {
 };
 
 struct Function : Value {
-	FunctionType m_definition;
-	Environment m_environment;
+	FunctionType m_def;
+	Environment m_env;
 
 	Function() = default;
 	Function(FunctionType, Environment);
