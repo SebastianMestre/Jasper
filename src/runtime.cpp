@@ -59,10 +59,6 @@ void List::gc_visit() {
 
 Object::Object(ObjectType o) : m_value(std::move(o)) {}
 
-void Object::addMember(Identifier const& id, Value* v) {
-	m_value[id] = v;
-}
-
 Value* Object::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
@@ -74,6 +70,34 @@ Value* Object::getMember(Identifier const& id) {
 }
 
 void Object::gc_visit() {
+	if (Value::m_visited)
+		return;
+
+	Value::m_visited = true;
+	for (auto child : m_value) {
+		child.second->gc_visit();
+	}
+}
+
+
+
+Dictionary::Dictionary(ObjectType o) : m_value(std::move(o)) {}
+
+void Dictionary::addMember(Identifier const& id, Value* v) {
+	m_value[id] = v;
+}
+
+Value* Dictionary::getMember(Identifier const& id) {
+	auto it = m_value.find(id);
+	if (it == m_value.end()) {
+		// TODO: return RangeError
+		return nullptr;
+	} else {
+		return it->second;
+	}
+}
+
+void Dictionary::gc_visit() {
 	if (Value::m_visited)
 		return;
 
