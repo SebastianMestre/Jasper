@@ -51,6 +51,7 @@ int main() {
 	auto parse_result = p.parse_top_level();
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
+		return 1;
 	} else {
 		parse_result.m_result->print();
 	}
