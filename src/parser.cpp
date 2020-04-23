@@ -67,11 +67,19 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminato
 	std::vector<std::unique_ptr<AST>> declarations;
 
 	while (not m_lexer->done()) {
-		if(peek()->m_type == terminator)
+		auto p0 = peek();
+
+		if(p0->m_type == terminator)
 			break;
 
-		if(peek()->m_type == token_type::END){
-			assert(0 && "hit unexpected EOF");
+		if(p0->m_type == token_type::END){
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("a declaration", p0));
+
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error(token_type_string[int(terminator)], p0));
+
+			return result;
 		}
 
 		auto declaration = parse_declaration();
