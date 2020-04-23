@@ -66,15 +66,16 @@ struct Object : Value {
 
 struct Function : Value {
 	FunctionType m_definition;
-	Scope m_scope;
+	Environment m_environment;
 
 	Function() = default;
-	Function(FunctionType, Scope);
+	Function(FunctionType, Environment);
+	
+	Value* call(ListType args);
 
 	void gc_visit() override;
 };
 
-Value* call(Function* f, ListType args);
 
 /**
  * Example:

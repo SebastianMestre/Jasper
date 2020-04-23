@@ -83,7 +83,12 @@ void Object::gc_visit() {
 	}
 }
 
-// TODO: implement Function
-// TODO: implement call
+
+
+Function::Function(FunctionType def, Environment env) : m_def(std::move(def)), m_env(std::move(env)) {}
+
+Function::call(ListType args) {
+	return m_def->run(m_env);
+}
 
 } // namespace Type
