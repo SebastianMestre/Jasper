@@ -24,7 +24,7 @@ struct Scope {
 	Scope* m_parent;
 	ObjectType m_declarations;
 
-	Value* access(Identifier i) {
+	Value* access(const Identifier& i) {
 		auto v = m_declarations.find(i);
 		
 		if (v != m_declarations.end())
@@ -35,6 +35,10 @@ struct Scope {
 
 		// TODO: ReferenceError
 		return nullptr;
+	}
+
+	void declare(const Identifier &i, Value* v) {
+		m_declarations[i] = v;
 	}
 };
 
