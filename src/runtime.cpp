@@ -59,6 +59,10 @@ void List::gc_visit() {
 
 Object::Object(ObjectType o) : m_value(std::move(o)) {}
 
+void Object::addMember(Identifier const& id, Value* v) {
+	m_value[id] = v;
+}
+
 Value* Object::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
@@ -95,6 +99,10 @@ Value* Dictionary::getMember(Identifier const& id) {
 	} else {
 		return it->second;
 	}
+}
+
+void Dictionary::removeMember(Identifier const& id) {
+	m_value.erase(id);
 }
 
 void Dictionary::gc_visit() {
