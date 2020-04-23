@@ -51,9 +51,29 @@ Writer<std::unique_ptr<AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse top level program" } };
 
+	auto declarations = parse_declaration_list(token_type::END);
+
+	if (handle_error(result, declarations)) {
+		return result;
+	}
+
+	return declarations;
+}
+
+Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminator) {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse declaration list" } };
+
 	auto e = std::make_unique<ASTDeclarationList>();
 
 	while (not m_lexer->done()) {
+		if(peek()->m_type == terminator)
+			break;
+
+		if(peek()->m_type == token_type::END){
+			assert(0 && "hit unexpected EOF");
+		}
+
 		auto declaration = parse_declaration();
 
 		if (handle_error(result, declaration))
