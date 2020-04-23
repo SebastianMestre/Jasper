@@ -59,6 +59,11 @@ inline const char* token_type_string[] = {
 	"KEYWORD",
 
 	"KEYWORD_FN",
+	"KEYWORD_DICT",
+	"KEYWORD_OBJECT",
+	"KEYWORD_RETURN",
+	"KEYWORD_IF",
+	"KEYWORD_FOR",
 
 	"END",
 };
@@ -122,6 +127,11 @@ enum class token_type {
 	KEYWORD,
 
 	KEYWORD_FN,
+	KEYWORD_DICT,
+	KEYWORD_OBJECT,
+	KEYWORD_RETURN,
+	KEYWORD_IF,
+	KEYWORD_FOR,
 
 	END,
 };

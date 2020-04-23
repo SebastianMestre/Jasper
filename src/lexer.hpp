@@ -72,6 +72,7 @@ struct Lexer {
 	bool done() { return current_char() == '\0'; }
 
 	void consume_token();
+	bool consume_keyword();
 	void push_token(token_type, int);
 
 	void advance();
@@ -81,4 +82,5 @@ struct Lexer {
 	Token const& current_token() { return token_at(m_token_index); }
 	Token const& next_token() { return token_at(m_token_index + 1); }
 	Token const& peek_token(int dt = 0) { return token_at(m_token_index + dt); }
+
 };
