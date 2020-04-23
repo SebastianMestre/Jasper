@@ -58,6 +58,7 @@ struct Object : Value {
 	Object() = default;
 	Object(ObjectType);
 
+	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
 	
 	void gc_visit() override;
@@ -71,6 +72,7 @@ struct Dictionary : Value {
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
+	void removeMember(Identifier const& id);
 
 	void gc_visit() override;
 };
