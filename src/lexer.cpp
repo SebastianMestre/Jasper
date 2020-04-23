@@ -27,6 +27,70 @@ void Lexer::push_token(token_type tt, int width) {
 	m_current_column += width;
 }
 
+bool Lexer::consume_keyword() {
+	// TODO: make table based?
+	char c0 = peek_char(0);
+	switch (c0) {
+	case 'f': {
+		char c1 = peek_char(1);
+		if (c1 == 'n') {
+			if (not is_identifier_char(peek_char(2))) {
+				push_token(token_type::KEYWORD_FN, 2);
+				return true;
+			}
+		} else if (c1 == 'o') {
+			char c2 = peek_char(2);
+			if (c2 == 'r') {
+				if (not is_identifier_char(peek_char(3))) {
+					push_token(token_type::KEYWORD_FOR, 3);
+					return true;
+				}
+			}
+		}
+	} break;
+	case 'i': {
+		char c1 = peek_char(1);
+		if (c1 == 'f') {
+			if (not is_identifier_char(peek_char(2))) {
+				push_token(token_type::KEYWORD_IF, 2);
+				return true;
+			}
+		}
+	} break;
+	case 'r':
+		if (peek_char(1) == 'e' &&
+		    peek_char(2) == 't' &&
+		    peek_char(3) == 'u' &&
+		    peek_char(4) == 'r' &&
+		    peek_char(5) == 'n' &&
+		    not is_identifier_char(peek_char(6))
+		) {
+			push_token(token_type::KEYWORD_RETURN, 6);
+			return true;
+		}
+		break;
+	case 'd':
+		if (peek_char(1) == 'i' &&
+		    peek_char(2) == 'c' &&
+		    peek_char(3) == 't' &&
+		    not is_identifier_char(peek_char(4))
+		) {
+			push_token(token_type::KEYWORD_DICT, 4);
+			return true;
+		}
+		break;
+	case 'o':
+		if (peek_char(1) == 'b' &&
+		    peek_char(2) == 't' &&
+		    not is_identifier_char(peek_char(3))
+		) {
+			push_token(token_type::KEYWORD_OBJECT, 3);
+			return true;
+		}
+	}
+	return false;
+}
+
 void Lexer::consume_token() {
 
 	switch (current_char()) {
@@ -242,49 +306,8 @@ void Lexer::consume_token() {
 		break;
 
 	default:
-
-		// tokenize keywords
-		// TODO: make table based?
-		if (peek_char(0) == 'f') {
-			if (peek_char(1) == 'n') {
-				if (not is_identifier_char(peek_char(2))){
-					push_token(token_type::KEYWORD_FN, 2);
-					return;
-				}
-			} else if (peek_char(1) == 'o') {
-				if (peek_char(2) == 'r') {
-					if (not is_identifier_char(peek_char(3))){
-						// FIXME: KEYWORD_FOR
-						push_token(token_type::KEYWORD, 3);
-						return;
-					}
-				}
-			}
-		}else if(peek_char(0) == 'i'){
-			if (peek_char(1) == 'f') {
-				if (not is_identifier_char(peek_char(2))){
-					// FIXME: KEYWORD_IF
-					push_token(token_type::KEYWORD, 2);
-					return;
-				}
-			}
-		}else if(peek_char(0) == 'r'){
-			if(peek_char(1) == 'e'){
-				if(peek_char(2) == 't'){
-					if(peek_char(3) == 'u'){
-						if(peek_char(4) == 'r'){
-							if(peek_char(5) == 'n'){
-								if (not is_identifier_char(peek_char(6))){
-									// FIXME: KEYWORD_RETURN
-									push_token(token_type::KEYWORD, 6);
-									return;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+		if(consume_keyword())
+			return;
 
 		if (is_identifier_start_char(current_char())) {
 			std::string text;
