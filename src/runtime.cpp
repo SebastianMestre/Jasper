@@ -126,7 +126,17 @@ void Dictionary::gc_visit() {
 	}
 }
 
-Function::Function(FunctionType* def, Scope* scope) : m_def(def), m_scope(scope) {}
+Function::Function(FunctionType def, Scope* scope) : m_def(def), m_scope(scope) {}
+
+void Function::gc_visit() {
+	if (Value::m_visited)
+		return;
+	
+	Value::m_visited = true;
+	for (auto dec : m_scope->m_declarations)
+		dec.second->gc_visit();
+}
+
 // TODO: implement call
 
 } // namespace Type
