@@ -72,6 +72,22 @@ Type::Value* ASTStringLiteral::eval(Type::Environment &e) {
 
 
 
+void ASTObjectLiteral::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ ObjectLiteral\n"
+		<< tab << "Declarations:\n";
+	m_body->print(d+1);
+	std::cout << stab << "]\n";
+}
+
+Type::Value* ASTObjectLiteral::run(Type::Environment &e) {
+	assert(0);
+	return nullptr;
+};
+
+
+
 void ASTIdentifier::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
