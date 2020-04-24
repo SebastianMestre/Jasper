@@ -58,6 +58,12 @@ Type::Integer* GC::new_integer(int i) {
 	return result;
 }
 
+Type::Float* GC::new_float(float f) {
+	auto result = new Type::Float(f);
+	m_blocks.push_back(result);
+	return result;
+}
+
 Type::String* GC::new_string(std::string s) {
 	auto result = new Type::String(std::move(s));
 	m_blocks.push_back(result);

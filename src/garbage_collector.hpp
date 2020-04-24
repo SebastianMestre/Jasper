@@ -24,6 +24,7 @@ public:
 	Type::Object* new_object ();
 	Type::List* new_list ();
 	Type::Integer* new_integer (int);
+	Type::Float* new_float (float);
 	Type::String* new_string (std::string);
 	// TODO: Function
 	Type::Error* new_error (std::string);
