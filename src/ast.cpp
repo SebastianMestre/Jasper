@@ -88,6 +88,23 @@ Type::Value* ASTObjectLiteral::run(Type::Environment &e) {
 
 
 
+// TODO: this is exactly the same as ASTObjectLiteral, maybe do something about it?
+void ASTDictionaryLiteral::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ DictionaryLiteral\n"
+		<< tab << "Declarations:\n";
+	m_body->print(d+1);
+	std::cout << stab << "]\n";
+}
+
+Type::Value* ASTDictionaryLiteral::run(Type::Environment &e) {
+	assert(0);
+	return nullptr;
+};
+
+
+
 void ASTIdentifier::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
