@@ -25,9 +25,11 @@ int main() {
 
 	w := fn (a,b:int,c){};
 
-	f := fn (name : string) {
+	f := obt {
 		greeting := "Hello, ";
-		print(greeting + name);
+		__invoke := fn (name : string) {
+			print(greeting + name);
+		};
 	};
 
 	__invoke := fn () {
