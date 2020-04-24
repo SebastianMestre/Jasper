@@ -51,6 +51,12 @@ struct ASTObjectLiteral : public AST {
 	Type::Value* run(Type::Environment &e) override;
 };
 
+struct ASTDictionaryLiteral : public AST {
+	std::unique_ptr<AST> m_body;
+	void print(int d) override;
+	Type::Value* run(Type::Environment &e) override;
+};
+
 struct ASTIdentifier : public AST {
 	std::string m_text;
 
