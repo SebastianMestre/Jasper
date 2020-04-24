@@ -62,7 +62,7 @@ int main() {
 		return 1;
 	} 
 
-	parse_result.m_result->print();
+	//parse_result.m_result->print();
 	auto& top_level = static_cast<ASTDeclarationList&>(*parse_result.m_result);
 
 	GarbageCollector::GC gc;
@@ -77,7 +77,10 @@ int main() {
 	auto* entry_point = dynamic_cast<Type::Function*>(env.m_scope->access("__invoke"));
 	if(!entry_point){
 		std::cerr << "__invoke is not a function\n";
+		return 1;
 	}
+
+	entry_point->m_def->print(0);
 
 	// entry_point->call(env);
 
