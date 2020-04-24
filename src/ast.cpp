@@ -165,7 +165,7 @@ void ASTArgumentList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTArgumentList::run(Type::Environment &e) {
+Type::Value* ASTArgumentList::eval(Type::Environment &e) {
 	// TODO: return as list?
 	assert(0);
 	return e.m_gc->null();
