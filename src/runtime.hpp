@@ -87,11 +87,11 @@ struct Dictionary : Value {
 };
 
 struct Function : Value {
-	FunctionType m_definition;
-	Scope m_scope;
+	FunctionType m_def;
+	Scope* m_scope;
 
 	Function() = default;
-	Function(FunctionType, Scope);
+	Function(FunctionType, Scope*);
 
 	void gc_visit() override;
 };

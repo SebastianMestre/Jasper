@@ -126,7 +126,7 @@ void Dictionary::gc_visit() {
 	}
 }
 
-// TODO: implement Function
+Function::Function(FunctionType* def, Scope* scope) : m_def(def), m_scope(scope) {}
 // TODO: implement call
 
 } // namespace Type
