@@ -404,7 +404,8 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 }
 
 Writer<std::unique_ptr<AST>> Parser::parse_object_literal () {
-	Writer<std::unique_ptr<AST>> result;
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Failed to parse object literal" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_OBJECT))) {
 		return result;
@@ -431,7 +432,8 @@ Writer<std::unique_ptr<AST>> Parser::parse_object_literal () {
 }
 
 Writer<std::unique_ptr<AST>> Parser::parse_dictionary_literal () {
-	Writer<std::unique_ptr<AST>> result;
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Failed to parse dictionary literal" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_DICT))) {
 		return result;
