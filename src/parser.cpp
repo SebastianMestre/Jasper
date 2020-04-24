@@ -377,6 +377,13 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 		return function;
 	}
 
+	if (token->m_type == token_type::KEYWORD_OBJECT) {
+		auto object = parse_object_literal();
+		if (handle_error(result, object))
+			return result;
+		return object;
+	}
+
 	result.m_error.m_sub_errors.push_back({ make_expected_error(
 	    token_type_string[int(token_type::KEYWORD_FN)], token) });
 
