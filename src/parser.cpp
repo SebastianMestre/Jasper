@@ -389,6 +389,33 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 	return result;
 }
 
+Writer<std::unique_ptr<AST>> Parser::parse_object_literal () {
+	Writer<std::unique_ptr<AST>> result;
+
+	if (handle_error(result, require(token_type::KEYWORD_OBJECT))) {
+		return result;
+	}
+
+	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+		return result;
+	}
+
+	auto declarations = parse_declaration_list(token_type::BRACE_CLOSE);
+
+	if (handle_error(result, declarations)) {
+		return result;
+	}
+
+	if (handle_error(result, require(token_type::BRACE_CLOSE))) {
+		return result;
+	}
+
+	auto e = std::make_unique<ASTObjectLiteral>();
+	e->m_body = std::move(declarations.m_result);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
 /*
  * functions look like this:
  * fn (x : int, y, z : string) {
