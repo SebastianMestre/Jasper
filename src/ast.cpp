@@ -81,7 +81,7 @@ void ASTObjectLiteral::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTObjectLiteral::run(Type::Environment &e) {
+Type::Value* ASTObjectLiteral::eval(Type::Environment &e) {
 	assert(0);
 	return nullptr;
 };
@@ -98,7 +98,7 @@ void ASTDictionaryLiteral::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDictionaryLiteral::run(Type::Environment &e) {
+Type::Value* ASTDictionaryLiteral::eval(Type::Environment &e) {
 	assert(0);
 	return nullptr;
 };
