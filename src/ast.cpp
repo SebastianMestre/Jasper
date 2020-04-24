@@ -13,7 +13,7 @@ void ASTDeclarationList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDeclarationList::run(Type::Environment &e) {
+Type::Value* ASTDeclarationList::eval(Type::Environment &e) {
 	return e.m_gc->null();
 };
 
@@ -32,7 +32,7 @@ void ASTDeclaration::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDeclaration::run(Type::Environment &e) {
+Type::Value* ASTDeclaration::eval(Type::Environment &e) {
 	// TODO: type and mutable check -> return error
 	return e.m_gc->null();
 };
@@ -45,7 +45,7 @@ void ASTNumberLiteral::print(int d) {
 	std::cout << stab << "[ Number " << m_text << " ]\n";
 }
 
-Type::Value* ASTNumberLiteral::run(Type::Environment &e) {
+Type::Value* ASTNumberLiteral::eval(Type::Environment &e) {
 	// TODO: float / dec / int ...
 	assert(0);
 	return e.m_gc->null();
@@ -61,7 +61,7 @@ void ASTStringLiteral::print(int d) {
 		<< stab << "]\n";
 }
 
-Type::Value* ASTStringLiteral::run(Type::Environment &e) {
+Type::Value* ASTStringLiteral::eval(Type::Environment &e) {
 	return e.m_gc->new_string(m_text);
 };
 
@@ -75,7 +75,7 @@ void ASTIdentifier::print(int d) {
 		<< stab << "]\n";
 }
 
-Type::Value* ASTIdentifier::run(Type::Environment &e) {
+Type::Value* ASTIdentifier::eval(Type::Environment &e) {
 	return e.m_scope->access(m_text);
 };
 
@@ -90,7 +90,7 @@ void ASTBlock::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTBlock::run(Type::Environment &e) {
+Type::Value* ASTBlock::eval(Type::Environment &e) {
 	return e.m_gc->null();
 };
 
@@ -110,7 +110,7 @@ void ASTFunction::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTFunction::run(Type::Environment &e) {
+Type::Value* ASTFunction::eval(Type::Environment &e) {
 	// TODO: create definition?
 	assert(0);
 	return e.m_gc->null();
@@ -130,7 +130,7 @@ void ASTBinaryExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTBinaryExpression::run(Type::Environment &e) {
+Type::Value* ASTBinaryExpression::eval(Type::Environment &e) {
 	return nullptr;
 }
 
@@ -147,7 +147,7 @@ void ASTCallExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTCallExpression::run(Type::Environment &e) {
+Type::Value* ASTCallExpression::eval(Type::Environment &e) {
 	// TODO: fetch function definition and scope and run
 	assert(0);
 	return e.m_gc->null();
