@@ -34,6 +34,11 @@ void ASTDeclaration::print(int d) {
 
 Type::Value* ASTDeclaration::eval(Type::Environment &e) {
 	// TODO: type and mutable check -> return error
+	if (m_value)
+		e.m_scope->declare(m_identifier, e.m_gc->null());
+	else
+		e.m_scope->declare(m_identifier, m_value);
+
 	return e.m_gc->null();
 };
 
