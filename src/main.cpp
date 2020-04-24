@@ -74,7 +74,13 @@ int main() {
 
 	top_level.eval(env);
 
-	auto* entry_point = dynamic_cast<Type::Function*>(env.m_scope->access("__invoke"));
+	auto* entry_point_ptr = env.m_scope->access("__invoke");
+	if(!entry_point_ptr){
+		std::cerr << "__invoke is not defined\n";
+		return 1;
+	}
+
+	auto* entry_point = dynamic_cast<Type::Function*>(entry_point_ptr);
 	if(!entry_point){
 		std::cerr << "__invoke is not a function\n";
 		return 1;
