@@ -36,6 +36,12 @@ int main() {
 		f.greeting = "Hey, ";
 		f("Sailor");
 	};
+
+	names := dict {
+		user0 := "peter";
+		user1 := "joseph";
+		user2 := "anne";
+	};
 )";
 
 	for (char c : s) {
