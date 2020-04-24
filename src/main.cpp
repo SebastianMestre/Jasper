@@ -4,6 +4,8 @@
 
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "types.hpp"
+#include "garbage_collector.hpp"
 
 int main() {
 	std::vector<char> v;
@@ -54,15 +56,30 @@ int main() {
 	Parser p;
 	p.m_lexer = &l;
 
-	std::cout << s << '\n';
-
 	auto parse_result = p.parse_top_level();
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
 		return 1;
-	} else {
-		parse_result.m_result->print();
+	} 
+
+	parse_result.m_result->print();
+	auto& top_level = static_cast<ASTDeclarationList&>(*parse_result.m_result);
+
+	GarbageCollector::GC gc;
+	Type::Scope scope;
+	Type::Environment env;
+
+	env.m_gc = &gc;
+	env.m_scope = &scope;
+
+	top_level.eval(env);
+
+	auto* entry_point = dynamic_cast<Type::Function*>(env.m_scope->access("__invoke"));
+	if(!entry_point){
+		std::cerr << "__invoke is not a function\n";
 	}
+
+	// entry_point->call(env);
 
 	return 0;
 }
