@@ -16,6 +16,7 @@ public:
 	std::vector<Type::Value*> m_roots;
 
 	GC();
+	~GC();
 	
 	void run ();
 	void add_root (Type::Value* new_root);
