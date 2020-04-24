@@ -51,12 +51,12 @@ void ASTNumberLiteral::print(int d) {
 }
 
 Type::Value* ASTNumberLiteral::eval(Type::Environment &e) {
-	// TODO: float / dec / int ...
-	assert(0);
-	return e.m_gc->null();
+	for (char a : m_text)
+		if (a == '.')
+			return e.m_gc->new_float(std::stof(m_text));
+
+	return e.m_gc->new_integer(std::stoi(m_text));
 };
-
-
 
 void ASTStringLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
