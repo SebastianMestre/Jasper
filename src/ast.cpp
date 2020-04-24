@@ -37,7 +37,7 @@ Type::Value* ASTDeclaration::eval(Type::Environment &e) {
 	if (m_value)
 		e.m_scope->declare(m_identifier, e.m_gc->null());
 	else
-		e.m_scope->declare(m_identifier, m_value);
+		e.m_scope->declare(m_identifier, m_value->eval(e));
 
 	return e.m_gc->null();
 };

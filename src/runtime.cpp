@@ -19,6 +19,17 @@ void Integer::gc_visit() {
 
 
 
+Float::Float(float v) : m_value(v) {}
+
+void Float::gc_visit() {
+	if (Value::m_visited)
+		return;
+
+	Value::m_visited = true;
+}
+
+
+
 String::String(std::string s) : m_value(std::move(s)) {}
 
 void String::gc_visit() {

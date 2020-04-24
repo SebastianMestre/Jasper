@@ -31,6 +31,15 @@ struct Integer : Value {
 	void gc_visit() override;
 };
 
+struct Float : Value {
+	float m_value = 0.0;
+
+	Float() = default;
+	Float(float v);
+
+	void gc_visit() override;
+};
+
 struct String : Value {
 	std::string m_value = "";
 
