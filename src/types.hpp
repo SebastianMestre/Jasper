@@ -21,7 +21,7 @@ using ListType = std::vector<Value*>;
 using FunctionType = ::ASTFunction*;
 
 struct Scope {
-	Scope* m_parent;
+	Scope* m_parent {nullptr};
 	ObjectType m_declarations;
 
 	Value* access(const Identifier& i) {
