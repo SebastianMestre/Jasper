@@ -26,7 +26,7 @@ public:
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);
 	Type::String* new_string (std::string);
-	// TODO: Function
+	Type::Function* new_function (Type::FunctionType, Type::Scope*);
 	Type::Error* new_error (std::string);
 
 	// TODO: Scope

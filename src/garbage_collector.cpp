@@ -70,6 +70,12 @@ Type::String* GC::new_string(std::string s) {
 	return result;
 }
 
+Type::Function* GC::new_function(Type::FunctionType def, Type::Scope* scope) {
+	auto result = new Type::Function(std::move(def), std::move(scope));
+	m_blocks.push_back(result);
+	return result;
+}
+
 Type::Error* GC::new_error(std::string s) {
 	auto result = new Type::Error(std::move(s));
 	m_blocks.push_back(result);
