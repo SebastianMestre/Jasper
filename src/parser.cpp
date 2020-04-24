@@ -384,6 +384,13 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 		return object;
 	}
 
+	if (token->m_type == token_type::KEYWORD_DICT) {
+		auto dictionary = parse_dictionary_literal();
+		if (handle_error(result, dictionary))
+			return result;
+		return dictionary;
+	}
+
 	result.m_error.m_sub_errors.push_back({ make_expected_error(
 	    token_type_string[int(token_type::KEYWORD_FN)], token) });
 
