@@ -48,13 +48,13 @@ struct ASTStringLiteral : public AST {
 struct ASTObjectLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	void print(int d) override;
-	Type::Value* run(Type::Environment &e) override;
+	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTDictionaryLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	void print(int d) override;
-	Type::Value* run(Type::Environment &e) override;
+	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTIdentifier : public AST {
