@@ -22,7 +22,7 @@ __invoke := fn () {
 And here is a possible refactor: Wrap a funcion in an object to add some configuration.
 
 ```c++
-f := {
+f := obt {
 	greeting := "Hello, ";
 	__invoke := fn (name) {
 		return greeting + name;
