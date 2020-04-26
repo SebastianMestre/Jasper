@@ -1,40 +1,25 @@
-# parse stuff
+# JS++
 
-Experiments on figuring out how to write a parser that gives
-somewhat useful error messages. Also, it should parse stuff.
+We are trying to make nice programming language.
 
-Here is an example of a sentence we want to be able to parse:
+ - easy to refactor
+ - consistent
+ - nice to use
+
+Here is an example piece of code:
 
 ```c++
-greeting := "Hello, ";
 f := fn (name) {
+	greeting := "Hello, ";
 	return greeting + name;
 };
 
 __invoke := fn () {
-	greeting = "Hello, ";
 	print(f("Programmer"));
 };
 ```
 
-Here is another one, it is almost equivalent, but now we can
-pass `obj` around:
-
-```c++
-obj := {
-	greeting := "Hello, ";
-	f := fn (name) {
-		return greeting + name;
-	};
-};
-
-__invoke := fn () {
-	obj.greeting = "Hey, ";
-	print(obj.f("Programmer"));
-};
-```
-
-And here is one last one, where we restore the old interface.
+And here is a possible refactor: Wrap a funcion in an object to add some configuration.
 
 ```c++
 f := {
