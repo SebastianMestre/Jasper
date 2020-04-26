@@ -62,15 +62,11 @@ int main() {
 		return 1;
 	} 
 
-	//parse_result.m_result->print();
 	auto& top_level = static_cast<ASTDeclarationList&>(*parse_result.m_result);
 
 	GarbageCollector::GC gc;
 	Type::Scope scope;
-	Type::Environment env;
-
-	env.m_gc = &gc;
-	env.m_scope = &scope;
+	Type::Environment env = {&gc, &scope};
 
 	top_level.eval(env);
 
@@ -85,8 +81,6 @@ int main() {
 		std::cerr << "__invoke is not a function\n";
 		return 1;
 	}
-
-	entry_point->m_def->print(0);
 
 	// entry_point->call(env);
 
