@@ -14,7 +14,9 @@ void ASTDeclarationList::print(int d) {
 }
 
 Type::Value* ASTDeclarationList::eval(Type::Environment &e) {
-	return e.m_gc->null();
+	for(auto& decl : m_declarations)
+		decl->eval(e);
+	return nullptr;
 };
 
 

@@ -8,6 +8,10 @@ GC::GC() {
 	m_null = new Type::Null;
 }
 
+GC::~GC(){
+	delete m_null;
+}
+
 void GC::run() {
 	for (auto* block : m_blocks) {
 		block->m_visited = false;
