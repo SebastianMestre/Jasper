@@ -108,10 +108,12 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 
 	Writer<Token const*> type;
 
-	if (handle_error(result, require(token_type::DECLARE_ASSIGN))) {
+	auto p0 = peek();
 
-		if (handle_error(result, require(token_type::DECLARE)))
-			return result;
+	if (p0->m_type == token_type::DECLARE_ASSIGN) {
+		m_lexer->advance();
+	} else if (p0->m_type == token_type::DECLARE) {
+		m_lexer->advance();
 
 		type = require(token_type::IDENTIFIER);
 		if (handle_error(result, type))
@@ -119,6 +121,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 
 		if (handle_error(result, require(token_type::ASSIGN)))
 			return result;
+	} else {
+		result.m_error.m_sub_errors.push_back(
+		    make_expected_error("':' or ':='", p0));
 	}
 
 	auto value = parse_expression();
