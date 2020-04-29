@@ -136,7 +136,7 @@ Type::Value* ASTBlock::eval(Type::Environment &e) {
 
 
 
-void ASTFunction::print(int d) {
+void ASTFunctionLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Function\n"
@@ -150,7 +150,7 @@ void ASTFunction::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTFunction::eval(Type::Environment &e) {
+Type::Value* ASTFunctionLiteral::eval(Type::Environment &e) {
 	return e.m_gc->new_function(this, e.m_scope);
 };
 
@@ -207,5 +207,21 @@ void ASTArgumentList::print(int d) {
 Type::Value* ASTArgumentList::eval(Type::Environment &e) {
 	// TODO: return as list?
 	assert(0);
+	return e.m_gc->null();
+};
+
+
+
+void ASTReturnStatement::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ ReturnStatement\n";
+	m_value->print(d+1);
+	std::cout << stab << "]\n";
+}
+
+Type::Value* ASTReturnStatement::eval(Type::Environment &e) {
+	// TODO: implement
+	std::cerr << "WARNING: not implemented action (return statement)\n";
 	return e.m_gc->null();
 };

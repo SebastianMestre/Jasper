@@ -551,7 +551,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 		return result;
 	}
 
-	auto e = std::make_unique<ASTFunction>();
+	auto e = std::make_unique<ASTFunctionLiteral>();
 
 	e->m_body = std::move(block.m_result);
 	e->m_args = std::move(args);
@@ -599,6 +599,31 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
+Writer<std::unique_ptr<AST>> Parser::parse_return_statement() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse return statement" } };
+
+	if (handle_error(result, require(token_type::KEYWORD_RETURN))) {
+		return result;
+	}
+
+	auto value = parse_expression();
+
+	if (handle_error(result, value)) {
+		return result;
+	}
+
+	if (handle_error(result, require(token_type::SEMICOLON))) {
+		return result;
+	}
+
+	auto e = std::make_unique<ASTReturnStatement>();
+
+	e->m_value = std::move(value.m_result);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
 /*
  * Looks ahead a few tokens to predict what syntactic structure we are about to
  * parse. This prevents us from backtracking and ensures the parser runs in
@@ -608,6 +633,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse statement" } };
 
+	// TODO: recognize literals
 	auto* p0 = peek(0);
 	if (p0->m_type == token_type::IDENTIFIER) {
 		auto* p1 = peek(1);
@@ -638,12 +664,16 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 
 			return expression;
 		}
+	} else if (p0->m_type == token_type::KEYWORD_RETURN) {
+		auto return_statement = parse_return_statement();
+		if (handle_error(result, return_statement)) {
+			return result;
+		}
+		return return_statement;
 	} else {
 		// TODO: parse loops, conditionals, etc.
 
-		// TODO: clean up error reporting
-		auto err = make_expected_error(
-		    token_type_string[int(token_type::IDENTIFIER)], p0);
+		auto err = make_expected_error("a statement", p0);
 
 		result.m_error.m_sub_errors.push_back(std::move(err));
 		return result;
