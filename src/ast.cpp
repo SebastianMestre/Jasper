@@ -151,9 +151,7 @@ void ASTFunction::print(int d) {
 }
 
 Type::Value* ASTFunction::eval(Type::Environment &e) {
-	// TODO: create definition?
-	assert(0);
-	return e.m_gc->null();
+	return e.m_gc->new_function(this, e.m_scope);
 };
 
 
