@@ -34,9 +34,12 @@ int main() {
 		};
 	};
 
+	norm := fn(p){};
+
 	__invoke := fn () {
 		f.greeting = "Hey, ";
 		f("Sailor");
+		sqrt5 := obt{x:=1;y:=2;} |> norm();
 	};
 
 	names := dict {
