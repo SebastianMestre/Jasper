@@ -29,8 +29,6 @@ public:
 	Type::String* new_string (std::string);
 	Type::Function* new_function (Type::FunctionType, Type::Scope*);
 	Type::Error* new_error (std::string);
-
-	// TODO: Scope
 };
 
 }
