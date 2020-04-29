@@ -551,7 +551,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 		return result;
 	}
 
-	auto e = std::make_unique<ASTFunction>();
+	auto e = std::make_unique<ASTFunctionLiteral>();
 
 	e->m_body = std::move(block.m_result);
 	e->m_args = std::move(args);

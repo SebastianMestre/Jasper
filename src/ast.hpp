@@ -15,21 +15,6 @@ struct AST {
 
 constexpr char tabc = ' ';
 
-struct ASTDeclarationList : public AST {
-	std::vector<std::unique_ptr<AST>> m_declarations;
-
-	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
-};
-
-struct ASTDeclaration : public AST {
-	std::string m_identifier;
-	std::string m_typename;
-	std::unique_ptr<AST> m_value;
-
-	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
-};
 
 struct ASTNumberLiteral : public AST {
 	std::string m_text;
@@ -53,6 +38,31 @@ struct ASTObjectLiteral : public AST {
 
 struct ASTDictionaryLiteral : public AST {
 	std::unique_ptr<AST> m_body;
+	void print(int d) override;
+	Type::Value* eval(Type::Environment &e) override;
+};
+
+struct ASTFunctionLiteral : public AST {
+	std::unique_ptr<AST> m_body;
+	std::vector<std::unique_ptr<AST>> m_args;
+
+	void print(int d) override;
+	Type::Value* eval(Type::Environment &e) override;
+};
+
+
+struct ASTDeclarationList : public AST {
+	std::vector<std::unique_ptr<AST>> m_declarations;
+
+	void print(int d) override;
+	Type::Value* eval(Type::Environment &e) override;
+};
+
+struct ASTDeclaration : public AST {
+	std::string m_identifier;
+	std::string m_typename;
+	std::unique_ptr<AST> m_value;
+
 	void print(int d) override;
 	Type::Value* eval(Type::Environment &e) override;
 };
@@ -95,10 +105,3 @@ struct ASTBlock : public AST {
 	Type::Value* eval(Type::Environment &e) override;
 };
 
-struct ASTFunction : public AST {
-	std::unique_ptr<AST> m_body;
-	std::vector<std::unique_ptr<AST>> m_args;
-
-	void print(int d) override; 
-	Type::Value* eval(Type::Environment &e) override;
-};

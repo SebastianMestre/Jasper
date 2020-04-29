@@ -136,7 +136,7 @@ Type::Value* ASTBlock::eval(Type::Environment &e) {
 
 
 
-void ASTFunction::print(int d) {
+void ASTFunctionLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Function\n"
@@ -150,7 +150,7 @@ void ASTFunction::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTFunction::eval(Type::Environment &e) {
+Type::Value* ASTFunctionLiteral::eval(Type::Environment &e) {
 	return e.m_gc->new_function(this, e.m_scope);
 };
 
