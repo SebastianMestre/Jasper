@@ -76,6 +76,16 @@ int main() {
 		return 1;
 	}
 
+	if(entry_point_ptr == nullptr){
+		std::cerr << "entry point is nullptr: " << entry_point_ptr << "\n";
+		return 1;
+	}
+
+	if(entry_point_ptr == gc.null()){
+		std::cerr << "entry point is null: " << entry_point_ptr << "\n";
+		return 1;
+	}
+
 	auto* entry_point = dynamic_cast<Type::Function*>(entry_point_ptr);
 	if(!entry_point){
 		std::cerr << "__invoke is not a function\n";
