@@ -94,5 +94,7 @@ int main() {
 
 	// entry_point->call(env);
 
+	gc.run();
+
 	return 0;
 }
