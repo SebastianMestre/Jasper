@@ -1,14 +1,18 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 jobs:
-  build_gcc_latest:
+  build_and_run_gcc_latest:
     docker:
       - image: gcc:latest
     steps:
       - checkout
-      - run: (cd src; make -j && ../bin/iseeaparse)
+      - run:
+          name: Build
+          command: make -C ./src -j
+      - run:
+          name: Run
+          command: ./bin/iseeaparse
 workflows:
   version: 2.1
-  build:
+  build_and_run:
     jobs:
-      - build_gcc_latest
+      - build_and_run_gcc_latest
