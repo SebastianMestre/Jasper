@@ -4,13 +4,10 @@
 #include <memory>
 #include <vector>
 
-#include "types.hpp"
 #include "token_type.hpp"
-#include "environment.hpp"
 
 struct AST {
 	virtual void print(int d = 1) = 0;
-	virtual Type::Value* eval(Type::Environment &e) = 0;
 	virtual ~AST() = default;
 };
 
@@ -21,26 +18,22 @@ struct ASTNumberLiteral : public AST {
 	std::string m_text;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTStringLiteral : public AST {
 	std::string m_text;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTObjectLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTDictionaryLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTFunctionLiteral : public AST {
@@ -48,7 +41,6 @@ struct ASTFunctionLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 
@@ -56,7 +48,6 @@ struct ASTDeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTDeclaration : public AST {
@@ -65,14 +56,12 @@ struct ASTDeclaration : public AST {
 	std::unique_ptr<AST> m_value;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTIdentifier : public AST {
 	std::string m_text;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTBinaryExpression : public AST {
@@ -81,7 +70,6 @@ struct ASTBinaryExpression : public AST {
 	std::unique_ptr<AST> m_rhs;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTCallExpression : public AST {
@@ -89,26 +77,22 @@ struct ASTCallExpression : public AST {
 	std::unique_ptr<AST> m_args;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTArgumentList : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTBlock : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };
 
 struct ASTReturnStatement : public AST {
 	std::unique_ptr<AST> m_value;
 
 	void print(int d) override;
-	Type::Value* eval(Type::Environment &e) override;
 };

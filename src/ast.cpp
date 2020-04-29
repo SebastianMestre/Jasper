@@ -13,14 +13,6 @@ void ASTDeclarationList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDeclarationList::eval(Type::Environment &e) {
-	for(auto& decl : m_declarations)
-		decl->eval(e);
-	return nullptr;
-};
-
-
-
 void ASTDeclaration::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -34,31 +26,11 @@ void ASTDeclaration::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDeclaration::eval(Type::Environment &e) {
-	// TODO: type and mutable check -> return error
-	if (!m_value)
-		e.m_scope->declare(m_identifier, e.m_gc->null());
-	else
-		e.m_scope->declare(m_identifier, m_value->eval(e));
-
-	return e.m_gc->null();
-};
-
-
-
 void ASTNumberLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Number " << m_text << " ]\n";
 }
-
-Type::Value* ASTNumberLiteral::eval(Type::Environment &e) {
-	for (char a : m_text)
-		if (a == '.')
-			return e.m_gc->new_float(std::stof(m_text));
-
-	return e.m_gc->new_integer(std::stoi(m_text));
-};
 
 void ASTStringLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
@@ -67,12 +39,6 @@ void ASTStringLiteral::print(int d) {
 		<< tab << "Value: " << m_text << "\n"
 		<< stab << "]\n";
 }
-
-Type::Value* ASTStringLiteral::eval(Type::Environment &e) {
-	return e.m_gc->new_string(m_text);
-};
-
-
 
 void ASTObjectLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
@@ -83,14 +49,6 @@ void ASTObjectLiteral::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTObjectLiteral::eval(Type::Environment &e) {
-	std::cerr << "WARNING: not implemented action (Creating an object)\n";
-	return nullptr;
-};
-
-
-
-// TODO: this is exactly the same as ASTObjectLiteral, maybe do something about it?
 void ASTDictionaryLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -100,13 +58,6 @@ void ASTDictionaryLiteral::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTDictionaryLiteral::eval(Type::Environment &e) {
-	std::cerr << "WARNING: not implemented action (Creating a dictionary)\n";
-	return nullptr;
-};
-
-
-
 void ASTIdentifier::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -114,12 +65,6 @@ void ASTIdentifier::print(int d) {
 		<< tab << "Name: " << m_text << '\n'
 		<< stab << "]\n";
 }
-
-Type::Value* ASTIdentifier::eval(Type::Environment &e) {
-	return e.m_scope->access(m_text);
-};
-
-
 
 void ASTBlock::print(int d) {
 	std::string stab(d - 1, tabc);
@@ -129,12 +74,6 @@ void ASTBlock::print(int d) {
 		child->print(d + 1);
 	std::cout << stab << "]\n";
 }
-
-Type::Value* ASTBlock::eval(Type::Environment &e) {
-	return e.m_gc->null();
-};
-
-
 
 void ASTFunctionLiteral::print(int d) {
 	std::string stab(d - 1, tabc);
@@ -150,12 +89,6 @@ void ASTFunctionLiteral::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTFunctionLiteral::eval(Type::Environment &e) {
-	return e.m_gc->new_function(this, e.m_scope);
-};
-
-
-
 void ASTBinaryExpression::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -168,13 +101,6 @@ void ASTBinaryExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTBinaryExpression::eval(Type::Environment &e) {
-	std::cerr << "WARNING: not implemented action (Evaluating binary expression)\n";
-	return nullptr;
-}
-
-
-
 void ASTCallExpression::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -186,14 +112,6 @@ void ASTCallExpression::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTCallExpression::eval(Type::Environment &e) {
-	// TODO: fetch function definition and scope and run
-	assert(0);
-	return e.m_gc->null();
-};
-
-
-
 void ASTArgumentList::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -204,14 +122,6 @@ void ASTArgumentList::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTArgumentList::eval(Type::Environment &e) {
-	// TODO: return as list?
-	assert(0);
-	return e.m_gc->null();
-};
-
-
-
 void ASTReturnStatement::print(int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -220,8 +130,3 @@ void ASTReturnStatement::print(int d) {
 	std::cout << stab << "]\n";
 }
 
-Type::Value* ASTReturnStatement::eval(Type::Environment &e) {
-	// TODO: implement
-	std::cerr << "WARNING: not implemented action (return statement)\n";
-	return e.m_gc->null();
-};
