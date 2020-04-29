@@ -41,6 +41,7 @@ inline const char* token_type_string[] = {
 
 	"DOT",
 	"COMMA",
+	"PIZZA",
 
 	"BRACE_OPEN",
 	"BRACKET_OPEN",
@@ -109,6 +110,7 @@ enum class token_type {
 
 	DOT,
 	COMMA,
+	PIZZA,
 
 	BRACE_OPEN,
 	BRACKET_OPEN,
