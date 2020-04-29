@@ -38,17 +38,17 @@ void Environment::end_scope() {
 // used as a short-hand
 
 // scope
-inline void Environment::declare(const Identifier& i, Value* v) { m_scope->declare(i,v); }
-inline Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
+void Environment::declare(const Identifier& i, Value* v) { m_scope->declare(i,v); }
+Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
 
 // gargabe_collector
-inline Null* Environment::null() { return m_gc->null(); }
-inline Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
-inline Float* Environment::new_float(float f) { return m_gc->new_float(f); }
-inline String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
-inline List* Environment::new_list() { return m_gc->new_list(); }
-inline Object* Environment::new_object() { return m_gc->new_object(); }
-inline Function* Environment::new_function(FunctionType def, Scope* s) { return m_gc->new_function(def, s); }
-inline Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
+Null* Environment::null() { return m_gc->null(); }
+Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
+Float* Environment::new_float(float f) { return m_gc->new_float(f); }
+String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
+List* Environment::new_list() { return m_gc->new_list(); }
+Object* Environment::new_object() { return m_gc->new_object(); }
+Function* Environment::new_function(FunctionType def, Scope* s) { return m_gc->new_function(def, s); }
+Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
 
 }
