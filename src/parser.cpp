@@ -633,6 +633,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse statement" } };
 
+	// TODO: recognize literals
 	auto* p0 = peek(0);
 	if (p0->m_type == token_type::IDENTIFIER) {
 		auto* p1 = peek(1);
@@ -663,12 +664,16 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 
 			return expression;
 		}
+	} else if (p0->m_type == token_type::KEYWORD_RETURN) {
+		auto return_statement = parse_return_statement();
+		if (handle_error(result, return_statement)) {
+			return result;
+		}
+		return return_statement;
 	} else {
 		// TODO: parse loops, conditionals, etc.
 
-		// TODO: clean up error reporting
-		auto err = make_expected_error(
-		    token_type_string[int(token_type::IDENTIFIER)], p0);
+		auto err = make_expected_error("a statement", p0);
 
 		result.m_error.m_sub_errors.push_back(std::move(err));
 		return result;
