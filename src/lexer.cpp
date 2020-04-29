@@ -159,6 +159,9 @@ void Lexer::consume_token() {
 		case '|':
 			push_token(token_type::LOGIC_IOR, 2);
 			break;
+		case '>':
+			push_token(token_type::PIZZA, 2);
+			break;
 		case '=':
 			push_token(token_type::IOR_TO, 2);
 			break;
