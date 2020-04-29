@@ -9,6 +9,8 @@
 
 namespace Type {
 
+struct Scope;
+
 struct Value {
 	bool m_visited = false;
 	virtual void gc_visit() = 0;

@@ -10,7 +10,8 @@ OBJNAMES := \
 	ast.o \
 	runtime.o \
 	garbage_collector.o \
-	error.o
+	error.o \
+	environment.o
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 

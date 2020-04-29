@@ -1,4 +1,5 @@
 #include "runtime.hpp"
+#include "environment.hpp"
 
 namespace Type {
 

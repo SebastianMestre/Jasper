@@ -6,6 +6,7 @@
 
 #include "types.hpp"
 #include "token_type.hpp"
+#include "environment.hpp"
 
 struct AST {
 	virtual void print(int d = 1) = 0;
