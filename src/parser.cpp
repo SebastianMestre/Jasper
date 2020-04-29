@@ -599,6 +599,31 @@ Writer<std::unique_ptr<AST>> Parser::parse_block() {
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
+Writer<std::unique_ptr<AST>> Parser::parse_return_statement() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse return statement" } };
+
+	if (handle_error(result, require(token_type::KEYWORD_RETURN))) {
+		return result;
+	}
+
+	auto value = parse_expression();
+
+	if (handle_error(result, value)) {
+		return result;
+	}
+
+	if (handle_error(result, require(token_type::SEMICOLON))) {
+		return result;
+	}
+
+	auto e = std::make_unique<ASTReturnStatement>();
+
+	e->m_value = std::move(value.m_result);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
 /*
  * Looks ahead a few tokens to predict what syntactic structure we are about to
  * parse. This prevents us from backtracking and ensures the parser runs in
