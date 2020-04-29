@@ -162,6 +162,7 @@ bool is_binary_operator(token_type t){
 	case token_type::NOT_EQUAL:
 	case token_type::ASSIGN:
 	case token_type::DOT:
+	case token_type::PIZZA:
 	case token_type::ADD:
 	case token_type::SUB:
 	case token_type::MUL:
@@ -190,8 +191,10 @@ binding_power binding_power_of(token_type t){
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
 		return { 40, 41 };
+	case token_type::PIZZA:
+		return { 51, 50 };
 	case token_type::DOT:
-		return { 50, 51 };
+		return { 60, 61 };
 	default:
 		assert(false);
 	}
@@ -639,7 +642,11 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 		// TODO: parse loops, conditionals, etc.
 
 		// TODO: clean up error reporting
-		auto err = make_expected_error(token_type_string[int(token_type::IDENTIFIER)], p0);
+		auto err = make_expected_error(
+		    token_type_string[int(token_type::IDENTIFIER)], p0);
+
+		result.m_error.m_sub_errors.push_back(std::move(err));
+		return result;
 	}
 
 	return result;
