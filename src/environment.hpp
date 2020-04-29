@@ -32,18 +32,18 @@ struct Environment {
 	// used as a short-hand
 	
 	// scope
-	inline void declare(const Identifier&, Value*);
-	inline Value* access(const Identifier&);
+	void declare(const Identifier&, Value*);
+	Value* access(const Identifier&);
 	
 	// gargabe_collector
-	inline Null* null();
-	inline Integer* new_integer(int);
-	inline Float* new_float(float);
-	inline String* new_string(std::string);
-	inline List* new_list();
-	inline Object* new_object();
-	inline Function* new_function(FunctionType, Scope*);
-	inline Error* new_error(std::string);
+	Null* null();
+	Integer* new_integer(int);
+	Float* new_float(float);
+	String* new_string(std::string);
+	List* new_list();
+	Object* new_object();
+	Function* new_function(FunctionType, Scope*);
+	Error* new_error(std::string);
 };
 
 }
