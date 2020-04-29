@@ -209,3 +209,19 @@ Type::Value* ASTArgumentList::eval(Type::Environment &e) {
 	assert(0);
 	return e.m_gc->null();
 };
+
+
+
+void ASTReturnStatement::print(int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ ReturnStatement\n";
+	m_value->print(d+1);
+	std::cout << stab << "]\n";
+}
+
+Type::Value* ASTReturnStatement::eval(Type::Environment &e) {
+	// TODO: implement
+	std::cerr << "WARNING: not implemented action (return statement)\n";
+	return e.m_gc->null();
+};

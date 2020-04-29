@@ -105,3 +105,9 @@ struct ASTBlock : public AST {
 	Type::Value* eval(Type::Environment &e) override;
 };
 
+struct ASTReturnStatement : public AST {
+	std::unique_ptr<AST> m_value;
+
+	void print(int d) override;
+	Type::Value* eval(Type::Environment &e) override;
+};
