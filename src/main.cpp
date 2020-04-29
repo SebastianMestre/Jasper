@@ -34,7 +34,9 @@ int main() {
 		};
 	};
 
-	norm := fn(p){};
+	norm := fn(p){
+		return sqrt(p.x * p.x + p.y * p.y);
+	};
 
 	__invoke := fn () {
 		f.greeting = "Hey, ";
@@ -64,6 +66,8 @@ int main() {
 		parse_result.m_error.print();
 		return 1;
 	} 
+
+	parse_result.m_result->print();
 
 	auto& top_level = static_cast<ASTDeclarationList&>(*parse_result.m_result);
 
