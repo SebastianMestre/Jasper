@@ -2,10 +2,12 @@
 #include <string>
 #include <vector>
 
+#include "environment.hpp"
+#include "eval.hpp"
+#include "garbage_collector.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "types.hpp"
-#include "garbage_collector.hpp"
 
 int main() {
 	std::vector<char> v;
@@ -69,13 +71,14 @@ int main() {
 
 	parse_result.m_result->print();
 
-	auto& top_level = static_cast<ASTDeclarationList&>(*parse_result.m_result);
+	auto* top_level = parse_result.m_result.get();
+	assert(dynamic_cast<ASTDeclarationList*>(top_level));
 
 	GarbageCollector::GC gc;
 	Type::Scope scope;
 	Type::Environment env = {&gc, &scope};
 
-	top_level.eval(env);
+	eval(top_level, env);
 
 	auto* entry_point_ptr = env.m_scope->access("__invoke");
 	if(!entry_point_ptr){
