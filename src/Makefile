@@ -8,6 +8,7 @@ OBJNAMES := \
 	lexer.o \
 	parser.o \
 	ast.o \
+	eval.o \
 	runtime.o \
 	garbage_collector.o \
 	error.o \
