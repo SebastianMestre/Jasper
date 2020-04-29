@@ -84,7 +84,7 @@ void ASTObjectLiteral::print(int d) {
 }
 
 Type::Value* ASTObjectLiteral::eval(Type::Environment &e) {
-	assert(0);
+	std::cerr << "WARNING: not implemented action (Creating an object)\n";
 	return nullptr;
 };
 
@@ -101,7 +101,7 @@ void ASTDictionaryLiteral::print(int d) {
 }
 
 Type::Value* ASTDictionaryLiteral::eval(Type::Environment &e) {
-	assert(0);
+	std::cerr << "WARNING: not implemented action (Creating a dictionary)\n";
 	return nullptr;
 };
 
@@ -169,6 +169,7 @@ void ASTBinaryExpression::print(int d) {
 }
 
 Type::Value* ASTBinaryExpression::eval(Type::Environment &e) {
+	std::cerr << "WARNING: not implemented action (Evaluating binary expression)\n";
 	return nullptr;
 }
 
