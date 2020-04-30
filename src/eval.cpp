@@ -8,7 +8,7 @@
 
 Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 	for(auto& decl : ast->m_declarations){
-		assert(dynamic_cast<ASTDeclaration*>(decl.get()));
+		assert(decl->type() == ast_type::Declaration);
 		eval(static_cast<ASTDeclaration*>(decl.get()), e);
 	}
 	return nullptr;

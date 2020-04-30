@@ -69,10 +69,10 @@ int main() {
 		return 1;
 	} 
 
-	parse_result.m_result->print();
+	print(parse_result.m_result.get(), 1);
 
 	auto* top_level = parse_result.m_result.get();
-	assert(dynamic_cast<ASTDeclarationList*>(top_level));
+	assert(top_level->type() == ast_type::DeclarationList);
 
 	GarbageCollector::GC gc;
 	Type::Scope scope;
