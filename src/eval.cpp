@@ -83,91 +83,33 @@ Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
 
 Type::Value* eval(AST* ast, Type::Environment& e) {
 
-	// TODO: replace by switch on enum
-
-	{
-		auto* t = dynamic_cast<ASTNumberLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTStringLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTObjectLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTDictionaryLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTFunctionLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTDeclarationList*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTDeclaration*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTIdentifier*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTBinaryExpression*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTCallExpression*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTArgumentList*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTBlock*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTReturnStatement*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
-	}
-	{
-		auto* t = dynamic_cast<ASTNumberLiteral*>(ast);
-		if (t != nullptr) {
-			return eval(t, e);
-		}
+	switch (ast->type()) {
+	case ast_type::NumberLiteral:
+		return eval(static_cast<ASTNumberLiteral*>(ast), e);
+	case ast_type::StringLiteral:
+		return eval(static_cast<ASTStringLiteral*>(ast), e);
+	case ast_type::ObjectLiteral:
+		return eval(static_cast<ASTObjectLiteral*>(ast), e);
+	case ast_type::DictionaryLiteral:
+		return eval(static_cast<ASTDictionaryLiteral*>(ast), e);
+	case ast_type::FunctionLiteral:
+		return eval(static_cast<ASTFunctionLiteral*>(ast), e);
+	case ast_type::DeclarationList:
+		return eval(static_cast<ASTDeclarationList*>(ast), e);
+	case ast_type::Declaration:
+		return eval(static_cast<ASTDeclaration*>(ast), e);
+	case ast_type::Identifier:
+		return eval(static_cast<ASTIdentifier*>(ast), e);
+	case ast_type::BinaryExpression:
+		return eval(static_cast<ASTBinaryExpression*>(ast), e);
+	case ast_type::CallExpression:
+		return eval(static_cast<ASTCallExpression*>(ast), e);
+	case ast_type::ArgumentList:
+		return eval(static_cast<ASTArgumentList*>(ast), e);
+	case ast_type::Block:
+		return eval(static_cast<ASTBlock*>(ast), e);
+	case ast_type::ReturnStatement:
+		return eval(static_cast<ASTReturnStatement*>(ast), e);
 	}
 
 	return nullptr;
