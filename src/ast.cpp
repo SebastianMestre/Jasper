@@ -4,129 +4,161 @@
 #include "runtime.hpp"
 #include "garbage_collector.hpp"
 
-void ASTDeclarationList::print(int d) {
+void print(ASTDeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ DeclarationList\n";
-	for (auto& ast : m_declarations)
-		ast->print(d + 1);
+	for (auto& decl : ast->m_declarations)
+		print(decl.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
-void ASTDeclaration::print(int d) {
+void print(ASTDeclaration* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Declaration\n"
-		<< tab << "Name: " << m_identifier << '\n'
-		<< tab << "Type: " << m_typename << '\n';
-	if (m_value) {
+		<< tab << "Name: " << ast->m_identifier << '\n'
+		<< tab << "Type: " << ast->m_typename << '\n';
+	if (ast->m_value) {
 		std::cout << tab << "Initializer:\n";
-		m_value->print(d + 1);
+		print(ast->m_value.get(), d + 1);
 	}
 	std::cout << stab << "]\n";
 }
 
-void ASTNumberLiteral::print(int d) {
+void print(ASTNumberLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Number " << m_text << " ]\n";
+	std::cout << stab << "[ Number " << ast->m_text << " ]\n";
 }
 
-void ASTStringLiteral::print(int d) {
+void print(ASTStringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ StringLiteral\n"
-		<< tab << "Value: " << m_text << "\n"
+		<< tab << "Value: " << ast->m_text << "\n"
 		<< stab << "]\n";
 }
 
-void ASTObjectLiteral::print(int d) {
+void print(ASTObjectLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ObjectLiteral\n"
 		<< tab << "Declarations:\n";
-	m_body->print(d+1);
+	print(ast->m_body.get(), d+1);
 	std::cout << stab << "]\n";
 }
 
-void ASTDictionaryLiteral::print(int d) {
+void print(ASTDictionaryLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ DictionaryLiteral\n"
 		<< tab << "Declarations:\n";
-	m_body->print(d+1);
+	print(ast->m_body.get(), d+1);
 	std::cout << stab << "]\n";
 }
 
-void ASTIdentifier::print(int d) {
+void print(ASTIdentifier* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Identifier\n"
-		<< tab << "Name: " << m_text << '\n'
+		<< tab << "Name: " << ast->m_text << '\n'
 		<< stab << "]\n";
 }
 
-void ASTBlock::print(int d) {
+void print(ASTBlock* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Block\n";
-	for (auto& child : m_body)
-		child->print(d + 1);
+	for (auto& child : ast->m_body)
+		print(child.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
-void ASTFunctionLiteral::print(int d) {
+void print(ASTFunctionLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Function\n"
 		<< tab << "Arguments:\n";
-	for(auto& arg : m_args){
-		arg->print(d+1);
+	for(auto& arg : ast->m_args){
+		print(arg.get(), d+1);
 	}
 	std::cout << tab << "Body:\n";
-	if (m_body)
-		m_body->print(d + 1);
+	if (ast->m_body)
+		print(ast->m_body.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
-void ASTBinaryExpression::print(int d) {
+void print(ASTBinaryExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ BinaryExpression\n"
-	          << tab << "Operator: " << token_type_string[int(m_op)] << '\n'
+	          << tab << "Operator: " << token_type_string[int(ast->m_op)] << '\n'
 	          << tab << "Left Operand:\n";
-	m_lhs->print(d + 1);
+	print(ast->m_lhs.get(), d + 1);
 	std::cout << tab << "Right Operand:\n";
-	m_rhs->print(d + 1);
+	print(ast->m_rhs.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
-void ASTCallExpression::print(int d) {
+void print(ASTCallExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ CallExpression\n"
 	          << tab << "Callee:\n";
-	m_callee->print(d + 1);
+	print(ast->m_callee.get(), d + 1);
 	std::cout << tab << "Args:\n";
-	m_args->print(d + 1);
+	print(ast->m_args.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
-void ASTArgumentList::print(int d) {
+void print(ASTArgumentList* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ArgumentList\n";
-	for(auto& argument : m_args){
-		argument->print(d+1);
+	for(auto& argument : ast->m_args){
+		print(argument.get(), d+1);
 	}
 	std::cout << stab << "]\n";
 }
 
-void ASTReturnStatement::print(int d) {
+void print(ASTReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
-	m_value->print(d+1);
+	print(ast->m_value.get(), d+1);
 	std::cout << stab << "]\n";
 }
 
+void print(AST* ast, int d) {
+
+	switch (ast->type()) {
+	case ast_type::NumberLiteral:
+		return print(static_cast<ASTNumberLiteral*>(ast), d);
+	case ast_type::StringLiteral:
+		return print(static_cast<ASTStringLiteral*>(ast), d);
+	case ast_type::ObjectLiteral:
+		return print(static_cast<ASTObjectLiteral*>(ast), d);
+	case ast_type::DictionaryLiteral:
+		return print(static_cast<ASTDictionaryLiteral*>(ast), d);
+	case ast_type::FunctionLiteral:
+		return print(static_cast<ASTFunctionLiteral*>(ast), d);
+	case ast_type::DeclarationList:
+		return print(static_cast<ASTDeclarationList*>(ast), d);
+	case ast_type::Declaration:
+		return print(static_cast<ASTDeclaration*>(ast), d);
+	case ast_type::Identifier:
+		return print(static_cast<ASTIdentifier*>(ast), d);
+	case ast_type::BinaryExpression:
+		return print(static_cast<ASTBinaryExpression*>(ast), d);
+	case ast_type::CallExpression:
+		return print(static_cast<ASTCallExpression*>(ast), d);
+	case ast_type::ArgumentList:
+		return print(static_cast<ASTArgumentList*>(ast), d);
+	case ast_type::Block:
+		return print(static_cast<ASTBlock*>(ast), d);
+	case ast_type::ReturnStatement:
+		return print(static_cast<ASTReturnStatement*>(ast), d);
+	}
+
+}
