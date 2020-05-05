@@ -1,6 +1,6 @@
 #pragma once
 
-#include "runtime.hpp"
+#include "value.hpp"
 #include "error.hpp"
 
 namespace GarbageCollector {

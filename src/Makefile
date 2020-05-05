@@ -9,7 +9,7 @@ OBJNAMES := \
 	parser.o \
 	ast.o \
 	eval.o \
-	runtime.o \
+	value.o \
 	garbage_collector.o \
 	error.o \
 	environment.o
