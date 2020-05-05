@@ -1,8 +1,10 @@
 #include "lexer.hpp"
 
-#include <iostream>
 #include <string>
+#include <vector>
 
+#include <cassert>
+#include <cctype>
 #include <cstdlib>
 
 bool is_identifier_start_char (char c) {
