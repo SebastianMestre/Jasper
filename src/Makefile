@@ -4,16 +4,16 @@
 BINDIR := ../bin
 OBJDIR := ../build
 OBJNAMES := \
-	main.o \
-	lexer.o \
-	parser.o \
 	ast.o \
-	token.o \
-	eval.o \
-	value.o \
-	garbage_collector.o \
+	environment.o \
 	error.o \
-	environment.o
+	eval.o \
+	garbage_collector.o \
+	lexer.o \
+	main.o \
+	parser.o \
+	token.o \
+	value.o
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
