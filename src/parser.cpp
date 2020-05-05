@@ -177,22 +177,22 @@ binding_power binding_power_of(token_type t){
 	// TODO: fill out this table
 	switch(t){
 	case token_type::ASSIGN:
-		return {10, 11};
+		return { 10, 11 };
+	case token_type::PIZZA:
+		return { 20, 21 };
 	case token_type::LT:
 	case token_type::GT:
 	case token_type::LTE:
 	case token_type::GTE:
 	case token_type::EQUAL:
 	case token_type::NOT_EQUAL: // fallthrough
-		return { 20, 21 };
+		return { 30, 31 };
 	case token_type::ADD:
 	case token_type::SUB: // fallthrough
-		return { 30, 31 };
+		return { 40, 41 };
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
-		return { 40, 41 };
-	case token_type::PIZZA:
-		return { 51, 50 };
+		return { 50, 51 };
 	case token_type::DOT:
 		return { 60, 61 };
 	default:
