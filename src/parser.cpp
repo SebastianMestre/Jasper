@@ -194,7 +194,7 @@ binding_power binding_power_of(token_type t){
 	case token_type::DIV: // fallthrough
 		return { 50, 51 };
 	case token_type::DOT:
-		return { 60, 61 };
+		return { 70, 71 };
 	default:
 		assert(false);
 	}
@@ -266,8 +266,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse expression" } };
 
-	auto p0 = peek();
-
 	Writer<std::unique_ptr<AST>> lhs;
 
 	lhs = parse_terminal();
@@ -281,7 +279,11 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 			break;
 		}
 
+		constexpr int binding_power_of_paren_open = 60;
 		if(op->m_type == token_type::PAREN_OPEN){
+			if(binding_power_of_paren_open < bp)
+				break;
+
 			auto args = parse_argument_list();
 
 			if(handle_error(result, args)){
