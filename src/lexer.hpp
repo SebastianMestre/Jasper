@@ -3,22 +3,8 @@
 #include <string>
 #include <vector>
 
-#include <cassert>
-#include <cctype>
-
+#include "token.hpp"
 #include "token_type.hpp"
-
-struct Token {
-	/* internal representation of token */
-	token_type m_type;
-	/* source code representation of token */
-	std::string m_text;
-
-	/* beggining of token in source */
-	int m_line0, m_col0;
-	/* end of token in source */
-	int m_line1, m_col1;
-};
 
 /**
  * Bucket-like token list
@@ -50,9 +36,10 @@ struct TokenArray {
 };
 
 /**
- * Contains source code and handles tokens.
- * Has pointers to source code character and token,
- * they stay at the same piece of code all the time.
+ * Converts raw bytes to tokens.
+ *
+ * Ensures reference stability for the Tokens it
+ * hands out.
  */
 struct Lexer {
 	std::vector<char> m_source;
