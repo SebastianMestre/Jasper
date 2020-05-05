@@ -40,10 +40,16 @@ int main() {
 		return sqrt(p.x * p.x + p.y * p.y);
 	};
 
+	my_lib := dict {
+		five := fn() { return 6; };
+		times_pi := fn(x) { return x * 3; };
+	};
+
 	__invoke := fn () {
 		f.greeting = "Hey, ";
 		f("Sailor");
 		sqrt5 := obt{x:=1;y:=2;} |> norm();
+		sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
 	names := dict {
