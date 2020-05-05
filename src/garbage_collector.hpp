@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "runtime.hpp"
+#include "value.hpp"
 #include "error.hpp"
 
 namespace GarbageCollector {
