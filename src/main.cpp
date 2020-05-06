@@ -7,7 +7,6 @@
 #include "garbage_collector.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "types.hpp"
 
 int main() {
 	std::vector<char> v;
