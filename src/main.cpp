@@ -7,6 +7,7 @@
 #include "garbage_collector.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "value.hpp"
 
 int main() {
 	std::vector<char> v;
@@ -56,6 +57,8 @@ int main() {
 		user1 := "joseph";
 		user2 := "anne";
 	};
+
+	int_val := 1 + 2 + 3 + 4;
 )";
 
 	for (char c : s) {
@@ -84,6 +87,15 @@ int main() {
 	Type::Environment env = {&gc, &scope};
 
 	eval(top_level, env);
+
+	{ // TODO: remove this, improve testing
+		// this is just some janky testing code.
+		auto* expected_10 = env.m_scope->access("int_val");
+		auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
+		assert(as_integer);
+		assert(as_integer->m_value == 10);
+		std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+	}
 
 	auto* entry_point_ptr = env.m_scope->access("__invoke");
 	if(!entry_point_ptr){
