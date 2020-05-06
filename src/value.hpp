@@ -5,11 +5,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include "value_type.hpp"
+struct ASTFunctionLiteral;
 
 namespace Type {
 
 struct Scope;
+struct Value;
+
+using Identifier = std::string;
+using ObjectType = std::unordered_map<Identifier, Value*>;
+using ListType = std::vector<Value*>;
+using FunctionType = ::ASTFunctionLiteral*;
+
+
 
 struct Value {
 	bool m_visited = false;
