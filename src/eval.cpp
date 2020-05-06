@@ -3,7 +3,6 @@
 #include "ast.hpp"
 #include "environment.hpp"
 #include "value.hpp"
-#include "types.hpp"
 
 
 Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
