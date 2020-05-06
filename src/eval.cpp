@@ -72,7 +72,25 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
-	std::cerr << "WARNING: not implemented action (Evaluating binary expression)\n";
+
+	auto* lhs = eval(ast->m_lhs.get(), e);
+	auto* rhs = eval(ast->m_rhs.get(), e);
+
+	switch (ast->m_op) {
+	case token_type::ADD: {
+		// TODO: proper error handling
+		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
+		Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
+		assert(lhs_i);
+		assert(rhs_i);
+		return e.new_integer(lhs_i->m_value + rhs_i->m_value);
+		break;
+	}
+	default:
+		std::cerr << "WARNING: not implemented action"
+		             "(Evaluating binary expression)\n";
+	}
+
 	return nullptr;
 }
 
