@@ -59,6 +59,8 @@ int main() {
 	};
 
 	int_val := 1 + 2 + 3 + 4;
+	float_val := 1 + 1.5 + 1;
+	string_val := "test" + "ing";
 )";
 
 	for (char c : s) {
@@ -95,6 +97,18 @@ int main() {
 		assert(as_integer);
 		assert(as_integer->m_value == 10);
 		std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+		
+		auto* expected_3_5 = env.m_scope->access("float_val");
+		auto* as_float = dynamic_cast<Type::Float*>(expected_3_5);
+		assert(as_float);
+		assert(as_float->m_value == 3.5);
+		std::cout << "@@ Value is: " << as_float->m_value << '\n';
+		
+		auto* expected_testing = env.m_scope->access("string_val");
+		auto* as_string = dynamic_cast<Type::String*>(expected_testing);
+		assert(as_string);
+		assert(as_string->m_value == "testing");
+		std::cout << "@@ Value is: " << as_string->m_value << '\n';
 	}
 
 	auto* entry_point_ptr = env.m_scope->access("__invoke");
