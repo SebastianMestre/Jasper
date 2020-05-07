@@ -50,6 +50,15 @@ struct Float : Value {
 	void gc_visit() override;
 };
 
+struct Boolean : Value {
+	bool m_value = false;
+
+	Float() = default;
+	Float(bool b);
+
+	void gc_visit() override;
+};
+
 struct String : Value {
 	std::string m_value = "";
 
