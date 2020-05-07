@@ -138,6 +138,24 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 		return e.new_float(lhs_f->m_value * rhs_f->m_value);
 		break;
 	}
+	case token_type::DIV: {
+		
+		// TODO: proper error handling
+
+		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
+		if (lhs_i) {
+			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
+			assert(rhs_i);
+			return e.new_integer(lhs_i->m_value / rhs_i->m_value);
+		}
+
+		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
+		Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
+		assert(lhs_f);
+		assert(rhs_f);
+		return e.new_float(lhs_f->m_value / rhs_f->m_value);
+		break;
+	}
 	default:
 		std::cerr << "WARNING: not implemented action"
 		             "(Evaluating binary expression)\n";
