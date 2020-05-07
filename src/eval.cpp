@@ -156,6 +156,16 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 		return e.new_float(lhs_f->m_value / rhs_f->m_value);
 		break;
 	}
+	case token_type::AND: {
+		
+		// TODO: proper error handling
+		Type::Boolean* lhs_b = dynamic_cast<Type::Boolean*>(lhs);
+		Type::Boolean* rhs_b = dynamic_cast<Type::Boolean*>(rhs);
+		assert(lhs_b);
+		assert(rhs_b);
+		return e.new_boolean(lhs_b->m_value and rhs_b->m_value);
+		break;
+	}
 	default:
 		std::cerr << "WARNING: not implemented action"
 		             "(Evaluating binary expression)\n";
