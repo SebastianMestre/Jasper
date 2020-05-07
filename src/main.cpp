@@ -114,13 +114,13 @@ int main() {
 		std::cout << "@@ Value is: " << as_string->m_value << '\n';
 		
 		auto* expected_0 = env.m_scope->access("int_div");
-		auto* as_int = dynamic_cast<Type::Integer*>(expected_0);
-		assert(as_int);
-		assert(as_int->m_value == 0);
-		std::cout << "@@ Value is: " << as_int->m_value << '\n';
+		as_integer = dynamic_cast<Type::Integer*>(expected_0);
+		assert(as_integer);
+		assert(as_integer->m_value == 0);
+		std::cout << "@@ Value is: " << as_integer->m_value << '\n';
 		
 		auto* expected_0_5 = env.m_scope->access("float_div");
-		auto* as_float = dynamic_cast<Type::Float*>(expected_0_5);
+		as_float = dynamic_cast<Type::Float*>(expected_0_5);
 		assert(as_float);
 		assert(as_float->m_value == 0.5);
 		std::cout << "@@ Value is: " << as_float->m_value << '\n';
