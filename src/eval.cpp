@@ -84,27 +84,15 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
 		if (lhs_i) {
 			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			if (rhs_i) {
-				return e.new_integer(lhs_i->m_value + rhs_i->m_value);
-			}
-			
-			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-			if (rhs_f) {
-				return e.new_float(lhs_i->m_value + rhs_f->m_value);
-			}
+			assert(rhs_i);
+			return e.new_integer(lhs_i->m_value + rhs_i->m_value);
 		}
 
 		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
 		if (lhs_f) {	
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			if (rhs_i) {
-				return e.new_float(lhs_f->m_value + rhs_i->m_value);
-			}
-			
 			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-			if (rhs_f) {
-				return e.new_float(lhs_f->m_value + rhs_f->m_value);
-			}
+			assert(rhs_f);
+			return e.new_float(lhs_f->m_value + rhs_f->m_value);
 		}
 
 		Type::String* lhs_s = dynamic_cast<Type::String*>(lhs);

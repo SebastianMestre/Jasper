@@ -59,8 +59,8 @@ int main() {
 	};
 
 	int_val := 1 + 2 + 3 + 4;
-	float_val := 1 + 1.5 + 1;
-	string_val := "test" + "ing";
+	float_val := 1.0 + 1.5 + 1.0;
+	string_val := "test" + "ing" + ".";
 )";
 
 	for (char c : s) {
@@ -107,7 +107,7 @@ int main() {
 		auto* expected_testing = env.m_scope->access("string_val");
 		auto* as_string = dynamic_cast<Type::String*>(expected_testing);
 		assert(as_string);
-		assert(as_string->m_value == "testing");
+		assert(as_string->m_value == "testing.");
 		std::cout << "@@ Value is: " << as_string->m_value << '\n';
 	}
 
