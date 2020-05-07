@@ -36,7 +36,7 @@ Boolean::Boolean(bool b) : m_value(b) {}
 
 void Boolean::gc_visit() {
 	if (Value::m_visited)
-		return:
+		return;
 
 	Value::m_visited = true;
 }
