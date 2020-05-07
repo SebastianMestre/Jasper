@@ -78,12 +78,40 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
 	switch (ast->m_op) {
 	case token_type::ADD: {
+		
 		// TODO: proper error handling
+
 		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-		assert(lhs_i);
-		assert(rhs_i);
-		return e.new_integer(lhs_i->m_value + rhs_i->m_value);
+		if (lhs_i) {
+			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
+			if (rhs_i) {
+				return e.new_integer(lhs_i->m_value + rhs_i->m_value);
+			}
+			
+			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
+			if (rhs_f) {
+				return e.new_float(lhs_i->m_value + rhs_f->m_value);
+			}
+		}
+
+		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
+		if (lhs_f) {	
+			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
+			if (rhs_i) {
+				return e.new_float(lhs_f->m_value + rhs_i->m_value);
+			}
+			
+			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
+			if (rhs_f) {
+				return e.new_float(lhs_f->m_value + rhs_f->m_value);
+			}
+		}
+
+		Type::String* lhs_s = dynamic_cast<Type::String*>(lhs);
+		Type::String* rhs_s = dynamic_cast<Type::String*>(rhs);
+		assert(lhs_s);
+		assert(rhs_s);
+		return e.new_string(lhs_s->m_value + rhs_s->m_value);
 		break;
 	}
 	default:
