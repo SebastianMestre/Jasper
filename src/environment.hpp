@@ -39,6 +39,7 @@ struct Environment {
 	Null* null();
 	Integer* new_integer(int);
 	Float* new_float(float);
+	Boolean* new_boolean(bool);
 	String* new_string(std::string);
 	List* new_list();
 	Object* new_object();

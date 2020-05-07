@@ -68,6 +68,12 @@ Type::Float* GC::new_float(float f) {
 	return result;
 }
 
+Type::Boolean* GC::new_boolean(bool b) {
+	auto result = new Type::Boolean(b);
+	m_blocks.push_back(result);
+	return result;
+}
+
 Type::String* GC::new_string(std::string s) {
 	auto result = new Type::String(std::move(s));
 	m_blocks.push_back(result);
