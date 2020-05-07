@@ -53,8 +53,8 @@ struct Float : Value {
 struct Boolean : Value {
 	bool m_value = false;
 
-	Float() = default;
-	Float(bool b);
+	Boolean() = default;
+	Boolean(bool b);
 
 	void gc_visit() override;
 };
