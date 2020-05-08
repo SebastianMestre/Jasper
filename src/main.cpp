@@ -9,8 +9,22 @@
 #include "parser.hpp"
 #include "value.hpp"
 
-int main() {
+Parser make_parser(std::string source, Lexer& l) {
 	std::vector<char> v;
+	
+	for (char c : source) {
+		v.push_back(c);
+	}
+
+	l.m_source = std::move(v);
+
+	Parser p;
+	p.m_lexer = &l;
+
+	return p;
+}
+
+int main() {
 	std::string s = R"(
 	x : dec = 1.4;
 	y : int = 3;
@@ -66,15 +80,8 @@ int main() {
 	float_div := 1.0 / 2.0;
 )";
 
-	for (char c : s) {
-		v.push_back(c);
-	}
-
 	Lexer l;
-	l.m_source = std::move(v);
-
-	Parser p;
-	p.m_lexer = &l;
+	Parser p = make_parser(std::move(s), l);
 
 	auto parse_result = p.parse_top_level();
 	if (not parse_result.ok()) {
