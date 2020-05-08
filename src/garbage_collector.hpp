@@ -26,6 +26,7 @@ public:
 	Type::List* new_list ();
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);
+	Type::Boolean* new_boolean (bool);
 	Type::String* new_string (std::string);
 	Type::Function* new_function (Type::FunctionType, Type::Scope*);
 	Type::Error* new_error (std::string);

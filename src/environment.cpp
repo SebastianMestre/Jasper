@@ -45,6 +45,7 @@ Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
 Null* Environment::null() { return m_gc->null(); }
 Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
 Float* Environment::new_float(float f) { return m_gc->new_float(f); }
+Boolean* Environment::new_boolean(bool b) { return m_gc->new_boolean(b); }
 String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
 List* Environment::new_list() { return m_gc->new_list(); }
 Object* Environment::new_object() { return m_gc->new_object(); }

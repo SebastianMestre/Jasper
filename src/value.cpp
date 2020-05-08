@@ -32,6 +32,17 @@ void Float::gc_visit() {
 
 
 
+Boolean::Boolean(bool b) : m_value(b) {}
+
+void Boolean::gc_visit() {
+	if (Value::m_visited)
+		return;
+
+	Value::m_visited = true;
+}
+
+
+
 String::String(std::string s) : m_value(std::move(s)) {}
 
 void String::gc_visit() {
