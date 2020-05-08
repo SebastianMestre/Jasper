@@ -148,7 +148,20 @@ int main() {
 		return 1;
 	}
 
-	// entry_point->call(env);
+	// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
+	// this means we need to create a call expression node to run the program.
+	// TODO: We need to clean this up
+
+	{
+		auto top_level_name = std::make_unique<ASTIdentifier>();
+		top_level_name->m_text = "__invoke";
+
+		auto top_level_call = std::make_unique<ASTCallExpression>();
+		top_level_call->m_callee = std::move(top_level_name);
+		top_level_call->m_args = std::make_unique<ASTArgumentList>();
+
+		eval(top_level_call.get(), env);
+	}
 
 	gc.run();
 
