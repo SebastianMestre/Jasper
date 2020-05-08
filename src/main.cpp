@@ -20,7 +20,9 @@ int main() {
 		c := a;
 		a + b;
 		cmp : bool = a < c;
-		
+
+		sqrt5 := obt{x:=1;y:=2;} |> norm();
+		sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
 	y := fn () {
@@ -36,6 +38,10 @@ int main() {
 		};
 	};
 
+	f := fn (name : string) {};
+
+	sqrt := fn (x) { return (x+1) * 0.5; };
+
 	norm := fn(p){
 		return sqrt(p.x * p.x + p.y * p.y);
 	};
@@ -48,8 +54,6 @@ int main() {
 	__invoke := fn () {
 		f.greeting = "Hey, ";
 		f("Sailor");
-		sqrt5 := obt{x:=1;y:=2;} |> norm();
-		sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
 	names := dict {
