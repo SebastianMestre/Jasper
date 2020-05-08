@@ -8,21 +8,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "value.hpp"
-
-Parser make_parser(std::string source, Lexer& l) {
-	std::vector<char> v;
-	
-	for (char c : source) {
-		v.push_back(c);
-	}
-
-	l.m_source = std::move(v);
-
-	Parser p;
-	p.m_lexer = &l;
-
-	return p;
-}
+#include "tester.hpp"
 
 int main() {
 	std::string s = R"(

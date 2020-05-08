@@ -4,8 +4,11 @@
 #include <string>
 
 #include "environment.hpp"
+#include "parser.hpp"
 
-using TestFunction = void (*)(Type::Environment);
+using TestFunction = bool (*)(Type::Environment);
+
+Parser make_parser(std::string source, Lexer& l);
 
 struct Tester {
 
@@ -16,4 +19,5 @@ struct Tester {
 	Tester(std::string, std::vector<TestFunction>);
 
 	void add_test(TestFunction);
+	bool execute(bool);
 };
