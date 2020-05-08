@@ -7,6 +7,8 @@
 #include "garbage_collector.hpp"
 #include "eval.hpp"
 
+namespace Test {
+
 Parser make_parser(std::string source, Lexer& l) {
 	std::vector<char> v;
 	
@@ -61,4 +63,6 @@ bool Tester::execute(bool print_parse = false) {
 
 	gc.run();
 	return answer;
+}
+
 }

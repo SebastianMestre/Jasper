@@ -6,6 +6,8 @@
 #include "environment.hpp"
 #include "parser.hpp"
 
+namespace Test {
+
 using TestFunction = bool (*)(Type::Environment);
 
 Parser make_parser(std::string source, Lexer& l);
@@ -21,3 +23,5 @@ struct Tester {
 	void add_test(TestFunction);
 	bool execute(bool);
 };
+
+}
