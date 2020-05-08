@@ -59,5 +59,6 @@ bool Tester::execute(bool print_parse = false) {
 		answer = answer and (*f)(env);
 	}
 
+	gc.run();
 	return answer;
 }
