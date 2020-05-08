@@ -66,8 +66,40 @@ Type::Value* eval(ASTArgumentList* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
-	// TODO: fetch function definition and scope and run
-	assert(0);
+	std::vector<Type::Value*> args;
+
+	// TODO: proper error handling
+
+	auto* calleeTypeErased = eval(ast->m_callee.get(), e);
+	assert(calleeTypeErased);
+
+	auto* callee = dynamic_cast<Type::Function*>(calleeTypeErased);
+	assert(callee);
+
+	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
+	assert(callee->m_def->m_args.size() == arglist->m_args.size());
+
+	e.new_scope();
+
+	for(int i = 0; i < int(callee->m_def->m_args.size()); ++i){
+		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
+		assert(argdeclTypeErased);
+
+		auto* argdecl = dynamic_cast<ASTDeclaration*>(argdeclTypeErased);
+		assert(argdecl);
+
+		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		e.declare(argdecl->m_identifier, argvalue);
+	}
+
+	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
+	assert(body);
+	for(auto &stmt : body->m_body){
+		eval(stmt.get(), e);
+	}
+
+	e.end_scope();
+
 	return e.null();
 };
 

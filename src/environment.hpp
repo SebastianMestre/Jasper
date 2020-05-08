@@ -30,11 +30,11 @@ struct Environment {
 	void end_scope();
 
 	// used as a short-hand
-	
+
 	// scope
 	void declare(const Identifier&, Value*);
 	Value* access(const Identifier&);
-	
+
 	// gargabe_collector
 	Null* null();
 	Integer* new_integer(int);
@@ -46,5 +46,4 @@ struct Environment {
 	Function* new_function(FunctionType, Scope*);
 	Error* new_error(std::string);
 };
-
 }
