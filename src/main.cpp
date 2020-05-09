@@ -10,13 +10,7 @@
 #include "value.hpp"
 #include "tester.hpp"
 
-namespace Test {
-void test_begin();
-}
-
 int main() {
-
-	Test::test_begin();
 
 	std::string s = R"(
 	x : dec = 1.4;

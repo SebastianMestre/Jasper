@@ -10,9 +10,7 @@ OBJNAMES := \
 	eval.o \
 	garbage_collector.o \
 	lexer.o \
-	main.o \
 	parser.o \
-	test_file.o \
 	tester.o \
 	token.o \
 	value.o
@@ -26,22 +24,28 @@ CPPFLAGS :=
 
 all: $(BINDIR)/iseeaparse
 
+test_program: $(BINDIR)/test_program
+
 clean:
 	rm $(BINDIR) -r
 	rm $(OBJDIR) -r
 
-$(BINDIR)/iseeaparse: $(OBJS) | $(BINDIR)
+$(BINDIR)/iseeaparse: $(OBJS) $(OBJDIR)/main.o | $(BINDIR)
 	$(CXX) -o $@ $^ $(LIBS)
 
+$(BINDIR)/test_program: $(OBJS) $(OBJDIR)/tests.o | $(BINDIR)
+	$(CXX) -o $@ $^ $(LIBS)
 
 $(BINDIR):
 	mkdir $(BINDIR)
 
-$(OBJS): | $(OBJDIR)
+$(OBJS) $(OBJDIR)/main.o $(OBJDIR)/tests.o: | $(OBJDIR)
 
 $(OBJDIR):
 	mkdir $(OBJDIR)
 
+include $(OBJDIR)/main.d
+include $(OBJDIR)/tests.d
 include $(OBJS:.o=.d)
 		
 $(OBJDIR)/%.o : %.cpp

@@ -4,9 +4,8 @@
 #include "tester.hpp"
 #include "value.hpp"
 
-namespace Test {
-
-void test_begin() {
+int main() {
+	using namespace Test;
 	
 	Tester bexp_tester(R"(
 		int_val := 1 + 2 + 3 + 4;
@@ -53,6 +52,4 @@ void test_begin() {
 	);
 
 	assert(bexp_tester.execute(true));
-}
-
 }
