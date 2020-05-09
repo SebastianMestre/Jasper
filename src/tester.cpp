@@ -10,21 +10,6 @@
 
 namespace Test {
 
-Parser make_parser(std::string source, Lexer& l) {
-	std::vector<char> v;
-	
-	for (char c : source) {
-		v.push_back(c);
-	}
-
-	l.m_source = std::move(v);
-
-	Parser p;
-	p.m_lexer = &l;
-
-	return p;
-}
-
 Tester::Tester(std::string s) : m_source(std::move(s)) {};
 Tester::Tester(std::string s, std::vector<TestFunction> tfs)
     : m_source(std::move(s)), m_testers(std::move(tfs)) {};
