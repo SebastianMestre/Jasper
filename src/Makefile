@@ -12,6 +12,8 @@ OBJNAMES := \
 	lexer.o \
 	main.o \
 	parser.o \
+	test_file.o \
+	tester.o \
 	token.o \
 	value.o
 
