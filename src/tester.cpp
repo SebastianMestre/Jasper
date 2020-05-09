@@ -34,13 +34,14 @@ void Tester::add_test(TestFunction tf) {
 }
 
 bool Tester::execute(bool print_parse = false) {
-	bool answer = true;
-	::execute(m_source, print_parse, [&](Type::Environment& env) {
+	int exit_code = ::execute(m_source, print_parse, [&](Type::Environment& env) -> int {
 		for (auto* f : m_testers) {
-			answer = answer and (*f)(env);
+			if (!(*f)(env))
+				return 1;
 		}
+		return 0;
 	});
-	return answer;
+	return exit_code == 0;
 }
 
 }

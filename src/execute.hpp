@@ -9,6 +9,9 @@
 // returns an exit status
 template <typename Runner>
 int execute(std::string const& source, bool dump_ast, Runner runner) {
+	static_assert(
+	    std::is_same<decltype(runner(std::declval<Type::Environment&>())), int>::value,
+	    "runners must have signature Environment& -> int");
 
 	Lexer l;
 
@@ -39,7 +42,10 @@ int execute(std::string const& source, bool dump_ast, Runner runner) {
 
 	eval(top_level, env);
 
-	runner(env);
+	int runner_exit_code = runner(env);
+
+	if(runner_exit_code)
+		return runner_exit_code;
 
 	gc.run();
 
