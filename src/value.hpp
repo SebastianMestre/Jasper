@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "value_type.hpp"
+
 struct ASTFunctionLiteral;
 
 namespace Type {
@@ -20,14 +22,22 @@ using FunctionType = ::ASTFunctionLiteral*;
 
 
 struct Value {
+protected:
+	value_type m_type;
+
+public:
 	bool m_visited = false;
+
+	Value(value_type type) : m_type(type) {}
+	value_type type() const { return m_type; }
+
 	virtual void gc_visit() = 0;
 	virtual ~Value() = default;
 };
 
 struct Null : Value {
 
-	Null() = default;
+	Null();
 
 	void gc_visit() override;
 };
@@ -35,7 +45,7 @@ struct Null : Value {
 struct Integer : Value {
 	int m_value = 0;
 
-	Integer() = default;
+	Integer();
 	Integer(int v);
 
 	void gc_visit() override;
@@ -44,7 +54,7 @@ struct Integer : Value {
 struct Float : Value {
 	float m_value = 0.0;
 
-	Float() = default;
+	Float();
 	Float(float v);
 
 	void gc_visit() override;
@@ -53,7 +63,7 @@ struct Float : Value {
 struct Boolean : Value {
 	bool m_value = false;
 
-	Boolean() = default;
+	Boolean();
 	Boolean(bool b);
 
 	void gc_visit() override;
@@ -62,7 +72,7 @@ struct Boolean : Value {
 struct String : Value {
 	std::string m_value = "";
 
-	String() = default;
+	String();
 	String(std::string s);
 
 	void gc_visit() override;
@@ -71,7 +81,7 @@ struct String : Value {
 struct List : Value {
 	ListType m_value;
 
-	List() = default;
+	List();
 	List(ListType l);
 
 	void append(Value* v);
@@ -83,7 +93,7 @@ struct List : Value {
 struct Object : Value {
 	ObjectType m_value;
 
-	Object() = default;
+	Object();
 	Object(ObjectType);
 
 	void addMember(Identifier const& id, Value* v);
@@ -95,7 +105,7 @@ struct Object : Value {
 struct Dictionary : Value {
 	ObjectType m_value;
 
-	Dictionary() = default;
+	Dictionary();
 	Dictionary(ObjectType);
 
 	void addMember(Identifier const& id, Value* v);
@@ -109,7 +119,7 @@ struct Function : Value {
 	FunctionType m_def;
 	Scope* m_scope;
 
-	Function() = default;
+	Function();
 	Function(FunctionType, Scope*);
 
 	void gc_visit() override;

@@ -7,7 +7,7 @@ namespace Type {
 struct Error : Value {
 	std::string m_error;
 
-	Error() = default;
+	Error();
 	Error(std::string);
 
 	void gc_visit() override;
