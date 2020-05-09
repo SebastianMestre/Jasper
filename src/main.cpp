@@ -4,11 +4,11 @@
 
 #include "environment.hpp"
 #include "eval.hpp"
+#include "execute.hpp"
 #include "garbage_collector.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "value.hpp"
-#include "tester.hpp"
 
 int main() {
 
@@ -65,64 +65,46 @@ int main() {
 
 )";
 
-	Lexer l;
-	Parser p = Test::make_parser(std::move(s), l);
+	int exit_code = execute(s, true, [&](Type::Environment& env) {
+		auto* entry_point_ptr = env.m_scope->access("__invoke");
+		if (!entry_point_ptr) {
+			std::cerr << "__invoke is not defined\n";
+			return 1;
+		}
 
-	auto parse_result = p.parse_top_level();
-	if (not parse_result.ok()) {
-		parse_result.m_error.print();
-		return 1;
-	} 
+		if (entry_point_ptr == nullptr) {
+			std::cerr << "entry point is nullptr: " << entry_point_ptr << "\n";
+			return 1;
+		}
 
-	print(parse_result.m_result.get(), 1);
+		if (entry_point_ptr == env.m_gc->null()) {
+			std::cerr << "entry point is null: " << entry_point_ptr << "\n";
+			return 1;
+		}
 
-	auto* top_level = parse_result.m_result.get();
-	assert(top_level->type() == ast_type::DeclarationList);
+		auto* entry_point = dynamic_cast<Type::Function*>(entry_point_ptr);
+		if (!entry_point) {
+			std::cerr << "__invoke is not a function\n";
+			return 1;
+		}
 
-	GarbageCollector::GC gc;
-	Type::Scope scope;
-	Type::Environment env = {&gc, &scope};
+		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
+		// this means we need to create a call expression node to run the program.
+		// TODO: We need to clean this up
 
-	eval(top_level, env);
+		{
+			auto top_level_name = std::make_unique<ASTIdentifier>();
+			top_level_name->m_text = "__invoke";
 
-	auto* entry_point_ptr = env.m_scope->access("__invoke");
-	if(!entry_point_ptr){
-		std::cerr << "__invoke is not defined\n";
-		return 1;
-	}
+			auto top_level_call = std::make_unique<ASTCallExpression>();
+			top_level_call->m_callee = std::move(top_level_name);
+			top_level_call->m_args = std::make_unique<ASTArgumentList>();
 
-	if(entry_point_ptr == nullptr){
-		std::cerr << "entry point is nullptr: " << entry_point_ptr << "\n";
-		return 1;
-	}
+			eval(top_level_call.get(), env);
+		}
 
-	if(entry_point_ptr == gc.null()){
-		std::cerr << "entry point is null: " << entry_point_ptr << "\n";
-		return 1;
-	}
+		return 0;
+	});
 
-	auto* entry_point = dynamic_cast<Type::Function*>(entry_point_ptr);
-	if(!entry_point){
-		std::cerr << "__invoke is not a function\n";
-		return 1;
-	}
-
-	// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
-	// this means we need to create a call expression node to run the program.
-	// TODO: We need to clean this up
-
-	{
-		auto top_level_name = std::make_unique<ASTIdentifier>();
-		top_level_name->m_text = "__invoke";
-
-		auto top_level_call = std::make_unique<ASTCallExpression>();
-		top_level_call->m_callee = std::move(top_level_name);
-		top_level_call->m_args = std::make_unique<ASTArgumentList>();
-
-		eval(top_level_call.get(), env);
-	}
-
-	gc.run();
-
-	return 0;
+	return exit_code;
 }
