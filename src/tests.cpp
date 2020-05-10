@@ -121,6 +121,30 @@ int main() {
 		return true;
 	});
 
+	Tester function_return{R"(
+	f := fn() {
+		a := 1;
+		b := 2;
+		return a + b;
+	};
+)"};
+	
+	function_return.add_test(+[](Type::Environment& env) -> bool {
+		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
+		// this means we need to create a call expression node to run the program.
+		// TODO: We need to clean this up
+		auto top_level_name = std::make_unique<ASTIdentifier>();
+		top_level_name->m_text = "f";
+
+		auto top_level_call = std::make_unique<ASTCallExpression>();
+		top_level_call->m_callee = std::move(top_level_name);
+		top_level_call->m_args = std::make_unique<ASTArgumentList>();
+
+		Type::Value* returned = eval(top_level_call.get(), env);
+		return dynamic_cast<Type::Integer*>(returned)->m_value == 3;
+	});
+
 	assert(bexp_tester.execute(true));
 	assert(monolithic_test.execute(true));
+	assert(function_return.execute(true));
 }

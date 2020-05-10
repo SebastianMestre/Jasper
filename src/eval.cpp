@@ -54,8 +54,11 @@ Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTReturnStatement* ast, Type::Environment& e) {
-	// TODO: implement
-	std::cerr << "WARNING: not implemented action (return statement)\n";
+	// TODO: proper error handling
+	auto* returning = eval(ast->m_value.get(), e);
+	assert(returning);
+
+	e.save_return_value(returning);
 	return e.null();
 };
 
@@ -94,13 +97,17 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
 	assert(body);
+
+	Type::Value* return_value;
 	for(auto &stmt : body->m_body){
 		eval(stmt.get(), e);
+		if ((return_value = e.fetch_return_value()))
+			break;
 	}
 
 	e.end_scope();
 
-	return e.null();
+	return return_value;
 };
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {

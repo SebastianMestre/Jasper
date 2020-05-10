@@ -35,6 +35,18 @@ void Environment::end_scope() {
 	m_scope = parent;
 }
 
+void Environment::save_return_value(Type::Value* v) {
+	// check if not stepping on another value
+	assert(!m_return_value);
+	m_return_value = v;
+}
+
+Type::Value* Environment::fetch_return_value() {
+	Type::Value* rv = m_return_value;
+	m_return_value = nullptr;
+	return rv;
+}
+
 // used as a short-hand
 
 // scope
