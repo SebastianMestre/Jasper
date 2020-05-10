@@ -37,7 +37,7 @@ void Environment::end_scope() {
 
 void Environment::save_return_value(Type::Value* v) {
 	// check if not stepping on another value
-	assert(m_return_value);
+	assert(!m_return_value);
 	m_return_value = v;
 }
 

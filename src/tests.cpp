@@ -126,7 +126,7 @@ int main() {
 		a := 1;
 		b := 2;
 		return a + b;
-	}
+	};
 )"};
 	
 	function_return.add_test(+[](Type::Environment& env) -> bool {
@@ -140,9 +140,8 @@ int main() {
 		top_level_call->m_callee = std::move(top_level_name);
 		top_level_call->m_args = std::make_unique<ASTArgumentList>();
 
-		Type::Integer* returned = eval(top_level_call.get(), env);
-
-		return returned->m_value == 3;
+		Type::Value* returned = eval(top_level_call.get(), env);
+		return dynamic_cast<Type::Integer*>(returned)->m_value == 3;
 	});
 
 	assert(bexp_tester.execute(true));

@@ -25,7 +25,7 @@ struct Scope {
 struct Environment {
 	GarbageCollector::GC* m_gc;
 	Scope* m_scope;
-	Type::Value* m_return_value;
+	Type::Value* m_return_value {nullptr};
 
 	Scope* new_scope();
 	void end_scope();
