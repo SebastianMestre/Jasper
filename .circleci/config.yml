@@ -1,6 +1,17 @@
 version: 2.1
 jobs:
-  build_and_run_gcc_latest:
+  test_gcc_latest:
+    docker:
+      - image: gcc:latest
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: make -C ./src test_program -j
+      - run:
+          name: Run
+          command: ./bin/test_program
+  build_gcc_latest:
     docker:
       - image: gcc:latest
     steps:
@@ -8,11 +19,9 @@ jobs:
       - run:
           name: Build
           command: make -C ./src -j
-      - run:
-          name: Run
-          command: ./bin/iseeaparse
 workflows:
   version: 2.1
   build_and_run:
     jobs:
-      - build_and_run_gcc_latest
+      - test_gcc_latest
+      - build_gcc_latest
