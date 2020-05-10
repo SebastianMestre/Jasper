@@ -8,7 +8,7 @@
 
 namespace Test {
 
-using TestFunction = bool (*)(Type::Environment);
+using TestFunction = bool (*)(Type::Environment&);
 
 Parser make_parser(std::string source, Lexer& l);
 

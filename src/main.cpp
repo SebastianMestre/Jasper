@@ -1,4 +1,6 @@
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -12,81 +14,19 @@
 
 int main() {
 
-	std::string s = R"(
-	x : dec = 1.4;
-	y : int = 3;
-	z := fn () {
-		a := 2;
-		b : dec = (4 + 5) * 3 * 1 + 4.5 * 2;
-		c := a;
-		a + b;
-		cmp : bool = a < c;
+	std::ifstream in_fs("source.jp");
 
-		sqrt5 := obt{x:=1;y:=2;} |> norm();
-		sixteen := my_lib.times_pi(my_lib.five()) + 1;
-	};
+	std::stringstream file_content;
+	std::string line;
 
-	y := fn () {
-		print(1,z(),4);
-	};
+	while(std::getline(in_fs, line)){
+		file_content << line << '\n';
+	}
 
-	w := fn (a,b:int,c){};
+	std::string source = file_content.str();
 
-	f := obt {
-		greeting := "Hello, ";
-		__invoke := fn (name : string) {
-			print(greeting + name);
-		};
-	};
 
-	f := fn (name : string) {};
-
-	sqrt := fn (x) { return (x+1) * 0.5; };
-
-	norm := fn(p){
-		return sqrt(p.x * p.x + p.y * p.y);
-	};
-
-	my_lib := dict {
-		five := fn() { return 6; };
-		times_pi := fn(x) { return x * 3; };
-	};
-
-	__invoke := fn () {
-		f.greeting = "Hey, ";
-		f("Sailor");
-	};
-
-	names := dict {
-		user0 := "peter";
-		user1 := "joseph";
-		user2 := "anne";
-	};
-
-)";
-
-	int exit_code = execute(s, true, [&](Type::Environment& env) {
-		auto* entry_point_ptr = env.m_scope->access("__invoke");
-		if (!entry_point_ptr) {
-			std::cerr << "__invoke is not defined\n";
-			return 1;
-		}
-
-		if (entry_point_ptr == nullptr) {
-			std::cerr << "entry point is nullptr: " << entry_point_ptr << "\n";
-			return 1;
-		}
-
-		if (entry_point_ptr == env.m_gc->null()) {
-			std::cerr << "entry point is null: " << entry_point_ptr << "\n";
-			return 1;
-		}
-
-		auto* entry_point = dynamic_cast<Type::Function*>(entry_point_ptr);
-		if (!entry_point) {
-			std::cerr << "__invoke is not a function\n";
-			return 1;
-		}
+	int exit_code = execute(source, true, [&](Type::Environment& env) {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
