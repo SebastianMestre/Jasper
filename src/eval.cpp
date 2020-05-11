@@ -1,5 +1,9 @@
 #include "eval.hpp"
 
+#include <iostream>
+
+#include <cassert>
+
 #include "ast.hpp"
 #include "environment.hpp"
 #include "value.hpp"

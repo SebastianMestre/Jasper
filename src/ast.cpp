@@ -1,8 +1,17 @@
+#include "ast.hpp"
+
+#include <iostream>
+
 #include <cassert>
 
-#include "ast.hpp"
-#include "value.hpp"
 #include "garbage_collector.hpp"
+#include "value.hpp"
+
+namespace {
+
+constexpr char tabc = ' ';
+
+}
 
 void print(ASTDeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
