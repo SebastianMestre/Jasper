@@ -26,7 +26,7 @@ int main() {
 	std::string source = file_content.str();
 
 
-	int exit_code = execute(source, true, [&](Type::Environment& env) {
+	int exit_code = execute(source, true, +[](Type::Environment& env) -> int {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.

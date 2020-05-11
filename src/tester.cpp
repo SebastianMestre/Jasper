@@ -18,15 +18,12 @@ void Tester::add_test(TestFunction tf) {
 	m_testers.push_back(tf);
 }
 
-bool Tester::execute(bool print_parse = false) {
-	int exit_code = ::execute(m_source, print_parse, [&](Type::Environment& env) -> int {
-		for (auto* f : m_testers) {
-			if (!(*f)(env))
-				return 1;
-		}
-		return 0;
-	});
-	return exit_code == 0;
+int Tester::execute(bool print_parse = false) {
+	for (auto* tester : m_testers) {
+		int exit_code = ::execute(m_source, print_parse, tester);
+		if(exit_code != 0) return exit_code;
+	}
+	return 0;
 }
 
 }
