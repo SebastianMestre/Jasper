@@ -1,8 +1,8 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "token_type.hpp"
 #include "ast_type.hpp"
@@ -18,8 +18,6 @@ public:
 	ast_type type() const { return m_type; }
 	virtual ~AST() = default;
 };
-
-constexpr char tabc = ' ';
 
 
 struct ASTNumberLiteral : public AST {

@@ -1,5 +1,7 @@
 #include "value.hpp"
 
+#include <cassert>
+
 #include "environment.hpp"
 #include "error.hpp"
 

@@ -1,4 +1,7 @@
 #include "environment.hpp"
+
+#include <cassert>
+
 #include "garbage_collector.hpp"
 
 namespace Type {
