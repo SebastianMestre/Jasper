@@ -95,32 +95,6 @@ Function::Function(FunctionType def, Scope* scope)
 
 
 
-void gc_visit(Value* v) {
-
-	switch(v->type()) {
-	case value_type::Null:
-		return gc_visit(static_cast<Null*>(v));
-	case value_type::Integer:
-		return gc_visit(static_cast<Integer*>(v));
-	case value_type::Float:
-		return gc_visit(static_cast<Float*>(v));
-	case value_type::String:
-		return gc_visit(static_cast<String*>(v));
-	case value_type::Boolean:
-		return gc_visit(static_cast<Boolean*>(v));
-	case value_type::Error:
-		return gc_visit(static_cast<Error*>(v));
-	case value_type::List:
-		return gc_visit(static_cast<List*>(v));
-	case value_type::Object:
-		return gc_visit(static_cast<Object*>(v));
-	case value_type::Dictionary:
-		return gc_visit(static_cast<Dictionary*>(v));
-	case value_type::Function:
-		return gc_visit(static_cast<Function*>(v));
-	}
-}
-
 void gc_visit(Null* v) { v->m_visited = true; }
 void gc_visit(Integer* v) { v->m_visited = true; }
 void gc_visit(Float* v) { v->m_visited = true; }
@@ -163,6 +137,32 @@ void gc_visit(Function* f) {
 	f->m_visited = true;
 	for (auto dec : f->m_scope->m_declarations)
 		gc_visit(dec.second);
+}
+
+void gc_visit(Value* v) {
+
+	switch(v->type()) {
+	case value_type::Null:
+		return gc_visit(static_cast<Null*>(v));
+	case value_type::Integer:
+		return gc_visit(static_cast<Integer*>(v));
+	case value_type::Float:
+		return gc_visit(static_cast<Float*>(v));
+	case value_type::String:
+		return gc_visit(static_cast<String*>(v));
+	case value_type::Boolean:
+		return gc_visit(static_cast<Boolean*>(v));
+	case value_type::Error:
+		return gc_visit(static_cast<Error*>(v));
+	case value_type::List:
+		return gc_visit(static_cast<List*>(v));
+	case value_type::Object:
+		return gc_visit(static_cast<Object*>(v));
+	case value_type::Dictionary:
+		return gc_visit(static_cast<Dictionary*>(v));
+	case value_type::Function:
+		return gc_visit(static_cast<Function*>(v));
+	}
 }
 
 } // namespace Type
