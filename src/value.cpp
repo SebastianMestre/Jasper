@@ -1,62 +1,31 @@
 #include "value.hpp"
 
 #include "environment.hpp"
+#include "error.hpp"
 
 namespace Type {
 
 Null::Null() : Value(value_type::Null) {}
-
-void Null::gc_visit() {
-	Value::m_visited = true;
-}
 
 
 
 Integer::Integer() : Value(value_type::Integer) {}
 Integer::Integer(int v) : Value(value_type::Integer), m_value(v) {}
 
-void Integer::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-}
-
 
 
 Float::Float() : Value(value_type::Float) {}
 Float::Float(float v) : Value(value_type::Float), m_value(v) {}
-
-void Float::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-}
 
 
 
 Boolean::Boolean() : Value(value_type::Boolean) {}
 Boolean::Boolean(bool b) : Value(value_type::Boolean), m_value(b) {}
 
-void Boolean::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-}
-
 
 
 String::String() : Value(value_type::String) {}
 String::String(std::string s) : Value(value_type::String), m_value(std::move(s)) {}
-
-void String::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-}
 
 
 
@@ -76,16 +45,6 @@ Value* List::at(int position) {
 	}
 }
 
-void List::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-	for (auto* child : m_value) {
-		child->gc_visit();
-	}
-}
-
 
 
 Object::Object() : Value(value_type::Object) {}
@@ -102,16 +61,6 @@ Value* Object::getMember(Identifier const& id) {
 		return nullptr;
 	} else {
 		return it->second;
-	}
-}
-
-void Object::gc_visit() {
-	if (Value::m_visited)
-		return;
-
-	Value::m_visited = true;
-	for (auto child : m_value) {
-		child.second->gc_visit();
 	}
 }
 
@@ -138,29 +87,82 @@ void Dictionary::removeMember(Identifier const& id) {
 	m_value.erase(id);
 }
 
-void Dictionary::gc_visit() {
-	if (Value::m_visited)
-		return;
 
-	Value::m_visited = true;
-	for (auto child : m_value) {
-		child.second->gc_visit();
-	}
-}
 
 Function::Function() : Value(value_type::Function) {}
 Function::Function(FunctionType def, Scope* scope)
 	: Value(value_type::Function), m_def(def), m_scope(scope) {}
 
-void Function::gc_visit() {
-	if (Value::m_visited)
-		return;
-	
-	Value::m_visited = true;
-	for (auto dec : m_scope->m_declarations)
-		dec.second->gc_visit();
+
+
+void gc_visit(Value* v) {
+
+	switch(v->type()) {
+	case value_type::Null:
+		return gc_visit(static_cast<Null*>(v));
+	case value_type::Integer:
+		return gc_visit(static_cast<Integer*>(v));
+	case value_type::Float:
+		return gc_visit(static_cast<Float*>(v));
+	case value_type::String:
+		return gc_visit(static_cast<String*>(v));
+	case value_type::Boolean:
+		return gc_visit(static_cast<Boolean*>(v));
+	case value_type::Error:
+		return gc_visit(static_cast<Error*>(v));
+	case value_type::List:
+		return gc_visit(static_cast<List*>(v));
+	case value_type::Object:
+		return gc_visit(static_cast<Object*>(v));
+	case value_type::Dictionary:
+		return gc_visit(static_cast<Dictionary*>(v));
+	case value_type::Function:
+		return gc_visit(static_cast<Function*>(v));
+	}
 }
 
-// TODO: implement call
+void gc_visit(Null* v) { v->m_visited = true; }
+void gc_visit(Integer* v) { v->m_visited = true; }
+void gc_visit(Float* v) { v->m_visited = true; }
+void gc_visit(String* v) { v->m_visited = true; }
+void gc_visit(Boolean* v) { v->m_visited = true; }
+void gc_visit(Error* v) { v->m_visited = true; }
+
+void gc_visit(List* l) {
+	if (l->m_visited)
+		return;
+
+	l->m_visited = true;
+	for (auto* child : l->m_value) {
+		gc_visit(child);
+	}
+}
+
+void gc_visit(Object* o) {
+	if (o->m_visited)
+		return;
+
+	o->m_visited = true;
+	for (auto child : o->m_value)
+		gc_visit(child.second);
+}
+
+void gc_visit(Dictionary* d) {
+	if (d->m_visited)
+		return;
+
+	d->m_visited = true;
+	for (auto child : d->m_value)
+		gc_visit(child.second);
+}
+
+void gc_visit(Function* f) {
+	if (f->m_visited)
+		return;
+	
+	f->m_visited = true;
+	for (auto dec : f->m_scope->m_declarations)
+		gc_visit(dec.second);
+}
 
 } // namespace Type

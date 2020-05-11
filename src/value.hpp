@@ -31,15 +31,12 @@ public:
 	Value(value_type type) : m_type(type) {}
 	value_type type() const { return m_type; }
 
-	virtual void gc_visit() = 0;
 	virtual ~Value() = default;
 };
 
 struct Null : Value {
 
 	Null();
-
-	void gc_visit() override;
 };
 
 struct Integer : Value {
@@ -47,8 +44,6 @@ struct Integer : Value {
 
 	Integer();
 	Integer(int v);
-
-	void gc_visit() override;
 };
 
 struct Float : Value {
@@ -56,8 +51,6 @@ struct Float : Value {
 
 	Float();
 	Float(float v);
-
-	void gc_visit() override;
 };
 
 struct Boolean : Value {
@@ -65,8 +58,6 @@ struct Boolean : Value {
 
 	Boolean();
 	Boolean(bool b);
-
-	void gc_visit() override;
 };
 
 struct String : Value {
@@ -74,8 +65,6 @@ struct String : Value {
 
 	String();
 	String(std::string s);
-
-	void gc_visit() override;
 };
 
 struct List : Value {
@@ -86,8 +75,6 @@ struct List : Value {
 
 	void append(Value* v);
 	Value* at(int position);
-
-	void gc_visit() override;
 };
 
 struct Object : Value {
@@ -98,8 +85,6 @@ struct Object : Value {
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
-	
-	void gc_visit() override;
 };
 
 struct Dictionary : Value {
@@ -111,8 +96,6 @@ struct Dictionary : Value {
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
 	void removeMember(Identifier const& id);
-
-	void gc_visit() override;
 };
 
 struct Function : Value {
@@ -121,11 +104,9 @@ struct Function : Value {
 
 	Function();
 	Function(FunctionType, Scope*);
-
-	void gc_visit() override;
 };
 
-Value* call(Function* f, ListType args);
+void gc_visit(Value*);
 
 /**
  * Example:

@@ -9,9 +9,6 @@ struct Error : Value {
 
 	Error();
 	Error(std::string);
-
-	void gc_visit() override;
-
 };
 
 Error make_reference_error(const Identifier&);

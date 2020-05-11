@@ -18,7 +18,7 @@ void GC::run() {
 	}
 
 	for (auto* root : m_roots) {
-		root->gc_visit();
+		gc_visit(root);
 	}
 
 	for (auto*& block : m_blocks) {
