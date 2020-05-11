@@ -50,6 +50,17 @@ Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
+
+	e.new_scope();
+
+	for(auto &stmt : ast->m_body){
+		eval(stmt.get(), e);
+		if (e.m_return_value)
+			break;
+	}
+
+	e.end_scope();
+
 	return e.null();
 };
 
@@ -98,16 +109,11 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
 	assert(body);
 
-	Type::Value* return_value;
-	for(auto &stmt : body->m_body){
-		eval(stmt.get(), e);
-		if ((return_value = e.fetch_return_value()))
-			break;
-	}
+	eval(body, e);
 
 	e.end_scope();
 
-	return return_value;
+	return e.fetch_return_value();
 };
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
