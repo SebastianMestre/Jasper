@@ -47,6 +47,7 @@ struct ASTDictionaryLiteral : public AST {
 struct ASTFunctionLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	std::vector<std::unique_ptr<AST>> m_args;
+	std::vector<std::string> m_captures;
 
 	ASTFunctionLiteral() : AST{ ast_type::FunctionLiteral } {}
 };

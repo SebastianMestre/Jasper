@@ -5,6 +5,7 @@
 #include "garbage_collector.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "captures.hpp"
 
 int execute(std::string const& source, bool dump_ast, Runner* runner) {
 
@@ -23,6 +24,8 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 		parse_result.m_error.print();
 		return 1;
 	}
+
+	gather_captures(parse_result.m_result.get());
 
 	if (dump_ast)
 		print(parse_result.m_result.get(), 1);
