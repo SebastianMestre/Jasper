@@ -15,6 +15,7 @@ inline const char* ast_type_string[] = {
 	"ArgumentList",
 	"Block",
 	"ReturnStatement",
+	"IfStatement",
 };
 
 enum class ast_type {
@@ -32,5 +33,6 @@ enum class ast_type {
 	ArgumentList,
 	Block,
 	ReturnStatement,
+	IfStatement,
 };
 

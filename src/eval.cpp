@@ -50,6 +50,17 @@ Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
+
+	e.new_scope();
+
+	for(auto &stmt : ast->m_body){
+		eval(stmt.get(), e);
+		if (e.m_return_value)
+			break;
+	}
+
+	e.end_scope();
+
 	return e.null();
 };
 
@@ -98,16 +109,11 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
 	assert(body);
 
-	Type::Value* return_value;
-	for(auto &stmt : body->m_body){
-		eval(stmt.get(), e);
-		if ((return_value = e.fetch_return_value()))
-			break;
-	}
+	eval(body, e);
 
 	e.end_scope();
 
-	return return_value;
+	return e.fetch_return_value();
 };
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
@@ -225,6 +231,29 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 		return e.new_boolean(lhs_b->m_value xor rhs_b->m_value);
 		break;
 	}
+	case token_type::EQUAL: {
+
+		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
+		if (lhs_i) {
+			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
+			assert(rhs_i);
+			return e.new_boolean(lhs_i->m_value == rhs_i->m_value);
+		}
+
+		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
+		if (lhs_f) {
+			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
+			assert(rhs_f);
+			return e.new_boolean(lhs_f->m_value == rhs_f->m_value);
+		}
+
+		Type::String* lhs_s = dynamic_cast<Type::String*>(lhs);
+		Type::String* rhs_s = dynamic_cast<Type::String*>(rhs);
+		assert(lhs_s);
+		assert(rhs_s);
+		return e.new_boolean(lhs_s->m_value == rhs_s->m_value);
+		break;
+	}
 	default:
 		std::cerr << "WARNING: not implemented action"
 		             "(Evaluating binary expression)\n";
@@ -235,6 +264,20 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
 	return e.new_function(ast, e.m_scope);
+};
+
+Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {
+	auto* condition_result = eval(ast->m_condition.get(), e);
+	assert(condition_result);
+
+	auto* condition_result_b = dynamic_cast<Type::Boolean*>(condition_result);
+	assert(condition_result_b);
+
+	if(condition_result_b->m_value){
+		eval(ast->m_body.get(), e);
+	}
+
+	return e.null();
 };
 
 Type::Value* eval(AST* ast, Type::Environment& e) {
@@ -266,6 +309,10 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTBlock*>(ast), e);
 	case ast_type::ReturnStatement:
 		return eval(static_cast<ASTReturnStatement*>(ast), e);
+	case ast_type::IfStatement:
+		return eval(static_cast<ASTIfStatement*>(ast), e);
+	default:
+		std::cerr << "big problem: unhandled case in eval\n";
 	}
 
 	return nullptr;

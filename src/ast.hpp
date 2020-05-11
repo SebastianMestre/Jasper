@@ -107,4 +107,11 @@ struct ASTReturnStatement : public AST {
 	ASTReturnStatement() : AST{ ast_type::ReturnStatement } {}
 };
 
+struct ASTIfStatement : public AST {
+	std::unique_ptr<AST> m_condition;
+	std::unique_ptr<AST> m_body;
+
+	ASTIfStatement() : AST{ ast_type::IfStatement } {}
+};
+
 void print (AST*, int);
