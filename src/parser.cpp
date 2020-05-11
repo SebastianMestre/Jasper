@@ -699,6 +699,18 @@ Writer<std::unique_ptr<AST>> Parser::parse_statement() {
 			return result;
 		}
 		return return_statement;
+	} else if (p0->m_type == token_type::KEYWORD_IF) {
+		auto if_statement = parse_if_statement();
+		if (handle_error(result, if_statement)) {
+			return result;
+		}
+		return if_statement;
+	} else if (p0->m_type == token_type::BRACE_OPEN) {
+		auto block_statement = parse_block();
+		if (handle_error(result, block_statement)) {
+			return result;
+		}
+		return block_statement;
 	} else {
 		// TODO: parse loops, conditionals, etc.
 
