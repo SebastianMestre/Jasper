@@ -4,11 +4,8 @@
 
 namespace Type {
 
-Error::Error(std::string message) : m_error(message) {}
-
-void Error::gc_visit() {
-	Value::m_visited = true;
-}
+Error::Error() : Value(value_type::Error) {}
+Error::Error(std::string message) : Value(value_type::Error), m_error(message) {}
 
 Error make_reference_error(const Identifier& i) {
 	std::stringstream ss;

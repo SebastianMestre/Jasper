@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "value_type.hpp"
+
 struct ASTFunctionLiteral;
 
 namespace Type {
@@ -20,102 +22,91 @@ using FunctionType = ::ASTFunctionLiteral*;
 
 
 struct Value {
+protected:
+	value_type m_type;
+
+public:
 	bool m_visited = false;
-	virtual void gc_visit() = 0;
+
+	Value(value_type type) : m_type(type) {}
+	value_type type() const { return m_type; }
+
 	virtual ~Value() = default;
 };
 
 struct Null : Value {
 
-	Null() = default;
-
-	void gc_visit() override;
+	Null();
 };
 
 struct Integer : Value {
 	int m_value = 0;
 
-	Integer() = default;
+	Integer();
 	Integer(int v);
-
-	void gc_visit() override;
 };
 
 struct Float : Value {
 	float m_value = 0.0;
 
-	Float() = default;
+	Float();
 	Float(float v);
-
-	void gc_visit() override;
 };
 
 struct Boolean : Value {
 	bool m_value = false;
 
-	Boolean() = default;
+	Boolean();
 	Boolean(bool b);
-
-	void gc_visit() override;
 };
 
 struct String : Value {
 	std::string m_value = "";
 
-	String() = default;
+	String();
 	String(std::string s);
-
-	void gc_visit() override;
 };
 
 struct List : Value {
 	ListType m_value;
 
-	List() = default;
+	List();
 	List(ListType l);
 
 	void append(Value* v);
 	Value* at(int position);
-
-	void gc_visit() override;
 };
 
 struct Object : Value {
 	ObjectType m_value;
 
-	Object() = default;
+	Object();
 	Object(ObjectType);
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
-	
-	void gc_visit() override;
 };
 
 struct Dictionary : Value {
 	ObjectType m_value;
 
-	Dictionary() = default;
+	Dictionary();
 	Dictionary(ObjectType);
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
 	void removeMember(Identifier const& id);
-
-	void gc_visit() override;
 };
 
 struct Function : Value {
 	FunctionType m_def;
 	Scope* m_scope;
 
-	Function() = default;
+	Function();
 	Function(FunctionType, Scope*);
-
-	void gc_visit() override;
 };
 
-Value* call(Function* f, ListType args);
+void gc_visit(Value*);
 
 /**
  * Example:

@@ -4,7 +4,6 @@
 #include "environment.hpp"
 #include "value.hpp"
 
-
 Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 	for(auto& decl : ast->m_declarations){
 		assert(decl->type() == ast_type::Declaration);
@@ -87,8 +86,8 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 	auto* calleeTypeErased = eval(ast->m_callee.get(), e);
 	assert(calleeTypeErased);
 
-	auto* callee = dynamic_cast<Type::Function*>(calleeTypeErased);
-	assert(callee);
+	assert(calleeTypeErased->type() == value_type::Function);
+	Type::Function* callee = static_cast<Type::Function*>(calleeTypeErased);
 
 	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
 	assert(callee->m_def->m_args.size() == arglist->m_args.size());
@@ -125,134 +124,178 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 	case token_type::ADD: {
 		
 		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
 
-		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		if (lhs_i) {
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			assert(rhs_i);
-			return e.new_integer(lhs_i->m_value + rhs_i->m_value);
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_integer(
+				static_cast<Type::Integer*>(lhs)->m_value +
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_float(
+				static_cast<Type::Float*>(lhs)->m_value +
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		case value_type::String:
+			return e.new_string(
+				static_cast<Type::String*>(lhs)->m_value +
+				static_cast<Type::String*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't add values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
-
-		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
-		if (lhs_f) {	
-			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-			assert(rhs_f);
-			return e.new_float(lhs_f->m_value + rhs_f->m_value);
-		}
-
-		Type::String* lhs_s = dynamic_cast<Type::String*>(lhs);
-		Type::String* rhs_s = dynamic_cast<Type::String*>(rhs);
-		assert(lhs_s);
-		assert(rhs_s);
-		return e.new_string(lhs_s->m_value + rhs_s->m_value);
-		break;
 	}
 	case token_type::SUB: {
 		
 		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
 
-		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		if (lhs_i) {
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			assert(rhs_i);
-			return e.new_integer(lhs_i->m_value - rhs_i->m_value);
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_integer(
+				static_cast<Type::Integer*>(lhs)->m_value -
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_float(
+				static_cast<Type::Float*>(lhs)->m_value -
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't subtract values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
-
-		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
-		Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-		assert(lhs_f);
-		assert(rhs_f);
-		return e.new_float(lhs_f->m_value - rhs_f->m_value);
-		break;
 	}
 	case token_type::MUL: {
 		
 		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
 
-		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		if (lhs_i) {
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			assert(rhs_i);
-			return e.new_integer(lhs_i->m_value * rhs_i->m_value);
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_integer(
+				static_cast<Type::Integer*>(lhs)->m_value *
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_float(
+				static_cast<Type::Float*>(lhs)->m_value *
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't multiply values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
-
-		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
-		Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-		assert(lhs_f);
-		assert(rhs_f);
-		return e.new_float(lhs_f->m_value * rhs_f->m_value);
-		break;
 	}
 	case token_type::DIV: {
 		
 		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
 
-		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		if (lhs_i) {
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			assert(rhs_i);
-			return e.new_integer(lhs_i->m_value / rhs_i->m_value);
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_integer(
+				static_cast<Type::Integer*>(lhs)->m_value /
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_float(
+				static_cast<Type::Float*>(lhs)->m_value /
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't divide values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
-
-		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
-		Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-		assert(lhs_f);
-		assert(rhs_f);
-		return e.new_float(lhs_f->m_value / rhs_f->m_value);
-		break;
 	}
 	case token_type::AND: {
 		
 		// TODO: proper error handling
-		Type::Boolean* lhs_b = dynamic_cast<Type::Boolean*>(lhs);
-		Type::Boolean* rhs_b = dynamic_cast<Type::Boolean*>(rhs);
-		assert(lhs_b);
-		assert(rhs_b);
-		return e.new_boolean(lhs_b->m_value and rhs_b->m_value);
-		break;
+		if (lhs->type() == value_type::Boolean and rhs->type() == value_type::Boolean)
+			return e.new_boolean(
+				static_cast<Type::Boolean*>(lhs)->m_value and
+				static_cast<Type::Boolean*>(rhs)->m_value
+			);
+		std::cerr
+			<< "ERROR: logical and operator not defined for types "
+			<< value_type_string[static_cast<int>(lhs->type())] << " and "
+			<< value_type_string[static_cast<int>(rhs->type())];
+		assert(0);
 	}
 	case token_type::IOR: {
 		
 		// TODO: proper error handling
-		Type::Boolean* lhs_b = dynamic_cast<Type::Boolean*>(lhs);
-		Type::Boolean* rhs_b = dynamic_cast<Type::Boolean*>(rhs);
-		assert(lhs_b);
-		assert(rhs_b);
-		return e.new_boolean(lhs_b->m_value or rhs_b->m_value);
-		break;
+		if (lhs->type() == value_type::Boolean and rhs->type() == value_type::Boolean)
+			return e.new_boolean(
+				static_cast<Type::Boolean*>(lhs)->m_value or
+				static_cast<Type::Boolean*>(rhs)->m_value
+			);
+		std::cerr
+			<< "ERROR: logical or operator not defined for types "
+			<< value_type_string[static_cast<int>(lhs->type())] << " and "
+			<< value_type_string[static_cast<int>(rhs->type())];
+		assert(0);
 	}
 	case token_type::XOR: {
 		
 		// TODO: proper error handling
-		Type::Boolean* lhs_b = dynamic_cast<Type::Boolean*>(lhs);
-		Type::Boolean* rhs_b = dynamic_cast<Type::Boolean*>(rhs);
-		assert(lhs_b);
-		assert(rhs_b);
-		return e.new_boolean(lhs_b->m_value xor rhs_b->m_value);
-		break;
+		if (lhs->type() == value_type::Boolean and rhs->type() == value_type::Boolean)
+			return e.new_boolean(
+				static_cast<Type::Boolean*>(lhs)->m_value xor
+				static_cast<Type::Boolean*>(rhs)->m_value
+			);
+		std::cerr
+			<< "ERROR: exclusive or operator not defined for types "
+			<< value_type_string[static_cast<int>(lhs->type())] << " and "
+			<< value_type_string[static_cast<int>(rhs->type())];
+		assert(0);
 	}
 	case token_type::EQUAL: {
 
-		Type::Integer* lhs_i = dynamic_cast<Type::Integer*>(lhs);
-		if (lhs_i) {
-			Type::Integer* rhs_i = dynamic_cast<Type::Integer*>(rhs);
-			assert(rhs_i);
-			return e.new_boolean(lhs_i->m_value == rhs_i->m_value);
-		}
+		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
 
-		Type::Float* lhs_f = dynamic_cast<Type::Float*>(lhs);
-		if (lhs_f) {
-			Type::Float* rhs_f = dynamic_cast<Type::Float*>(rhs);
-			assert(rhs_f);
-			return e.new_boolean(lhs_f->m_value == rhs_f->m_value);
+		switch (lhs->type()) {
+		case value_type::Null:
+			return e.new_boolean(true);
+		case value_type::Integer:
+			return e.new_boolean(
+				static_cast<Type::Integer*>(lhs)->m_value ==
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_boolean(
+				static_cast<Type::Float*>(lhs)->m_value ==
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		case value_type::String:
+			return e.new_boolean(
+				static_cast<Type::String*>(lhs)->m_value ==
+				static_cast<Type::String*>(rhs)->m_value
+			);
+		case value_type::Boolean:
+			return e.new_boolean(
+				static_cast<Type::Boolean*>(lhs)->m_value ==
+				static_cast<Type::Boolean*>(rhs)->m_value
+			);
+		default: {
+			std::cerr
+				<< "ERROR: can't compare equality of types "
+				<< value_type_string[static_cast<int>(lhs->type())] << " and "
+				<< value_type_string[static_cast<int>(rhs->type())];
+			assert(0);
 		}
-
-		Type::String* lhs_s = dynamic_cast<Type::String*>(lhs);
-		Type::String* rhs_s = dynamic_cast<Type::String*>(rhs);
-		assert(lhs_s);
-		assert(rhs_s);
-		return e.new_boolean(lhs_s->m_value == rhs_s->m_value);
-		break;
+		}
 	}
 	default:
 		std::cerr << "WARNING: not implemented action"
@@ -270,8 +313,8 @@ Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {
 	auto* condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
-	auto* condition_result_b = dynamic_cast<Type::Boolean*>(condition_result);
-	assert(condition_result_b);
+	assert(condition_result->type() == value_type::Boolean);
+	auto* condition_result_b = static_cast<Type::Boolean*>(condition_result);
 
 	if(condition_result_b->m_value){
 		eval(ast->m_body.get(), e);
