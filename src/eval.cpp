@@ -266,6 +266,20 @@ Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
 	return e.new_function(ast, e.m_scope);
 };
 
+Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {
+	auto* condition_result = eval(ast->m_condition.get(), e);
+	assert(condition_result);
+
+	auto* condition_result_b = dynamic_cast<Type::Boolean*>(condition_result);
+	assert(condition_result_b);
+
+	if(condition_result_b->m_value){
+		eval(ast->m_body.get(), e);
+	}
+
+	return e.null();
+};
+
 Type::Value* eval(AST* ast, Type::Environment& e) {
 
 	switch (ast->type()) {
@@ -295,6 +309,10 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTBlock*>(ast), e);
 	case ast_type::ReturnStatement:
 		return eval(static_cast<ASTReturnStatement*>(ast), e);
+	case ast_type::IfStatement:
+		return eval(static_cast<ASTIfStatement*>(ast), e);
+	default:
+		std::cerr << "big problem: unhandled case in eval\n";
 	}
 
 	return nullptr;
