@@ -144,7 +144,7 @@ int main() {
 		return (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
 	});
 
-	assert(bexp_tester.execute(true));
-	assert(monolithic_test.execute(true));
-	assert(function_return.execute(true));
+	assert(0 == bexp_tester.execute(true));
+	assert(0 == monolithic_test.execute(true));
+	assert(0 == function_return.execute(true));
 }
