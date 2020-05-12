@@ -48,6 +48,14 @@ Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
 	return nullptr;
 };
 
+Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
+	std::vector<Type::Value*> elements;
+	for(auto& element : ast->m_elements){
+		elements.push_back(eval(element.get(), e));
+	}
+	return e.new_list(std::move(elements));
+};
+
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
 	return e.m_scope->access(ast->m_text);
 };
@@ -340,6 +348,8 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTStringLiteral*>(ast), e);
 	case ast_type::ObjectLiteral:
 		return eval(static_cast<ASTObjectLiteral*>(ast), e);
+	case ast_type::ArrayLiteral:
+		return eval(static_cast<ASTArrayLiteral*>(ast), e);
 	case ast_type::DictionaryLiteral:
 		return eval(static_cast<ASTDictionaryLiteral*>(ast), e);
 	case ast_type::FunctionLiteral:
