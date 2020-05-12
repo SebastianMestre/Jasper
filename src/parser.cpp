@@ -297,7 +297,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 	while(1){
 		auto op = peek();
-		if(op->m_type == token_type::SEMICOLON || op->m_type == token_type::END){
+		if(op->m_type == token_type::SEMICOLON || op->m_type == token_type::END || op->m_type == token_type::BRACE_CLOSE){
 			break;
 		}
 
@@ -416,6 +416,13 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 		return dictionary;
 	}
 
+	if (token->m_type == token_type::KEYWORD_ARRAY) {
+		auto array = parse_array_literal();
+		if (handle_error(result, array))
+			return result;
+		return array;
+	}
+
 	result.m_error.m_sub_errors.push_back({ make_expected_error(
 	    token_type_string[int(token_type::KEYWORD_FN)], token) });
 
@@ -426,6 +433,30 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 	    token_type_string[int(token_type::NUMBER)], token) });
 
 	return result;
+}
+
+Writer<std::unique_ptr<AST>> Parser::parse_array_literal () {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Failed to parse array literal" } };
+
+	if (handle_error(result, require(token_type::KEYWORD_ARRAY))) {
+		return result;
+	}
+
+	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+		return result;
+	}
+
+	auto elements = parse_expression_list(token_type::SEMICOLON, token_type::BRACE_CLOSE, true);
+
+	if (handle_error(result, elements)) {
+		return result;
+	}
+
+	auto e = std::make_unique<ASTArrayLiteral>();
+	e->m_elements = std::move(elements.m_result);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
 Writer<std::unique_ptr<AST>> Parser::parse_object_literal () {

@@ -57,6 +57,7 @@ struct Parser {
 	Writer<std::unique_ptr<AST>> parse_terminal();
 	Writer<std::unique_ptr<AST>> parse_function();
 	Writer<std::unique_ptr<AST>> parse_object_literal();
+	Writer<std::unique_ptr<AST>> parse_array_literal ();
 	Writer<std::unique_ptr<AST>> parse_dictionary_literal();
 	Writer<std::unique_ptr<AST>> parse_argument_list();
 	Writer<std::unique_ptr<AST>> parse_block();
