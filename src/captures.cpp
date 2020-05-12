@@ -101,6 +101,16 @@ Set gather_captures(ASTObjectLiteral* ast) {
 	return {};
 }
 
+Set gather_captures(ASTArrayLiteral* ast) {
+	Set result {};
+	for(auto& child : ast->m_elements){
+		Set child_captures = gather_captures(child.get());
+		for(auto const& identifier : child_captures)
+			result.insert(identifier);
+	}
+	return result;
+}
+
 Set gather_captures(ASTDictionaryLiteral* ast) {
 	// TODO
 	return {};
@@ -125,6 +135,8 @@ Set gather_captures(AST* ast) {
 		return gather_captures(static_cast<ASTStringLiteral*>(ast));
 	case ast_type::ObjectLiteral:
 		return gather_captures(static_cast<ASTObjectLiteral*>(ast));
+	case ast_type::ArrayLiteral:
+		return gather_captures(static_cast<ASTArrayLiteral*>(ast));
 	case ast_type::DictionaryLiteral:
 		return gather_captures(static_cast<ASTDictionaryLiteral*>(ast));
 	case ast_type::FunctionLiteral:
