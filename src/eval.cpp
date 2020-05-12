@@ -109,6 +109,10 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 		e.declare(argdecl->m_identifier, argvalue);
 	}
 
+	for(auto& kv : callee->m_captures){
+		e.declare(kv.first, kv.second);
+	}
+
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
 	assert(body);
 
