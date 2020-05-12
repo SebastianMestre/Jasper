@@ -97,6 +97,66 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminato
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
+Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_expression_list(
+    token_type delimiter, token_type terminator, bool allow_trailing_delimiter
+) {
+	Writer<std::vector<std::unique_ptr<AST>>> result
+	    = { { "Parse Error: Failed to parse expression list" } };
+
+	std::vector<std::unique_ptr<AST>> expressions;
+
+	if(peek()->m_type == terminator){
+		m_lexer->advance();
+	} else {
+		while (1) {
+			auto p0 = peek();
+
+			if (p0->m_type == token_type::END) {
+				result.m_error.m_sub_errors.push_back(
+				    { { "Found EOF while parsing an expression list" } });
+				return result;
+			}
+
+			if (p0->m_type == terminator) {
+				if (allow_trailing_delimiter) {
+					m_lexer->advance();
+					break;
+				} else {
+					result.m_error.m_sub_errors.push_back(
+					    { { "Found a terminator after a delimiter in an "
+					        "expression list " } });
+					return result;
+				}
+			}
+
+			auto expression = parse_expression();
+
+			if (handle_error(result, expression)) {
+				return result;
+			} else {
+				expressions.push_back(std::move(expression.m_result));
+			}
+
+			auto p1 = peek();
+
+			if (p1->m_type == delimiter) {
+				m_lexer->advance();
+			} else if (p1->m_type == terminator) {
+				m_lexer->advance();
+				break;
+			} else {
+				result.m_error.m_sub_errors.push_back(
+				    make_expected_error(token_type_string[(int)delimiter], p1));
+				result.m_error.m_sub_errors.push_back(
+				    make_expected_error(token_type_string[(int)terminator], p1));
+				return result;
+			}
+		}
+	}
+
+	return make_writer(std::move(expressions));
+}
+
 Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 	Writer<std::unique_ptr<AST>> result
 	    = { { "Parse Error: Failed to parse declaration" } };
@@ -208,52 +268,14 @@ Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
 		return result;
 	}
 
-	std::vector<std::unique_ptr<AST>> args;
+	auto args = parse_expression_list(token_type::COMMA, token_type::PAREN_CLOSE, false);
 
-	if (peek()->m_type == token_type::PAREN_CLOSE) {
-		m_lexer->advance();
-	} else {
-		// loop until we find a matching paren
-		while (1) {
-			auto p0 = peek();
-
-			if (p0->m_type == token_type::END) {
-				result.m_error.m_sub_errors.push_back(
-				    { { "Found EOF while parsing a function call" } });
-				return result;
-			}
-
-			if (p0->m_type == token_type::PAREN_CLOSE) {
-				result.m_error.m_sub_errors.push_back(
-				    { { "Found a closing paren after a comma in a function "
-				        "call" } });
-				return result;
-			}
-
-			auto argument = parse_expression();
-			if (handle_error(result, argument)) {
-				return result;
-			} else {
-				args.push_back(std::move(argument.m_result));
-			}
-
-			auto p1 = peek();
-
-			if (p1->m_type == token_type::COMMA) {
-				m_lexer->advance();
-			} else if (p1->m_type == token_type::PAREN_CLOSE) {
-				m_lexer->advance();
-				break;
-			}else{
-				result.m_error.m_sub_errors.push_back(
-				    make_expected_error("',' or ')'", p1));
-				return result;
-			}
-		}
+	if (handle_error(result, args)) {
+		return result;
 	}
 
 	auto e = std::make_unique<ASTArgumentList>();
-	e->m_args = std::move(args);
+	e->m_args = std::move(args.m_result);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
