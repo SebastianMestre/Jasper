@@ -56,7 +56,7 @@ Type::Value* Environment::fetch_return_value() {
 void Environment::declare(const Identifier& i, Value* v) { m_scope->declare(i,v); }
 Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
 
-// gargabe_collector
+// garbage_collector
 Null* Environment::null() { return m_gc->null(); }
 Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
 Float* Environment::new_float(float f) { return m_gc->new_float(f); }
@@ -64,7 +64,6 @@ Boolean* Environment::new_boolean(bool b) { return m_gc->new_boolean(b); }
 String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
 List* Environment::new_list() { return m_gc->new_list(); }
 Object* Environment::new_object() { return m_gc->new_object(); }
-Function* Environment::new_function(FunctionType def, Scope* s) { return m_gc->new_function(def, s); }
+Function* Environment::new_function(FunctionType def, ObjectType const& s) { return m_gc->new_function(def, s); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
-
 }

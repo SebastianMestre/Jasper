@@ -28,7 +28,7 @@ public:
 	Type::Float* new_float (float);
 	Type::Boolean* new_boolean (bool);
 	Type::String* new_string (std::string);
-	Type::Function* new_function (Type::FunctionType, Type::Scope*);
+	Type::Function* new_function (Type::FunctionType, Type::ObjectType const&);
 	Type::Error* new_error (std::string);
 };
 

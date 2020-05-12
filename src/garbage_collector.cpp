@@ -1,6 +1,8 @@
 #include "garbage_collector.hpp"
 
 #include <algorithm>
+#include <string>
+#include <unordered_map>
 
 namespace GarbageCollector {
 
@@ -80,8 +82,8 @@ Type::String* GC::new_string(std::string s) {
 	return result;
 }
 
-Type::Function* GC::new_function(Type::FunctionType def, Type::Scope* scope) {
-	auto result = new Type::Function(std::move(def), std::move(scope));
+Type::Function* GC::new_function(Type::FunctionType def, Type::ObjectType const& captures) {
+	auto result = new Type::Function(std::move(def), std::move(captures));
 	m_blocks.push_back(result);
 	return result;
 }

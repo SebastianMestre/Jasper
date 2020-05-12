@@ -47,7 +47,7 @@ struct Environment {
 	String* new_string(std::string);
 	List* new_list();
 	Object* new_object();
-	Function* new_function(FunctionType, Scope*);
+	Function* new_function(FunctionType, ObjectType const&);
 	Error* new_error(std::string);
 };
 }

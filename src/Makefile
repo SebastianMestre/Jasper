@@ -5,6 +5,7 @@ BINDIR := ../bin
 OBJDIR := ../build
 OBJNAMES := \
 	ast.o \
+	captures.o \
 	environment.o \
 	error.o \
 	eval.o \

@@ -17,7 +17,7 @@ int main() {
 	)");
 
 	bexp_tester.add_test(
-		+[](Type::Environment& env) -> bool {
+		+[](Type::Environment& env) -> int {
 			auto* expected_10 = env.m_scope->access("int_val");
 			auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
 			assert(as_integer);
@@ -48,7 +48,7 @@ int main() {
 			assert(as_float->m_value == 0.5);
 			std::cout << "@@ Value is: " << as_float->m_value << '\n';
 			
-			return true;	
+			return 0;
 		}
 	);
 
@@ -105,7 +105,7 @@ int main() {
 
 )"};
 
-	monolithic_test.add_test(+[](Type::Environment& env) -> bool {
+	monolithic_test.add_test(+[](Type::Environment& env) -> int {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
@@ -118,7 +118,7 @@ int main() {
 
 		eval(top_level_call.get(), env);
 
-		return true;
+		return 0;
 	});
 
 	Tester function_return{R"(
@@ -129,7 +129,7 @@ int main() {
 	};
 )"};
 	
-	function_return.add_test(+[](Type::Environment& env) -> bool {
+	function_return.add_test(+[](Type::Environment& env) -> int {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
@@ -141,10 +141,10 @@ int main() {
 		top_level_call->m_args = std::make_unique<ASTArgumentList>();
 
 		Type::Value* returned = eval(top_level_call.get(), env);
-		return dynamic_cast<Type::Integer*>(returned)->m_value == 3;
+		return (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
 	});
 
-	assert(bexp_tester.execute(true));
-	assert(monolithic_test.execute(true));
-	assert(function_return.execute(true));
+	assert(0 == bexp_tester.execute(true));
+	assert(0 == monolithic_test.execute(true));
+	assert(0 == function_return.execute(true));
 }

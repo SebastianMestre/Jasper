@@ -8,7 +8,7 @@
 
 namespace Test {
 
-using TestFunction = bool (*)(Type::Environment&);
+using TestFunction = int (*)(Type::Environment&);
 
 Parser make_parser(std::string source, Lexer& l);
 
@@ -21,7 +21,7 @@ struct Tester {
 	Tester(std::string, std::vector<TestFunction>);
 
 	void add_test(TestFunction);
-	bool execute(bool);
+	int execute(bool);
 };
 
 }

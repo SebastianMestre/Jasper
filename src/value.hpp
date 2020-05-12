@@ -99,10 +99,9 @@ struct Dictionary : Value {
 
 struct Function : Value {
 	FunctionType m_def;
-	Scope* m_scope;
+	ObjectType m_captures;
 
-	Function();
-	Function(FunctionType, Scope*);
+	Function(FunctionType, ObjectType);
 };
 
 void gc_visit(Value*);

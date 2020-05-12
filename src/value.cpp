@@ -91,11 +91,8 @@ void Dictionary::removeMember(Identifier const& id) {
 
 
 
-Function::Function() : Value(value_type::Function) {}
-Function::Function(FunctionType def, Scope* scope)
-	: Value(value_type::Function), m_def(def), m_scope(scope) {}
-
-
+Function::Function(FunctionType def, ObjectType captures)
+    : Value(value_type::Function), m_def(def), m_captures(std::move(captures)) {}
 
 void gc_visit(Null* v) { v->m_visited = true; }
 void gc_visit(Integer* v) { v->m_visited = true; }
@@ -137,7 +134,7 @@ void gc_visit(Function* f) {
 		return;
 	
 	f->m_visited = true;
-	for (auto dec : f->m_scope->m_declarations)
+	for (auto& dec : f->m_captures)
 		gc_visit(dec.second);
 }
 
