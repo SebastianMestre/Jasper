@@ -38,6 +38,12 @@ struct ASTObjectLiteral : public AST {
 	ASTObjectLiteral() : AST{ ast_type::ObjectLiteral } {}
 };
 
+struct ASTArrayLiteral : public AST {
+	std::vector<std::unique_ptr<AST>> m_elements;
+
+	ASTArrayLiteral() : AST{ ast_type::ArrayLiteral } {}
+};
+
 struct ASTDictionaryLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 
