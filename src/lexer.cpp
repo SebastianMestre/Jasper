@@ -33,6 +33,17 @@ bool Lexer::consume_keyword() {
 	// TODO: make table based?
 	char c0 = peek_char(0);
 	switch (c0) {
+	case 'a': {
+		if (peek_char(1) == 'r' &&
+		    peek_char(2) == 'r' &&
+		    peek_char(3) == 'a' &&
+		    peek_char(4) == 'y' &&
+		    not is_identifier_char(peek_char(5))
+		) {
+			push_token(token_type::KEYWORD_ARRAY, 5);
+			return true;
+		}
+	} break;
 	case 'f': {
 		char c1 = peek_char(1);
 		if (c1 == 'n') {
