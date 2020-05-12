@@ -310,7 +310,11 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 }
 
 Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
-	return e.new_function(ast, e.m_scope);
+	std::unordered_map<std::string, Type::Value*> captures;
+	for(auto const& identifier : ast->m_captures){
+		captures[identifier] = e.m_scope->access(identifier);
+	}
+	return e.new_function(ast, captures);
 };
 
 Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {

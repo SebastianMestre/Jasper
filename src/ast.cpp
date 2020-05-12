@@ -4,7 +4,6 @@
 
 #include <cassert>
 
-#include "garbage_collector.hpp"
 #include "value.hpp"
 
 namespace {
