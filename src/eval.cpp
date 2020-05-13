@@ -27,15 +27,15 @@ Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTNumberLiteral* ast, Type::Environment& e) {
-	for (char a : ast->m_text)
+	for (char a : ast->text())
 		if (a == '.')
-			return e.new_float(std::stof(ast->m_text));
+			return e.new_float(std::stof(ast->text()));
 
-	return e.new_integer(std::stoi(ast->m_text));
+	return e.new_integer(std::stoi(ast->text()));
 };
 
 Type::Value* eval(ASTStringLiteral* ast, Type::Environment& e) {
-	return e.new_string(ast->m_text);
+	return e.new_string(ast->text());
 };
 
 Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
@@ -84,7 +84,7 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	return e.m_scope->access(ast->m_text);
+	return e.m_scope->access(ast->text());
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {

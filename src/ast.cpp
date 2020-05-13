@@ -37,15 +37,13 @@ void print(ASTDeclaration* ast, int d) {
 void print(ASTNumberLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Number " << ast->m_text << " ]\n";
+	std::cout << stab << "[ Number " << ast->text() << " ]\n";
 }
 
 void print(ASTStringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ StringLiteral\n"
-		<< tab << "Value: " << ast->m_text << "\n"
-		<< stab << "]\n";
+	std::cout << stab << "[ StringLiteral\n" << ast->text() << "]\n";
 }
 
 void print(ASTObjectLiteral* ast, int d) {
@@ -71,9 +69,7 @@ void print(ASTDictionaryLiteral* ast, int d) {
 void print(ASTIdentifier* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Identifier\n"
-		<< tab << "Name: " << ast->m_text << '\n'
-		<< stab << "]\n";
+	std::cout << stab << "[ Identifier\n" << ast->text() << "]\n";
 }
 
 void print(ASTBlock* ast, int d) {

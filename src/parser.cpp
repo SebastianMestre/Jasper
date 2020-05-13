@@ -365,21 +365,21 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 
 	if (token->m_type == token_type::NUMBER) {
 		auto e = std::make_unique<ASTNumberLiteral>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
 	if (token->m_type == token_type::IDENTIFIER) {
 		auto e = std::make_unique<ASTIdentifier>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
 	if(token->m_type == token_type::STRING){
 		auto e = std::make_unique<ASTStringLiteral>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}

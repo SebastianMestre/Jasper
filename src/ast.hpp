@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "token_type.hpp"
+#include "token.hpp"
 #include "ast_type.hpp"
 
 struct AST {
@@ -21,13 +21,17 @@ public:
 
 
 struct ASTNumberLiteral : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTNumberLiteral() : AST{ ast_type::NumberLiteral } {}
 };
 
 struct ASTStringLiteral : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTStringLiteral() : AST{ ast_type::StringLiteral } {}
 };
@@ -74,7 +78,9 @@ struct ASTDeclaration : public AST {
 };
 
 struct ASTIdentifier : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTIdentifier() : AST{ ast_type::Identifier } {}
 };

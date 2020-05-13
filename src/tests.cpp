@@ -2,7 +2,9 @@
 #include <cassert>
 
 #include "eval.hpp"
+#include "parse.hpp"
 #include "tester.hpp"
+#include "token_array.hpp"
 #include "value.hpp"
 
 int main() {
@@ -109,14 +111,10 @@ int main() {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
-		auto top_level_name = std::make_unique<ASTIdentifier>();
-		top_level_name->m_text = "__invoke";
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
 
-		auto top_level_call = std::make_unique<ASTCallExpression>();
-		top_level_call->m_callee = std::move(top_level_name);
-		top_level_call->m_args = std::make_unique<ASTArgumentList>();
-
-		eval(top_level_call.get(), env);
+		eval(top_level_call.m_result.get(), env);
 
 		return 0;
 	});
@@ -133,14 +131,10 @@ int main() {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
-		auto top_level_name = std::make_unique<ASTIdentifier>();
-		top_level_name->m_text = "f";
+		TokenArray ta;
+		auto top_level_call = parse_expression("f()", ta);
 
-		auto top_level_call = std::make_unique<ASTCallExpression>();
-		top_level_call->m_callee = std::move(top_level_name);
-		top_level_call->m_args = std::make_unique<ASTArgumentList>();
-
-		Type::Value* returned = eval(top_level_call.get(), env);
+		Type::Value* returned = eval(top_level_call.m_result.get(), env);
 		return (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
 	});
 
@@ -161,14 +155,10 @@ int main() {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
-		auto top_level_name = std::make_unique<ASTIdentifier>();
-		top_level_name->m_text = "f";
+		TokenArray ta;
+		auto top_level_call = parse_expression("f()", ta);
 
-		auto top_level_call = std::make_unique<ASTCallExpression>();
-		top_level_call->m_callee = std::move(top_level_name);
-		top_level_call->m_args = std::make_unique<ASTArgumentList>();
-
-		Type::Value* returned = eval(top_level_call.get(), env);
+		Type::Value* returned = eval(top_level_call.m_result.get(), env);
 
 		if (!returned)
 			return 1;

@@ -62,7 +62,7 @@ Set gather_captures(ASTStringLiteral* ast) {
 }
 
 Set gather_captures(ASTIdentifier* ast) {
-	return {{ ast->m_text }};
+	return {{ ast->text() }};
 }
 
 Set gather_captures(ASTBinaryExpression* ast) {
