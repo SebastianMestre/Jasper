@@ -214,6 +214,8 @@ struct binding_power {
 bool is_binary_operator(token_type t){
 	// TODO: fill out this table
 	switch(t){
+	case token_type::PAREN_OPEN: // a bit of a hack
+
 	case token_type::LT:
 	case token_type::GT:
 	case token_type::LTE:
@@ -236,6 +238,7 @@ bool is_binary_operator(token_type t){
 binding_power binding_power_of(token_type t){
 	// TODO: fill out this table
 	switch(t){
+
 	case token_type::ASSIGN:
 		return { 10, 11 };
 	case token_type::PIZZA:
@@ -253,11 +256,13 @@ binding_power binding_power_of(token_type t){
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
 		return { 50, 51 };
+	case token_type::PAREN_OPEN: // a bit of a hack
 	case token_type::DOT:
 		return { 70, 71 };
 	default:
 		assert(false);
 	}
+
 }
 
 Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
@@ -297,18 +302,30 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 	while(1){
 		auto op = peek();
-		if(op->m_type == token_type::SEMICOLON || op->m_type == token_type::END || op->m_type == token_type::BRACE_CLOSE){
+
+		if (op->m_type == token_type::SEMICOLON
+		    || op->m_type == token_type::END
+		    || op->m_type == token_type::BRACE_CLOSE
+		    || op->m_type == token_type::PAREN_CLOSE
+		    || op->m_type == token_type::COMMA) {
 			break;
 		}
 
-		constexpr int binding_power_of_paren_open = 60;
-		if(op->m_type == token_type::PAREN_OPEN){
-			if(binding_power_of_paren_open < bp)
-				break;
+		if (not is_binary_operator(op->m_type)) {
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("a binary operator", op));
+			return result;
+		}
 
+		auto [lp, rp] = binding_power_of(op->m_type);
+
+		if (lp < bp)
+			break;
+
+		if (op->m_type == token_type::PAREN_OPEN) {
 			auto args = parse_argument_list();
 
-			if(handle_error(result, args)){
+			if (handle_error(result, args)) {
 				return result;
 			}
 
@@ -321,24 +338,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 			continue;
 		}
 
-		if(op->m_type == token_type::PAREN_CLOSE){
-			break;
-		}
-
-		if(op->m_type == token_type::COMMA){
-			break;
-		}
-
-		if(not is_binary_operator(op->m_type)){
-			auto err = make_expected_error("a binary operator", op);
-			result.m_error.m_sub_errors.push_back(std::move(err));
-			return result;
-		}
-
-		auto [lp, rp] = binding_power_of(op->m_type);
-
-		if(lp < bp) break;
-
 		m_lexer->advance();
 		auto rhs = parse_expression(rp);
 
@@ -349,6 +348,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 		e->m_rhs = std::move(rhs.m_result);
 
 		lhs.m_result = std::move(e);
+
 	}
 
 	return lhs;
