@@ -23,6 +23,7 @@ public:
 	Type::Null* null();
 
 	Type::Object* new_object (Type::ObjectType);
+	Type::Dictionary* new_dictionary (Type::ObjectType);
 	Type::List* new_list (Type::ListType);
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);

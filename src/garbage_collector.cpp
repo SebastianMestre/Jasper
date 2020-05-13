@@ -53,6 +53,13 @@ Type::Object* GC::new_object(Type::ObjectType declarations) {
 	return result;
 }
 
+Type::Dictionary* GC::new_dictionary(Type::ObjectType declarations) {
+	auto result = new Type::Dictionary;
+	result->m_value = std::move(declarations);
+	m_blocks.push_back(result);
+	return result;
+}
+
 Type::List* GC::new_list(Type::ListType elements) {
 	auto result = new Type::List;
 	result->m_value = std::move(elements);
