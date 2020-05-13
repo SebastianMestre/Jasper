@@ -21,7 +21,7 @@ struct Tester {
 	Tester(std::string, std::vector<TestFunction>);
 
 	void add_test(TestFunction);
-	int execute(bool);
+	int execute(bool print_ast = false);
 };
 
 }

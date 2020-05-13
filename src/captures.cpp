@@ -8,6 +8,7 @@
 using Set = std::unordered_set<std::string>;
 
 Set gather_captures(ASTFunctionLiteral* ast) {
+
 	auto* body = dynamic_cast<ASTBlock*>(ast->m_body.get());
 	assert(body);
 
@@ -20,7 +21,15 @@ Set gather_captures(ASTFunctionLiteral* ast) {
 		}
 	};
 
+	// Do not capture own arguments
+	for (auto& argp : ast->m_args) {
+		assert(argp->type() == ast_type::Declaration);
+		auto decl = static_cast<ASTDeclaration*>(argp.get());
+		internals.insert(decl->m_identifier);
+	}
+
 	for (auto& stmt : body->m_body) {
+		// do not capture locals
 		if (stmt->type() == ast_type::Declaration) {
 			auto* decl = static_cast<ASTDeclaration*>(stmt.get());
 			internals.insert(decl->m_identifier);

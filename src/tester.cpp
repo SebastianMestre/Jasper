@@ -18,7 +18,7 @@ void Tester::add_test(TestFunction tf) {
 	m_testers.push_back(tf);
 }
 
-int Tester::execute(bool print_parse = false) {
+int Tester::execute(bool print_parse) {
 	for (auto* tester : m_testers) {
 		int exit_code = ::execute(m_source, print_parse, tester);
 		if(exit_code != 0) return exit_code;

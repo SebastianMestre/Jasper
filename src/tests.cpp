@@ -147,4 +147,43 @@ int main() {
 	assert(0 == bexp_tester.execute(true));
 	assert(0 == monolithic_test.execute(true));
 	assert(0 == function_return.execute(true));
+
+	Tester function_captures{R"(
+	K := fn (x) { return fn (y) { return x; }; };
+	f := fn() {
+		a := 42;
+		b := 2;
+		return K(a)(b);
+	};
+	)"};
+
+	function_captures.add_test(+[](Type::Environment& env) -> int {
+		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
+		// this means we need to create a call expression node to run the program.
+		// TODO: We need to clean this up
+		auto top_level_name = std::make_unique<ASTIdentifier>();
+		top_level_name->m_text = "f";
+
+		auto top_level_call = std::make_unique<ASTCallExpression>();
+		top_level_call->m_callee = std::move(top_level_name);
+		top_level_call->m_args = std::make_unique<ASTArgumentList>();
+
+		Type::Value* returned = eval(top_level_call.get(), env);
+
+		if (!returned)
+			return 1;
+
+		if (returned->type() != value_type::Integer)
+			return 1;
+
+		auto* as_int = static_cast<Type::Integer*>(returned);
+		if (as_int->m_value != 42){
+			std::cerr << "@@ Value is " << as_int->m_value << '\n';
+			return 1;
+		}
+
+		return 0;
+	});
+
+	assert(0 == function_captures.execute());
 }
