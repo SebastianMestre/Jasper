@@ -91,7 +91,7 @@ Type::String* GC::new_string(std::string s) {
 	return result;
 }
 
-Type::Function* GC::new_function(Type::FunctionType def, Type::ObjectType const& captures) {
+Type::Function* GC::new_function(Type::FunctionType def, Type::ObjectType captures) {
 	auto result = new Type::Function(std::move(def), std::move(captures));
 	m_blocks.push_back(result);
 	return result;

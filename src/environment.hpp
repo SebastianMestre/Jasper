@@ -48,7 +48,7 @@ struct Environment {
 	List* new_list(ListType);
 	Object* new_object(ObjectType);
 	Dictionary* new_dictionary(ObjectType);
-	Function* new_function(FunctionType, ObjectType const&);
+	Function* new_function(FunctionType, ObjectType);
 	Error* new_error(std::string);
 };
 }

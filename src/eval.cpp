@@ -46,7 +46,7 @@ Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
 		}
 		else {
 			std::cerr << "ERROR: declaration in object must have a value";
@@ -65,7 +65,7 @@ Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
 		}
 		else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
@@ -353,7 +353,7 @@ Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
 	for(auto const& identifier : ast->m_captures){
 		captures[identifier] = e.m_scope->access(identifier);
 	}
-	return e.new_function(ast, captures);
+	return e.new_function(ast, std::move(captures));
 };
 
 Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {
