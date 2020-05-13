@@ -8,6 +8,7 @@
 #include "eval.hpp"
 #include "execute.hpp"
 #include "parse.hpp"
+#include "token_array.hpp"
 #include "value.hpp"
 
 int main() {
@@ -31,7 +32,8 @@ int main() {
 		// TODO: We need to clean this up
 
 		{
-			auto top_level_call = parse_expression("__invoke()");
+			TokenArray ta;
+			auto top_level_call = parse_expression("__invoke()", ta);
 
 			auto* result = eval(top_level_call.m_result.get(), env);
 

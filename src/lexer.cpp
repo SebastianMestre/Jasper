@@ -7,6 +7,8 @@
 #include <cctype>
 #include <cstdlib>
 
+#include "token_array.hpp"
+
 bool is_identifier_start_char (char c) {
 	return isalpha(c) || c == '_';
 }

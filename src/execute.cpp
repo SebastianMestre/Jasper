@@ -1,14 +1,16 @@
 #include "execute.hpp"
 
+#include "captures.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
 #include "parse.hpp"
-#include "captures.hpp"
+#include "token_array.hpp"
 
 int execute(std::string const& source, bool dump_ast, Runner* runner) {
 
-	auto parse_result = parse_program(source);
+	TokenArray ta;
+	auto parse_result = parse_program(source, ta);
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
 		return 1;

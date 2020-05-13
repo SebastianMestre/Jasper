@@ -4,5 +4,7 @@
 
 #include "parser.hpp"
 
-Writer<std::unique_ptr<AST>> parse_program(std::string const&);
-Writer<std::unique_ptr<AST>> parse_expression(std::string const&);
+struct TokenArray;
+
+Writer<std::unique_ptr<AST>> parse_program(std::string const&, TokenArray&);
+Writer<std::unique_ptr<AST>> parse_expression(std::string const&, TokenArray&);
