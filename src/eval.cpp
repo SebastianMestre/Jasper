@@ -39,13 +39,33 @@ Type::Value* eval(ASTStringLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
-	std::cerr << "WARNING: not implemented action (Creating an object)\n";
-	return nullptr;
+	Type::ObjectType declarations;
+
+	for(auto& declTypeErased : ast->m_body) {
+		assert(declTypeErased->type() == ast_type::Declaration);
+		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
+
+		if (!decl->m_value)
+			declarations[decl->m_identifier] = e.null();
+		else
+			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+	}
+	return e.new_object(std::move(declarations));
 };
 
 Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
-	std::cerr << "WARNING: not implemented action (Creating a dictionary)\n";
-	return nullptr;
+	Type::ObjectType declarations;
+
+	for(auto& declTypeErased : ast->m_body) {
+		assert(declTypeErased->type() == ast_type::Declaration);
+		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
+
+		if (!decl->m_value)
+			declarations[decl->m_identifier] = e.null();
+		else
+			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+	}
+	return e.new_dictionary(std::move(declarations));
 };
 
 Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
