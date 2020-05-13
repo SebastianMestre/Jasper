@@ -52,8 +52,9 @@ Type::Object* GC::new_object() {
 	return result;
 }
 
-Type::List* GC::new_list() {
+Type::List* GC::new_list(std::vector<Type::Value*> elements) {
 	auto result = new Type::List;
+	result->m_value = std::move(elements);
 	m_blocks.push_back(result);
 	return result;
 }

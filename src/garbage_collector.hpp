@@ -23,7 +23,7 @@ public:
 	Type::Null* null();
 
 	Type::Object* new_object ();
-	Type::List* new_list ();
+	Type::List* new_list (std::vector<Type::Value*>);
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);
 	Type::Boolean* new_boolean (bool);

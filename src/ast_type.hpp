@@ -4,6 +4,7 @@ inline const char* ast_type_string[] = {
 	"NumberLiteral",
 	"StringLiteral",
 	"ObjectLiteral",
+	"ArrayLiteral",
 	"DictionaryLiteral",
 	"FunctionLiteral",
 
@@ -22,6 +23,7 @@ enum class ast_type {
 	NumberLiteral,
 	StringLiteral,
 	ObjectLiteral,
+	ArrayLiteral,
 	DictionaryLiteral,
 	FunctionLiteral,
 
