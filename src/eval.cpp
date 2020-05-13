@@ -45,10 +45,14 @@ Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
 		assert(declTypeErased->type() == ast_type::Declaration);
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
-		if (!decl->m_value)
-			declarations[decl->m_identifier] = e.null();
-		else
+		if (decl->m_value) {
 			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+		}
+		else {
+			std::cerr << "ERROR: declaration in object must have a value";
+			assert(0);
+		}
+
 	}
 	return e.new_object(std::move(declarations));
 };
@@ -60,10 +64,13 @@ Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
 		assert(declTypeErased->type() == ast_type::Declaration);
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
-		if (!decl->m_value)
-			declarations[decl->m_identifier] = e.null();
-		else
+		if (decl->m_value) {
 			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+		}
+		else {
+			std::cerr << "ERROR: declaration in dictionary must have value";
+			assert(0);
+		}
 	}
 	return e.new_dictionary(std::move(declarations));
 };
