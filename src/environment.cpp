@@ -44,8 +44,8 @@ void Environment::save_return_value(Type::Value* v) {
 	m_return_value = v;
 }
 
-Type::Value* Environment::fetch_return_value() {
-	Type::Value* rv = m_return_value;
+Value* Environment::fetch_return_value() {
+	Value* rv = m_return_value;
 	m_return_value = nullptr;
 	return rv;
 }
@@ -62,8 +62,9 @@ Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
 Float* Environment::new_float(float f) { return m_gc->new_float(f); }
 Boolean* Environment::new_boolean(bool b) { return m_gc->new_boolean(b); }
 String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
-List* Environment::new_list(std::vector<Type::Value*> elements) { return m_gc->new_list(std::move(elements)); }
-Object* Environment::new_object() { return m_gc->new_object(); }
+List* Environment::new_list(ListType elements) { return m_gc->new_list(std::move(elements)); }
+Object* Environment::new_object(ObjectType declarations) { return m_gc->new_object(std::move(declarations)); }
+Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->new_dictionary(std::move(declarations)); }
 Function* Environment::new_function(FunctionType def, ObjectType const& s) { return m_gc->new_function(def, s); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
 }

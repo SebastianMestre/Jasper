@@ -33,7 +33,7 @@ struct ASTStringLiteral : public AST {
 };
 
 struct ASTObjectLiteral : public AST {
-	std::unique_ptr<AST> m_body;
+	std::vector<std::unique_ptr<AST>> m_body;
 
 	ASTObjectLiteral() : AST{ ast_type::ObjectLiteral } {}
 };
@@ -45,7 +45,7 @@ struct ASTArrayLiteral : public AST {
 };
 
 struct ASTDictionaryLiteral : public AST {
-	std::unique_ptr<AST> m_body;
+	std::vector<std::unique_ptr<AST>> m_body;
 
 	ASTDictionaryLiteral() : AST{ ast_type::DictionaryLiteral } {}
 };

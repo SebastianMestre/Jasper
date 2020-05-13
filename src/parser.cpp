@@ -57,11 +57,15 @@ Writer<std::unique_ptr<AST>> Parser::parse_top_level() {
 		return result;
 	}
 
-	return declarations;
+	auto e = std::make_unique<ASTDeclarationList>();
+
+	e->m_declarations = std::move(declarations.m_result);
+
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminator) {
-	Writer<std::unique_ptr<AST>> result
+Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_declaration_list(token_type terminator) {
+	Writer<std::vector<std::unique_ptr<AST>>> result
 	    = { { "Parse Error: Failed to parse declaration list" } };
 
 	std::vector<std::unique_ptr<AST>> declarations;
@@ -90,11 +94,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration_list(token_type terminato
 		declarations.push_back(std::move(declaration.m_result));
 	}
 
-	auto e = std::make_unique<ASTDeclarationList>();
-
-	e->m_declarations = std::move(declarations);
-
-	return make_writer<std::unique_ptr<AST>>(std::move(e));
+	return make_writer(std::move(declarations));
 }
 
 Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_expression_list(

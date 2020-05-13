@@ -25,13 +25,13 @@ struct Scope {
 struct Environment {
 	GarbageCollector::GC* m_gc;
 	Scope* m_scope;
-	Type::Value* m_return_value {nullptr};
+	Value* m_return_value {nullptr};
 
 	Scope* new_scope();
 	void end_scope();
 
 	void save_return_value(Type::Value*);
-	Type::Value* fetch_return_value();
+	Value* fetch_return_value();
 
 	// used as a short-hand
 
@@ -45,8 +45,9 @@ struct Environment {
 	Float* new_float(float);
 	Boolean* new_boolean(bool);
 	String* new_string(std::string);
-	List* new_list(std::vector<Type::Value*>);
-	Object* new_object();
+	List* new_list(ListType);
+	Object* new_object(ObjectType);
+	Dictionary* new_dictionary(ObjectType);
 	Function* new_function(FunctionType, ObjectType const&);
 	Error* new_error(std::string);
 };

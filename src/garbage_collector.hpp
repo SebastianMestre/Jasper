@@ -22,8 +22,9 @@ public:
 	void add_root (Type::Value* new_root);
 	Type::Null* null();
 
-	Type::Object* new_object ();
-	Type::List* new_list (std::vector<Type::Value*>);
+	Type::Object* new_object (Type::ObjectType);
+	Type::Dictionary* new_dictionary (Type::ObjectType);
+	Type::List* new_list (Type::ListType);
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);
 	Type::Boolean* new_boolean (bool);

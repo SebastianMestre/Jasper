@@ -53,7 +53,8 @@ void print(ASTObjectLiteral* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ObjectLiteral\n"
 		<< tab << "Declarations:\n";
-	print(ast->m_body.get(), d+1);
+	for (auto& decl : ast->m_body)
+		print(decl.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -62,7 +63,8 @@ void print(ASTDictionaryLiteral* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ DictionaryLiteral\n"
 		<< tab << "Declarations:\n";
-	print(ast->m_body.get(), d+1);
+	for (auto& decl : ast->m_body)
+		print(decl.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
