@@ -70,7 +70,7 @@ Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_declaration_list(token_t
 
 	std::vector<std::unique_ptr<AST>> declarations;
 
-	while (not m_lexer->done()) {
+	while (1) {
 		auto p0 = peek();
 
 		if(p0->m_type == terminator)
