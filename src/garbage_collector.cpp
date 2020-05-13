@@ -46,13 +46,14 @@ Type::Null* GC::null() {
 
 
 
-Type::Object* GC::new_object() {
+Type::Object* GC::new_object(Type::ObjectType declarations) {
 	auto result = new Type::Object;
+	result->m_value = std::move(declarations);
 	m_blocks.push_back(result);
 	return result;
 }
 
-Type::List* GC::new_list(std::vector<Type::Value*> elements) {
+Type::List* GC::new_list(Type::ListType elements) {
 	auto result = new Type::List;
 	result->m_value = std::move(elements);
 	m_blocks.push_back(result);
