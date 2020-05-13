@@ -70,9 +70,12 @@ struct ASTDeclarationList : public AST {
 };
 
 struct ASTDeclaration : public AST {
-	std::string m_identifier;
-	std::string m_typename;
+	Token const* m_identifier_token;
+	Token const* m_typename_token { nullptr };
 	std::unique_ptr<AST> m_value;
+
+	std::string const& identifier_text() const { return m_identifier_token->m_text; }
+	std::string const& typename_text() const { return m_typename_token->m_text; }
 
 	ASTDeclaration() : AST{ ast_type::Declaration } {}
 };

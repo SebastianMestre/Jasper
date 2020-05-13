@@ -25,8 +25,11 @@ void print(ASTDeclaration* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Declaration\n"
-		<< tab << "Name: " << ast->m_identifier << '\n'
-		<< tab << "Type: " << ast->m_typename << '\n';
+		<< tab << "Name: " << ast->identifier_text() << '\n';
+
+	if(ast->m_typename_token)
+		std::cout << tab << "Type: " <<  ast->typename_text() << '\n';
+
 	if (ast->m_value) {
 		std::cout << tab << "Initializer:\n";
 		print(ast->m_value.get(), d + 1);
@@ -69,7 +72,7 @@ void print(ASTDictionaryLiteral* ast, int d) {
 void print(ASTIdentifier* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Identifier\n" << ast->text() << "]\n";
+	std::cout << stab << "[ Identifier " << ast->text() << " ]\n";
 }
 
 void print(ASTBlock* ast, int d) {

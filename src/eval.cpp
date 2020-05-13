@@ -19,9 +19,9 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
 	if (!ast->m_value)
-		e.m_scope->declare(ast->m_identifier, e.null());
+		e.m_scope->declare(ast->identifier_text(), e.null());
 	else
-		e.m_scope->declare(ast->m_identifier, eval(ast->m_value.get(), e));
+		e.m_scope->declare(ast->identifier_text(), eval(ast->m_value.get(), e));
 
 	return e.null();
 };
@@ -141,7 +141,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 		assert(argdecl);
 
 		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		e.declare(argdecl->m_identifier, argvalue);
+		e.declare(argdecl->identifier_text(), argvalue);
 	}
 
 	for(auto& kv : callee->m_captures){

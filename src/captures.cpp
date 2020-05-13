@@ -25,14 +25,14 @@ Set gather_captures(ASTFunctionLiteral* ast) {
 	for (auto& argp : ast->m_args) {
 		assert(argp->type() == ast_type::Declaration);
 		auto decl = static_cast<ASTDeclaration*>(argp.get());
-		internals.insert(decl->m_identifier);
+		internals.insert(decl->identifier_text());
 	}
 
 	for (auto& stmt : body->m_body) {
 		// do not capture locals
 		if (stmt->type() == ast_type::Declaration) {
 			auto* decl = static_cast<ASTDeclaration*>(stmt.get());
-			internals.insert(decl->m_identifier);
+			internals.insert(decl->identifier_text());
 		}
 
 		Set child_captures = gather_captures(stmt.get());

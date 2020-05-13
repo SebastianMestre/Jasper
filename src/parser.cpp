@@ -196,9 +196,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 
 	auto p = std::make_unique<ASTDeclaration>();
 
-	p->m_identifier = name.m_result->m_text;
+	p->m_identifier_token = name.m_result;
 	if (type.m_result)
-		p->m_typename = type.m_result->m_text;
+		p->m_typename_token = type.m_result;
 	p->m_value = std::move(value.m_result);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(p));
@@ -543,7 +543,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 			// consume argument name
 
 			auto arg = std::make_unique<ASTDeclaration>();
-			arg->m_identifier = p0->m_text;
+			arg->m_identifier_token = p0;
 
 			// now we optionally consume a type hint
 			// NOTE: a type hint is a colon followed by a type name.
@@ -558,7 +558,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 				auto p2 = peek();
 				if (p2->m_type == token_type::IDENTIFIER) {
 					// consume type
-					arg->m_typename = p2->m_text;
+					arg->m_typename_token = p2;
 
 					m_lexer->advance();
 					p1 = peek();
