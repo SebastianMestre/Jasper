@@ -19,23 +19,23 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
 	if (!ast->m_value)
-		e.m_scope->declare(ast->m_identifier, e.null());
+		e.m_scope->declare(ast->identifier_text(), e.null());
 	else
-		e.m_scope->declare(ast->m_identifier, eval(ast->m_value.get(), e));
+		e.m_scope->declare(ast->identifier_text(), eval(ast->m_value.get(), e));
 
 	return e.null();
 };
 
 Type::Value* eval(ASTNumberLiteral* ast, Type::Environment& e) {
-	for (char a : ast->m_text)
+	for (char a : ast->text())
 		if (a == '.')
-			return e.new_float(std::stof(ast->m_text));
+			return e.new_float(std::stof(ast->text()));
 
-	return e.new_integer(std::stoi(ast->m_text));
+	return e.new_integer(std::stoi(ast->text()));
 };
 
 Type::Value* eval(ASTStringLiteral* ast, Type::Environment& e) {
-	return e.new_string(ast->m_text);
+	return e.new_string(ast->text());
 };
 
 Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
@@ -46,7 +46,7 @@ Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
 		}
 		else {
 			std::cerr << "ERROR: declaration in object must have a value";
@@ -65,7 +65,7 @@ Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
 		ASTDeclaration* decl = static_cast<ASTDeclaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->m_identifier] = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
 		}
 		else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
@@ -84,7 +84,7 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	return e.m_scope->access(ast->m_text);
+	return e.m_scope->access(ast->text());
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
@@ -141,7 +141,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 		assert(argdecl);
 
 		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		e.declare(argdecl->m_identifier, argvalue);
+		e.declare(argdecl->identifier_text(), argvalue);
 	}
 
 	for(auto& kv : callee->m_captures){
@@ -353,7 +353,7 @@ Type::Value* eval(ASTFunctionLiteral* ast, Type::Environment& e) {
 	for(auto const& identifier : ast->m_captures){
 		captures[identifier] = e.m_scope->access(identifier);
 	}
-	return e.new_function(ast, captures);
+	return e.new_function(ast, std::move(captures));
 };
 
 Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {

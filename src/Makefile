@@ -13,6 +13,7 @@ OBJNAMES := \
 	garbage_collector.o \
 	lexer.o \
 	parser.o \
+	parse.o \
 	tester.o \
 	token.o \
 	value.o

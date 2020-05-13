@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "token_type.hpp"
+#include "token.hpp"
 #include "ast_type.hpp"
 
 struct AST {
@@ -21,13 +21,17 @@ public:
 
 
 struct ASTNumberLiteral : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTNumberLiteral() : AST{ ast_type::NumberLiteral } {}
 };
 
 struct ASTStringLiteral : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTStringLiteral() : AST{ ast_type::StringLiteral } {}
 };
@@ -66,15 +70,20 @@ struct ASTDeclarationList : public AST {
 };
 
 struct ASTDeclaration : public AST {
-	std::string m_identifier;
-	std::string m_typename;
+	Token const* m_identifier_token;
+	Token const* m_typename_token { nullptr };
 	std::unique_ptr<AST> m_value;
+
+	std::string const& identifier_text() const { return m_identifier_token->m_text; }
+	std::string const& typename_text() const { return m_typename_token->m_text; }
 
 	ASTDeclaration() : AST{ ast_type::Declaration } {}
 };
 
 struct ASTIdentifier : public AST {
-	std::string m_text;
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
 
 	ASTIdentifier() : AST{ ast_type::Identifier } {}
 };

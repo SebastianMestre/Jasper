@@ -70,7 +70,7 @@ Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_declaration_list(token_t
 
 	std::vector<std::unique_ptr<AST>> declarations;
 
-	while (not m_lexer->done()) {
+	while (1) {
 		auto p0 = peek();
 
 		if(p0->m_type == terminator)
@@ -196,9 +196,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_declaration() {
 
 	auto p = std::make_unique<ASTDeclaration>();
 
-	p->m_identifier = name.m_result->m_text;
+	p->m_identifier_token = name.m_result;
 	if (type.m_result)
-		p->m_typename = type.m_result->m_text;
+		p->m_typename_token = type.m_result;
 	p->m_value = std::move(value.m_result);
 
 	return make_writer<std::unique_ptr<AST>>(std::move(p));
@@ -214,6 +214,8 @@ struct binding_power {
 bool is_binary_operator(token_type t){
 	// TODO: fill out this table
 	switch(t){
+	case token_type::PAREN_OPEN: // a bit of a hack
+
 	case token_type::LT:
 	case token_type::GT:
 	case token_type::LTE:
@@ -236,6 +238,7 @@ bool is_binary_operator(token_type t){
 binding_power binding_power_of(token_type t){
 	// TODO: fill out this table
 	switch(t){
+
 	case token_type::ASSIGN:
 		return { 10, 11 };
 	case token_type::PIZZA:
@@ -253,11 +256,13 @@ binding_power binding_power_of(token_type t){
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
 		return { 50, 51 };
+	case token_type::PAREN_OPEN: // a bit of a hack
 	case token_type::DOT:
 		return { 70, 71 };
 	default:
 		assert(false);
 	}
+
 }
 
 Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
@@ -297,18 +302,30 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 	while(1){
 		auto op = peek();
-		if(op->m_type == token_type::SEMICOLON || op->m_type == token_type::END || op->m_type == token_type::BRACE_CLOSE){
+
+		if (op->m_type == token_type::SEMICOLON
+		    || op->m_type == token_type::END
+		    || op->m_type == token_type::BRACE_CLOSE
+		    || op->m_type == token_type::PAREN_CLOSE
+		    || op->m_type == token_type::COMMA) {
 			break;
 		}
 
-		constexpr int binding_power_of_paren_open = 60;
-		if(op->m_type == token_type::PAREN_OPEN){
-			if(binding_power_of_paren_open < bp)
-				break;
+		if (not is_binary_operator(op->m_type)) {
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("a binary operator", op));
+			return result;
+		}
 
+		auto [lp, rp] = binding_power_of(op->m_type);
+
+		if (lp < bp)
+			break;
+
+		if (op->m_type == token_type::PAREN_OPEN) {
 			auto args = parse_argument_list();
 
-			if(handle_error(result, args)){
+			if (handle_error(result, args)) {
 				return result;
 			}
 
@@ -321,24 +338,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 			continue;
 		}
 
-		if(op->m_type == token_type::PAREN_CLOSE){
-			break;
-		}
-
-		if(op->m_type == token_type::COMMA){
-			break;
-		}
-
-		if(not is_binary_operator(op->m_type)){
-			auto err = make_expected_error("a binary operator", op);
-			result.m_error.m_sub_errors.push_back(std::move(err));
-			return result;
-		}
-
-		auto [lp, rp] = binding_power_of(op->m_type);
-
-		if(lp < bp) break;
-
 		m_lexer->advance();
 		auto rhs = parse_expression(rp);
 
@@ -349,6 +348,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 		e->m_rhs = std::move(rhs.m_result);
 
 		lhs.m_result = std::move(e);
+
 	}
 
 	return lhs;
@@ -365,21 +365,21 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 
 	if (token->m_type == token_type::NUMBER) {
 		auto e = std::make_unique<ASTNumberLiteral>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
 	if (token->m_type == token_type::IDENTIFIER) {
 		auto e = std::make_unique<ASTIdentifier>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
 
 	if(token->m_type == token_type::STRING){
 		auto e = std::make_unique<ASTStringLiteral>();
-		e->m_text = token->m_text;
+		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST>>(std::move(e));
 	}
@@ -543,7 +543,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 			// consume argument name
 
 			auto arg = std::make_unique<ASTDeclaration>();
-			arg->m_identifier = p0->m_text;
+			arg->m_identifier_token = p0;
 
 			// now we optionally consume a type hint
 			// NOTE: a type hint is a colon followed by a type name.
@@ -558,7 +558,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 				auto p2 = peek();
 				if (p2->m_type == token_type::IDENTIFIER) {
 					// consume type
-					arg->m_typename = p2->m_text;
+					arg->m_typename_token = p2;
 
 					m_lexer->advance();
 					p1 = peek();

@@ -7,9 +7,8 @@
 #include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
-#include "garbage_collector.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
+#include "parse.hpp"
+#include "token_array.hpp"
 #include "value.hpp"
 
 int main() {
@@ -26,21 +25,22 @@ int main() {
 	std::string source = file_content.str();
 
 
-	int exit_code = execute(source, true, +[](Type::Environment& env) -> int {
+	int exit_code = execute(source, false, +[](Type::Environment& env) -> int {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
 		// TODO: We need to clean this up
 
 		{
-			auto top_level_name = std::make_unique<ASTIdentifier>();
-			top_level_name->m_text = "__invoke";
+			TokenArray ta;
+			auto top_level_call = parse_expression("__invoke()", ta);
 
-			auto top_level_call = std::make_unique<ASTCallExpression>();
-			top_level_call->m_callee = std::move(top_level_name);
-			top_level_call->m_args = std::make_unique<ASTArgumentList>();
+			auto* result = eval(top_level_call.m_result.get(), env);
 
-			eval(top_level_call.get(), env);
+			if(result)
+				std::cout << value_type_string[(int)result->type()] << '\n';
+			else
+				std::cout << "(nullptr)\n";
 		}
 
 		return 0;

@@ -65,6 +65,6 @@ String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
 List* Environment::new_list(ListType elements) { return m_gc->new_list(std::move(elements)); }
 Object* Environment::new_object(ObjectType declarations) { return m_gc->new_object(std::move(declarations)); }
 Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->new_dictionary(std::move(declarations)); }
-Function* Environment::new_function(FunctionType def, ObjectType const& s) { return m_gc->new_function(def, s); }
+Function* Environment::new_function(FunctionType def, ObjectType s) { return m_gc->new_function(def, std::move(s)); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
 }
