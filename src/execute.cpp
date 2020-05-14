@@ -29,6 +29,15 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	if (top_level->type() != ast_type::DeclarationList)
 		return 1;
 
+	// TODO: put native functions in a better place
+	env.declare(
+	    "print",
+	    env.new_native_function(
+	        +[](Type::Value* v, Type::Environment& e) -> Type::Value* {
+		        Type::print(v);
+		        return e.null();
+	        }));
+
 	eval(top_level, env);
 
 	int runner_exit_code = runner(env);

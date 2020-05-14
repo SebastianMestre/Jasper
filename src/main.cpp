@@ -24,7 +24,6 @@ int main() {
 
 	std::string source = file_content.str();
 
-
 	int exit_code = execute(source, false, +[](Type::Environment& env) -> int {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
@@ -37,7 +36,7 @@ int main() {
 
 			auto* result = eval(top_level_call.m_result.get(), env);
 
-			if(result)
+			if (result)
 				Type::print(result);
 			else
 				std::cout << "(nullptr)\n";
