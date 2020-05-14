@@ -12,13 +12,16 @@ namespace Type {
 
 struct Scope;
 struct Value;
+struct Environment;
 
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using ListType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
+using NativeFunctionType = auto(Value*, Environment&) -> Value*;
 
-
+void print(Value* v, int d = 0);
+void gc_visit(Value*);
 
 struct Value {
 protected:
@@ -32,6 +35,7 @@ public:
 
 	virtual ~Value() = default;
 };
+
 
 struct Null : Value {
 
@@ -104,7 +108,12 @@ struct Function : Value {
 	Function(FunctionType, ObjectType);
 };
 
-void gc_visit(Value*);
+struct NativeFunction : Value {
+	NativeFunctionType* m_fptr;
+
+	NativeFunction(NativeFunctionType* = nullptr);
+};
+
 
 /**
  * Example:

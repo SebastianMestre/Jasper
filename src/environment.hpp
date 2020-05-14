@@ -49,6 +49,7 @@ struct Environment {
 	Object* new_object(ObjectType);
 	Dictionary* new_dictionary(ObjectType);
 	Function* new_function(FunctionType, ObjectType);
+	NativeFunction* new_native_function(NativeFunctionType*);
 	Error* new_error(std::string);
 };
 }

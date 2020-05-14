@@ -1,5 +1,7 @@
 #include "value.hpp"
 
+#include <iostream>
+
 #include <cassert>
 
 #include "environment.hpp"
@@ -94,12 +96,20 @@ void Dictionary::removeMember(Identifier const& id) {
 Function::Function(FunctionType def, ObjectType captures)
     : Value(value_type::Function), m_def(def), m_captures(std::move(captures)) {}
 
+
+
+NativeFunction::NativeFunction(NativeFunctionType* fptr)
+    : Value { value_type::NativeFunction }, m_fptr { fptr } {}
+
+
+
 void gc_visit(Null* v) { v->m_visited = true; }
 void gc_visit(Integer* v) { v->m_visited = true; }
 void gc_visit(Float* v) { v->m_visited = true; }
 void gc_visit(String* v) { v->m_visited = true; }
 void gc_visit(Boolean* v) { v->m_visited = true; }
 void gc_visit(Error* v) { v->m_visited = true; }
+void gc_visit(NativeFunction* v) { v->m_visited = true; }
 
 void gc_visit(List* l) {
 	if (l->m_visited)
@@ -161,7 +171,109 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Dictionary*>(v));
 	case value_type::Function:
 		return gc_visit(static_cast<Function*>(v));
+	case value_type::NativeFunction:
+		return gc_visit(static_cast<NativeFunction*>(v));
 	}
 }
+
+// = === === print === === = //
+
+void print_spaces(int n) {
+	for(int i = 0; i < n; ++i)
+		std::cout << '\n';
+}
+
+void print(Integer const* v, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+}
+
+void print(Null* v, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << '\n';
+}
+
+void print(Float* v, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+}
+
+void print(String* v, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << ' ' << '"' << v->m_value << '"' << '\n';
+}
+
+void print(Boolean* v, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+}
+
+void print(Error* v, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(v->type())] << '\n';
+}
+
+void print(Object* o, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(o->type())] << '\n';
+}
+
+void print(Dictionary* m, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(m->type())] << '\n';
+}
+
+void print(Function* f, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(f->type())] << '\n';
+}
+
+void print(NativeFunction* f, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(f->type())] << '\n';
+}
+
+void print(List* l, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(l->type())] << '\n';
+	for (auto* child : l->m_value) {
+		print(child, d+1);
+	}
+}
+
+
+void print(Value* v, int d) {
+
+	switch(v->type()) {
+	case value_type::Null:
+		return print(static_cast<Null*>(v), d);
+	case value_type::Integer:
+		return print(static_cast<Integer*>(v), d);
+	case value_type::Float:
+		return print(static_cast<Float*>(v), d);
+	case value_type::String:
+		return print(static_cast<String*>(v), d);
+	case value_type::Boolean:
+		return print(static_cast<Boolean*>(v), d);
+	case value_type::Error:
+		return print(static_cast<Error*>(v), d);
+	case value_type::List:
+		return print(static_cast<List*>(v), d);
+	case value_type::Object:
+		return print(static_cast<Object*>(v), d);
+	case value_type::Dictionary:
+		return print(static_cast<Dictionary*>(v), d);
+	case value_type::Function:
+		return print(static_cast<Function*>(v), d);
+	case value_type::NativeFunction:
+		return print(static_cast<NativeFunction*>(v), d);
+	}
+}
+
 
 } // namespace Type
