@@ -38,7 +38,7 @@ int main() {
 			auto* result = eval(top_level_call.m_result.get(), env);
 
 			if(result)
-				std::cout << value_type_string[(int)result->type()] << '\n';
+				Type::print(result);
 			else
 				std::cout << "(nullptr)\n";
 		}

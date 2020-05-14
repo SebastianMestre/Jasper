@@ -19,7 +19,6 @@ using ListType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
 
 
-
 struct Value {
 protected:
 	value_type m_type;
@@ -32,6 +31,8 @@ public:
 
 	virtual ~Value() = default;
 };
+
+void print (Value* v, int d = 0);
 
 struct Null : Value {
 
