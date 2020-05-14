@@ -96,12 +96,20 @@ void Dictionary::removeMember(Identifier const& id) {
 Function::Function(FunctionType def, ObjectType captures)
     : Value(value_type::Function), m_def(def), m_captures(std::move(captures)) {}
 
+
+
+NativeFunction::NativeFunction(NativeFunctionType* fptr)
+    : Value { value_type::NativeFunction }, m_fptr { fptr } {}
+
+
+
 void gc_visit(Null* v) { v->m_visited = true; }
 void gc_visit(Integer* v) { v->m_visited = true; }
 void gc_visit(Float* v) { v->m_visited = true; }
 void gc_visit(String* v) { v->m_visited = true; }
 void gc_visit(Boolean* v) { v->m_visited = true; }
 void gc_visit(Error* v) { v->m_visited = true; }
+void gc_visit(NativeFunction* v) { v->m_visited = true; }
 
 void gc_visit(List* l) {
 	if (l->m_visited)
@@ -163,6 +171,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Dictionary*>(v));
 	case value_type::Function:
 		return gc_visit(static_cast<Function*>(v));
+	case value_type::NativeFunction:
+		return gc_visit(static_cast<NativeFunction*>(v));
 	}
 }
 
@@ -222,6 +232,12 @@ void print(Function* f, int d) {
 	std::cout << value_type_string[int(f->type())] << '\n';
 }
 
+void print(NativeFunction* f, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_type_string[int(f->type())] << '\n';
+}
+
 void print(List* l, int d) {
 	print_spaces(d);
 	std::cout << value_type_string[int(l->type())] << '\n';
@@ -254,6 +270,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Dictionary*>(v), d);
 	case value_type::Function:
 		return print(static_cast<Function*>(v), d);
+	case value_type::NativeFunction:
+		return print(static_cast<NativeFunction*>(v), d);
 	}
 }
 

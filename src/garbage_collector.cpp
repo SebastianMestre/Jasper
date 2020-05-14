@@ -97,6 +97,12 @@ Type::Function* GC::new_function(Type::FunctionType def, Type::ObjectType captur
 	return result;
 }
 
+Type::NativeFunction* GC::new_native_function(Type::NativeFunctionType* fptr) {
+	auto result = new Type::NativeFunction(fptr);
+	m_blocks.push_back(result);
+	return result;
+}
+
 Type::Error* GC::new_error(std::string s) {
 	auto result = new Type::Error(std::move(s));
 	m_blocks.push_back(result);

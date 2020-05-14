@@ -66,5 +66,6 @@ List* Environment::new_list(ListType elements) { return m_gc->new_list(std::move
 Object* Environment::new_object(ObjectType declarations) { return m_gc->new_object(std::move(declarations)); }
 Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->new_dictionary(std::move(declarations)); }
 Function* Environment::new_function(FunctionType def, ObjectType s) { return m_gc->new_function(def, std::move(s)); }
+NativeFunction* Environment::new_native_function(NativeFunctionType* fptr) { return m_gc->new_native_function(fptr); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
 }

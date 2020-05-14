@@ -13,7 +13,8 @@ inline const char* value_type_string[] = {
 	"Object",
 	"Dictionary",
 
-	"Function"
+	"Function",
+	"NativeFunction",
 };
 
 enum class value_type {
@@ -29,6 +30,7 @@ enum class value_type {
 	Object,
 	Dictionary,
 	
-	Function
+	Function,
+	NativeFunction,
 };
 
