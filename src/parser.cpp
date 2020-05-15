@@ -215,6 +215,7 @@ bool is_binary_operator(token_type t){
 	// TODO: fill out this table
 	switch(t){
 	case token_type::PAREN_OPEN: // a bit of a hack
+	case token_type::BRACKET_OPEN: // a bit of a hack
 
 	case token_type::LT:
 	case token_type::GT:
@@ -257,6 +258,7 @@ binding_power binding_power_of(token_type t){
 	case token_type::DIV: // fallthrough
 		return { 50, 51 };
 	case token_type::PAREN_OPEN: // a bit of a hack
+	case token_type::BRACKET_OPEN: // a bit of a hack
 	case token_type::DOT:
 		return { 70, 71 };
 	default:
@@ -306,6 +308,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 		if (op->m_type == token_type::SEMICOLON
 		    || op->m_type == token_type::END
 		    || op->m_type == token_type::BRACE_CLOSE
+		    || op->m_type == token_type::BRACKET_CLOSE
 		    || op->m_type == token_type::PAREN_CLOSE
 		    || op->m_type == token_type::COMMA) {
 			break;
@@ -324,7 +327,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 		if (op->m_type == token_type::PAREN_OPEN) {
 			auto args = parse_argument_list();
-
 			if (handle_error(result, args)) {
 				return result;
 			}
@@ -333,6 +335,26 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 			e->m_callee = std::move(lhs.m_result);
 			e->m_args = std::move(args.m_result);
+			lhs.m_result = std::move(e);
+
+			continue;
+		}
+
+		if (op->m_type == token_type::BRACKET_OPEN) {
+			m_lexer->advance();
+
+			auto index = parse_expression();
+			if(handle_error(result, index)){
+				return result;
+			}
+
+			if(handle_error(result, require(token_type::BRACKET_CLOSE))){
+				return result;
+			}
+
+			auto e = std::make_unique<ASTIndexExpression>();
+			e->m_callee = std::move(lhs.m_result);
+			e->m_index = std::move(index.m_result);
 			lhs.m_result = std::move(e);
 
 			continue;

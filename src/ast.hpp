@@ -103,6 +103,13 @@ struct ASTCallExpression : public AST {
 	ASTCallExpression() : AST{ ast_type::CallExpression } {}
 };
 
+struct ASTIndexExpression : public AST {
+	std::unique_ptr<AST> m_callee;
+	std::unique_ptr<AST> m_index;
+
+	ASTIndexExpression() : AST{ ast_type::IndexExpression } {}
+};
+
 struct ASTArgumentList : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
