@@ -176,4 +176,33 @@ int main() {
 	});
 
 	assert(0 == function_captures.execute());
+
+	Tester short_functions {R"(
+		K := fn (x) => fn (y) => x;
+		S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
+		I := S(K)(K);
+		__invoke := fn () => I(42);
+	)"};
+
+	short_functions.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = eval(top_level_call.m_result.get(), env);
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if(as_int->m_value != 42){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+
+	assert(0 == short_functions.execute());
 }

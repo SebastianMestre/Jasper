@@ -594,15 +594,32 @@ Writer<std::unique_ptr<AST>> Parser::parse_function() {
 		}
 	}
 
-	auto block = parse_block();
-	if (handle_error(result, block)) {
-		return result;
-	}
-
 	auto e = std::make_unique<ASTFunctionLiteral>();
+	auto p0 = peek();
+	if (p0->m_type == token_type::ARROW) {
+		m_lexer->advance();
+		auto expression = parse_expression();
+		if (handle_error(result, expression)) {
+			return result;
+		}
 
-	e->m_body = std::move(block.m_result);
-	e->m_args = std::move(args);
+		auto returnStmt = std::make_unique<ASTReturnStatement>();
+		returnStmt->m_value = std::move(expression.m_result);
+
+		auto block = std::make_unique<ASTBlock>();
+		block->m_body.push_back(std::move(returnStmt));
+
+		e->m_body = std::move(block);
+		e->m_args = std::move(args);
+	} else {
+		auto block = parse_block();
+		if (handle_error(result, block)) {
+			return result;
+		}
+
+		e->m_body = std::move(block.m_result);
+		e->m_args = std::move(args);
+	}
 
 	return make_writer<std::unique_ptr<AST>>(std::move(e));
 }
