@@ -211,6 +211,9 @@ void Lexer::consume_token() {
 		case '=':
 			push_token(token_type::EQUAL, 2);
 			break;
+		case '>':
+			push_token(token_type::ARROW, 2);
+			break;
 		default:
 			push_token(token_type::ASSIGN, 1);
 		}
