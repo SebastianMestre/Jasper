@@ -180,7 +180,7 @@ void gc_visit(Value* v) {
 
 void print_spaces(int n) {
 	for(int i = 0; i < n; ++i)
-		std::cout << '\n';
+		std::cout << ' ';
 }
 
 void print(Integer const* v, int d) {
