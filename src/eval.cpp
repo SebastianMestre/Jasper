@@ -89,7 +89,7 @@ Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
 
-	e.new_scope();
+	e.new_nested_scope();
 
 	for(auto &stmt : ast->m_body){
 		eval(stmt.get(), e);
@@ -197,9 +197,11 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = eval(ast->m_callee.get(), e);
+	assert(callee);
 	assert(callee->type() == value_type::List);
 
 	auto* index = eval(ast->m_index.get(), e);
+	assert(index);
 	assert(index->type() == value_type::Integer);
 
 	auto* array_callee = static_cast<Type::List*>(callee);

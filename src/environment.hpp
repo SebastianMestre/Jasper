@@ -13,10 +13,8 @@ namespace Type {
 
 struct Scope {
 	Scope* m_parent {nullptr};
+	Scope* m_prev {nullptr};
 	ObjectType m_declarations;
-
-	Scope() = default;
-	Scope(Scope* parent) : m_parent(parent) {}
 
 	void declare(const Identifier& i, Value* v);
 	Value* access(const Identifier& i);
@@ -25,9 +23,11 @@ struct Scope {
 struct Environment {
 	GarbageCollector::GC* m_gc;
 	Scope* m_scope;
+	Scope* m_global_scope;
 	Value* m_return_value {nullptr};
 
 	Scope* new_scope();
+	Scope* new_nested_scope();
 	void end_scope();
 
 	void save_return_value(Type::Value*);
