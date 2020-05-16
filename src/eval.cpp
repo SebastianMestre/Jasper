@@ -89,7 +89,7 @@ Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
 
-	e.new_scope();
+	e.new_nested_scope();
 
 	for(auto &stmt : ast->m_body){
 		eval(stmt.get(), e);
@@ -130,8 +130,14 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
 	assert(callee->m_def->m_args.size() == arglist->m_args.size());
 
-	e.new_scope();
 
+	std::vector<Type::Value*> args;
+	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
+		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		args.push_back(argvalue);
+	}
+
+	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
 		assert(argdeclTypeErased);
@@ -140,8 +146,7 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 		auto* argdecl = dynamic_cast<ASTDeclaration*>(argdeclTypeErased);
 		assert(argdecl);
 
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		e.declare(argdecl->identifier_text(), argvalue);
+		e.declare(argdecl->identifier_text(), args[i]);
 	}
 
 	for (auto& kv : callee->m_captures) {
@@ -174,7 +179,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	// TODO: proper error handling
 
-	auto* callee= eval(ast->m_callee.get(), e);
+	auto* callee = eval(ast->m_callee.get(), e);
 	assert(callee);
 
 	assert(is_callable_value(callee));
@@ -192,9 +197,11 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = eval(ast->m_callee.get(), e);
+	assert(callee);
 	assert(callee->type() == value_type::List);
 
 	auto* index = eval(ast->m_index.get(), e);
+	assert(index);
 	assert(index->type() == value_type::Integer);
 
 	auto* array_callee = static_cast<Type::List*>(callee);
@@ -383,6 +390,33 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 				<< value_type_string[static_cast<int>(rhs->type())];
 			assert(0);
 		}
+		}
+	}
+	case token_type::LT: {
+		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
+
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_boolean(
+				static_cast<Type::Integer*>(lhs)->m_value <
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_boolean(
+				static_cast<Type::Float*>(lhs)->m_value <
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		case value_type::String:
+			return e.new_boolean(
+				static_cast<Type::String*>(lhs)->m_value <
+				static_cast<Type::String*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't compare values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
 	}
 	default:

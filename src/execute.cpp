@@ -23,7 +23,7 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 
 	GarbageCollector::GC gc;
 	Type::Scope scope;
-	Type::Environment env = { &gc, &scope };
+	Type::Environment env = { &gc, &scope, &scope};
 
 	auto* top_level = parse_result.m_result.get();
 	if (top_level->type() != ast_type::DeclarationList)
