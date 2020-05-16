@@ -26,16 +26,20 @@ Value* Scope::access(const Identifier& i) {
 
 
 
+Scope* Environment::new_nested_scope() {
+	m_scope = new Scope{m_scope, m_scope};
+	return m_scope;
+}
+
 Scope* Environment::new_scope() {
-	Scope* parent = m_scope;
-	m_scope = new Scope(parent);
+	m_scope = new Scope{m_global_scope, m_scope};
 	return m_scope;
 }
 
 void Environment::end_scope() {
-	Scope* parent = m_scope->m_parent;
+	Scope* prev = m_scope->m_prev;
 	delete m_scope;
-	m_scope = parent;
+	m_scope = prev;
 }
 
 void Environment::save_return_value(Type::Value* v) {
