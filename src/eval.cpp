@@ -188,6 +188,21 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 	}
 };
 
+Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
+	// TODO: proper error handling
+
+	auto* callee = eval(ast->m_callee.get(), e);
+	assert(callee->type() == value_type::List);
+
+	auto* index = eval(ast->m_index.get(), e);
+	assert(index->type() == value_type::Integer);
+
+	auto* array_callee = static_cast<Type::List*>(callee);
+	auto* int_index = static_cast<Type::Integer*>(index);
+
+	return array_callee->at(int_index->m_value);
+};
+
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
 	auto* lhs = eval(ast->m_lhs.get(), e);
@@ -425,6 +440,8 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTBinaryExpression*>(ast), e);
 	case ast_type::CallExpression:
 		return eval(static_cast<ASTCallExpression*>(ast), e);
+	case ast_type::IndexExpression:
+		return eval(static_cast<ASTIndexExpression*>(ast), e);
 	case ast_type::ArgumentList:
 		return eval(static_cast<ASTArgumentList*>(ast), e);
 	case ast_type::Block:
@@ -434,7 +451,8 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 	case ast_type::IfStatement:
 		return eval(static_cast<ASTIfStatement*>(ast), e);
 	default:
-		std::cerr << "big problem: unhandled case in eval\n";
+		std::cerr << "@ Internal Error: unhandled case in eval:\n";
+		std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
 	}
 
 	return nullptr;
