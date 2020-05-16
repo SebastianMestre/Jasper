@@ -179,7 +179,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	// TODO: proper error handling
 
-	auto* callee= eval(ast->m_callee.get(), e);
+	auto* callee = eval(ast->m_callee.get(), e);
 	assert(callee);
 
 	assert(is_callable_value(callee));
@@ -388,6 +388,33 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 				<< value_type_string[static_cast<int>(rhs->type())];
 			assert(0);
 		}
+		}
+	}
+	case token_type::LT: {
+		// TODO: proper error handling
+		assert(lhs->type() == rhs->type());
+
+		switch (lhs->type()) {
+		case value_type::Integer:
+			return e.new_boolean(
+				static_cast<Type::Integer*>(lhs)->m_value <
+				static_cast<Type::Integer*>(rhs)->m_value
+			);
+		case value_type::Float:
+			return e.new_boolean(
+				static_cast<Type::Float*>(lhs)->m_value <
+				static_cast<Type::Float*>(rhs)->m_value
+			);
+		case value_type::String:
+			return e.new_boolean(
+				static_cast<Type::String*>(lhs)->m_value <
+				static_cast<Type::String*>(rhs)->m_value
+			);
+		default:
+			std::cerr
+				<< "ERROR: can't compare values of type "
+				<< value_type_string[static_cast<int>(lhs->type())];
+			assert(0);
 		}
 	}
 	default:
