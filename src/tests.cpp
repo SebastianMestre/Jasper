@@ -9,50 +9,6 @@
 
 int main() {
 	using namespace Test;
-	
-	Tester bexp_tester(R"(
-		int_val := 1 + 2 + 3 + 4;
-		float_val := 1.0 + 1.5 + 1.0;
-		string_val := "test" + "ing" + ".";
-		int_div := 1 / 2;
-		float_div := 1.0 / 2.0;
-	)");
-
-	bexp_tester.add_test(
-		+[](Type::Environment& env) -> int {
-			auto* expected_10 = env.m_scope->access("int_val");
-			auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
-			assert(as_integer);
-			assert(as_integer->m_value == 10);
-			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
-			
-			auto* expected_3_5 = env.m_scope->access("float_val");
-			auto* as_float = dynamic_cast<Type::Float*>(expected_3_5);
-			assert(as_float);
-			assert(as_float->m_value == 3.5);
-			std::cout << "@@ Value is: " << as_float->m_value << '\n';
-			
-			auto* expected_testing = env.m_scope->access("string_val");
-			auto* as_string = dynamic_cast<Type::String*>(expected_testing);
-			assert(as_string);
-			assert(as_string->m_value == "testing.");
-			std::cout << "@@ Value is: " << as_string->m_value << '\n';
-			
-			auto* expected_0 = env.m_scope->access("int_div");
-			as_integer = dynamic_cast<Type::Integer*>(expected_0);
-			assert(as_integer);
-			assert(as_integer->m_value == 0);
-			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
-			
-			auto* expected_0_5 = env.m_scope->access("float_div");
-			as_float = dynamic_cast<Type::Float*>(expected_0_5);
-			assert(as_float);
-			assert(as_float->m_value == 0.5);
-			std::cout << "@@ Value is: " << as_float->m_value << '\n';
-			
-			return 0;
-		}
-	);
 
 	Tester monolithic_test = {R"(
 	x : dec = 1.4;
@@ -116,17 +72,67 @@ int main() {
 
 		eval(top_level_call.m_result.get(), env);
 
+		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
 	});
 
+	assert(0 == monolithic_test.execute(false));
+
+	Tester bexp_tester(R"(
+		int_val := 1 + 2 + 3 + 4;
+		float_val := 1.0 + 1.5 + 1.0;
+		string_val := "test" + "ing" + ".";
+		int_div := 1 / 2;
+		float_div := 1.0 / 2.0;
+	)");
+
+	bexp_tester.add_test(
+		+[](Type::Environment& env) -> int {
+			auto* expected_10 = env.m_scope->access("int_val");
+			auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
+			assert(as_integer);
+			assert(as_integer->m_value == 10);
+			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+
+			auto* expected_3_5 = env.m_scope->access("float_val");
+			auto* as_float = dynamic_cast<Type::Float*>(expected_3_5);
+			assert(as_float);
+			assert(as_float->m_value == 3.5);
+			std::cout << "@@ Value is: " << as_float->m_value << '\n';
+
+			auto* expected_testing = env.m_scope->access("string_val");
+			auto* as_string = dynamic_cast<Type::String*>(expected_testing);
+			assert(as_string);
+			assert(as_string->m_value == "testing.");
+			std::cout << "@@ Value is: " << as_string->m_value << '\n';
+
+			auto* expected_0 = env.m_scope->access("int_div");
+			as_integer = dynamic_cast<Type::Integer*>(expected_0);
+			assert(as_integer);
+			assert(as_integer->m_value == 0);
+			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+
+			auto* expected_0_5 = env.m_scope->access("float_div");
+			as_float = dynamic_cast<Type::Float*>(expected_0_5);
+			assert(as_float);
+			assert(as_float->m_value == 0.5);
+			std::cout << "@@ Value is: " << as_float->m_value << '\n';
+
+			std::cout << "@ line " << __LINE__ << ": Success\n";
+			return 0;
+		}
+	);
+
+	assert(0 == bexp_tester.execute());
+
 	Tester function_return{R"(
-	f := fn() {
-		a := 1;
-		b := 2;
-		return a + b;
-	};
-)"};
-	
+		f := fn() {
+			a := 1;
+			b := 2;
+			return a + b;
+		};
+	)"};
+
 	function_return.add_test(+[](Type::Environment& env) -> int {
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
@@ -135,12 +141,14 @@ int main() {
 		auto top_level_call = parse_expression("f()", ta);
 
 		Type::Value* returned = eval(top_level_call.m_result.get(), env);
-		return (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
+		auto exitcode = (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
+		if(!exitcode)
+			std::cout << "@ line " << __LINE__ << ": Success\n";
+
+		return exitcode;
 	});
 
-	assert(0 == bexp_tester.execute(true));
-	assert(0 == monolithic_test.execute(true));
-	assert(0 == function_return.execute(true));
+	assert(0 == function_return.execute());
 
 	Tester function_captures{R"(
 	K := fn (x) { return fn (y) { return x; }; };
@@ -172,6 +180,7 @@ int main() {
 			return 1;
 		}
 
+		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
 	});
 
@@ -246,4 +255,66 @@ int main() {
 	});
 
 	assert(0 == array_index.execute());
+
+	Tester binary_search_tree{R"(
+		Leaf := fn() => array { "Leaf" };
+		Node := fn(x,l,r) => array { "Node"; x; l; r };
+
+		insert := fn(tree, x) {
+			ins := fn(tree, x, r) {
+				if(tree[0] == "Leaf")
+					return Node(x, Leaf(), Leaf());
+				if(tree[1] == x)
+					return tree;
+				if(tree[1] < x)
+					return Node(tree[1], tree[2], r(tree[3], x, r));
+				if(x < tree[1])
+					return Node(tree[1], r(tree[2], x, r), tree[3]);
+			};
+			return ins(tree, x, ins);
+		};
+
+		print_inorder := fn (tree) {
+			pr := fn(t, p) {
+				if(t[0] == "Leaf") return "";
+				return p(t[2],p) + t[1] + p(t[3], p);
+			};
+			return pr(tree, pr);
+		};
+
+		__invoke := fn () {
+			t0 := Leaf();
+			t1 := insert(t0, "f");
+			t2 := insert(t1, "b");
+			t3 := insert(t2, "e");
+			t4 := insert(t3, "c");
+			t5 := insert(t4, "a");
+			t6 := insert(t5, "g");
+			t7 := insert(t6, "d");
+
+			return print_inorder(t7);
+		};
+	)"};
+
+	binary_search_tree.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = eval(top_level_call.m_result.get(), env);
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::String)
+			return 2;
+
+		auto* as_str = static_cast<Type::String*>(result);
+		if(as_str->m_value != "abcdefg"){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+
+	assert(0 == binary_search_tree.execute());
 }
