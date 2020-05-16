@@ -130,8 +130,14 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
 	assert(callee->m_def->m_args.size() == arglist->m_args.size());
 
-	e.new_scope();
 
+	std::vector<Type::Value*> args;
+	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
+		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		args.push_back(argvalue);
+	}
+
+	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
 		assert(argdeclTypeErased);
@@ -140,8 +146,7 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 		auto* argdecl = dynamic_cast<ASTDeclaration*>(argdeclTypeErased);
 		assert(argdecl);
 
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		e.declare(argdecl->identifier_text(), argvalue);
+		e.declare(argdecl->identifier_text(), args[i]);
 	}
 
 	for (auto& kv : callee->m_captures) {
