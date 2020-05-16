@@ -24,7 +24,7 @@ public:
 
 	Type::Object* new_object (Type::ObjectType);
 	Type::Dictionary* new_dictionary (Type::ObjectType);
-	Type::List* new_list (Type::ListType);
+	Type::Array* new_list (Type::ArrayType);
 	Type::Integer* new_integer (int);
 	Type::Float* new_float (float);
 	Type::Boolean* new_boolean (bool);

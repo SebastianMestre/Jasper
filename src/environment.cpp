@@ -62,7 +62,7 @@ Integer* Environment::new_integer(int i) { return m_gc->new_integer(i); }
 Float* Environment::new_float(float f) { return m_gc->new_float(f); }
 Boolean* Environment::new_boolean(bool b) { return m_gc->new_boolean(b); }
 String* Environment::new_string(std::string s) { return m_gc->new_string(s); }
-List* Environment::new_list(ListType elements) { return m_gc->new_list(std::move(elements)); }
+Array* Environment::new_list(ArrayType elements) { return m_gc->new_list(std::move(elements)); }
 Object* Environment::new_object(ObjectType declarations) { return m_gc->new_object(std::move(declarations)); }
 Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->new_dictionary(std::move(declarations)); }
 Function* Environment::new_function(FunctionType def, ObjectType s) { return m_gc->new_function(def, std::move(s)); }

@@ -192,12 +192,12 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = eval(ast->m_callee.get(), e);
-	assert(callee->type() == value_type::List);
+	assert(callee->type() == value_type::Array);
 
 	auto* index = eval(ast->m_index.get(), e);
 	assert(index->type() == value_type::Integer);
 
-	auto* array_callee = static_cast<Type::List*>(callee);
+	auto* array_callee = static_cast<Type::Array*>(callee);
 	auto* int_index = static_cast<Type::Integer*>(index);
 
 	return array_callee->at(int_index->m_value);

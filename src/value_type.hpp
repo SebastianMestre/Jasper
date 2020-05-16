@@ -9,7 +9,7 @@ inline const char* value_type_string[] = {
 	"String",
 	"Error",
 
-	"List",
+	"Array",
 	"Object",
 	"Dictionary",
 
@@ -26,7 +26,7 @@ enum class value_type {
 	String,
 	Error,
 
-	List,
+	Array,
 	Object,
 	Dictionary,
 	

@@ -33,14 +33,14 @@ String::String(std::string s) : Value(value_type::String), m_value(std::move(s))
 
 
 
-List::List() : Value(value_type::List) {}
-List::List(ListType l) : Value(value_type::List), m_value(std::move(l)) {}
+Array::Array() : Value(value_type::Array) {}
+Array::Array(ArrayType l) : Value(value_type::Array), m_value(std::move(l)) {}
 
-void List::append(Value* v) {
+void Array::append(Value* v) {
 	m_value.push_back(v);
 }
 
-Value* List::at(int position) {
+Value* Array::at(int position) {
 	if (position < 0 or position >= int(m_value.size())) {
 		// TODO: return RangeError
 		return nullptr;
@@ -111,7 +111,7 @@ void gc_visit(Boolean* v) { v->m_visited = true; }
 void gc_visit(Error* v) { v->m_visited = true; }
 void gc_visit(NativeFunction* v) { v->m_visited = true; }
 
-void gc_visit(List* l) {
+void gc_visit(Array* l) {
 	if (l->m_visited)
 		return;
 
@@ -163,8 +163,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Boolean*>(v));
 	case value_type::Error:
 		return gc_visit(static_cast<Error*>(v));
-	case value_type::List:
-		return gc_visit(static_cast<List*>(v));
+	case value_type::Array:
+		return gc_visit(static_cast<Array*>(v));
 	case value_type::Object:
 		return gc_visit(static_cast<Object*>(v));
 	case value_type::Dictionary:
@@ -238,14 +238,13 @@ void print(NativeFunction* f, int d) {
 	std::cout << value_type_string[int(f->type())] << '\n';
 }
 
-void print(List* l, int d) {
+void print(Array* l, int d) {
 	print_spaces(d);
 	std::cout << value_type_string[int(l->type())] << '\n';
 	for (auto* child : l->m_value) {
 		print(child, d+1);
 	}
 }
-
 
 void print(Value* v, int d) {
 
@@ -262,8 +261,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Boolean*>(v), d);
 	case value_type::Error:
 		return print(static_cast<Error*>(v), d);
-	case value_type::List:
-		return print(static_cast<List*>(v), d);
+	case value_type::Array:
+		return print(static_cast<Array*>(v), d);
 	case value_type::Object:
 		return print(static_cast<Object*>(v), d);
 	case value_type::Dictionary:
@@ -274,6 +273,5 @@ void print(Value* v, int d) {
 		return print(static_cast<NativeFunction*>(v), d);
 	}
 }
-
 
 } // namespace Type

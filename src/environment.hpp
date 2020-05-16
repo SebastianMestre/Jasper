@@ -45,7 +45,7 @@ struct Environment {
 	Float* new_float(float);
 	Boolean* new_boolean(bool);
 	String* new_string(std::string);
-	List* new_list(ListType);
+	Array* new_list(ArrayType);
 	Object* new_object(ObjectType);
 	Dictionary* new_dictionary(ObjectType);
 	Function* new_function(FunctionType, ObjectType);
