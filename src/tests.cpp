@@ -246,4 +246,66 @@ int main() {
 	});
 
 	assert(0 == array_index.execute());
+
+	Tester binary_search_tree{R"(
+		Leaf := fn() => array { "Leaf" };
+		Node := fn(x,l,r) => array { "Node"; x; l; r };
+
+		insert := fn(tree, x) {
+			ins := fn(tree, x, r) {
+				if(tree[0] == "Leaf")
+					return Node(x, Leaf(), Leaf());
+				if(tree[1] == x)
+					return tree;
+				if(tree[1] < x)
+					return Node(tree[1], tree[2], r(tree[3], x, r));
+				if(x < tree[1])
+					return Node(tree[1], r(tree[2], x, r), tree[3]);
+			};
+			return ins(tree, x, ins);
+		};
+
+		print_inorder := fn (tree) {
+			pr := fn(t, p) {
+				if(t[0] == "Leaf") return "";
+				return p(t[2],p) + t[1] + p(t[3], p);
+			};
+			return pr(tree, pr);
+		};
+
+		__invoke := fn () {
+			t0 := Leaf();
+			t1 := insert(t0, "f");
+			t2 := insert(t1, "b");
+			t3 := insert(t2, "e");
+			t4 := insert(t3, "c");
+			t5 := insert(t4, "a");
+			t6 := insert(t5, "g");
+			t7 := insert(t6, "d");
+
+			return print_inorder(t7);
+		};
+	)"};
+
+	binary_search_tree.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = eval(top_level_call.m_result.get(), env);
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::String)
+			return 2;
+
+		auto* as_str = static_cast<Type::String*>(result);
+		if(as_str->m_value != "abcdefg"){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+
+	assert(0 == binary_search_tree.execute());
 }
