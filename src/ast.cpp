@@ -46,7 +46,7 @@ void print(ASTNumberLiteral* ast, int d) {
 void print(ASTStringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ StringLiteral\n" << ast->text() << "]\n";
+	std::cout << stab << "[ StringLiteral " << ast->text() << "]\n";
 }
 
 void print(ASTObjectLiteral* ast, int d) {
