@@ -16,7 +16,7 @@ struct Environment;
 
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
-using ListType = std::vector<Value*>;
+using ArrayType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
 using NativeFunctionType = auto(Value*, Environment&) -> Value*;
 
@@ -70,11 +70,11 @@ struct String : Value {
 	String(std::string s);
 };
 
-struct List : Value {
-	ListType m_value;
+struct Array : Value {
+	ArrayType m_value;
 
-	List();
-	List(ListType l);
+	Array();
+	Array(ArrayType l);
 
 	void append(Value* v);
 	Value* at(int position);
@@ -113,28 +113,5 @@ struct NativeFunction : Value {
 
 	NativeFunction(NativeFunctionType* = nullptr);
 };
-
-
-/**
- * Example:
- *
- * using namespace Type;
- * using GarbageCollector::GC;
- *
- * GC gc;
- *
- * Object* top_level = gc.new_object();
- * gc.add_root(top_level);
- *
- * TopLevel.add_member("myInt", gc.new_integer(10));
- *
- * TopLevel.add_member(
- *     "myList",
- *     gc.new_list({
- *         gc.new_integer(2),
- *         gc.new_integer(2)
- * }));
- *
- */
 
 } // namespace Type

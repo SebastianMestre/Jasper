@@ -60,8 +60,8 @@ Type::Dictionary* GC::new_dictionary(Type::ObjectType declarations) {
 	return result;
 }
 
-Type::List* GC::new_list(Type::ListType elements) {
-	auto result = new Type::List;
+Type::Array* GC::new_list(Type::ArrayType elements) {
+	auto result = new Type::Array;
 	result->m_value = std::move(elements);
 	m_blocks.push_back(result);
 	return result;

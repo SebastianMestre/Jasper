@@ -59,6 +59,16 @@ void print(ASTObjectLiteral* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(ASTArrayLiteral* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ ArrayLiteral\n"
+		<< tab << "Elements:\n";
+	for (auto& elem : ast->m_elements)
+		print(elem.get(), d + 1);
+	std::cout << stab << "]\n";
+}
+
 void print(ASTDictionaryLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -121,6 +131,17 @@ void print(ASTCallExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(ASTIndexExpression* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ IndexExpression\n"
+	          << tab << "Callee:\n";
+	print(ast->m_callee.get(), d + 1);
+	std::cout << tab << "Index:\n";
+	print(ast->m_index.get(), d + 1);
+	std::cout << stab << "]\n";
+}
+
 void print(ASTArgumentList* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -159,6 +180,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<ASTStringLiteral*>(ast), d);
 	case ast_type::ObjectLiteral:
 		return print(static_cast<ASTObjectLiteral*>(ast), d);
+	case ast_type::ArrayLiteral:
+		return print(static_cast<ASTArrayLiteral*>(ast), d);
 	case ast_type::DictionaryLiteral:
 		return print(static_cast<ASTDictionaryLiteral*>(ast), d);
 	case ast_type::FunctionLiteral:
@@ -173,6 +196,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<ASTBinaryExpression*>(ast), d);
 	case ast_type::CallExpression:
 		return print(static_cast<ASTCallExpression*>(ast), d);
+	case ast_type::IndexExpression:
+		return print(static_cast<ASTIndexExpression*>(ast), d);
 	case ast_type::ArgumentList:
 		return print(static_cast<ASTArgumentList*>(ast), d);
 	case ast_type::Block:
