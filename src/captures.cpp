@@ -144,6 +144,7 @@ Set gather_captures(ASTDeclarationList* ast) {
 }
 
 Set gather_captures(ASTIfStatement* ast) {
+	// TODO
 	return {};
 }
 
