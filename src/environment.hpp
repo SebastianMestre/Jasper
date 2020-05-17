@@ -18,7 +18,7 @@ struct Scope {
 	ObjectType m_declarations;
 
 	void declare(const Identifier& i, Reference* v);
-	Value* access(const Identifier& i);
+	Reference* access(const Identifier& i);
 };
 
 struct Environment {
@@ -38,7 +38,7 @@ struct Environment {
 
 	// scope
 	void declare(const Identifier&, Value*);
-	Value* access(const Identifier&);
+	Reference* access(const Identifier&);
 
 	// gargabe_collector
 	Null* null();

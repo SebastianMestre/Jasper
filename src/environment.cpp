@@ -11,14 +11,12 @@ void Scope::declare(const Identifier& i, Reference* v) {
 	m_declarations[i] = v;
 }
 
-Value* Scope::access(const Identifier& i) {
+Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
 	if (v != m_declarations.end()){
-		auto val = v->second;
-		assert(val->type() == value_type::Reference);
-		auto ref = static_cast<Type::Reference*>(val);
-		return ref->m_value;
+		assert(v->second->type() == value_type::Reference);
+		return static_cast<Type::Reference*>(v->second);
 	}
 
 	if (m_parent != nullptr)
@@ -65,7 +63,7 @@ void Environment::declare(const Identifier& i, Value* v) {
 	auto r = new_reference(v);
 	m_scope->declare(i, r);
 }
-Value* Environment::access(const Identifier& i) {
+Reference* Environment::access(const Identifier& i) {
 	return m_scope->access(i);
 }
 

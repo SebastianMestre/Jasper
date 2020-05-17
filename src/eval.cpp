@@ -84,7 +84,7 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	return e.m_scope->access(ast->text());
+	return unboxed(unboxed(unboxed(e.m_scope->access(ast->text()))));
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {

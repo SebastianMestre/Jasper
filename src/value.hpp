@@ -20,6 +20,8 @@ using ArrayType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
 using NativeFunctionType = auto(Value*, Environment&) -> Value*;
 
+// Returns the value pointed to by a reference
+Value* unboxed(Value* value);
 void print(Value* v, int d = 0);
 void gc_visit(Value*);
 
