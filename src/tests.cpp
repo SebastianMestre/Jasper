@@ -28,7 +28,15 @@ int main() {
 		print(1,z(),4);
 	};
 
-	w := fn (a,b:int,c){};
+	w := fn (a,b:int,c){
+		for(i := b; i < 3; i = i + 1)
+			for(j := i + 1; j < 9; j = j + 1) {
+				if (j < 9)
+					return j;
+				j = 2*j;
+			}
+		return c*i;
+	};
 
 	f := obt {
 		greeting := "Hello, ";
@@ -372,9 +380,8 @@ int main() {
 		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
 	});
-
+	
 	assert(0 == bool_and_null_literals.execute());
-
 
 	Tester recursion{R"(
 		fib := fn(n){
@@ -405,4 +412,44 @@ int main() {
 	});
 
 	assert(0 == recursion.execute());
+	
+	Tester for_loop_prime_numbers{R"(
+		__invoke := fn () {
+			a := 11;
+			ended := false;
+			for (i := 1; i < a; i = i + 1) {
+				for (j := 1; j < i; j = j + 1) {
+					trunc := (i / j) * j;
+					if (trunc == i) {
+						print(i);
+						print(" is not prime!");
+					}
+				}
+				if (i == (a - 1))
+					ended = true;
+			}
+			return ended;
+		};
+	)"};
+
+	for_loop_prime_numbers.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = eval(top_level_call.m_result.get(), env);
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::Boolean)
+			return 2;
+
+		auto* as_bool = static_cast<Type::Boolean*>(result);
+		if(as_bool->m_value != true){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+	assert(0 == for_loop_prime_numbers.execute());
 }

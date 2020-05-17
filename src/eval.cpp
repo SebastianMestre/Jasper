@@ -226,8 +226,23 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
-	auto* lhs = unboxed(eval(ast->m_lhs.get(), e));
-	auto* rhs = unboxed(eval(ast->m_rhs.get(), e));
+	// DEBUG
+	if (ast->m_op == token_type::ASSIGN)
+		std::cerr
+			<< (int)ast->m_lhs.get()->type()
+			<< " - "
+			<< (int)ast->m_rhs.get()->type();
+
+	// NOTE: lhs_ref and rhs_ref can still be plain values
+	// unboxing only guarantees that
+	auto* lhs_ref = eval(ast->m_lhs.get(), e);
+	auto* rhs_ref = eval(ast->m_rhs.get(), e);
+	auto* lhs = unboxed(lhs_ref);
+	auto* rhs = unboxed(rhs_ref);
+	assert(lhs_ref);
+	assert(rhs_ref);
+	assert(lhs);
+	assert(rhs);
 
 	switch (ast->m_op) {
 	case token_type::ADD: {
@@ -433,6 +448,14 @@ Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 			assert(0);
 		}
 	}
+	case token_type::ASSIGN: {
+		// TODO: proper error handling
+		assert(lhs_ref->type() == value_type::Reference);
+		// NOTE: copied by reference, matters if rhs_ref is actually a reference
+		// TODO: change in another pr, perhaps adding Environment::copy_value?
+		static_cast<Type::Reference*>(lhs_ref)->m_value = rhs;
+		return e.null();
+	}
 	default:
 		std::cerr << "WARNING: not implemented action"
 		             "(Evaluating binary expression)\n";
@@ -459,6 +482,34 @@ Type::Value* eval(ASTIfStatement* ast, Type::Environment& e) {
 	if(condition_result_b->m_value){
 		eval(ast->m_body.get(), e);
 	}
+
+	return e.null();
+};
+
+Type::Value* eval(ASTForStatement* ast, Type::Environment& e) {
+	e.new_nested_scope();
+	
+	auto* declaration = eval(ast->m_declaration.get(), e);
+	assert(declaration);
+
+	while (1) {
+		auto* condition_result = eval(ast->m_condition.get(), e);
+		assert(condition_result);
+
+		assert(condition_result->type() == value_type::Boolean);
+		auto* condition_result_b = static_cast<Type::Boolean*>(condition_result);
+
+		if (condition_result_b->m_value){
+			eval(ast->m_body.get(), e);
+		} else {
+			break;
+		}
+
+		auto* loop_action = eval(ast->m_action.get(), e);
+		assert(loop_action);
+	}
+
+	e.end_scope();
 
 	return e.null();
 };
@@ -502,6 +553,8 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTReturnStatement*>(ast), e);
 	case ast_type::IfStatement:
 		return eval(static_cast<ASTIfStatement*>(ast), e);
+	case ast_type::ForStatement:
+		return eval(static_cast<ASTForStatement*>(ast), e);
 	default:
 		std::cerr << "@ Internal Error: unhandled case in eval:\n";
 		std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
