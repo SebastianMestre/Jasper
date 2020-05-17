@@ -164,9 +164,9 @@ Set gather_captures(AST* ast) {
 	case ast_type::StringLiteral:
 		return gather_captures(static_cast<ASTStringLiteral*>(ast));
 	case ast_type::BooleanLiteral:
-		return gather_captures(static_cast<ASTNumberLiteral*>(ast));
+		return gather_captures(static_cast<ASTBooleanLiteral*>(ast));
 	case ast_type::NullLiteral:
-		return gather_captures(static_cast<ASTStringLiteral*>(ast));
+		return gather_captures(static_cast<ASTNullLiteral*>(ast));
 	case ast_type::ObjectLiteral:
 		return gather_captures(static_cast<ASTObjectLiteral*>(ast));
 	case ast_type::ArrayLiteral:

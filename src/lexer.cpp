@@ -67,7 +67,7 @@ bool Lexer::consume_keyword() {
 			   peek_char(4) == 'e' &&
 			   not is_identifier_char(peek_char(5))
 		  ) {
-			push_token(token_type::FALSE_VALUE, 5);
+			push_token(token_type::KEYWORD_FALSE, 5);
 			return true;
 		}
 	} break;
@@ -117,7 +117,7 @@ bool Lexer::consume_keyword() {
 		    peek_char(3) == 'e' &&
 		    not is_identifier_char(peek_char(4))
 		) {
-			push_token(token_type::TRUE_VALUE, 4);
+			push_token(token_type::KEYWORD_TRUE, 4);
 			return true;
 		}
 		break;
@@ -127,7 +127,7 @@ bool Lexer::consume_keyword() {
 		    peek_char(3) == 'l' &&
 		    not is_identifier_char(peek_char(4))
 		) {
-			push_token(token_type::NULL_VALUE, 4);
+			push_token(token_type::KEYWORD_NULL, 4);
 			return true;
 		}
 		break;
