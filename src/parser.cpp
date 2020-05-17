@@ -385,6 +385,26 @@ Writer<std::unique_ptr<AST>> Parser::parse_terminal() {
 
 	auto token = peek();
 
+	if (token->m_type == token_type::KEYWORD_NULL) {
+		auto e = std::make_unique<ASTNullLiteral>();
+		m_lexer->advance();
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
+	}
+
+	if (token->m_type == token_type::KEYWORD_TRUE) {
+		auto e = std::make_unique<ASTBooleanLiteral>();
+		e->m_token = token;
+		m_lexer->advance();
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
+	}
+
+	if (token->m_type == token_type::KEYWORD_FALSE) {
+		auto e = std::make_unique<ASTBooleanLiteral>();
+		e->m_token = token;
+		m_lexer->advance();
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
+	}
+
 	if (token->m_type == token_type::NUMBER) {
 		auto e = std::make_unique<ASTNumberLiteral>();
 		e->m_token = token;

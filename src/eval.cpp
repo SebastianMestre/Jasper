@@ -40,6 +40,15 @@ Type::Value* eval(ASTStringLiteral* ast, Type::Environment& e) {
 	return e.new_string(ast->text());
 };
 
+Type::Value* eval(ASTBooleanLiteral* ast, Type::Environment& e) {
+	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
+	return e.new_boolean(b);
+};
+
+Type::Value* eval(ASTNullLiteral* ast, Type::Environment& e) {
+	return e.null();
+};
+
 Type::Value* eval(ASTObjectLiteral* ast, Type::Environment& e) {
 	Type::ObjectType declarations;
 
@@ -461,6 +470,10 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTNumberLiteral*>(ast), e);
 	case ast_type::StringLiteral:
 		return eval(static_cast<ASTStringLiteral*>(ast), e);
+	case ast_type::BooleanLiteral:
+		return eval(static_cast<ASTBooleanLiteral*>(ast), e);
+	case ast_type::NullLiteral:
+		return eval(static_cast<ASTNullLiteral*>(ast), e);
 	case ast_type::ObjectLiteral:
 		return eval(static_cast<ASTObjectLiteral*>(ast), e);
 	case ast_type::ArrayLiteral:

@@ -36,6 +36,19 @@ struct ASTStringLiteral : public AST {
 	ASTStringLiteral() : AST{ ast_type::StringLiteral } {}
 };
 
+struct ASTBooleanLiteral : public AST {
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
+
+	ASTBooleanLiteral() : AST{ ast_type::BooleanLiteral } {}
+};
+
+struct ASTNullLiteral : public AST {
+
+	ASTNullLiteral() : AST{ ast_type::NullLiteral } {}
+};
+
 struct ASTObjectLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 

@@ -14,7 +14,6 @@ constexpr char tabc = ' ';
 
 void print(ASTDeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ DeclarationList\n";
 	for (auto& decl : ast->m_declarations)
 		print(decl.get(), d + 1);
@@ -39,14 +38,22 @@ void print(ASTDeclaration* ast, int d) {
 
 void print(ASTNumberLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ Number " << ast->text() << " ]\n";
 }
 
 void print(ASTStringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ StringLiteral " << ast->text() << "]\n";
+}
+
+void print(ASTBooleanLiteral* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::cout << stab << "[ BooleanLiteral " << ast->text() << "]\n";
+}
+
+void print(ASTNullLiteral* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::cout << stab << "[ NullLiteral ]\n";
 }
 
 void print(ASTObjectLiteral* ast, int d) {
@@ -81,13 +88,11 @@ void print(ASTDictionaryLiteral* ast, int d) {
 
 void print(ASTIdentifier* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ Identifier " << ast->text() << " ]\n";
 }
 
 void print(ASTBlock* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ Block\n";
 	for (auto& child : ast->m_body)
 		print(child.get(), d + 1);
@@ -144,7 +149,6 @@ void print(ASTIndexExpression* ast, int d) {
 
 void print(ASTArgumentList* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ ArgumentList\n";
 	for(auto& argument : ast->m_args){
 		print(argument.get(), d+1);
@@ -154,7 +158,6 @@ void print(ASTArgumentList* ast, int d) {
 
 void print(ASTReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
 	print(ast->m_value.get(), d+1);
 	std::cout << stab << "]\n";
@@ -178,6 +181,10 @@ void print(AST* ast, int d) {
 		return print(static_cast<ASTNumberLiteral*>(ast), d);
 	case ast_type::StringLiteral:
 		return print(static_cast<ASTStringLiteral*>(ast), d);
+	case ast_type::BooleanLiteral:
+		return print(static_cast<ASTBooleanLiteral*>(ast), d);
+	case ast_type::NullLiteral:
+		return print(static_cast<ASTNullLiteral*>(ast), d);
 	case ast_type::ObjectLiteral:
 		return print(static_cast<ASTObjectLiteral*>(ast), d);
 	case ast_type::ArrayLiteral:

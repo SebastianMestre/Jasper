@@ -57,6 +57,9 @@ inline const char* token_type_string[] = {
 
 	"NUMBER",
 	"STRING",
+	"KEYWORD_FALSE",
+	"KEYWORD_TRUE",
+	"KEYWORD_NULL",
 	"IDENTIFIER",
 	"KEYWORD",
 
@@ -128,6 +131,9 @@ enum class token_type {
 
 	NUMBER,
 	STRING,
+	KEYWORD_FALSE,
+	KEYWORD_TRUE,
+	KEYWORD_NULL,
 	IDENTIFIER,
 	KEYWORD,
 

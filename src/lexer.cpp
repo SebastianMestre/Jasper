@@ -61,6 +61,14 @@ bool Lexer::consume_keyword() {
 					return true;
 				}
 			}
+		} else if (peek_char(1) == 'a' &&
+			   peek_char(2) == 'l' &&
+			   peek_char(3) == 's' &&
+			   peek_char(4) == 'e' &&
+			   not is_identifier_char(peek_char(5))
+		  ) {
+			push_token(token_type::KEYWORD_FALSE, 5);
+			return true;
 		}
 	} break;
 	case 'i': {
@@ -102,6 +110,27 @@ bool Lexer::consume_keyword() {
 			push_token(token_type::KEYWORD_OBJECT, 3);
 			return true;
 		}
+		break;
+	case 't':
+		if (peek_char(1) == 'r' &&
+		    peek_char(2) == 'u' &&
+		    peek_char(3) == 'e' &&
+		    not is_identifier_char(peek_char(4))
+		) {
+			push_token(token_type::KEYWORD_TRUE, 4);
+			return true;
+		}
+		break;
+	case 'n':
+		if (peek_char(1) == 'u' &&
+		    peek_char(2) == 'l' &&
+		    peek_char(3) == 'l' &&
+		    not is_identifier_char(peek_char(4))
+		) {
+			push_token(token_type::KEYWORD_NULL, 4);
+			return true;
+		}
+		break;
 	}
 	return false;
 }
