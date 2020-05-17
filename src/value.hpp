@@ -103,6 +103,7 @@ struct Dictionary : Value {
 
 struct Function : Value {
 	FunctionType m_def;
+	// TODO: store references instead of values
 	ObjectType m_captures;
 
 	Function(FunctionType, ObjectType);

@@ -14,9 +14,10 @@ namespace Type {
 struct Scope {
 	Scope* m_parent {nullptr};
 	Scope* m_prev {nullptr};
+	// TODO: store references instead of values
 	ObjectType m_declarations;
 
-	void declare(const Identifier& i, Value* v);
+	void declare(const Identifier& i, Reference* v);
 	Value* access(const Identifier& i);
 };
 

@@ -19,9 +19,9 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
 	if (!ast->m_value)
-		e.m_scope->declare(ast->identifier_text(), e.null());
+		e.declare(ast->identifier_text(), e.null());
 	else
-		e.m_scope->declare(ast->identifier_text(), eval(ast->m_value.get(), e));
+		e.declare(ast->identifier_text(), eval(ast->m_value.get(), e));
 
 	return e.null();
 };

@@ -6,16 +6,20 @@
 
 namespace Type {
 
-void Scope::declare(const Identifier& i, Value* v) {
-	// TODO: check name colission
+void Scope::declare(const Identifier& i, Reference* v) {
+	// TODO: check name collision
 	m_declarations[i] = v;
 }
 
 Value* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
-	if (v != m_declarations.end())
-		return v->second;
+	if (v != m_declarations.end()){
+		auto val = v->second;
+		assert(val->type() == value_type::Reference);
+		auto ref = static_cast<Type::Reference*>(val);
+		return ref->m_value;
+	}
 
 	if (m_parent != nullptr)
 		return m_parent->access(i);
@@ -57,8 +61,13 @@ Value* Environment::fetch_return_value() {
 // used as a short-hand
 
 // scope
-void Environment::declare(const Identifier& i, Value* v) { m_scope->declare(i,v); }
-Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
+void Environment::declare(const Identifier& i, Value* v) {
+	auto r = new_reference(v);
+	m_scope->declare(i, r);
+}
+Value* Environment::access(const Identifier& i) {
+	return m_scope->access(i);
+}
 
 // garbage_collector
 Null* Environment::null() { return m_gc->null(); }
