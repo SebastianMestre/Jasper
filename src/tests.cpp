@@ -10,7 +10,6 @@
 int main() {
 	using namespace Test;
 
-	/*
 	Tester monolithic_test = {R"(
 	x : dec = 1.4;
 	y : int = 3;
@@ -150,7 +149,6 @@ int main() {
 	});
 
 	assert(0 == function_return.execute());
-	*/
 
 	Tester function_captures{R"(
 	K := fn (x) { return fn (y) { return x; }; };
