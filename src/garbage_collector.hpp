@@ -32,6 +32,7 @@ public:
 	Type::Function* new_function (Type::FunctionType, Type::ObjectType);
 	Type::NativeFunction* new_native_function (Type::NativeFunctionType*);
 	Type::Error* new_error (std::string);
+	Type::Reference* new_reference (Type::Value*);
 };
 
 }

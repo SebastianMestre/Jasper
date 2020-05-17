@@ -102,6 +102,9 @@ NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : Value { value_type::NativeFunction }, m_fptr { fptr } {}
 
 
+Reference::Reference(Value* value)
+	: Value { value_type::Reference }, m_value{value} {}
+
 
 void gc_visit(Null* v) { v->m_visited = true; }
 void gc_visit(Integer* v) { v->m_visited = true; }
@@ -148,6 +151,15 @@ void gc_visit(Function* f) {
 		gc_visit(dec.second);
 }
 
+void gc_visit(Reference* r) {
+	if (r->m_visited)
+		return;
+	
+	r->m_visited = true;
+	gc_visit(r->m_value);
+}
+
+
 void gc_visit(Value* v) {
 
 	switch(v->type()) {
@@ -173,6 +185,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Function*>(v));
 	case value_type::NativeFunction:
 		return gc_visit(static_cast<NativeFunction*>(v));
+	case value_type::Reference:
+		return gc_visit(static_cast<Reference*>(v));
 	}
 }
 
@@ -246,6 +260,12 @@ void print(Array* l, int d) {
 	}
 }
 
+void print(Reference* l, int d) {
+	print_spaces(d);
+	std::cout << value_type_string[int(l->type())] << '\n';
+	print(l->m_value, d+1);
+}
+
 void print(Value* v, int d) {
 
 	switch(v->type()) {
@@ -271,6 +291,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Function*>(v), d);
 	case value_type::NativeFunction:
 		return print(static_cast<NativeFunction*>(v), d);
+	case value_type::Reference:
+		return print(static_cast<Reference*>(v), d);
 	}
 }
 

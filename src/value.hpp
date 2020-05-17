@@ -114,4 +114,10 @@ struct NativeFunction : Value {
 	NativeFunction(NativeFunctionType* = nullptr);
 };
 
+struct Reference : Value {
+	Value* m_value;
+
+	Reference(Value* value);
+};
+
 } // namespace Type

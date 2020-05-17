@@ -15,6 +15,8 @@ inline const char* value_type_string[] = {
 
 	"Function",
 	"NativeFunction",
+
+	"Reference",
 };
 
 enum class value_type {
@@ -32,5 +34,7 @@ enum class value_type {
 	
 	Function,
 	NativeFunction,
+
+	Reference,
 };
 

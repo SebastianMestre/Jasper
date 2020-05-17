@@ -51,5 +51,6 @@ struct Environment {
 	Function* new_function(FunctionType, ObjectType);
 	NativeFunction* new_native_function(NativeFunctionType*);
 	Error* new_error(std::string);
+	Reference* new_reference(Value*);
 };
 }

@@ -72,4 +72,5 @@ Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->
 Function* Environment::new_function(FunctionType def, ObjectType s) { return m_gc->new_function(def, std::move(s)); }
 NativeFunction* Environment::new_native_function(NativeFunctionType* fptr) { return m_gc->new_native_function(fptr); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
+Reference* Environment::new_reference(Value* v) { return m_gc->new_reference(v); }
 }
