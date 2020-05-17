@@ -148,4 +148,13 @@ struct ASTIfStatement : public AST {
 	ASTIfStatement() : AST{ ast_type::IfStatement } {}
 };
 
+struct ASTForStatement : public AST {
+	std::unique_ptr<AST> m_declaration;
+	std::unique_ptr<AST> m_condition;
+	std::unique_ptr<AST> m_action;
+	std::unique_ptr<AST> m_body;
+
+	ASTForStatement() : AST{ ast_type::ForStatement } {}
+};
+
 void print (AST*, int);
