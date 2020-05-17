@@ -39,7 +39,7 @@ Type::Value* eval(ASTStringLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTBooleanLiteral* ast, Type::Environment& e) {
-	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE ? true : false;
+	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 
