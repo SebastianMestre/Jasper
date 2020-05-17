@@ -76,7 +76,7 @@ int main() {
 		return 0;
 	});
 
-	// assert(0 == monolithic_test.execute(false));
+	assert(0 == monolithic_test.execute(false));
 
 	Tester bexp_tester(R"(
 		int_val := 1 + 2 + 3 + 4;

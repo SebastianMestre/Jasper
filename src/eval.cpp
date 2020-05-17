@@ -153,6 +153,7 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	}
 
 	for (auto& kv : callee->m_captures) {
+		assert(kv.second);
 		assert(kv.second->type() == value_type::Reference);
 		e.direct_declare(kv.first, static_cast<Type::Reference*>(kv.second));
 	}
