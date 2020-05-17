@@ -86,10 +86,7 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	// FIXME: This is wrong. evaluating an identifier should not unbox a value.
-	// However, in order not to break things, for now, a single call to `unboxed`
-	// is acceptable here.
-	return unboxed(e.m_scope->access(ast->text()));
+	return e.access(ast->text());
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
@@ -109,7 +106,7 @@ Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTReturnStatement* ast, Type::Environment& e) {
 	// TODO: proper error handling
-	auto* returning = eval(ast->m_value.get(), e);
+	auto* returning = unboxed(eval(ast->m_value.get(), e));
 	assert(returning);
 
 	e.save_return_value(returning);
@@ -186,7 +183,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	// TODO: proper error handling
 
-	auto* callee = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(eval(ast->m_callee.get(), e));
 	assert(callee);
 
 	assert(is_callable_value(callee));
@@ -203,11 +200,11 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
-	auto* callee = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(eval(ast->m_callee.get(), e));
 	assert(callee);
 	assert(callee->type() == value_type::Array);
 
-	auto* index = eval(ast->m_index.get(), e);
+	auto* index = unboxed(eval(ast->m_index.get(), e));
 	assert(index);
 	assert(index->type() == value_type::Integer);
 
@@ -219,8 +216,8 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
-	auto* lhs = eval(ast->m_lhs.get(), e);
-	auto* rhs = eval(ast->m_rhs.get(), e);
+	auto* lhs = unboxed(eval(ast->m_lhs.get(), e));
+	auto* rhs = unboxed(eval(ast->m_rhs.get(), e));
 
 	switch (ast->m_op) {
 	case token_type::ADD: {
