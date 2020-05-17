@@ -317,4 +317,59 @@ int main() {
 	});
 
 	assert(0 == binary_search_tree.execute());
+
+	Tester bool_and_null_literals{R"(
+		litt : bool = true;
+		litf : bool = false;
+		nullv := null;
+	)"};
+	
+	bool_and_null_literals.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		{
+			auto top_level_call = parse_expression("litt()", ta);
+
+			auto* result = eval(top_level_call.m_result.get(), env);
+			if(!result)
+				return 1;
+
+			if(result->type() != value_type::Boolean)
+				return 2;
+
+			auto* as_bool = static_cast<Type::Boolean*>(result);
+			if(as_bool->m_value != true){
+				return 3;
+			}
+		}
+		{	
+			auto top_level_call = parse_expression("litf()", ta);
+
+			auto* result = eval(top_level_call.m_result.get(), env);
+			if(!result)
+				return 1;
+
+			if(result->type() != value_type::Boolean)
+				return 2;
+
+			auto* as_bool = static_cast<Type::Boolean*>(result);
+			if(as_bool->m_value != false){
+				return 3;
+			}
+		}
+		{	
+			auto top_level_call = parse_expression("nullv()", ta);
+
+			auto* result = eval(top_level_call.m_result.get(), env);
+			if(!result)
+				return 1;
+
+			if(result->type() != value_type::Null)
+				return 2;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+
+	assert(0 == binary_search_tree.execute());
 }
