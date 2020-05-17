@@ -88,31 +88,31 @@ int main() {
 
 	bexp_tester.add_test(
 		+[](Type::Environment& env) -> int {
-			auto* expected_10 = env.m_scope->access("int_val");
+			auto* expected_10 = unboxed(env.m_scope->access("int_val"));
 			auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
 			assert(as_integer);
 			assert(as_integer->m_value == 10);
 			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
 
-			auto* expected_3_5 = env.m_scope->access("float_val");
+			auto* expected_3_5 = unboxed(env.m_scope->access("float_val"));
 			auto* as_float = dynamic_cast<Type::Float*>(expected_3_5);
 			assert(as_float);
 			assert(as_float->m_value == 3.5);
 			std::cout << "@@ Value is: " << as_float->m_value << '\n';
 
-			auto* expected_testing = env.m_scope->access("string_val");
+			auto* expected_testing = unboxed(env.m_scope->access("string_val"));
 			auto* as_string = dynamic_cast<Type::String*>(expected_testing);
 			assert(as_string);
 			assert(as_string->m_value == "testing.");
 			std::cout << "@@ Value is: " << as_string->m_value << '\n';
 
-			auto* expected_0 = env.m_scope->access("int_div");
+			auto* expected_0 = unboxed(env.m_scope->access("int_div"));
 			as_integer = dynamic_cast<Type::Integer*>(expected_0);
 			assert(as_integer);
 			assert(as_integer->m_value == 0);
 			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
 
-			auto* expected_0_5 = env.m_scope->access("float_div");
+			auto* expected_0_5 = unboxed(env.m_scope->access("float_div"));
 			as_float = dynamic_cast<Type::Float*>(expected_0_5);
 			assert(as_float);
 			assert(as_float->m_value == 0.5);
@@ -152,7 +152,7 @@ int main() {
 
 	Tester function_captures{R"(
 	K := fn (x) { return fn (y) { return x; }; };
-	f := fn() {
+	f := fn () {
 		a := 42;
 		b := 2;
 		return K(a)(b);

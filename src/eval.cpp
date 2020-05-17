@@ -18,10 +18,12 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
-	if (!ast->m_value)
-		e.m_scope->declare(ast->identifier_text(), e.null());
-	else
-		e.m_scope->declare(ast->identifier_text(), eval(ast->m_value.get(), e));
+	if (!ast->m_value) {
+		e.declare(ast->identifier_text(), e.null());
+	} else {
+		auto val = unboxed(eval(ast->m_value.get(), e));
+		e.declare(ast->identifier_text(), val);
+	}
 
 	return e.null();
 };
@@ -84,7 +86,7 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	return e.m_scope->access(ast->text());
+	return e.access(ast->text());
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
@@ -104,7 +106,7 @@ Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTReturnStatement* ast, Type::Environment& e) {
 	// TODO: proper error handling
-	auto* returning = eval(ast->m_value.get(), e);
+	auto* returning = unboxed(eval(ast->m_value.get(), e));
 	assert(returning);
 
 	e.save_return_value(returning);
@@ -133,7 +135,8 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 
 	std::vector<Type::Value*> args;
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		auto* argvalue = unboxed(eval(arglist->m_args[i].get(), e));
+		assert(argvalue->type() != value_type::Reference);
 		args.push_back(argvalue);
 	}
 
@@ -150,7 +153,9 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	}
 
 	for (auto& kv : callee->m_captures) {
-		e.declare(kv.first, kv.second);
+		assert(kv.second);
+		assert(kv.second->type() == value_type::Reference);
+		e.direct_declare(kv.first, static_cast<Type::Reference*>(kv.second));
 	}
 
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
@@ -179,7 +184,7 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	// TODO: proper error handling
 
-	auto* callee = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(eval(ast->m_callee.get(), e));
 	assert(callee);
 
 	assert(is_callable_value(callee));
@@ -196,11 +201,11 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
-	auto* callee = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(eval(ast->m_callee.get(), e));
 	assert(callee);
 	assert(callee->type() == value_type::Array);
 
-	auto* index = eval(ast->m_index.get(), e);
+	auto* index = unboxed(eval(ast->m_index.get(), e));
 	assert(index);
 	assert(index->type() == value_type::Integer);
 
@@ -212,8 +217,8 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
-	auto* lhs = eval(ast->m_lhs.get(), e);
-	auto* rhs = eval(ast->m_rhs.get(), e);
+	auto* lhs = unboxed(eval(ast->m_lhs.get(), e));
+	auto* rhs = unboxed(eval(ast->m_rhs.get(), e));
 
 	switch (ast->m_op) {
 	case token_type::ADD: {

@@ -6,16 +6,18 @@
 
 namespace Type {
 
-void Scope::declare(const Identifier& i, Value* v) {
-	// TODO: check name colission
+void Scope::declare(const Identifier& i, Reference* v) {
+	// TODO: check name collision
 	m_declarations[i] = v;
 }
 
-Value* Scope::access(const Identifier& i) {
+Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
-	if (v != m_declarations.end())
-		return v->second;
+	if (v != m_declarations.end()){
+		assert(v->second->type() == value_type::Reference);
+		return static_cast<Type::Reference*>(v->second);
+	}
 
 	if (m_parent != nullptr)
 		return m_parent->access(i);
@@ -57,8 +59,22 @@ Value* Environment::fetch_return_value() {
 // used as a short-hand
 
 // scope
-void Environment::declare(const Identifier& i, Value* v) { m_scope->declare(i,v); }
-Value* Environment::access(const Identifier& i) { return m_scope->access(i); }
+void Environment::direct_declare(const Identifier& i, Reference* r) {
+	if(r->type() != value_type::Reference){
+		assert(0 && "directly declared a non-reference!");
+	}
+	m_scope->declare(i, r);
+}
+void Environment::declare(const Identifier& i, Value* v) {
+	if(v->type() == value_type::Reference){
+		assert(0 && "declared a reference!");
+	}
+	auto r = new_reference(v);
+	m_scope->declare(i, r);
+}
+Reference* Environment::access(const Identifier& i) {
+	return m_scope->access(i);
+}
 
 // garbage_collector
 Null* Environment::null() { return m_gc->null(); }
@@ -72,4 +88,10 @@ Dictionary* Environment::new_dictionary(ObjectType declarations) { return m_gc->
 Function* Environment::new_function(FunctionType def, ObjectType s) { return m_gc->new_function(def, std::move(s)); }
 NativeFunction* Environment::new_native_function(NativeFunctionType* fptr) { return m_gc->new_native_function(fptr); }
 Error* Environment::new_error(std::string e) { return m_gc->new_error(e); }
+Reference* Environment::new_reference(Value* v) {
+	assert(
+	    v->type() != value_type::Reference
+	    && "References to references are not allowed.");
+	return m_gc->new_reference(v);
+}
 }

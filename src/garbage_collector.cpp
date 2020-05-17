@@ -109,4 +109,10 @@ Type::Error* GC::new_error(std::string s) {
 	return result;
 }
 
+Type::Reference* GC::new_reference(Type::Value* v) {
+	auto result = new Type::Reference(std::move(v));
+	m_blocks.push_back(result);
+	return result;
+}
+
 } // namespace GarbageCollector

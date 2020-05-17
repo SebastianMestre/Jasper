@@ -14,10 +14,11 @@ namespace Type {
 struct Scope {
 	Scope* m_parent {nullptr};
 	Scope* m_prev {nullptr};
+	// TODO: store references instead of values
 	ObjectType m_declarations;
 
-	void declare(const Identifier& i, Value* v);
-	Value* access(const Identifier& i);
+	void declare(const Identifier& i, Reference* v);
+	Reference* access(const Identifier& i);
 };
 
 struct Environment {
@@ -36,8 +37,11 @@ struct Environment {
 	// used as a short-hand
 
 	// scope
+	// Binds a name to a reference to the given value
 	void declare(const Identifier&, Value*);
-	Value* access(const Identifier&);
+	// Binds a name to the given reference
+	void direct_declare(const Identifier& i, Reference* v);
+	Reference* access(const Identifier&);
 
 	// gargabe_collector
 	Null* null();
@@ -51,5 +55,6 @@ struct Environment {
 	Function* new_function(FunctionType, ObjectType);
 	NativeFunction* new_native_function(NativeFunctionType*);
 	Error* new_error(std::string);
+	Reference* new_reference(Value*);
 };
 }

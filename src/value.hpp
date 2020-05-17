@@ -20,6 +20,8 @@ using ArrayType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
 using NativeFunctionType = auto(Value*, Environment&) -> Value*;
 
+// Returns the value pointed to by a reference
+Value* unboxed(Value* value);
 void print(Value* v, int d = 0);
 void gc_visit(Value*);
 
@@ -103,6 +105,7 @@ struct Dictionary : Value {
 
 struct Function : Value {
 	FunctionType m_def;
+	// TODO: store references instead of values
 	ObjectType m_captures;
 
 	Function(FunctionType, ObjectType);
@@ -112,6 +115,12 @@ struct NativeFunction : Value {
 	NativeFunctionType* m_fptr;
 
 	NativeFunction(NativeFunctionType* = nullptr);
+};
+
+struct Reference : Value {
+	Value* m_value;
+
+	Reference(Value* value);
 };
 
 } // namespace Type
