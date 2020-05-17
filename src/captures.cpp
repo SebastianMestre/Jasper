@@ -61,6 +61,14 @@ Set gather_captures(ASTStringLiteral* ast) {
 	return {};
 }
 
+Set gather_captures(ASTBooleanLiteral* ast) {
+	return {};
+}
+
+Set gather_captures(ASTNullLiteral* ast) {
+	return {};
+}
+
 Set gather_captures(ASTIdentifier* ast) {
 	return {{ ast->text() }};
 }
@@ -154,6 +162,10 @@ Set gather_captures(AST* ast) {
 	case ast_type::NumberLiteral:
 		return gather_captures(static_cast<ASTNumberLiteral*>(ast));
 	case ast_type::StringLiteral:
+		return gather_captures(static_cast<ASTStringLiteral*>(ast));
+	case ast_type::BooleanLiteral:
+		return gather_captures(static_cast<ASTNumberLiteral*>(ast));
+	case ast_type::NullLiteral:
 		return gather_captures(static_cast<ASTStringLiteral*>(ast));
 	case ast_type::ObjectLiteral:
 		return gather_captures(static_cast<ASTObjectLiteral*>(ast));
