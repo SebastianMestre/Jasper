@@ -37,7 +37,10 @@ struct Environment {
 	// used as a short-hand
 
 	// scope
+	// Binds a name to a reference to the given value
 	void declare(const Identifier&, Value*);
+	// Binds a name to the given reference
+	void direct_declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier&);
 
 	// gargabe_collector

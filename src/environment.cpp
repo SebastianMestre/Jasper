@@ -59,7 +59,16 @@ Value* Environment::fetch_return_value() {
 // used as a short-hand
 
 // scope
+void Environment::direct_declare(const Identifier& i, Reference* r) {
+	if(r->type() != value_type::Reference){
+		assert(0 && "directly declared a non-reference!");
+	}
+	m_scope->declare(i, r);
+}
 void Environment::declare(const Identifier& i, Value* v) {
+	if(v->type() == value_type::Reference){
+		assert(0 && "declared a reference!");
+	}
 	auto r = new_reference(v);
 	m_scope->declare(i, r);
 }

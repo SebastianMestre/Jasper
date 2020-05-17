@@ -18,10 +18,12 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
-	if (!ast->m_value)
+	if (!ast->m_value) {
 		e.declare(ast->identifier_text(), e.null());
-	else
-		e.declare(ast->identifier_text(), eval(ast->m_value.get(), e));
+	} else {
+		auto val = unboxed(eval(ast->m_value.get(), e));
+		e.declare(ast->identifier_text(), val);
+	}
 
 	return e.null();
 };
@@ -84,7 +86,10 @@ Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(ASTIdentifier* ast, Type::Environment& e) {
-	return unboxed(unboxed(unboxed(e.m_scope->access(ast->text()))));
+	// FIXME: This is wrong. evaluating an identifier should not unbox a value.
+	// However, in order not to break things, for now, a single call to `unboxed`
+	// is acceptable here.
+	return unboxed(e.m_scope->access(ast->text()));
 };
 
 Type::Value* eval(ASTBlock* ast, Type::Environment& e) {
@@ -133,7 +138,8 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 
 	std::vector<Type::Value*> args;
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		auto* argvalue = unboxed(eval(arglist->m_args[i].get(), e));
+		assert(argvalue->type() != value_type::Reference);
 		args.push_back(argvalue);
 	}
 
@@ -150,7 +156,8 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	}
 
 	for (auto& kv : callee->m_captures) {
-		e.declare(kv.first, kv.second);
+		assert(kv.second->type() == value_type::Reference);
+		e.direct_declare(kv.first, static_cast<Type::Reference*>(kv.second));
 	}
 
 	auto* body = dynamic_cast<ASTBlock*>(callee->m_def->m_body.get());
