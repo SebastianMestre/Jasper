@@ -34,3 +34,25 @@ __invoke := fn () {
 	print(f("Programmer"));
 };
 ```
+
+## Compiling the source
+
+The source files have to be compiled for the program
+to work. So, for a standard compilation proccess
+you'll have to execute the following statements.
+
+```
+cd src
+make
+```
+
+If anything goes wrong you should execute 
+
+```
+make clean
+```
+
+To avoid further errors and try compiling again.
+
+Once the program is compiled you can find it under the
+_bin_ folder and execute it following the user guide.
