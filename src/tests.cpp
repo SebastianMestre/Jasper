@@ -374,4 +374,35 @@ int main() {
 	});
 
 	assert(0 == bool_and_null_literals.execute());
+
+
+	Tester recursion{R"(
+		fib := fn(n){
+			if(n < 2) return n;
+			return fib(n-1) + fib(n-2);
+		};
+		__invoke := fn() => fib(6);
+	)"};
+
+	recursion.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = eval(top_level_call.m_result.get(), env);
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if(as_int->m_value != 8){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+
+	assert(0 == recursion.execute());
 }
