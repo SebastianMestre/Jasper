@@ -1,6 +1,6 @@
 #pragma once
 
-inline const char* ast_type_string[] = {
+constexpr const char* ast_type_string[] = {
 	"NumberLiteral",
 	"StringLiteral",
 	"BooleanLiteral",

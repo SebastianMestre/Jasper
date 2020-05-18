@@ -1,7 +1,7 @@
 #include "parser.hpp"
 
 #include <sstream>
-#include <string_view>
+#include "string_view.hpp"
 
 #include <cassert>
 
@@ -24,7 +24,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ParseError make_expected_error (std::string_view expected, Token const* found_token) {
+ParseError make_expected_error (string_view expected, Token const* found_token) {
 	std::stringstream ss;
 	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
 		<< found_token->m_col0 + 1 << ": Expected "
@@ -320,7 +320,9 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 			return result;
 		}
 
-		auto [lp, rp] = binding_power_of(op->m_type);
+		auto op_bp = binding_power_of(op->m_type);
+		auto& lp = op_bp.left;
+		auto& rp = op_bp.right;
 
 		if (lp < bp)
 			break;

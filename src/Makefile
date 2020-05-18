@@ -14,6 +14,7 @@ OBJNAMES := \
 	lexer.o \
 	parser.o \
 	parse.o \
+	string_view.o \
 	tester.o \
 	token.o \
 	value.o
@@ -22,7 +23,7 @@ OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
 LIBS := -lasan
 
-CXXFLAGS := -std=c++17 -Wall -fsanitize=address -g
+CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
 CPPFLAGS := 
 
 all: $(BINDIR)/iseeaparse
