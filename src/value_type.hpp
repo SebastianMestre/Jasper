@@ -1,6 +1,6 @@
 #pragma once
 
-inline const char* value_type_string[] = {
+constexpr const char* value_type_string[] = {
 	"Null",
 
 	"Integer",
