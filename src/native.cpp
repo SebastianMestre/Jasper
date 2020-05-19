@@ -1,6 +1,7 @@
 #include "value.hpp"
 #include "environment.hpp"
 #include <cassert>
+#include <sstream>
 
 // print(...) prints the values or references in ...
 Type::Value* print (Type::ArrayType v, Type::Environment& e) {
@@ -37,13 +38,30 @@ Type::Value* array_extend(Type::ArrayType v, Type::Environment& e) {
 }
 
 // size(array) returns the size of the array
-/* Type::Value* size(Type::ArrayType v, Type::Environment& e) {
+Type::Value* size(Type::ArrayType v, Type::Environment& e) {
     // TODO proper error handling
     assert(v.size() == 1);
     Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
-    int size = array->m_value.size();
-    return &Type::Integer(std::move(size));
-} */
+    Type::Integer* size = e.new_integer(array->m_value.size());
+    return size;
+} 
+
+// array_join(array, string) returns a string with
+// the array values separated by the string element
+Type::Value* array_join(Type::ArrayType v, Type::Environment& e) {
+    // TODO proper error handling
+    assert(v.size() == 2);
+    Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
+    Type::String* string = static_cast<Type::String*>(unboxed(v[1]));
+    std::stringstream result;
+    for (unsigned int i = 0; i < array->m_value.size()-1; i++) {
+        // TODO make it more general
+        result << static_cast<Type::Integer*>(array->m_value[i])->m_value;
+        result << string->m_value;
+    }
+    result << static_cast<Type::Integer*>(array->m_value.back())->m_value;
+    return e.new_string(result.str());
+}
 
 
 void declare_native_functions(Type::Environment& env) {
@@ -61,4 +79,14 @@ void declare_native_functions(Type::Environment& env) {
         "array_extend",
         env.new_native_function(
             static_cast<Type::NativeFunctionType*>(&array_extend)));
+
+    env.declare(
+        "size",
+        env.new_native_function(
+            static_cast<Type::NativeFunctionType*>(&size)));
+
+    env.declare(
+        "array_join",
+        env.new_native_function(
+            static_cast<Type::NativeFunctionType*>(&array_join)));
 }
