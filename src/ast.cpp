@@ -174,6 +174,21 @@ void print(ASTIfStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(ASTForStatement* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ ForStatement\n"
+	          << tab << "Declaration:\n";
+	print(ast->m_declaration.get(), d + 1);
+	std::cout << tab << "Condition:\n";
+	print(ast->m_condition.get(), d + 1);
+	std::cout << tab << "Action:\n";
+	print(ast->m_action.get(), d + 1);
+	std::cout << tab << "Body:\n";
+	print(ast->m_body.get(), d + 1);
+	std::cout << stab << "]\n";
+}
+
 void print(AST* ast, int d) {
 
 	switch (ast->type()) {
@@ -213,6 +228,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<ASTReturnStatement*>(ast), d);
 	case ast_type::IfStatement:
 		return print(static_cast<ASTIfStatement*>(ast), d);
+	case ast_type::ForStatement:
+		return print(static_cast<ASTForStatement*>(ast), d);
 	}
 
 }

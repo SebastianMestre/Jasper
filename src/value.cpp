@@ -116,7 +116,7 @@ NativeFunction::NativeFunction(NativeFunctionType* fptr)
 
 
 Reference::Reference(Value* value)
-	: Value { value_type::Reference }, m_value{value} {}
+    : Value { value_type::Reference }, m_value{value} {}
 
 
 void gc_visit(Null* v) { v->m_visited = true; }

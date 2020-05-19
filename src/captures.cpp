@@ -158,6 +158,11 @@ Set gather_captures(ASTIfStatement* ast) {
 	return {};
 }
 
+Set gather_captures(ASTForStatement* ast) {
+	// TODO
+	return {};
+}
+
 Set gather_captures(AST* ast) {
 
 	switch (ast->type()) {
@@ -197,6 +202,8 @@ Set gather_captures(AST* ast) {
 		return gather_captures(static_cast<ASTReturnStatement*>(ast));
 	case ast_type::IfStatement:
 		return gather_captures(static_cast<ASTIfStatement*>(ast));
+	case ast_type::ForStatement:
+		return gather_captures(static_cast<ASTForStatement*>(ast));
 	}
 
 	return {};

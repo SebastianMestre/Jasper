@@ -20,6 +20,7 @@ constexpr const char* ast_type_string[] = {
 	"Block",
 	"ReturnStatement",
 	"IfStatement",
+	"ForStatement",
 };
 
 enum class ast_type {
@@ -42,5 +43,6 @@ enum class ast_type {
 	Block,
 	ReturnStatement,
 	IfStatement,
+	ForStatement,
 };
 

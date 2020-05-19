@@ -28,7 +28,15 @@ int main() {
 		print(1,z(),4);
 	};
 
-	w := fn (a,b:int,c){};
+	w := fn (a,b:int,c){
+		for(i := b; i < 3; i = i + 1)
+			for(j := i + 1; j < 9; j = j + 1) {
+				if (j < 9)
+					return j;
+				j = 2*j;
+			}
+		return c*i;
+	};
 
 	f := obt {
 		greeting := "Hello, ";
@@ -37,11 +45,13 @@ int main() {
 		};
 	};
 
-	f := fn (name : string) {};
+	funct := fn (name : string) {};
 
 	sqrt := fn (x) { return (x+1) * 0.5; };
 
 	norm := fn(p){
+		f.greeting = "Hey, ";
+		f(" Sailor!");
 		return sqrt(p.x * p.x + p.y * p.y);
 	};
 
@@ -51,8 +61,7 @@ int main() {
 	};
 
 	__invoke := fn () {
-		f.greeting = "Hey, ";
-		f("Sailor");
+		
 	};
 
 	names := dict {
@@ -372,9 +381,8 @@ int main() {
 		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
 	});
-
+	
 	assert(0 == bool_and_null_literals.execute());
-
 
 	Tester recursion{R"(
 		fib := fn(n){
@@ -405,4 +413,37 @@ int main() {
 	});
 
 	assert(0 == recursion.execute());
+	
+	Tester sum_first_integers{R"(
+		__invoke := fn () {
+			sum := 0;
+			N := 16;
+			for (i := 0; i < N; i = i + 1) {
+				sum = sum + i;
+			}
+			return sum;
+		};
+	)"};
+
+	sum_first_integers.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = unboxed(eval(top_level_call.m_result.get(), env));
+		if(!result)
+			return 1;
+
+		if(result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if(as_int->m_value != 120){
+			return 3;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success\n";
+		return 0;
+	});
+	
+	assert(0 == sum_first_integers.execute());
 }
