@@ -18,11 +18,11 @@ Type::Value* eval(ASTDeclarationList* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTDeclaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
-	if (!ast->m_value) {
-		e.declare(ast->identifier_text(), e.null());
-	} else {
+	e.declare(ast->identifier_text(), e.null());
+	if (ast->m_value) {
+		auto* ref = e.access(ast->identifier_text());
 		auto val = unboxed(eval(ast->m_value.get(), e));
-		e.declare(ast->identifier_text(), val);
+		ref->m_value = val;
 	}
 
 	return e.null();
