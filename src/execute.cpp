@@ -33,10 +33,20 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	env.declare(
 	    "print",
 	    env.new_native_function(
-	        +[](Type::Value* v, Type::Environment& e) -> Type::Value* {
-		        Type::print(v);
+	        +[](Type::ArrayType v, Type::Environment& e) -> Type::Value* {
+				Type::print(v[0]);
 		        return e.null();
 	        }));
+
+	env.declare(
+		"array_append",
+		env.new_native_function(
+			[](Type::ArrayType v, Type::Environment& e) -> Type::Value* {
+				Type::Array* array = static_cast<Type::Array*>(v[0]);
+				Type::Value* value = v[1];
+				array->m_value.push_back(value);
+				return array;
+			}));
 
 	eval(top_level, env);
 
