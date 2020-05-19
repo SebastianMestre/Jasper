@@ -42,7 +42,7 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 		"array_append",
 		env.new_native_function(
 			[](Type::ArrayType v, Type::Environment& e) -> Type::Value* {
-				Type::Array* array = static_cast<Type::Array*>(v[0]);
+				Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
 				Type::Value* value = v[1];
 				array->m_value.push_back(value);
 				return array;
