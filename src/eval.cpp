@@ -226,23 +226,12 @@ Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
 
 Type::Value* eval(ASTBinaryExpression* ast, Type::Environment& e) {
 
-	// DEBUG
-	if (ast->m_op == token_type::ASSIGN)
-		std::cerr
-			<< (int)ast->m_lhs.get()->type()
-			<< " - "
-			<< (int)ast->m_rhs.get()->type();
-
 	// NOTE: lhs_ref and rhs_ref can still be plain values
 	// unboxing only guarantees that
 	auto* lhs_ref = eval(ast->m_lhs.get(), e);
 	auto* rhs_ref = eval(ast->m_rhs.get(), e);
 	auto* lhs = unboxed(lhs_ref);
 	auto* rhs = unboxed(rhs_ref);
-	assert(lhs_ref);
-	assert(rhs_ref);
-	assert(lhs);
-	assert(rhs);
 
 	switch (ast->m_op) {
 	case token_type::ADD: {

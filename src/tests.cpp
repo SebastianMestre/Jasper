@@ -45,11 +45,13 @@ int main() {
 		};
 	};
 
-	f := fn (name : string) {};
+	funct := fn (name : string) {};
 
 	sqrt := fn (x) { return (x+1) * 0.5; };
 
 	norm := fn(p){
+		f.greeting = "Hey, ";
+		f(" Sailor!");
 		return sqrt(p.x * p.x + p.y * p.y);
 	};
 
@@ -59,8 +61,7 @@ int main() {
 	};
 
 	__invoke := fn () {
-		f.greeting = "Hey, ";
-		f("Sailor");
+		
 	};
 
 	names := dict {
@@ -421,8 +422,7 @@ int main() {
 				for (j := 1; j < i; j = j + 1) {
 					trunc := (i / j) * j;
 					if (trunc == i) {
-						print(i);
-						print(" is not prime!");
+						
 					}
 				}
 				if (i == (a - 1))
