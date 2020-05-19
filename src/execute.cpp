@@ -6,6 +6,7 @@
 #include "garbage_collector.hpp"
 #include "parse.hpp"
 #include "token_array.hpp"
+#include "native.hpp"
 
 int execute(std::string const& source, bool dump_ast, Runner* runner) {
 
@@ -29,24 +30,7 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	if (top_level->type() != ast_type::DeclarationList)
 		return 1;
 
-	// TODO: put native functions in a better place
-	env.declare(
-	    "print",
-	    env.new_native_function(
-	        +[](Type::ArrayType v, Type::Environment& e) -> Type::Value* {
-				Type::print(v[0]);
-		        return e.null();
-	        }));
-
-	env.declare(
-		"array_append",
-		env.new_native_function(
-			[](Type::ArrayType v, Type::Environment& e) -> Type::Value* {
-				Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
-				Type::Value* value = v[1];
-				array->m_value.push_back(value);
-				return array;
-			}));
+	declare_native_functions(env);
 
 	eval(top_level, env);
 
