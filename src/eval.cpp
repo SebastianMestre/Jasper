@@ -493,11 +493,11 @@ Type::Value* eval(ASTForStatement* ast, Type::Environment& e) {
 		
 		eval(ast->m_body.get(), e);
 
-		auto* loop_action = eval(ast->m_action.get(), e);
-		assert(loop_action);
-
 		if (e.m_return_value)
 			break;
+
+		auto* loop_action = eval(ast->m_action.get(), e);
+		assert(loop_action);
 	}
 
 	e.end_scope();
