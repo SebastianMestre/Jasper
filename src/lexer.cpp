@@ -177,6 +177,9 @@ void Lexer::consume_token() {
 
 	case '/':
 		switch (next_char()) {
+		case '/':
+			assert(consume_comment());
+			break;
 		case '=':
 			push_token(token_type::DIV_TO, 2);
 			break;
@@ -421,6 +424,31 @@ void Lexer::consume_token() {
 			m_source_index += 1;
 		}
 	}
+}
+
+bool Lexer::consume_comment () {
+	if(current_char() != '/')
+		return false;
+	m_source_index += 1;
+	m_current_column += 1;
+
+	if(current_char() != '/') 
+		return false;
+	m_source_index += 1;
+	m_current_column += 1;
+
+	while ((not done()) && current_char() != '\n') {
+		m_source_index += 1;
+		m_current_column += 1;
+	}
+
+	if(current_char() == '\n'){
+		m_source_index += 1;
+		m_current_line += 1;
+		m_current_column = 0;
+	}
+
+	return true;
 }
 
 void Lexer::advance() {

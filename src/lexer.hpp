@@ -30,6 +30,7 @@ struct Lexer {
 
 	bool done() { return current_char() == '\0'; }
 
+	bool consume_comment();
 	void consume_token();
 	bool consume_keyword();
 	void push_token(token_type, int);
