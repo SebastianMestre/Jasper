@@ -1,5 +1,6 @@
 #include "value.hpp"
 #include "environment.hpp"
+#include "value_type.hpp"
 #include <cassert>
 #include <sstream>
 
@@ -16,9 +17,10 @@ Type::Value* print (Type::ArrayType v, Type::Environment& e) {
 Type::Value* array_append(Type::ArrayType v, Type::Environment& e) {
     // TODO proper error handling
     assert(v.size() > 0);
+    assert(unboxed(v[0])->type() == value_type::Array);
     Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
     for (unsigned int i = 1; i < v.size(); i++) {
-        array->m_value.push_back(unboxed(v[i]));
+        array->m_value.push_back(v[i]);
     }
     return array;
 }
@@ -28,6 +30,8 @@ Type::Value* array_append(Type::ArrayType v, Type::Environment& e) {
 Type::Value* array_extend(Type::ArrayType v, Type::Environment& e) {
     // TODO proper error handling
     assert(v.size() == 2);
+    assert(unboxed(v[0])->type() == value_type::Array);
+    assert(unboxed(v[1])->type() == value_type::Array);
     Type::Array* arr1 = static_cast<Type::Array*>(unboxed(v[0]));
     Type::Array* arr2 = static_cast<Type::Array*>(unboxed(v[1]));
     arr1->m_value.insert(
@@ -41,9 +45,9 @@ Type::Value* array_extend(Type::ArrayType v, Type::Environment& e) {
 Type::Value* size(Type::ArrayType v, Type::Environment& e) {
     // TODO proper error handling
     assert(v.size() == 1);
+    assert(unboxed(v[0])->type() == value_type::Array);
     Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
-    Type::Integer* size = e.new_integer(array->m_value.size());
-    return size;
+    return e.new_integer(array->m_value.size());
 } 
 
 // array_join(array, string) returns a string with
@@ -51,15 +55,21 @@ Type::Value* size(Type::ArrayType v, Type::Environment& e) {
 Type::Value* array_join(Type::ArrayType v, Type::Environment& e) {
     // TODO proper error handling
     assert(v.size() == 2);
+    assert(unboxed(v[0])->type() == value_type::Array);
+    assert(unboxed(v[1])->type() == value_type::String);
     Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
     Type::String* string = static_cast<Type::String*>(unboxed(v[1]));
     std::stringstream result;
-    for (unsigned int i = 0; i < array->m_value.size()-1; i++) {
+    for (unsigned int i = 0; i < array->m_value.size(); i++) {
         // TODO make it more general
-        result << static_cast<Type::Integer*>(array->m_value[i])->m_value;
-        result << string->m_value;
+        auto* value = unboxed(array->m_value[i]);
+    
+        assert(value->type() == value_type::Integer);
+
+        result << static_cast<Type::Integer*>(value)->m_value;
+        if (i < array->m_value.size()-1)
+            result << string->m_value;
     }
-    result << static_cast<Type::Integer*>(array->m_value.back())->m_value;
     return e.new_string(result.str());
 }
 

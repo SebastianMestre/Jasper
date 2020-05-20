@@ -17,7 +17,8 @@ OBJNAMES := \
 	string_view.o \
 	tester.o \
 	token.o \
-	value.o
+	value.o \
+	native.o
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
