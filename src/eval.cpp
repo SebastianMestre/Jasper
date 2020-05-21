@@ -136,29 +136,19 @@ auto is_callable_value (Type::Value* v) -> bool {
 	return type == value_type::Function || type == value_type::NativeFunction;
 }
 
-Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, Type::Environment& e){
+Type::Value* eval_call_function(Type::Function* callee, std::vector<Type::Value*> args, Type::Environment& e){
 
-	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
-	assert(callee->m_def->m_args.size() == arglist->m_args.size());
-
-
-	std::vector<Type::Value*> args;
-	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
-		auto* argvalue = unboxed(eval(arglist->m_args[i].get(), e));
-		assert(argvalue->type() != value_type::Reference);
-		args.push_back(argvalue);
-	}
+	// TODO: error handling ?
+	assert(callee->m_def->m_args.size() == args.size());
 
 	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
 		assert(argdeclTypeErased);
-
 		assert(argdeclTypeErased->type() == ast_type::Declaration);
-		auto* argdecl = dynamic_cast<ASTDeclaration*>(argdeclTypeErased);
-		assert(argdecl);
+		auto* argdecl = static_cast<ASTDeclaration*>(argdeclTypeErased);
 
-		e.declare(argdecl->identifier_text(), args[i]);
+		e.declare(argdecl->identifier_text(), unboxed(args[i]));
 	}
 
 	for (auto& kv : callee->m_captures) {
@@ -177,32 +167,30 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 	return e.fetch_return_value();
 }
 
-Type::Value* eval_call_native_function(Type::NativeFunction* callee, ASTCallExpression* ast, Type::Environment& e) {
-	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
-	assert(arglist);
-
-	Type::ArrayType value_arr;
-	for (unsigned int i = 0; i < arglist->m_args.size(); i++) {
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		value_arr.push_back(argvalue);
-	}
-
-	return callee->m_fptr(std::move(value_arr), e);
+Type::Value* eval_call_native_function(Type::NativeFunction* callee, std::vector<Type::Value*> args, Type::Environment& e) {
+	return callee->m_fptr(std::move(args), e);
 }
 
 Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
-	std::vector<Type::Value*> args;
-
 	// TODO: proper error handling
 
 	auto* callee = unboxed(eval(ast->m_callee.get(), e));
 	assert(callee);
 
+	assert(ast->m_args->type() == ast_type::ArgumentList);
+	auto* arglist = static_cast<ASTArgumentList*>(ast->m_args.get());
+
+	std::vector<Type::Value*> args;
+	for (int i = 0; i < int(arglist->m_args.size()); ++i) {
+		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		args.push_back(argvalue);
+	}
+
 	assert(is_callable_value(callee));
 	if (callee->type() == value_type::Function) {
-		return eval_call_function(static_cast<Type::Function*>(callee), ast, e);
+		return eval_call_function(static_cast<Type::Function*>(callee), std::move(args), e);
 	}else if(callee->type() == value_type::NativeFunction){
-		return eval_call_native_function(static_cast<Type::NativeFunction*>(callee), ast, e);
+		return eval_call_native_function(static_cast<Type::NativeFunction*>(callee), std::move(args), e);
 	}else{
 		assert(0);
 		return nullptr;
