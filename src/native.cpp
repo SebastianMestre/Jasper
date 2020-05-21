@@ -20,7 +20,7 @@ Type::Value* array_append(Type::ArrayType v, Type::Environment& e) {
     assert(unboxed(v[0])->type() == value_type::Array);
     Type::Array* array = static_cast<Type::Array*>(unboxed(v[0]));
     for (unsigned int i = 1; i < v.size(); i++) {
-        array->m_value.push_back(v[i]);
+        array->m_value.push_back(unboxed(v[i]));
     }
     return array;
 }

@@ -85,9 +85,11 @@ Set gather_captures(ASTBinaryExpression* ast) {
 
 Set gather_captures(ASTCallExpression* ast) {
 	Set result = gather_captures(ast->m_callee.get());
-	Set secondary = gather_captures(ast->m_args.get());
-	for(auto const& identifier : secondary)
-		result.insert(identifier);
+	for(auto& child : ast->m_args){
+		Set child_captures = gather_captures(child.get());
+		for(auto const& identifier : child_captures)
+			result.insert(identifier);
+	}
 	return result;
 }
 
@@ -96,16 +98,6 @@ Set gather_captures(ASTIndexExpression* ast) {
 	Set secondary = gather_captures(ast->m_index.get());
 	for(auto const& identifier : secondary)
 		result.insert(identifier);
-	return result;
-}
-
-Set gather_captures(ASTArgumentList* ast) {
-	Set result {};
-	for(auto& child : ast->m_args){
-		Set child_captures = gather_captures(child.get());
-		for(auto const& identifier : child_captures)
-			result.insert(identifier);
-	}
 	return result;
 }
 
@@ -194,8 +186,6 @@ Set gather_captures(AST* ast) {
 		return gather_captures(static_cast<ASTCallExpression*>(ast));
 	case ast_type::IndexExpression:
 		return gather_captures(static_cast<ASTIndexExpression*>(ast));
-	case ast_type::ArgumentList:
-		return gather_captures(static_cast<ASTArgumentList*>(ast));
 	case ast_type::Block:
 		return gather_captures(static_cast<ASTBlock*>(ast));
 	case ast_type::ReturnStatement:

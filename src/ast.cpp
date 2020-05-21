@@ -132,7 +132,8 @@ void print(ASTCallExpression* ast, int d) {
 	          << tab << "Callee:\n";
 	print(ast->m_callee.get(), d + 1);
 	std::cout << tab << "Args:\n";
-	print(ast->m_args.get(), d + 1);
+	for(auto& arg : ast->m_args)
+		print(arg.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -144,15 +145,6 @@ void print(ASTIndexExpression* ast, int d) {
 	print(ast->m_callee.get(), d + 1);
 	std::cout << tab << "Index:\n";
 	print(ast->m_index.get(), d + 1);
-	std::cout << stab << "]\n";
-}
-
-void print(ASTArgumentList* ast, int d) {
-	std::string stab(d - 1, tabc);
-	std::cout << stab << "[ ArgumentList\n";
-	for(auto& argument : ast->m_args){
-		print(argument.get(), d+1);
-	}
 	std::cout << stab << "]\n";
 }
 
@@ -220,8 +212,6 @@ void print(AST* ast, int d) {
 		return print(static_cast<ASTCallExpression*>(ast), d);
 	case ast_type::IndexExpression:
 		return print(static_cast<ASTIndexExpression*>(ast), d);
-	case ast_type::ArgumentList:
-		return print(static_cast<ASTArgumentList*>(ast), d);
 	case ast_type::Block:
 		return print(static_cast<ASTBlock*>(ast), d);
 	case ast_type::ReturnStatement:

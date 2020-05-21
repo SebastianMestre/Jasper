@@ -267,8 +267,8 @@ binding_power binding_power_of(token_type t){
 
 }
 
-Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
-	Writer<std::unique_ptr<AST>> result
+Writer<std::vector<std::unique_ptr<AST>>> Parser::parse_argument_list() {
+	Writer<std::vector<std::unique_ptr<AST>>> result
 	    = { { "Parse Error: Failed to argument list" } };
 
 	if (handle_error(result, require(token_type::PAREN_OPEN))) {
@@ -281,10 +281,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_argument_list() {
 		return result;
 	}
 
-	auto e = std::make_unique<ASTArgumentList>();
-	e->m_args = std::move(args.m_result);
-
-	return make_writer<std::unique_ptr<AST>>(std::move(e));
+	return args;
 }
 
 /* If I am not mistaken, the algorithm used here is called 'Pratt Parsing'
