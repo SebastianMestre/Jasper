@@ -122,12 +122,6 @@ Type::Value* eval(ASTReturnStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(ASTArgumentList* ast, Type::Environment& e) {
-	// TODO: return as list?
-	assert(0);
-	return e.null();
-};
-
 auto is_callable_value (Type::Value* v) -> bool {
 	if (!v)
 		return false;
@@ -175,21 +169,7 @@ Type::Value* eval_call_native_function(
 	return callee->m_fptr(std::move(args), e);
 }
 
-Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
-	// TODO: proper error handling
-
-	auto* callee = unboxed(eval(ast->m_callee.get(), e));
-	assert(callee);
-
-	assert(ast->m_args->type() == ast_type::ArgumentList);
-	auto* arglist = static_cast<ASTArgumentList*>(ast->m_args.get());
-
-	std::vector<Type::Value*> args;
-	for (int i = 0; i < int(arglist->m_args.size()); ++i) {
-		auto* argvalue = eval(arglist->m_args[i].get(), e);
-		args.push_back(argvalue);
-	}
-
+Type::Value* eval_call_callable(Type::Value* callee, std::vector<Type::Value*> args, Type::Environment& e){
 	assert(is_callable_value(callee));
 	if (callee->type() == value_type::Function) {
 		return eval_call_function(
@@ -201,6 +181,23 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 		assert(0);
 		return nullptr;
 	}
+}
+
+Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
+	// TODO: proper error handling
+
+	auto* callee = unboxed(eval(ast->m_callee.get(), e));
+	assert(callee);
+
+	auto& arglist = ast->m_args;
+
+	std::vector<Type::Value*> args;
+	for (int i = 0; i < int(arglist.size()); ++i) {
+		auto* argvalue = eval(arglist[i].get(), e);
+		args.push_back(argvalue);
+	}
+
+	return eval_call_callable(callee, std::move(args), e);
 };
 
 Type::Value* eval(ASTIndexExpression* ast, Type::Environment& e) {
@@ -532,8 +529,6 @@ Type::Value* eval(AST* ast, Type::Environment& e) {
 		return eval(static_cast<ASTCallExpression*>(ast), e);
 	case ast_type::IndexExpression:
 		return eval(static_cast<ASTIndexExpression*>(ast), e);
-	case ast_type::ArgumentList:
-		return eval(static_cast<ASTArgumentList*>(ast), e);
 	case ast_type::Block:
 		return eval(static_cast<ASTBlock*>(ast), e);
 	case ast_type::ReturnStatement:

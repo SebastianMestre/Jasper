@@ -111,7 +111,7 @@ struct ASTBinaryExpression : public AST {
 
 struct ASTCallExpression : public AST {
 	std::unique_ptr<AST> m_callee;
-	std::unique_ptr<AST> m_args;
+	std::vector<std::unique_ptr<AST>> m_args;
 
 	ASTCallExpression() : AST{ ast_type::CallExpression } {}
 };
@@ -121,12 +121,6 @@ struct ASTIndexExpression : public AST {
 	std::unique_ptr<AST> m_index;
 
 	ASTIndexExpression() : AST{ ast_type::IndexExpression } {}
-};
-
-struct ASTArgumentList : public AST {
-	std::vector<std::unique_ptr<AST>> m_args;
-
-	ASTArgumentList() : AST{ ast_type::ArgumentList } {}
 };
 
 struct ASTBlock : public AST {
