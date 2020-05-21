@@ -89,7 +89,7 @@ Type::Value* eval(ASTDictionaryLiteral* ast, Type::Environment& e) {
 Type::Value* eval(ASTArrayLiteral* ast, Type::Environment& e) {
 	std::vector<Type::Value*> elements;
 	for(auto& element : ast->m_elements){
-		elements.push_back(eval(element.get(), e));
+		elements.push_back(unboxed(eval(element.get(), e)));
 	}
 	return e.new_list(std::move(elements));
 };
@@ -136,7 +136,8 @@ auto is_callable_value (Type::Value* v) -> bool {
 	return type == value_type::Function || type == value_type::NativeFunction;
 }
 
-Type::Value* eval_call_function(Type::Function* callee, std::vector<Type::Value*> args, Type::Environment& e){
+Type::Value* eval_call_function(
+    Type::Function* callee, std::vector<Type::Value*> args, Type::Environment& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
@@ -167,7 +168,10 @@ Type::Value* eval_call_function(Type::Function* callee, std::vector<Type::Value*
 	return e.fetch_return_value();
 }
 
-Type::Value* eval_call_native_function(Type::NativeFunction* callee, std::vector<Type::Value*> args, Type::Environment& e) {
+Type::Value* eval_call_native_function(
+    Type::NativeFunction* callee,
+    std::vector<Type::Value*> args,
+    Type::Environment& e) {
 	return callee->m_fptr(std::move(args), e);
 }
 
@@ -188,10 +192,12 @@ Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
 
 	assert(is_callable_value(callee));
 	if (callee->type() == value_type::Function) {
-		return eval_call_function(static_cast<Type::Function*>(callee), std::move(args), e);
-	}else if(callee->type() == value_type::NativeFunction){
-		return eval_call_native_function(static_cast<Type::NativeFunction*>(callee), std::move(args), e);
-	}else{
+		return eval_call_function(
+		    static_cast<Type::Function*>(callee), std::move(args), e);
+	} else if (callee->type() == value_type::NativeFunction) {
+		return eval_call_native_function(
+		    static_cast<Type::NativeFunction*>(callee), std::move(args), e);
+	} else {
 		assert(0);
 		return nullptr;
 	}
