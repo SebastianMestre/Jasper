@@ -18,7 +18,7 @@ using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using ArrayType = std::vector<Value*>;
 using FunctionType = ::ASTFunctionLiteral*;
-using NativeFunctionType = auto(Value*, Environment&) -> Value*;
+using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
 
 // Returns the value pointed to by a reference
 Value* unboxed(Value* value);

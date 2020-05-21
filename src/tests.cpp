@@ -446,4 +446,133 @@ int main() {
 	});
 	
 	assert(0 == sum_first_integers.execute());
+
+	Tester native_array_append{R"(
+		__invoke := fn () {
+			A := array {};
+			array_append(A, 10);
+			return A;
+		};
+	)"};
+
+	native_array_append.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = unboxed(eval(top_level_call.m_result.get(), env));
+		if(!result)
+			return 1;
+
+		if (result->type() != value_type::Array)
+			return 2;
+
+		auto* array = static_cast<Type::Array*>(result);
+		if (array->m_value.size() != 1)
+			return 3;
+
+		if (array->m_value[0]->type() != value_type::Integer) {
+			return 4;
+		}
+
+		auto* value = static_cast<Type::Integer*>(array->m_value[0]);
+		if (value->m_value != 10)
+			return 5;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert(0 == native_array_append.execute());
+
+	Tester native_array_extend{R"(
+		__invoke := fn () {
+			A := array {};
+			array_extend(A, array{10});
+			return A;
+		};
+	)"};
+
+	native_array_extend.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = unboxed(eval(top_level_call.m_result.get(), env));
+		if(!result)
+			return 1;
+
+		if (result->type() != value_type::Array)
+			return 2;
+
+		auto* array = static_cast<Type::Array*>(result);
+		if (array->m_value.size() != 1)
+			return 3;
+
+		if (array->m_value[0]->type() != value_type::Integer)
+			return 4;
+
+		auto* value = static_cast<Type::Integer*>(array->m_value[0]);
+		if (value->m_value != 10)
+			return 5;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert(0 == native_array_extend.execute());
+
+	Tester native_size{R"(
+		__invoke := fn () {
+			A := array {10;10};
+			return size(A);
+		};
+	)"};
+
+	native_size.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = unboxed(eval(top_level_call.m_result.get(), env));
+		if(!result)
+			return 1;
+
+		if (result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if (as_int->m_value != 2)
+			return 3;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert(0 == native_size.execute());
+
+	Tester native_array_join{R"(
+		__invoke := fn () {
+			A := array {10;10};
+			return array_join(A, ",");
+		};
+	)"};
+
+	native_array_join.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call = parse_expression("__invoke()", ta);
+
+		auto* result = unboxed(eval(top_level_call.m_result.get(), env));
+		if(!result)
+			return 1;
+
+		if (result->type() != value_type::String)
+			return 2;
+
+		auto* as_string = static_cast<Type::String*>(result);
+		if (as_string->m_value != "10,10")
+			return 3;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert(0 == native_array_join.execute());
 }

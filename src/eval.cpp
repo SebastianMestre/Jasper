@@ -180,12 +180,14 @@ Type::Value* eval_call_function(Type::Function* callee, ASTCallExpression* ast, 
 Type::Value* eval_call_native_function(Type::NativeFunction* callee, ASTCallExpression* ast, Type::Environment& e) {
 	auto* arglist = dynamic_cast<ASTArgumentList*>(ast->m_args.get());
 	assert(arglist);
-	assert(arglist->m_args.size() == 1);
 
-	auto* argvalue = eval(arglist->m_args[0].get(), e);
-	callee->m_fptr(argvalue, e);
+	Type::ArrayType value_arr;
+	for (unsigned int i = 0; i < arglist->m_args.size(); i++) {
+		auto* argvalue = eval(arglist->m_args[i].get(), e);
+		value_arr.push_back(argvalue);
+	}
 
-	return e.fetch_return_value();
+	return callee->m_fptr(std::move(value_arr), e);
 }
 
 Type::Value* eval(ASTCallExpression* ast, Type::Environment& e) {
