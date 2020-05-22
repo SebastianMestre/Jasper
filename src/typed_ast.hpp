@@ -10,15 +10,14 @@ protected:
 
 public:
     value_type m_vtype;
-	TypedAST() = default;
 	TypedAST(ast_type type) : m_type{ type } {}
     TypedAST(ast_type type, value_type vtype) : m_type {type}, m_vtype {vtype} {}
-
-    TypedAST* convertAST(AST* ast);
 
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
 };
+
+TypedAST* convertAST(AST*);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
