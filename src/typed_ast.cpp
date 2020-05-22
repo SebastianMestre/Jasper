@@ -6,7 +6,7 @@
 
 // la funcion convertast hace una pasada configurando los tipos
 
-TypedAST* TypedASTDeclaration::convertAST(AST* ast) {
+TypedAST* TypedASTDeclaration::convertAST(ASTDeclaration* ast) {
     ASTDeclaration* declaration = static_cast<ASTDeclaration*>(ast);
     m_identifier_token = declaration->m_identifier_token;
     m_typename_token = declaration->m_typename_token;
@@ -24,12 +24,9 @@ TypedAST* TypedASTDeclaration::convertAST(AST* ast) {
     return this;
 }
 
-TypedAST* TypedASTDeclarationList::convertAST (AST* ast) {
-    ASTDeclarationList* declarations = static_cast<ASTDeclarationList*>(ast);
-
-    for (auto& declaration : declarations->m_declarations) {
-        TypedASTDeclaration* typed_declaration = new TypedASTDeclaration();
-        typed_declaration->convertAST(declaration.get());
+TypedAST* TypedASTDeclarationList::convertAST (ASTDeclarationList* ast) {
+    for (auto& declaration : ast->m_declarations) {
+        auto typed_declaration = TypedAST::convertAST(declaration.get());
         m_declarations.push_back(std::unique_ptr<TypedAST>(typed_declaration));
     }
 
@@ -38,8 +35,12 @@ TypedAST* TypedASTDeclarationList::convertAST (AST* ast) {
 
 TypedAST* TypedAST::convertAST (AST* ast) {
     switch (ast->type()) {
+    case ast_type::Declaration:
+        auto decl = new TypedASTDeclaration;
+        return decl->convertAST(static_cast<ASTDeclaration*>(ast));
     case ast_type::DeclarationList:
-        return static_cast<TypedASTDeclarationList*>(ast)->convertAST(ast);
+        auto decl_list = new TypedASTDeclarationList;
+        return decl_list->convertAST(static_cast<ASTDeclarationList*>(ast));
     }
 }
 

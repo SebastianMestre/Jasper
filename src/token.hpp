@@ -16,5 +16,5 @@ struct Token {
 	/* end of token in source */
 	int m_line1, m_col1;
 
-	Type::Value type();
+	value_type type() const;
 };
