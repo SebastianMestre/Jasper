@@ -17,6 +17,7 @@ OBJNAMES := \
 	string_view.o \
 	tester.o \
 	token.o \
+	typed_ast.o \
 	value.o \
 	native.o
 
