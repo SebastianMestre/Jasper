@@ -79,9 +79,9 @@ int main() {
 		// TODO: We need to clean this up
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		eval(top_level_call, env);
+		eval(top_level_call.get(), env);
 
 		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
@@ -150,9 +150,9 @@ int main() {
 		// TODO: We need to clean this up
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("f()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		Type::Value* returned = eval(top_level_call, env);
+		Type::Value* returned = eval(top_level_call.get(), env);
 		auto exitcode = (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
 		if(!exitcode)
 			std::cout << "@ line " << __LINE__ << ": Success\n";
@@ -177,9 +177,9 @@ int main() {
 		// TODO: We need to clean this up
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("f()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		Type::Value* returned = eval(top_level_call, env);
+		Type::Value* returned = eval(top_level_call.get(), env);
 
 		if (!returned)
 			return 1;
@@ -209,9 +209,9 @@ int main() {
 	short_functions.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = eval(top_level_call, env);
+		auto* result = eval(top_level_call.get(), env);
 		if(!result)
 			return 1;
 
@@ -251,9 +251,9 @@ int main() {
 	array_index.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = eval(top_level_call, env);
+		auto* result = eval(top_level_call.get(), env);
 		if(!result)
 			return 1;
 
@@ -314,9 +314,9 @@ int main() {
 	binary_search_tree.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = eval(top_level_call, env);
+		auto* result = eval(top_level_call.get(), env);
 		if(!result)
 			return 1;
 
@@ -344,9 +344,9 @@ int main() {
 		{
 			TokenArray ta;
 			auto top_level_call_ast = parse_expression("litt()", ta);
-			auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+			auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-			auto* result = eval(top_level_call, env);
+			auto* result = eval(top_level_call.get(), env);
 			if(!result)
 				return 1;
 
@@ -361,9 +361,9 @@ int main() {
 		{	
 			TokenArray ta;
 			auto top_level_call_ast = parse_expression("litf()", ta);
-			auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+			auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-			auto* result = eval(top_level_call, env);
+			auto* result = eval(top_level_call.get(), env);
 			if(!result)
 				return 1;
 
@@ -378,9 +378,9 @@ int main() {
 		{
 			TokenArray ta;
 			auto top_level_call_ast = parse_expression("nullv()", ta);
-			auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+			auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-			auto* result = eval(top_level_call, env);
+			auto* result = eval(top_level_call.get(), env);
 			if(!result)
 				return 1;
 
@@ -405,9 +405,9 @@ int main() {
 	recursion.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = eval(top_level_call, env);
+		auto* result = eval(top_level_call.get(), env);
 		if(!result)
 			return 1;
 
@@ -439,9 +439,9 @@ int main() {
 	sum_first_integers.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = unboxed(eval(top_level_call, env));
+		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -470,9 +470,9 @@ int main() {
 	native_array_append.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = unboxed(eval(top_level_call, env));
+		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -508,9 +508,9 @@ int main() {
 	native_array_extend.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = unboxed(eval(top_level_call, env));
+		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -544,9 +544,9 @@ int main() {
 	native_size.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = unboxed(eval(top_level_call, env));
+		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -573,9 +573,9 @@ int main() {
 	native_array_join.add_test(+[](Type::Environment& env)->int{
 		TokenArray ta;
 		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
 
-		auto* result = unboxed(eval(top_level_call, env));
+		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
