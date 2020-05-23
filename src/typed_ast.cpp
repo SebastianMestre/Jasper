@@ -88,9 +88,9 @@ TypedAST* convertAST(ASTDeclaration* ast) {
     TypedAST* typed_value = convertAST(ast->m_value.get());
     typed_dec->m_value = std::unique_ptr<TypedAST>(typed_value);
 
-    if (ast->m_typename_token != nullptr) {
-        assert(typed_value->m_vtype == ast->m_typename_token->type());
-    }
+    // if (ast->m_typename_token != nullptr) {
+    //    assert(typed_value->m_vtype == ast->m_typename_token->type());
+    // }
 
     typed_dec->m_vtype = typed_value->m_vtype;
 
