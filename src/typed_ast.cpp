@@ -99,7 +99,8 @@ TypedAST* convertAST(ASTDeclaration* ast) {
 
     typed_dec->m_identifier_token = ast->m_identifier_token;
     typed_dec->m_typename_token   = ast->m_typename_token;
-    typed_dec->m_value            = get_unique(ast->m_value);
+    if(ast->m_value)
+		typed_dec->m_value = get_unique(ast->m_value);
 
     return typed_dec;
 }
