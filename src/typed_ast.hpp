@@ -18,6 +18,7 @@ public:
 };
 
 TypedAST* convertAST(AST*);
+std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
