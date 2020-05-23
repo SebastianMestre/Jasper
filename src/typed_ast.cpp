@@ -57,14 +57,6 @@ TypedAST* convertAST(ASTArrayLiteral* ast) {
             std::unique_ptr<TypedAST>(typed_element)); 
     }
 
-    // checkeo para determinar que los tipos sean iguales
-    // a lo largo del array
-    for (int i = 0; i < ast->m_elements.size()-1; i++) {
-        assert(
-            typed_array->m_elements[i]->m_vtype == 
-            typed_array->m_elements[i+1]->m_vtype);
-    }
-
     return typed_array;
 }
 
@@ -91,8 +83,6 @@ TypedAST* convertAST(ASTDeclaration* ast) {
     // if (ast->m_typename_token != nullptr) {
     //    assert(typed_value->m_vtype == ast->m_typename_token->type());
     // }
-
-    typed_dec->m_vtype = typed_value->m_vtype;
 
     return typed_dec;
 }
