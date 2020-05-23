@@ -231,7 +231,6 @@ Type::Value* eval(TypedASTBinaryExpression* ast, Type::Environment& e) {
 		
 		// TODO: proper error handling
 		assert(lhs_val->type() == rhs_val->type());
-
 		switch (lhs_val->type()) {
 		case value_type::Integer:
 			return e.new_integer(
