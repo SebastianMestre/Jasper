@@ -10,6 +10,7 @@
 #include "parse.hpp"
 #include "token_array.hpp"
 #include "value.hpp"
+#include "typed_ast.hpp"
 
 int main() {
 
@@ -32,9 +33,10 @@ int main() {
 
 		{
 			TokenArray ta;
-			auto top_level_call = parse_expression("__invoke()", ta);
+			auto top_level_call_ast = parse_expression("__invoke()", ta);
+			auto top_level_call = convertAST(top_level_call_ast.m_result.get());
 
-			auto* result = eval(top_level_call.m_result.get(), env);
+			auto* result = eval(top_level_call, env);
 
 			if (result)
 				Type::print(result);
