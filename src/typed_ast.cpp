@@ -76,7 +76,7 @@ TypedAST* convertAST(ASTFunctionLiteral* ast) {
     }
 
     for (auto& captr : ast->m_captures) {
-        typed_function->m_captures.push_back(std::move(captr));
+        typed_function->m_captures.push_back(captr);
     }
 
     typed_function->m_body = get_unique(ast->m_body);
