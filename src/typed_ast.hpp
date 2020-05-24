@@ -103,8 +103,8 @@ struct TypedASTDeclarationList : public TypedAST {
 // doesnt have a value_type
 struct TypedASTDeclaration : public TypedAST {
 	Token const* m_identifier_token;
-	Token const* m_typename_token { nullptr };
-	std::unique_ptr<TypedAST> m_value;
+	Token const* m_typename_token { nullptr }; // can be nullptr
+	std::unique_ptr<TypedAST> m_value; // can be nullptr
 
 	std::string const& identifier_text() const { return m_identifier_token->m_text; }
 	std::string const& typename_text() const { return m_typename_token->m_text; }
