@@ -1,8 +1,8 @@
 #include <cassert>
 
-#include "typed_ast.hpp"
 #include "ast.hpp"
-#include "ast_type.hpp"
+#include "typed_ast.hpp"
+#include "typed_ast_type.hpp"
 
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>& ast) {
     return std::unique_ptr<TypedAST>(convertAST(ast.get()));
@@ -14,7 +14,7 @@ TypedAST* convertAST(ASTNumberLiteral* ast) {
     // desambiguar el tipo en float
     // por defecto es int
     // chequeo si es float:
-    //      typed_number->m_vtype = value_type::Float
+    //      typed_number->m_vtype = ast_vtype::Float
 
     typed_number->m_token = ast->m_token;
     return typed_number;
@@ -177,6 +177,7 @@ TypedAST* convertAST(ASTForStatement* ast) {
 }
 
 TypedAST* convertAST (AST* ast) {
+    // TODO missing argument list converter
     switch (ast->type()) {
     case ast_type::NumberLiteral:
         return convertAST(static_cast<ASTNumberLiteral*>(ast));
@@ -214,6 +215,8 @@ TypedAST* convertAST (AST* ast) {
         return convertAST(static_cast<ASTIfStatement*>(ast));
     case ast_type::ForStatement:
         return convertAST(static_cast<ASTForStatement*>(ast));
+    default:
+        return nullptr;
     }
 }
 
@@ -222,29 +225,29 @@ TypedAST* convertAST (AST* ast) {
 bool valid_vtype(TypedAST* ast) {
 	// maybe its not needed
 	return (
-		ast->m_vtype != value_type::Void &&
-		ast->m_vtype != value_type::TypeError);
+		ast->m_vtype != ast_vtype::Void &&
+		ast->m_vtype != ast_vtype::TypeError);
 }
 
 void typeAST(TypedASTArrayLiteral* ast) {
-	ast->m_vtype = value_type::Array;
+	ast->m_vtype = ast_vtype::Array;
 	
 	for (auto& element : ast->m_elements) {
-		if (element->m_vtype == value_type::Undefined) {
-			ast->m_vtype = value_type::Undefined;
+		if (element->m_vtype == ast_vtype::Undefined) {
+			ast->m_vtype = ast_vtype::Undefined;
 		}
 
 		if (!valid_vtype(element.get())) {
-			ast->m_vtype = value_type::TypeError;
+			ast->m_vtype = ast_vtype::TypeError;
 			break;
 		}
 	}
 
-	if (ast->m_vtype == value_type::Array) {
+	if (ast->m_vtype == ast_vtype::Array) {
 		for (int i = 0; i < (int)ast->m_elements.size()-1; i++) {
 			if (ast->m_elements[i]->m_vtype != 
 				ast->m_elements[i+1]->m_vtype) {
-				ast->m_vtype = value_type::TypeError;
+				ast->m_vtype = ast_vtype::TypeError;
 				break;
 			}
 		}
@@ -256,22 +259,22 @@ void typeAST(TypedASTDeclaration* ast) {
 	ast->m_vtype = value->m_vtype;
 
 	if (!valid_vtype(value.get())) {
-		ast->m_vtype = value_type::TypeError;
+		ast->m_vtype = ast_vtype::TypeError;
 	}
 }
 
 void typeAST(TypedASTDeclarationList* ast) {
-	ast->m_vtype = value_type::Void;
+	ast->m_vtype = ast_vtype::Void;
 
 	for (auto& decl : ast->m_declarations) {
-		value_type vtype = decl->m_vtype;
+		ast_vtype vtype = decl->m_vtype;
 
-		if (decl->m_vtype == value_type::Undefined) {
-			ast->m_vtype = value_type::Undefined;
+		if (vtype == ast_vtype::Undefined) {
+			ast->m_vtype = ast_vtype::Undefined;
 		}
 
-		if (decl->m_vtype == value_type::TypeError) {
-			ast->m_vtype = value_type::TypeError;
+		if (vtype == ast_vtype::TypeError) {
+			ast->m_vtype = ast_vtype::TypeError;
 			break;
 		}
 	}
@@ -286,7 +289,9 @@ void typeAST(TypedAST* ast) {
 		typeAST(static_cast<TypedASTDeclaration*>(ast));
 		break;
 	case ast_type::DeclarationList:
-		return typeAST(static_cast<TypedASTDeclarationList*>(ast));
+		typeAST(static_cast<TypedASTDeclarationList*>(ast));
 		break;
+    default:
+        break;
 	}
 }

@@ -182,7 +182,7 @@ void print(ASTForStatement* ast, int d) {
 }
 
 void print(AST* ast, int d) {
-
+	// TODO missing argument list printer
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
 		return print(static_cast<ASTNumberLiteral*>(ast), d);
