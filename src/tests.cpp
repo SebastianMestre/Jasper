@@ -8,6 +8,7 @@
 #include "value.hpp"
 #include "typed_ast.hpp"
 #include "utils.hpp"
+#include "typed_ast_type.hpp"
 
 void assert_equals(int expected, int received) {
 	if (expected != received) {
@@ -609,28 +610,28 @@ int main() {
 		decl->m_value = std::unique_ptr<TypedAST>(value);
 		typeAST(decl);
 
-		if (decl->m_vtype != value_type::Integer) {
+		if (decl->m_vtype != ast_vtype::Integer) {
 			return 1;
 		}
 
-		value->m_vtype = value_type::Undefined;
+		value->m_vtype = ast_vtype::Undefined;
 		typeAST(decl);
 
-		if (decl->m_vtype != value_type::Undefined) {
+		if (decl->m_vtype != ast_vtype::Undefined) {
 			return 2;
 		}
 
-		value->m_vtype = value_type::TypeError;
+		value->m_vtype = ast_vtype::TypeError;
 		typeAST(decl);
 
-		if (decl->m_vtype != value_type::TypeError) {
+		if (decl->m_vtype != ast_vtype::TypeError) {
 			return 3;
 		}
 
-		value->m_vtype = value_type::Void;
+		value->m_vtype = ast_vtype::Void;
 		typeAST(decl);
 
-		if (decl->m_vtype != value_type::TypeError) {
+		if (decl->m_vtype != ast_vtype::TypeError) {
 			return 4;
 		}
 
@@ -651,29 +652,29 @@ int main() {
 		array->m_elements.push_back(std::unique_ptr<TypedAST>(v2));
 
 		typeAST(array);
-		if (array->m_vtype != value_type::Array) {
+		if (array->m_vtype != ast_vtype::Array) {
 			return 1;
 		}
 
-		v1->m_vtype = value_type::Undefined;
+		v1->m_vtype = ast_vtype::Undefined;
 
 		typeAST(array);
-		if (array->m_vtype != value_type::Undefined) {
+		if (array->m_vtype != ast_vtype::Undefined) {
 			return 2;
 		}
 
-		v2->m_vtype = value_type::TypeError;
+		v2->m_vtype = ast_vtype::TypeError;
 
 		typeAST(array);
-		if (array->m_vtype != value_type::TypeError) {
+		if (array->m_vtype != ast_vtype::TypeError) {
 			return 3;
 		}
 
-		v1->m_vtype = value_type::Integer;
-		v2->m_vtype = value_type::String;
+		v1->m_vtype = ast_vtype::Integer;
+		v2->m_vtype = ast_vtype::String;
 
 		typeAST(array);
-		if (array->m_vtype != value_type::TypeError) {
+		if (array->m_vtype != ast_vtype::TypeError) {
 			return 4;
 		}
 
