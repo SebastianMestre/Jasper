@@ -7,7 +7,6 @@
 #include "token_array.hpp"
 #include "value.hpp"
 #include "typed_ast.hpp"
-#include "utils.hpp"
 #include "typed_ast_type.hpp"
 
 void assert_equals(int expected, int received) {
