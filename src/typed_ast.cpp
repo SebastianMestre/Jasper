@@ -217,3 +217,39 @@ TypedAST* convertAST (AST* ast) {
     }
 }
 
+bool valid_vtype(TypedAST* ast) {
+	return (
+		ast->m_vtype != value_type::Wildcard &&
+		ast->m_vtype != value_type::Void &&
+		ast->m_vtype != value_type::TypeError);
+}
+
+TypedAST* typeAST(TypedASTArrayLiteral* ast) {
+	ast->m_vtype = value_type::Array;
+	
+	for (int i = 0; i < ast->m_elements.size(); i++) {
+		auto& element = ast->m_elements[i];
+
+		if (!valid_vtype(element.get())) {
+			ast->m_vtype = value_type::TypeError;
+			break;
+		}
+
+		if (i < ast->m_elements.size()-1 &&
+			element->m_vtype != ast->m_elements[i+1]->m_vtype) {
+			ast->m_vtype = value_type::TypeError;
+			break;
+		}
+	}
+
+	return ast;
+}
+
+TypedAST* typeAST(TypedAST* ast) {
+	switch(ast->type()) {
+	case ast_type::ArrayLiteral:
+		return typeAST(static_cast<TypedASTArrayLiteral*>(ast));
+	default:
+		return ast;
+	}
+}

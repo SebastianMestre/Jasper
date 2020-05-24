@@ -36,5 +36,9 @@ enum class value_type {
 	NativeFunction,
 
 	Reference,
+	
+	TypeError,
+	Void,
+	Wildcard
 };
 

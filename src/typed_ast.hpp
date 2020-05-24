@@ -24,6 +24,8 @@ public:
 };
 
 TypedAST* convertAST(AST*);
+TypedAST* typeAST(TypedAST*);
+bool valid_vtype(TypedAST*);
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
