@@ -7,6 +7,7 @@
 #include "token_array.hpp"
 #include "value.hpp"
 #include "typed_ast.hpp"
+#include "utils.hpp"
 
 int main() {
 	using namespace Test;
@@ -591,4 +592,51 @@ int main() {
 	});
 
 	assert(0 == native_array_join.execute());
+
+	Tester typeDeclaration{""};
+
+	typeDeclaration.add_test(+[](Type::Environment& env)->int{
+		auto decl = new TypedASTDeclaration;
+		auto value = new TypedASTNumberLiteral;
+		
+		decl->m_value = std::unique_ptr<TypedAST>(value);
+		typeAST(decl);
+
+		if (decl->m_vtype != value_type::Integer) {
+			return 1;
+		}
+
+		value->m_vtype = value_type::Wildcard;
+		typeAST(decl);
+
+		if (decl->m_vtype != value_type::Wildcard) {
+			return 2;
+		}
+
+		value->m_vtype = value_type::TypeError;
+		typeAST(decl);
+
+		if (decl->m_vtype != value_type::TypeError) {
+			return 3;
+		}
+
+		value->m_vtype = value_type::Void;
+		typeAST(decl);
+
+		if (decl->m_vtype != value_type::TypeError) {
+			return 4;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	int return_code = typeDeclaration.execute();
+	if (return_code != 0) {
+		std::cout << return_code << std::endl;
+		assert(0);
+	}
+
+	
+
 }

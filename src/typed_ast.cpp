@@ -280,6 +280,10 @@ TypedAST* typeAST(TypedAST* ast) {
 	switch(ast->type()) {
 	case ast_type::ArrayLiteral:
 		return typeAST(static_cast<TypedASTArrayLiteral*>(ast));
+	case ast_type::Declaration:
+		return typeAST(static_cast<TypedASTDeclaration*>(ast));
+	case ast_type::DeclarationList:
+		return typeAST(static_cast<TypedASTDeclarationList*>(ast));
 	default:
 		return ast;
 	}
