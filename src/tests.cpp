@@ -9,6 +9,13 @@
 #include "typed_ast.hpp"
 #include "utils.hpp"
 
+void assert_equals(int expected, int received) {
+	if (expected != received) {
+		std::cout << "Error: expected " << expected << " but got " << received << std::endl;
+		assert(0);
+	}
+}
+
 int main() {
 	using namespace Test;
 
@@ -631,12 +638,48 @@ int main() {
 		return 0;
 	});
 
-	int return_code = typeDeclaration.execute();
-	if (return_code != 0) {
-		std::cout << return_code << std::endl;
-		assert(0);
-	}
+	assert_equals(0, typeDeclaration.execute());
 
-	
+	Tester typeArray{""};
 
+	typeArray.add_test(+[](Type::Environment& env)->int{
+		auto array = new TypedASTArrayLiteral;
+		auto v1 = new TypedASTNumberLiteral;
+		auto v2 = new TypedASTNumberLiteral;
+
+		array->m_elements.push_back(std::unique_ptr<TypedAST>(v1));
+		array->m_elements.push_back(std::unique_ptr<TypedAST>(v2));
+
+		typeAST(array);
+		if (array->m_vtype != value_type::Array) {
+			return 1;
+		}
+
+		v1->m_vtype = value_type::Wildcard;
+
+		typeAST(array);
+		if (array->m_vtype != value_type::Wildcard) {
+			return 2;
+		}
+
+		v2->m_vtype = value_type::TypeError;
+
+		typeAST(array);
+		if (array->m_vtype != value_type::TypeError) {
+			return 3;
+		}
+
+		v1->m_vtype = value_type::Integer;
+		v2->m_vtype = value_type::String;
+
+		typeAST(array);
+		if (array->m_vtype != value_type::TypeError) {
+			return 4;
+		}
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert_equals(0, typeArray.execute());
 }

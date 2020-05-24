@@ -224,44 +224,41 @@ bool valid_vtype(TypedAST* ast) {
 		ast->m_vtype != value_type::TypeError);
 }
 
-TypedAST* typeAST(TypedASTArrayLiteral* ast) {
+void typeAST(TypedASTArrayLiteral* ast) {
 	ast->m_vtype = value_type::Array;
 	
-	for (int i = 0; i < ast->m_elements.size(); i++) {
-		auto& element = ast->m_elements[i];
-
+	for (auto& element : ast->m_elements) {
 		if (element->m_vtype == value_type::Wildcard) {
 			ast->m_vtype = value_type::Wildcard;
-			break;
 		}
 
 		if (!valid_vtype(element.get())) {
 			ast->m_vtype = value_type::TypeError;
 			break;
 		}
-
-		if (i < ast->m_elements.size()-1 &&
-			element->m_vtype != ast->m_elements[i+1]->m_vtype) {
-			ast->m_vtype = value_type::TypeError;
-			break;
-		}
 	}
 
-	return ast;
+	if (ast->m_vtype == value_type::Array) {
+		for (int i = 0; i < (int)ast->m_elements.size()-1; i++) {
+			if (ast->m_elements[i]->m_vtype != 
+				ast->m_elements[i+1]->m_vtype) {
+				ast->m_vtype = value_type::TypeError;
+				break;
+			}
+		}
+	}
 }
 
-TypedAST* typeAST(TypedASTDeclaration* ast) {
+void typeAST(TypedASTDeclaration* ast) {
 	auto& value = ast->m_value;
 	ast->m_vtype = value->m_vtype;
 
 	if (!valid_vtype(value.get())) {
 		ast->m_vtype = value_type::TypeError;
 	}
-
-	return ast;
 }
 
-TypedAST* typeAST(TypedASTDeclarationList* ast) {
+void typeAST(TypedASTDeclarationList* ast) {
 	ast->m_vtype = value_type::Void;
 
 	for (auto& decl : ast->m_declarations) {
@@ -272,19 +269,18 @@ TypedAST* typeAST(TypedASTDeclarationList* ast) {
 			break;
 		}
 	}
-
-	return ast;
 }
 
-TypedAST* typeAST(TypedAST* ast) {
+void typeAST(TypedAST* ast) {
 	switch(ast->type()) {
 	case ast_type::ArrayLiteral:
-		return typeAST(static_cast<TypedASTArrayLiteral*>(ast));
+		typeAST(static_cast<TypedASTArrayLiteral*>(ast));
+		break;
 	case ast_type::Declaration:
-		return typeAST(static_cast<TypedASTDeclaration*>(ast));
+		typeAST(static_cast<TypedASTDeclaration*>(ast));
+		break;
 	case ast_type::DeclarationList:
 		return typeAST(static_cast<TypedASTDeclarationList*>(ast));
-	default:
-		return ast;
+		break;
 	}
 }
