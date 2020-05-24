@@ -1,8 +1,14 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "ast_type.hpp"
+#include "token.hpp"
+#include "token_type.hpp"
 #include "value_type.hpp"
-#include "ast.hpp"
+
+struct AST;
 
 struct TypedAST {
 protected:

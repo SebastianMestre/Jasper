@@ -5,14 +5,12 @@
 #include <vector>
 
 #include "value_type.hpp"
+#include "value_fwd.hpp"
+#include "environment_fwd.hpp"
 
 struct TypedASTFunctionLiteral;
 
 namespace Type {
-
-struct Scope;
-struct Value;
-struct Environment;
 
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;

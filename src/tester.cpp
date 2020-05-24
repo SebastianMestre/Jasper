@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "ast.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
 #include "garbage_collector.hpp"
