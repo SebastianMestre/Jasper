@@ -291,7 +291,5 @@ void typeAST(TypedAST* ast) {
 	case ast_type::DeclarationList:
 		typeAST(static_cast<TypedASTDeclarationList*>(ast));
 		break;
-    default:
-        break;
 	}
 }
