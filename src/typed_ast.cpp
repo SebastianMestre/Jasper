@@ -84,7 +84,7 @@ TypedAST* convertAST(ASTFunctionLiteral* ast) {
     return typed_function;
 }
 
-TypedAST* convertAST (ASTDeclarationList* ast) {
+TypedAST* convertAST(ASTDeclarationList* ast) {
     auto typed_declist = new TypedASTDeclarationList;
 
     for (auto& declaration : ast->m_declarations) {
@@ -99,7 +99,8 @@ TypedAST* convertAST(ASTDeclaration* ast) {
 
     typed_dec->m_identifier_token = ast->m_identifier_token;
     typed_dec->m_typename_token   = ast->m_typename_token;
-    typed_dec->m_value            = get_unique(ast->m_value);
+    if(ast->m_value)
+		typed_dec->m_value = get_unique(ast->m_value);
 
     return typed_dec;
 }
@@ -174,7 +175,7 @@ TypedAST* convertAST(ASTForStatement* ast) {
     typed_for->m_declaration = get_unique(ast->m_declaration);
     typed_for->m_condition   = get_unique(ast->m_condition);
     typed_for->m_action      = get_unique(ast->m_action);
-    typed_for->m_body        = get_unique(ast->m_declaration);
+    typed_for->m_body        = get_unique(ast->m_body);
 
     return typed_for;
 }

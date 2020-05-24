@@ -6,7 +6,7 @@
 
 #include "value_type.hpp"
 
-struct ASTFunctionLiteral;
+struct TypedASTFunctionLiteral;
 
 namespace Type {
 
@@ -17,7 +17,7 @@ struct Environment;
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using ArrayType = std::vector<Value*>;
-using FunctionType = ::ASTFunctionLiteral*;
+using FunctionType = ::TypedASTFunctionLiteral*;
 using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
 
 // Returns the value pointed to by a reference

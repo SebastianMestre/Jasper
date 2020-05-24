@@ -7,6 +7,7 @@
 #include "parse.hpp"
 #include "token_array.hpp"
 #include "native.hpp"
+#include "typed_ast.hpp"
 
 int execute(std::string const& source, bool dump_ast, Runner* runner) {
 
@@ -26,13 +27,14 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	Type::Scope scope;
 	Type::Environment env = { &gc, &scope, &scope};
 
-	auto* top_level = parse_result.m_result.get();
-	if (top_level->type() != ast_type::DeclarationList)
+	auto top_level_ast = std::move(parse_result.m_result);
+	if (top_level_ast->type() != ast_type::DeclarationList)
 		return 1;
 
 	declare_native_functions(env);
 
-	eval(top_level, env);
+	auto top_level = get_unique(top_level_ast);
+	eval(top_level.get(), env);
 
 	int runner_exit_code = runner(env);
 

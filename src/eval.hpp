@@ -1,10 +1,10 @@
 #pragma once
 
-struct AST;
+struct TypedAST;
 namespace Type {
 struct Environment;
 struct Value;
 }
 
-Type::Value* eval(AST*, Type::Environment&);
+Type::Value* eval(TypedAST*, Type::Environment&);
 
