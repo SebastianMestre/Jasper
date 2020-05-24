@@ -613,10 +613,10 @@ int main() {
 			return 1;
 		}
 
-		value->m_vtype = value_type::Wildcard;
+		value->m_vtype = value_type::Undefined;
 		typeAST(decl);
 
-		if (decl->m_vtype != value_type::Wildcard) {
+		if (decl->m_vtype != value_type::Undefined) {
 			return 2;
 		}
 
@@ -655,10 +655,10 @@ int main() {
 			return 1;
 		}
 
-		v1->m_vtype = value_type::Wildcard;
+		v1->m_vtype = value_type::Undefined;
 
 		typeAST(array);
-		if (array->m_vtype != value_type::Wildcard) {
+		if (array->m_vtype != value_type::Undefined) {
 			return 2;
 		}
 

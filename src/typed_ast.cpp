@@ -217,6 +217,8 @@ TypedAST* convertAST (AST* ast) {
     }
 }
 
+// --- --- --- --- -- typeAST -- --- --- --- --- ---
+
 bool valid_vtype(TypedAST* ast) {
 	// maybe its not needed
 	return (
@@ -228,8 +230,8 @@ void typeAST(TypedASTArrayLiteral* ast) {
 	ast->m_vtype = value_type::Array;
 	
 	for (auto& element : ast->m_elements) {
-		if (element->m_vtype == value_type::Wildcard) {
-			ast->m_vtype = value_type::Wildcard;
+		if (element->m_vtype == value_type::Undefined) {
+			ast->m_vtype = value_type::Undefined;
 		}
 
 		if (!valid_vtype(element.get())) {
@@ -264,8 +266,12 @@ void typeAST(TypedASTDeclarationList* ast) {
 	for (auto& decl : ast->m_declarations) {
 		value_type vtype = decl->m_vtype;
 
-		if (vtype == value_type::Wildcard || vtype == value_type::TypeError) {
-			ast->m_vtype = vtype;
+		if (decl->m_vtype == value_type::Undefined) {
+			ast->m_vtype = value_type::Undefined;
+		}
+
+		if (decl->m_vtype == value_type::TypeError) {
+			ast->m_vtype = value_type::TypeError;
 			break;
 		}
 	}

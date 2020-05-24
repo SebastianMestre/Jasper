@@ -39,6 +39,7 @@ enum class value_type {
 	
 	TypeError,
 	Void,
+	Undefined,
 	Wildcard
 };
 
