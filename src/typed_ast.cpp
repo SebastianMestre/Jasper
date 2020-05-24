@@ -218,8 +218,8 @@ TypedAST* convertAST (AST* ast) {
 }
 
 bool valid_vtype(TypedAST* ast) {
+	// maybe its not needed
 	return (
-		ast->m_vtype != value_type::Wildcard &&
 		ast->m_vtype != value_type::Void &&
 		ast->m_vtype != value_type::TypeError);
 }
@@ -230,6 +230,11 @@ TypedAST* typeAST(TypedASTArrayLiteral* ast) {
 	for (int i = 0; i < ast->m_elements.size(); i++) {
 		auto& element = ast->m_elements[i];
 
+		if (element->m_vtype == value_type::Wildcard) {
+			ast->m_vtype = value_type::Wildcard;
+			break;
+		}
+
 		if (!valid_vtype(element.get())) {
 			ast->m_vtype = value_type::TypeError;
 			break;
@@ -238,6 +243,32 @@ TypedAST* typeAST(TypedASTArrayLiteral* ast) {
 		if (i < ast->m_elements.size()-1 &&
 			element->m_vtype != ast->m_elements[i+1]->m_vtype) {
 			ast->m_vtype = value_type::TypeError;
+			break;
+		}
+	}
+
+	return ast;
+}
+
+TypedAST* typeAST(TypedASTDeclaration* ast) {
+	auto& value = ast->m_value;
+	ast->m_vtype = value->m_vtype;
+
+	if (!valid_vtype(value.get())) {
+		ast->m_vtype = value_type::TypeError;
+	}
+
+	return ast;
+}
+
+TypedAST* typeAST(TypedASTDeclarationList* ast) {
+	ast->m_vtype = value_type::Void;
+
+	for (auto& decl : ast->m_declarations) {
+		value_type vtype = decl->m_vtype;
+
+		if (vtype == value_type::Wildcard || vtype == value_type::TypeError) {
+			ast->m_vtype = vtype;
 			break;
 		}
 	}
