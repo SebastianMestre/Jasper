@@ -1,10 +1,7 @@
 #pragma once
 
 #include <string>
-
-namespace Type {
-struct Environment;
-}
+#include "environment_fwd.hpp"
 
 using Runner = auto (Type::Environment&) -> int;
 

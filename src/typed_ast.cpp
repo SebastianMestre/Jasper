@@ -75,10 +75,6 @@ TypedAST* convertAST(ASTFunctionLiteral* ast) {
         typed_function->m_args.push_back(get_unique(arg));
     }
 
-    for (auto& captr : ast->m_captures) {
-        typed_function->m_captures.push_back(captr);
-    }
-
     typed_function->m_body = get_unique(ast->m_body);
 
     return typed_function;

@@ -70,7 +70,6 @@ struct ASTDictionaryLiteral : public AST {
 struct ASTFunctionLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	std::vector<std::unique_ptr<AST>> m_args;
-	std::vector<std::string> m_captures;
 
 	ASTFunctionLiteral() : AST{ ast_type::FunctionLiteral } {}
 };
@@ -84,8 +83,8 @@ struct ASTDeclarationList : public AST {
 
 struct ASTDeclaration : public AST {
 	Token const* m_identifier_token;
-	Token const* m_typename_token { nullptr };
-	std::unique_ptr<AST> m_value;
+	Token const* m_typename_token { nullptr }; // can be nullptr
+	std::unique_ptr<AST> m_value; // can be nullptr
 
 	std::string const& identifier_text() const { return m_identifier_token->m_text; }
 	std::string const& typename_text() const { return m_typename_token->m_text; }

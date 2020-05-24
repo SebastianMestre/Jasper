@@ -18,7 +18,6 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 		return 1;
 	}
 
-	gather_captures(parse_result.m_result.get());
 
 	if (dump_ast)
 		print(parse_result.m_result.get(), 1);
@@ -34,6 +33,7 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	declare_native_functions(env);
 
 	auto top_level = get_unique(top_level_ast);
+	gather_captures(top_level.get());
 	eval(top_level.get(), env);
 
 	int runner_exit_code = runner(env);

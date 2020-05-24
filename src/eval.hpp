@@ -1,10 +1,9 @@
 #pragma once
 
+#include "value_fwd.hpp"
+#include "environment_fwd.hpp"
+
 struct TypedAST;
-namespace Type {
-struct Environment;
-struct Value;
-}
 
 Type::Value* eval(TypedAST*, Type::Environment&);
 
