@@ -601,9 +601,9 @@ int main() {
 
 	assert(0 == native_array_join.execute());
 
-	Tester typeDeclaration{""};
+	Tester type_declaration{""};
 
-	typeDeclaration.add_test(+[](Type::Environment& env)->int{
+	type_declaration.add_test(+[](Type::Environment& env)->int{
 		auto decl = TypedASTDeclaration();
 		auto value = TypedASTNumberLiteral();
 		
@@ -639,11 +639,11 @@ int main() {
 		return 0;
 	});
 
-	assert_equals(0, typeDeclaration.execute());
+	assert_equals(0, type_declaration.execute());
 
-	Tester typeArray{""};
+	Tester type_array{""};
 
-	typeArray.add_test(+[](Type::Environment& env)->int{
+	type_array.add_test(+[](Type::Environment& env)->int{
 		auto array = TypedASTArrayLiteral();
 		auto v1 = TypedASTNumberLiteral();
 		auto v2 = TypedASTNumberLiteral();
@@ -682,5 +682,5 @@ int main() {
 		return 0;
 	});
 
-	assert_equals(0, typeArray.execute());
+	assert_equals(0, type_array.execute());
 }
