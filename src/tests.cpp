@@ -8,6 +8,7 @@
 #include "value.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
+// #include "environment.hpp"
 
 void assert_equals(int expected, int received) {
 	if (expected != received) {
@@ -603,34 +604,34 @@ int main() {
 	Tester typeDeclaration{""};
 
 	typeDeclaration.add_test(+[](Type::Environment& env)->int{
-		auto decl = new TypedASTDeclaration;
-		auto value = new TypedASTNumberLiteral;
+		auto decl = TypedASTDeclaration();
+		auto value = TypedASTNumberLiteral();
 		
-		decl->m_value = std::unique_ptr<TypedAST>(value);
-		typeAST(decl);
+		decl.m_value = std::unique_ptr<TypedAST>(&value);
 
-		if (decl->m_vtype != ast_vtype::Integer) {
+		typeAST(&decl);
+		if (decl.m_vtype != ast_vtype::Integer) {
 			return 1;
 		}
 
-		value->m_vtype = ast_vtype::Undefined;
-		typeAST(decl);
+		value.m_vtype = ast_vtype::Undefined;
 
-		if (decl->m_vtype != ast_vtype::Undefined) {
+		typeAST(&decl);
+		if (decl.m_vtype != ast_vtype::Undefined) {
 			return 2;
 		}
 
-		value->m_vtype = ast_vtype::TypeError;
-		typeAST(decl);
+		value.m_vtype = ast_vtype::TypeError;
 
-		if (decl->m_vtype != ast_vtype::TypeError) {
+		typeAST(&decl);
+		if (decl.m_vtype != ast_vtype::TypeError) {
 			return 3;
 		}
 
-		value->m_vtype = ast_vtype::Void;
-		typeAST(decl);
+		value.m_vtype = ast_vtype::Void;
 
-		if (decl->m_vtype != ast_vtype::TypeError) {
+		typeAST(&decl);
+		if (decl.m_vtype != ast_vtype::TypeError) {
 			return 4;
 		}
 
@@ -643,37 +644,37 @@ int main() {
 	Tester typeArray{""};
 
 	typeArray.add_test(+[](Type::Environment& env)->int{
-		auto array = new TypedASTArrayLiteral;
-		auto v1 = new TypedASTNumberLiteral;
-		auto v2 = new TypedASTNumberLiteral;
+		auto array = TypedASTArrayLiteral();
+		auto v1 = TypedASTNumberLiteral();
+		auto v2 = TypedASTNumberLiteral();
 
-		array->m_elements.push_back(std::unique_ptr<TypedAST>(v1));
-		array->m_elements.push_back(std::unique_ptr<TypedAST>(v2));
+		array.m_elements.push_back(std::unique_ptr<TypedAST>(&v1));
+		array.m_elements.push_back(std::unique_ptr<TypedAST>(&v2));
 
-		typeAST(array);
-		if (array->m_vtype != ast_vtype::Array) {
+		typeAST(&array);
+		if (array.m_vtype != ast_vtype::Array) {
 			return 1;
 		}
 
-		v1->m_vtype = ast_vtype::Undefined;
+		v1.m_vtype = ast_vtype::Undefined;
 
-		typeAST(array);
-		if (array->m_vtype != ast_vtype::Undefined) {
+		typeAST(&array);
+		if (array.m_vtype != ast_vtype::Undefined) {
 			return 2;
 		}
 
-		v2->m_vtype = ast_vtype::TypeError;
+		v2.m_vtype = ast_vtype::TypeError;
 
-		typeAST(array);
-		if (array->m_vtype != ast_vtype::TypeError) {
+		typeAST(&array);
+		if (array.m_vtype != ast_vtype::TypeError) {
 			return 3;
 		}
 
-		v1->m_vtype = ast_vtype::Integer;
-		v2->m_vtype = ast_vtype::String;
+		v1.m_vtype = ast_vtype::Integer;
+		v2.m_vtype = ast_vtype::String;
 
-		typeAST(array);
-		if (array->m_vtype != ast_vtype::TypeError) {
+		typeAST(&array);
+		if (array.m_vtype != ast_vtype::TypeError) {
 			return 4;
 		}
 
