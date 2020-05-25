@@ -23,9 +23,7 @@ OBJNAMES := \
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
-LIBS := -lasan
-
-CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
+CXXFLAGS := -std=c++14 -Wall -g
 CPPFLAGS := 
 
 all: $(BINDIR)/iseeaparse

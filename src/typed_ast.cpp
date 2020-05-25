@@ -231,6 +231,7 @@ void typeAST(TypedASTArrayLiteral* ast) {
 			ast->m_vtype = ast_vtype::Undefined;
 		}
 
+        // cannot hold void
 		if (ast->m_vtype == ast_vtype::Void ||
 		    ast->m_vtype == ast_vtype::TypeError) {
 			ast->m_vtype = ast_vtype::TypeError;
@@ -260,6 +261,7 @@ void typeAST(TypedASTDeclaration* ast) {
     if (value) {
 	    ast->m_vtype = value->m_vtype;
         
+        // cannot hold void
         if (ast->m_vtype == ast_vtype::Void ||
             ast->m_vtype == ast_vtype::TypeError) {
             ast->m_vtype = ast_vtype::TypeError;
@@ -292,6 +294,16 @@ void typeAST(TypedASTBinaryExpression* ast) {
     ast->m_vtype = lhs->m_vtype;
 
     if (lhs->m_vtype != rhs->m_vtype) {
+        ast->m_vtype = ast_vtype::TypeError;
+    }
+
+    if (lhs->m_vtype == ast_vtype::Undefined || 
+        rhs->m_vtype == ast_vtype::Undefined) {
+        ast->m_vtype = ast_vtype::Undefined;
+    }
+
+    if (lhs->m_vtype == ast_vtype::TypeError ||
+        rhs->m_vtype == ast_vtype::TypeError) {
         ast->m_vtype = ast_vtype::TypeError;
     }
 }
@@ -333,7 +345,49 @@ void typeAST(TypedASTBlock* ast) {
     }
 }
 
+void typeAST(TypedASTReturnStatement* ast) {
+    ast->m_vtype = ast->m_value->m_vtype;
+}
 
+void typeAST(TypedASTIfStatement* ast) {
+    auto& condition = ast->m_condition;
+    auto& body = ast->m_body;
+
+    ast->m_vtype = ast_vtype::Void;
+
+    if (body->m_vtype == ast_vtype::Undefined ||
+        condition->m_vtype == ast_vtype::Undefined) {
+        ast->m_vtype = ast_vtype::Undefined;
+    }
+
+    if (body->m_vtype == ast_vtype::TypeError ||
+        condition->m_vtype == ast_vtype::TypeError) {
+        ast->m_vtype = ast_vtype::TypeError;
+    }
+}
+
+void typeAST(TypedASTForStatement* ast) {
+    auto& declaration = ast->m_declaration;
+    auto& condition = ast->m_condition;
+    auto& action = ast->m_action;
+    auto& body = ast->m_body;
+
+    ast->m_vtype = ast_vtype::Void;
+
+    if (body->m_vtype == ast_vtype::Undefined ||
+        action->m_vtype == ast_vtype::Undefined ||
+        condition->m_vtype == ast_vtype::Undefined ||
+        declaration->m_vtype == ast_vtype::Undefined) {
+        ast->m_vtype = ast_vtype::Undefined;
+    }
+
+    if (body->m_vtype == ast_vtype::TypeError ||
+        action->m_vtype == ast_vtype::TypeError ||
+        condition->m_vtype == ast_vtype::TypeError ||
+        declaration->m_vtype == ast_vtype::TypeError) {
+        ast->m_vtype = ast_vtype::TypeError;
+    }
+}
 
 void typeAST(TypedAST* ast) {
 	switch(ast->type()) {
@@ -347,10 +401,25 @@ void typeAST(TypedAST* ast) {
         return typeAST(static_cast<TypedASTFunctionLiteral*>(ast));
     case ast_type::BinaryExpression:
         return typeAST(static_cast<TypedASTBinaryExpression*>(ast));
+    case ast_type::CallExpression:
+        return typeAST(static_cast<TypedASTCallExpression*>(ast));
     case ast_type::IndexExpression:
         return typeAST(static_cast<TypedASTIndexExpression*>(ast));
     case ast_type::Block:
         return typeAST(static_cast<TypedASTBlock*>(ast));
+    case ast_type::ReturnStatement:
+        return typeAST(static_cast<TypedASTReturnStatement*>(ast));
+    case ast_type::IfStatement:
+        return typeAST(static_cast<TypedASTIfStatement*>(ast));
+    case ast_type::ForStatement:
+        return typeAST(static_cast<TypedASTForStatement*>(ast));
     case ast_type::Identifier:
+    case ast_type::BooleanLiteral:
+    case ast_type::DictionaryLiteral:
+    case ast_type::NullLiteral:
+    case ast_type::NumberLiteral:
+    case ast_type::ObjectLiteral:
+    case ast_type::StringLiteral:
+        break;
 	}
 }
