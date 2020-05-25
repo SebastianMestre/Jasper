@@ -254,6 +254,10 @@ void typeAST(TypedASTArrayLiteral* ast) {
 	}
 }
 
+void typeAST(TypedASTFunctionLiteral* ast) {
+    // TODO
+}
+
 void typeAST(TypedASTDeclaration* ast) {
 	auto& value = ast->m_value;
 	ast->m_vtype = value->m_vtype;
@@ -268,10 +272,6 @@ void typeAST(TypedASTDeclarationList* ast) {
 
 	for (auto& decl : ast->m_declarations) {
 		ast_vtype vtype = decl->m_vtype;
-
-		if (vtype == ast_vtype::Undefined) {
-			ast->m_vtype = ast_vtype::Undefined;
-		}
 
 		if (vtype == ast_vtype::TypeError) {
 			ast->m_vtype = ast_vtype::TypeError;

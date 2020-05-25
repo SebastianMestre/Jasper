@@ -605,35 +605,41 @@ int main() {
 
 	type_declaration.add_test(+[](Type::Environment& env)->int{
 		auto decl = TypedASTDeclaration();
-		auto value = TypedASTNumberLiteral();
-		
-		decl.m_value = std::unique_ptr<TypedAST>(&value);
+		auto value = new TypedASTNumberLiteral;
+
+		decl.m_value = std::unique_ptr<TypedAST>(value);
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Integer) {
+			free(value);
 			return 1;
 		}
 
-		value.m_vtype = ast_vtype::Undefined;
+		value->m_vtype = ast_vtype::Undefined;
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Undefined) {
+			free(value);
 			return 2;
 		}
 
-		value.m_vtype = ast_vtype::TypeError;
+		value->m_vtype = ast_vtype::TypeError;
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
+			free(value);
 			return 3;
 		}
 
-		value.m_vtype = ast_vtype::Void;
+		value->m_vtype = ast_vtype::Void;
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
+			free(value);
 			return 4;
 		}
+
+		free(value);
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
@@ -645,42 +651,97 @@ int main() {
 
 	type_array.add_test(+[](Type::Environment& env)->int{
 		auto array = TypedASTArrayLiteral();
-		auto v1 = TypedASTNumberLiteral();
-		auto v2 = TypedASTNumberLiteral();
+		auto v1 = new TypedASTNumberLiteral;
+		auto v2 = new TypedASTNumberLiteral;
 
-		array.m_elements.push_back(std::unique_ptr<TypedAST>(&v1));
-		array.m_elements.push_back(std::unique_ptr<TypedAST>(&v2));
+		array.m_elements.push_back(std::unique_ptr<TypedAST>(v1));
+		array.m_elements.push_back(std::unique_ptr<TypedAST>(v2));
+
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Array) {
+			free(v1);
+			free(v2);
 			return 1;
 		}
 
-		v1.m_vtype = ast_vtype::Undefined;
+		v1->m_vtype = ast_vtype::Undefined;
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Undefined) {
+			free(v1);
+			free(v2);
 			return 2;
 		}
 
-		v2.m_vtype = ast_vtype::TypeError;
+		v2->m_vtype = ast_vtype::TypeError;
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
+			free(v1);
+			free(v2);
 			return 3;
 		}
 
-		v1.m_vtype = ast_vtype::Integer;
-		v2.m_vtype = ast_vtype::String;
+		v1->m_vtype = ast_vtype::Integer;
+		v2->m_vtype = ast_vtype::String;
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
+			free(v1);
+			free(v2);
 			return 4;
 		}
+
+		free(v1);
+		free(v2);
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
 	});
 
 	assert_equals(0, type_array.execute());
+	
+	Tester type_decl_list{""};
+
+	type_decl_list.add_test(+[](Type::Environment& env)->int{
+		auto decl_list = TypedASTDeclarationList();
+		auto decl = new TypedASTDeclaration;
+		
+		decl_list.m_declarations.push_back(
+			std::unique_ptr<TypedAST>(decl));
+
+		decl->m_vtype = ast_vtype::Array;
+
+		typeAST(&decl_list);
+		if (decl_list.m_vtype != ast_vtype::Void) {
+			free(decl);
+			return 1;
+		}
+
+		decl->m_vtype = ast_vtype::Undefined;
+
+		typeAST(&decl_list);
+		if (decl_list.m_vtype != ast_vtype::Void) {
+			free(decl);
+			return 2;
+		}
+
+		decl->m_vtype = ast_vtype::TypeError;
+
+		typeAST(&decl_list);
+		if (decl_list.m_vtype != ast_vtype::TypeError) {
+			free(decl);
+			return 3;
+		}
+
+		free(decl);
+		
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert_equals(0, type_decl_list.execute());
+
+	
 }
