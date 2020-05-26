@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 
 #include "ast.hpp"
 #include "typed_ast.hpp"
@@ -177,7 +178,6 @@ TypedAST* convertAST(ASTForStatement* ast) {
 }
 
 TypedAST* convertAST (AST* ast) {
-    // TODO missing argument list converter
     switch (ast->type()) {
     case ast_type::NumberLiteral:
         return convertAST(static_cast<ASTNumberLiteral*>(ast));
@@ -216,7 +216,8 @@ TypedAST* convertAST (AST* ast) {
     case ast_type::ForStatement:
         return convertAST(static_cast<ASTForStatement*>(ast));
     default:
-        return nullptr;
+        std::cerr << "Error: AST type not handled in convertAST" << std::endl;
+        assert(0);
     }
 }
 

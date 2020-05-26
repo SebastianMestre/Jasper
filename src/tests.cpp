@@ -611,7 +611,7 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Integer) {
-			free(value);
+			delete value;
 			return 1;
 		}
 
@@ -619,7 +619,7 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Undefined) {
-			free(value);
+			delete value;
 			return 2;
 		}
 
@@ -627,7 +627,7 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
-			free(value);
+			delete value;
 			return 3;
 		}
 
@@ -635,11 +635,11 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
-			free(value);
+			delete value;
 			return 4;
 		}
 
-		free(value);
+		delete value;
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
@@ -660,8 +660,8 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Array) {
-			free(v1);
-			free(v2);
+			delete v1;
+			delete v2;
 			return 1;
 		}
 
@@ -669,8 +669,8 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Undefined) {
-			free(v1);
-			free(v2);
+			delete v1;
+			delete v2;
 			return 2;
 		}
 
@@ -678,8 +678,8 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
-			free(v1);
-			free(v2);
+			delete v1;
+			delete v2;
 			return 3;
 		}
 
@@ -688,13 +688,13 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
-			free(v1);
-			free(v2);
+			delete v1;
+			delete v2;
 			return 4;
 		}
 
-		free(v1);
-		free(v2);
+		delete v1;
+		delete v2;
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
@@ -715,7 +715,7 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::Void) {
-			free(decl);
+			delete decl;
 			return 1;
 		}
 
@@ -723,7 +723,7 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::Void) {
-			free(decl);
+			delete decl;
 			return 2;
 		}
 
@@ -731,11 +731,11 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::TypeError) {
-			free(decl);
+			delete decl;
 			return 3;
 		}
 
-		free(decl);
+		delete decl;
 		
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
