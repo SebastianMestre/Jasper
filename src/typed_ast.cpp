@@ -273,7 +273,7 @@ void typeAST(TypedASTDeclarationList* ast) {
 	ast->m_vtype = ast_vtype::Void;
 
 	for (auto& decl : ast->m_declarations) {
-		ast_vtype vtype = decl->m_vtype;
+		auto vtype = decl->m_vtype;
 
         if (vtype == ast_vtype::Undefined) {
             ast->m_vtype = ast_vtype::Undefined;

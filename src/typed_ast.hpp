@@ -16,9 +16,9 @@ protected:
 	ast_type m_type;
 
 public:
-    ast_vtype m_vtype;
-	TypedAST(ast_type type) : m_type{ type }, m_vtype {ast_vtype::Undefined} {}
-    TypedAST(ast_type type, ast_vtype vtype) : m_type {type}, m_vtype {vtype} {}
+    ValueType m_vtype {false};
+	TypedAST(ast_type type) : m_type{ type } {}
+    TypedAST(ast_type type, ValueType vtype) : m_type {type}, m_vtype {vtype} {}
 
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
