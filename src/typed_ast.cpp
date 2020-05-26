@@ -261,11 +261,15 @@ void typeAST(TypedASTFunctionLiteral* ast) {
 
 void typeAST(TypedASTDeclaration* ast) {
 	auto& value = ast->m_value;
-	ast->m_vtype = value->m_vtype;
+    ast->m_vtype = ast_vtype::Void;
 
-	if (!valid_vtype(value.get())) {
-		ast->m_vtype = ast_vtype::TypeError;
-	}
+    if (value) {
+	    ast->m_vtype = value->m_vtype;
+
+        if (!valid_vtype(value.get())) {
+            ast->m_vtype = ast_vtype::TypeError;
+        }
+    }
 }
 
 void typeAST(TypedASTDeclarationList* ast) {
