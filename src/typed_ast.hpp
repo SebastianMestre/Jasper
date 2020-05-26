@@ -115,6 +115,7 @@ struct TypedASTDeclaration : public TypedAST {
 // the value_type must be computed
 struct TypedASTIdentifier : public TypedAST {
 	Token const* m_token;
+	TypedASTDeclaration* m_declaration { nullptr };
 
 	std::string const& text () { return m_token->m_text; }
 
