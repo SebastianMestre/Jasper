@@ -91,7 +91,7 @@ struct TypedASTFunctionLiteral : public TypedAST {
 	std::vector<std::string> m_captures;
 
 	TypedASTFunctionLiteral() : 
-        TypedAST{ ast_type::FunctionLiteral } {}
+        TypedAST{ ast_type::FunctionLiteral, true } {}
 };
 
 // doesnt have a ast_vtype

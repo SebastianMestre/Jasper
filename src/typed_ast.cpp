@@ -1,4 +1,6 @@
 #include <cassert>
+#include <algorithm>
+#include <vector>
 #include <iostream>
 
 #include "ast.hpp"
@@ -251,7 +253,54 @@ void typeAST(TypedASTArrayLiteral* ast) {
 }
 
 void typeAST(TypedASTFunctionLiteral* ast) {
-    // TODO
+    assert(ast->m_vtype.m_function);
+
+    ast->m_vtype = ast_vtype::Void;
+
+    if (ast->m_body->m_vtype == ast_vtype::Undefined ||
+        ast->m_body->m_vtype == ast_vtype::TypeError) {
+        ast->m_vtype = ast->m_body->m_vtype;
+    }
+
+    for (auto& arg : ast->m_args) {
+        if (arg->m_vtype == ast_vtype::Undefined) {
+            ast->m_vtype = ast_vtype::Undefined;
+        }
+
+        if (arg->m_vtype == ast_vtype::TypeError) {
+            ast->m_vtype = ast_vtype::TypeError;
+            break;
+        }
+    }
+
+    if (ast->m_vtype != ast_vtype::Void) {
+        return;
+    }
+
+    for (auto& arg : ast->m_args) {
+        assert(!arg->m_vtype.m_function);
+        ast->m_vtype.m_vargs.push_back(arg->m_vtype);
+    }
+
+    assert(ast->m_body->type() == ast_type::Block);
+
+    auto body = static_cast<TypedASTBlock*>(ast->m_body.get());
+    TypedAST* fst_return_stmt = nullptr;
+
+    // check whether all return statements have the same type
+    for (auto& stmt : body->m_body) {
+        if (stmt->type() == ast_type::ReturnStatement) {
+            if (!fst_return_stmt) {
+                fst_return_stmt = stmt.get();
+            } else {
+                assert(stmt->m_vtype == fst_return_stmt->m_vtype);
+            }
+        }
+    }
+
+    if (fst_return_stmt) {
+        ast->m_vtype.m_vtype = fst_return_stmt->m_vtype.m_vtype;
+    }
 }
 
 void typeAST(TypedASTDeclaration* ast) {
