@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 // runtime type
 enum class ast_vtype {
@@ -16,24 +17,73 @@ enum class ast_vtype {
 	Object,
 	Dictionary,
 	
+	Function,
+	Reference,
+	
 	TypeError,
 	Void,
-	Undefined
+	Undefined,
+	Wildcard
 };
 
-class ValueType {
-public:
-	bool m_function;
-	ast_vtype m_vtype {ast_vtype::Undefined};
-	std::vector<ValueType> m_vargs;
-	int m_wildcard;
+enum class type_type {
+  builtin,
+  error,
+  reference,
+  function,
+  sum,
+  product,
+  polymorphic,
+  applied,
+  wildcard,
+};
 
-	ValueType(ast_vtype type) : m_vtype{type} {}
-	ValueType(bool is_function) : m_function{is_function} {}
+struct Type {
+  type_type m_type;
+};
 
-	bool operator== (ast_vtype);
-	bool operator== (ValueType);
-	bool operator!= (ast_vtype);
-	bool operator!= (ValueType);
-	bool operator= (ValueType);
+struct Wildcard : Type {
+  int id;
+};
+
+struct Polymorphic : Type {
+  std::vector<int> forall_ids;
+  Type* m_base;
+};
+
+struct Applied : Type {
+  Polymorphic* m_base;
+  std::vector<Type*> args;
+};
+
+struct Error : Type {
+  // informacion para printear
+};
+
+struct Sum : Type {
+  std::vector<Type*> m_types;
+};
+
+struct Product : Type {
+  std::vector<Type*> m_types;
+};
+
+struct Builtin : Type {
+  void* def; // TODO: que va aca?
+};
+
+struct Reference : Type {
+  Type* m_base;
+};
+
+struct Function : Type {
+  std::vector<Type*> arg_types;
+  Type* return_type;
+};
+
+std::unordered_map<std::string, Type*> type_table = {
+  {"int", new Builtin{/* algo */}},
+  {"runtime_error", new Builtin{/* algo */}},
+  {"unit", new Builtin{/* algo */}},
+  {"unit", new Builtin{/* algo */}},
 };

@@ -16,9 +16,9 @@ protected:
 	ast_type m_type;
 
 public:
-    ValueType m_vtype {false};
+    ast_vtype m_vtype {ast_vtype::Undefined};
 	TypedAST(ast_type type) : m_type{ type } {}
-    TypedAST(ast_type type, ValueType vtype) : m_type {type}, m_vtype {vtype} {}
+    TypedAST(ast_type type, ast_vtype vtype) : m_type {type}, m_vtype {vtype} {}
 
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
@@ -90,8 +90,7 @@ struct TypedASTFunctionLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 	std::vector<std::string> m_captures;
 
-	TypedASTFunctionLiteral() : 
-        TypedAST{ ast_type::FunctionLiteral, true } {}
+	TypedASTFunctionLiteral() : TypedAST{ ast_type::FunctionLiteral } {}
 };
 
 // doesnt have a ast_vtype

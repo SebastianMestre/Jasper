@@ -252,8 +252,13 @@ void typeAST(TypedASTArrayLiteral* ast) {
 	}
 }
 
+void typeAST(TypedASTIdentifier* ast) {
+    ast->m_vtype = ast_vtype::Reference;
+}
+
 void typeAST(TypedASTFunctionLiteral* ast) {
-    assert(ast->m_vtype.m_function);
+    ast->m_vtype = ast_vtype::Function;
+/*     assert(ast->m_vtype.m_function);
 
     ast->m_vtype = ast_vtype::Void;
 
@@ -301,6 +306,7 @@ void typeAST(TypedASTFunctionLiteral* ast) {
     if (fst_return_stmt) {
         ast->m_vtype.m_vtype = fst_return_stmt->m_vtype.m_vtype;
     }
+ */
 }
 
 void typeAST(TypedASTDeclaration* ast) {
@@ -464,6 +470,7 @@ void typeAST(TypedAST* ast) {
     case ast_type::ForStatement:
         return typeAST(static_cast<TypedASTForStatement*>(ast));
     case ast_type::Identifier:
+        return typeAST(static_cast<TypedASTIdentifier*>(ast));
     case ast_type::BooleanLiteral:
     case ast_type::DictionaryLiteral:
     case ast_type::NullLiteral:
