@@ -108,14 +108,32 @@ TypedAST* convertAST(ASTIdentifier* ast) {
     return typed_id;
 }
 
+TypedAST* convertASTPizza(ASTBinaryExpression* ast) {
+	// TODO: error handling
+	assert(ast->m_rhs->type() == ast_type::CallExpression);
+	auto call = static_cast<ASTCallExpression*>(ast->m_rhs.get());
+
+	auto result = new TypedASTCallExpression;
+
+	result->m_args.push_back(get_unique(ast->m_lhs));
+	for (auto& arg : call->m_args)
+		result->m_args.push_back(get_unique(arg));
+
+	result->m_callee = get_unique(call->m_callee);
+
+	return result;
+}
+
 TypedAST* convertAST(ASTBinaryExpression* ast) {
-    auto typed_be = new TypedASTBinaryExpression;
 
-    typed_be->m_op  = ast->m_op;
-    typed_be->m_lhs = get_unique(ast->m_lhs);
-    typed_be->m_rhs = get_unique(ast->m_rhs);
+	if (ast->m_op == token_type::PIZZA)
+		return convertASTPizza(ast);
 
-    return typed_be;
+	auto typed_be = new TypedASTBinaryExpression;
+	typed_be->m_op = ast->m_op;
+	typed_be->m_lhs = get_unique(ast->m_lhs);
+	typed_be->m_rhs = get_unique(ast->m_rhs);
+	return typed_be;
 }
 
 TypedAST* convertAST(ASTCallExpression* ast) {
