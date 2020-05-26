@@ -611,7 +611,6 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Integer) {
-			delete value;
 			return 1;
 		}
 
@@ -619,7 +618,6 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::Undefined) {
-			delete value;
 			return 2;
 		}
 
@@ -627,7 +625,6 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
-			delete value;
 			return 3;
 		}
 
@@ -635,11 +632,8 @@ int main() {
 
 		typeAST(&decl);
 		if (decl.m_vtype != ast_vtype::TypeError) {
-			delete value;
 			return 4;
 		}
-
-		delete value;
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
@@ -660,8 +654,6 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Array) {
-			delete v1;
-			delete v2;
 			return 1;
 		}
 
@@ -669,8 +661,6 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::Undefined) {
-			delete v1;
-			delete v2;
 			return 2;
 		}
 
@@ -678,8 +668,6 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
-			delete v1;
-			delete v2;
 			return 3;
 		}
 
@@ -688,13 +676,8 @@ int main() {
 
 		typeAST(&array);
 		if (array.m_vtype != ast_vtype::TypeError) {
-			delete v1;
-			delete v2;
 			return 4;
 		}
-
-		delete v1;
-		delete v2;
 
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
@@ -715,7 +698,6 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::Void) {
-			delete decl;
 			return 1;
 		}
 
@@ -723,7 +705,6 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::Void) {
-			delete decl;
 			return 2;
 		}
 
@@ -731,11 +712,8 @@ int main() {
 
 		typeAST(&decl_list);
 		if (decl_list.m_vtype != ast_vtype::TypeError) {
-			delete decl;
 			return 3;
 		}
-
-		delete decl;
 		
 		std::cout << "@ line " << __LINE__ << ": Success \n";
 		return 0;
