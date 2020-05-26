@@ -22,17 +22,18 @@ enum class ast_vtype {
 };
 
 class ValueType {
-private:
-	bool m_function;
 public:
+	bool m_function;
 	ast_vtype m_vtype {ast_vtype::Undefined};
-	std::vector<ast_vtype> m_vargs;
+	std::vector<ValueType> m_vargs;
 	int m_wildcard;
 
 	ValueType(ast_vtype type) : m_vtype{type} {}
 	ValueType(bool is_function) : m_function{is_function} {}
 
 	bool operator== (ast_vtype);
+	bool operator== (ValueType);
 	bool operator!= (ast_vtype);
 	bool operator!= (ValueType);
+	bool operator= (ValueType);
 };
