@@ -17,6 +17,12 @@ void assert_equals(int expected, int received) {
 	}
 }
 
+template<typename T>
+void print(T value) {
+	// print enum
+	std::cout << static_cast<typename std::underlying_type<T>::type>(value) << std::endl;
+} 
+
 int main() {
 	using namespace Test;
 
@@ -704,7 +710,7 @@ int main() {
 		decl->m_vtype = ast_vtype::Undefined;
 
 		typeAST(&decl_list);
-		if (decl_list.m_vtype != ast_vtype::Void) {
+		if (decl_list.m_vtype != ast_vtype::Undefined) {
 			return 2;
 		}
 

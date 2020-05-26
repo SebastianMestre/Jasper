@@ -232,8 +232,8 @@ void typeAST(TypedASTArrayLiteral* ast) {
 		}
 
         // cannot hold void
-		if (ast->m_vtype == ast_vtype::Void ||
-		    ast->m_vtype == ast_vtype::TypeError) {
+		if (element->m_vtype == ast_vtype::Void ||
+		    element->m_vtype == ast_vtype::TypeError) {
 			ast->m_vtype = ast_vtype::TypeError;
 			break;
 		}
@@ -275,8 +275,9 @@ void typeAST(TypedASTDeclarationList* ast) {
 	for (auto& decl : ast->m_declarations) {
 		ast_vtype vtype = decl->m_vtype;
 
-        // TODO if any of the decl is Undefined, decl_list has to be Undefined too
-        // TODO gotta fix the tests too
+        if (vtype == ast_vtype::Undefined) {
+            ast->m_vtype = ast_vtype::Undefined;
+        }
 
 		if (vtype == ast_vtype::TypeError) {
 			ast->m_vtype = ast_vtype::TypeError;
