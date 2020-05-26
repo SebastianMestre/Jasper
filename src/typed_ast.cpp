@@ -1,8 +1,9 @@
 #include <cassert>
+#include <iostream>
 
-#include "typed_ast.hpp"
 #include "ast.hpp"
-#include "ast_type.hpp"
+#include "typed_ast.hpp"
+#include "typed_ast_type.hpp"
 
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>& ast) {
     return std::unique_ptr<TypedAST>(convertAST(ast.get()));
@@ -14,7 +15,7 @@ TypedAST* convertAST(ASTNumberLiteral* ast) {
     // desambiguar el tipo en float
     // por defecto es int
     // chequeo si es float:
-    //      typed_number->m_vtype = value_type::Float
+    //      typed_number->m_vtype = ast_vtype::Float
 
     typed_number->m_token = ast->m_token;
     return typed_number;
@@ -214,6 +215,86 @@ TypedAST* convertAST (AST* ast) {
         return convertAST(static_cast<ASTIfStatement*>(ast));
     case ast_type::ForStatement:
         return convertAST(static_cast<ASTForStatement*>(ast));
+    default:
+        std::cerr << "Error: AST type not handled in convertAST" << std::endl;
+        assert(0);
     }
 }
 
+// --- --- --- --- -- typeAST -- --- --- --- --- ---
+
+bool valid_vtype(TypedAST* ast) {
+	// maybe its not needed
+	return (
+		ast->m_vtype != ast_vtype::Void &&
+		ast->m_vtype != ast_vtype::TypeError);
+}
+
+void typeAST(TypedASTArrayLiteral* ast) {
+	ast->m_vtype = ast_vtype::Array;
+	
+	for (auto& element : ast->m_elements) {
+		if (element->m_vtype == ast_vtype::Undefined) {
+			ast->m_vtype = ast_vtype::Undefined;
+		}
+
+		if (!valid_vtype(element.get())) {
+			ast->m_vtype = ast_vtype::TypeError;
+			break;
+		}
+	}
+
+	if (ast->m_vtype == ast_vtype::Array) {
+		for (int i = 0; i < (int)ast->m_elements.size()-1; i++) {
+			if (ast->m_elements[i]->m_vtype != 
+				ast->m_elements[i+1]->m_vtype) {
+				ast->m_vtype = ast_vtype::TypeError;
+				break;
+			}
+		}
+	}
+}
+
+void typeAST(TypedASTFunctionLiteral* ast) {
+    // TODO
+}
+
+void typeAST(TypedASTDeclaration* ast) {
+	auto& value = ast->m_value;
+    ast->m_vtype = ast_vtype::Void;
+
+    if (value) {
+	    ast->m_vtype = value->m_vtype;
+
+        if (!valid_vtype(value.get())) {
+            ast->m_vtype = ast_vtype::TypeError;
+        }
+    }
+}
+
+void typeAST(TypedASTDeclarationList* ast) {
+	ast->m_vtype = ast_vtype::Void;
+
+	for (auto& decl : ast->m_declarations) {
+		ast_vtype vtype = decl->m_vtype;
+
+		if (vtype == ast_vtype::TypeError) {
+			ast->m_vtype = ast_vtype::TypeError;
+			break;
+		}
+	}
+}
+
+void typeAST(TypedAST* ast) {
+	switch(ast->type()) {
+	case ast_type::ArrayLiteral:
+		typeAST(static_cast<TypedASTArrayLiteral*>(ast));
+		break;
+	case ast_type::Declaration:
+		typeAST(static_cast<TypedASTDeclaration*>(ast));
+		break;
+	case ast_type::DeclarationList:
+		typeAST(static_cast<TypedASTDeclarationList*>(ast));
+		break;
+	}
+}

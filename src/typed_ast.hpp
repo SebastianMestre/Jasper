@@ -7,6 +7,7 @@
 #include "token.hpp"
 #include "token_type.hpp"
 #include "value_type.hpp"
+#include "typed_ast_type.hpp"
 
 struct AST;
 
@@ -15,15 +16,17 @@ protected:
 	ast_type m_type;
 
 public:
-    value_type m_vtype;
-	TypedAST(ast_type type) : m_type{ type } {}
-    TypedAST(ast_type type, value_type vtype) : m_type {type}, m_vtype {vtype} {}
+    ast_vtype m_vtype;
+	TypedAST(ast_type type) : m_type{ type }, m_vtype {ast_vtype::Undefined} {}
+    TypedAST(ast_type type, ast_vtype vtype) : m_type {type}, m_vtype {vtype} {}
 
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
 };
 
 TypedAST* convertAST(AST*);
+void typeAST(TypedAST*);
+bool valid_vtype(TypedAST*);
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
@@ -34,7 +37,7 @@ struct TypedASTNumberLiteral : public TypedAST {
 	std::string const& text () { return m_token->m_text; }
 
 	TypedASTNumberLiteral() : 
-        TypedAST{ ast_type::NumberLiteral, value_type::Integer } {}
+        TypedAST{ ast_type::NumberLiteral, ast_vtype::Integer } {}
 };
 
 struct TypedASTStringLiteral : public TypedAST {
@@ -43,7 +46,7 @@ struct TypedASTStringLiteral : public TypedAST {
 	std::string const& text () { return m_token->m_text; }
 
 	TypedASTStringLiteral() : 
-        TypedAST{ ast_type::StringLiteral, value_type::String } {}
+        TypedAST{ ast_type::StringLiteral, ast_vtype::String } {}
 };
 
 struct TypedASTBooleanLiteral : public TypedAST {
@@ -52,13 +55,13 @@ struct TypedASTBooleanLiteral : public TypedAST {
 	std::string const& text () { return m_token->m_text; }
 
 	TypedASTBooleanLiteral() : 
-        TypedAST{ ast_type::BooleanLiteral, value_type::Boolean } {}
+        TypedAST{ ast_type::BooleanLiteral, ast_vtype::Boolean } {}
 };
 
 struct TypedASTNullLiteral : public TypedAST {
 
 	TypedASTNullLiteral() : 
-        TypedAST{ ast_type::NullLiteral, value_type::Null } {}
+        TypedAST{ ast_type::NullLiteral, ast_vtype::Null } {}
 };
 
 struct TypedASTObjectLiteral : public TypedAST {
@@ -67,21 +70,20 @@ struct TypedASTObjectLiteral : public TypedAST {
     // future feature 
     // the value type for objects must be followeb by a class identifier
 	TypedASTObjectLiteral() : 
-        TypedAST{ ast_type::ObjectLiteral, value_type::Object } {}
+        TypedAST{ ast_type::ObjectLiteral, ast_vtype::Object } {}
 };
 
 struct TypedASTArrayLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_elements;
 
-	TypedASTArrayLiteral() : 
-        TypedAST{ ast_type::ArrayLiteral, value_type::Array } {}
+	TypedASTArrayLiteral() : TypedAST{ ast_type::ArrayLiteral } {}
 };
 
 struct TypedASTDictionaryLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
 	TypedASTDictionaryLiteral() : 
-        TypedAST{ ast_type::DictionaryLiteral, value_type::Dictionary } {}
+        TypedAST{ ast_type::DictionaryLiteral, ast_vtype::Dictionary } {}
 };
 
 struct TypedASTFunctionLiteral : public TypedAST {
@@ -93,14 +95,14 @@ struct TypedASTFunctionLiteral : public TypedAST {
         TypedAST{ ast_type::FunctionLiteral } {}
 };
 
-// doesnt have a value_type
+// doesnt have a ast_vtype
 struct TypedASTDeclarationList : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_declarations;
 
 	TypedASTDeclarationList() : TypedAST{ ast_type::DeclarationList } {}
 };
 
-// doesnt have a value_type
+// doesnt have a ast_vtype
 struct TypedASTDeclaration : public TypedAST {
 	Token const* m_identifier_token;
 	Token const* m_typename_token { nullptr }; // can be nullptr
@@ -112,7 +114,7 @@ struct TypedASTDeclaration : public TypedAST {
 	TypedASTDeclaration() : TypedAST{ ast_type::Declaration } {}
 };
 
-// the value_type must be computed
+// the ast_vtype must be computed
 struct TypedASTIdentifier : public TypedAST {
 	Token const* m_token;
 
