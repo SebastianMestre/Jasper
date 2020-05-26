@@ -27,63 +27,63 @@ enum class ast_vtype {
 };
 
 enum class type_type {
-  builtin,
-  error,
-  reference,
-  function,
-  sum,
-  product,
-  polymorphic,
-  applied,
-  wildcard,
+	builtin,
+	error,
+	reference,
+	function,
+	sum,
+	product,
+	polymorphic,
+	applied,
+	wildcard,
 };
 
 struct Type {
-  type_type m_type;
+	type_type m_type;
 };
 
 struct Wildcard : Type {
-  int id;
+	int id;
 };
 
 struct Polymorphic : Type {
-  std::vector<int> forall_ids;
-  Type* m_base;
+	std::vector<int> forall_ids;
+	Type* m_base;
 };
 
 struct Applied : Type {
-  Polymorphic* m_base;
-  std::vector<Type*> args;
+	Polymorphic* m_base;
+	std::vector<Type*> args;
 };
 
 struct Error : Type {
-  // informacion para printear
+	// informacion para printear
 };
 
 struct Sum : Type {
-  std::vector<Type*> m_types;
+	std::vector<Type*> m_types;
 };
 
 struct Product : Type {
-  std::vector<Type*> m_types;
+	std::vector<Type*> m_types;
 };
 
 struct Builtin : Type {
-  void* def; // TODO: que va aca?
+	void* def; // TODO: que va aca?
 };
 
 struct Reference : Type {
-  Type* m_base;
+	Type* m_base;
 };
 
 struct Function : Type {
-  std::vector<Type*> arg_types;
-  Type* return_type;
+	std::vector<Type*> arg_types;
+	Type* return_type;
 };
 
 std::unordered_map<std::string, Type*> type_table = {
-  {"int", new Builtin{/* algo */}},
-  {"runtime_error", new Builtin{/* algo */}},
-  {"unit", new Builtin{/* algo */}},
-  {"unit", new Builtin{/* algo */}},
+	{"int", new Builtin{/* algo */}},
+	{"runtime_error", new Builtin{/* algo */}},
+	{"unit", new Builtin{/* algo */}},
+	{"unit", new Builtin{/* algo */}},
 };
