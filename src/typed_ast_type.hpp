@@ -26,6 +26,8 @@ enum class ast_vtype {
 	Wildcard
 };
 
+namespace TypeChecker {
+
 enum class type_type {
 	builtin,
 	error,
@@ -81,9 +83,11 @@ struct Function : Type {
 	Type* return_type;
 };
 
-std::unordered_map<std::string, Type*> type_table = {
+static std::unordered_map<std::string, Type*> type_table = {
 	{"int", new Builtin{/* algo */}},
 	{"runtime_error", new Builtin{/* algo */}},
 	{"unit", new Builtin{/* algo */}},
 	{"unit", new Builtin{/* algo */}},
 };
+
+}
