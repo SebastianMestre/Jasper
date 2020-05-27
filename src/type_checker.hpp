@@ -21,14 +21,11 @@ public:
 };
 
 class TC {
-protected:
-    GraphComponent m_root;
 public:
-    std::vector<GraphNode*> m_graph;
-    std::vector<GraphComponent*> m_dag; 
+    GraphComponent m_root;
     void createDag(TypedAST*);
 };
 
-GraphNode* createGraph(TypedAST*);
+GraphNode* create_graph(TypedAST*);
 
 }
