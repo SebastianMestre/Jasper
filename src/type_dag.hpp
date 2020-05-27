@@ -23,12 +23,16 @@ public:
     std::unordered_set<GraphComponent*> m_next;
 };
 
-class TC {
-public:
-    GraphComponent m_root;
+class Dag {
+protected:
     std::vector<GraphNode*> m_nodes;
-    GraphComponent* createDag(TypedAST*);
+
+    void transpose();
     void visit(GraphNode*);
+
+public:
+    GraphComponent* create(TypedAST*);
+    void test(GraphComponent*);
 };
 
 GraphNode* create_graph(TypedAST*);

@@ -1,35 +1,37 @@
-#include "type_checker.hpp"
+#include <cassert>
+
+#include "type_dag.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
 
 namespace TypeChecker {
 
-GraphComponent* TC::createDag(TypedAST* root) {
+void Dag::test(GraphComponent* dag) {
+    for (auto next : dag->m_next) {
+        test(next);
+    }
+}
+
+GraphComponent* Dag::create(TypedAST* root) {
     auto graph_root = create_graph(root);
 
     visit(graph_root);
 
-    // transpose graph
-    std::vector<GraphNode*> transposed;
     std::vector<GraphNode*> nodes_copy = m_nodes;
 
-    for (auto node : m_nodes) {
-        transposed.emplace_back(node->m_value);
-    }
+    transpose();
 
-    for (auto node : m_nodes) {
-        for (auto next : node->m_next) {
-            transposed[next->m_id]->m_next.push_back(node); 
-        }
-    }
+    std::vector<GraphNode*> transposed = m_nodes;
+    m_nodes.clear();
 
+    // find components
     std::vector<int> node_component(m_nodes.size(), -1);
     std::vector<GraphComponent*> components(m_nodes.size());
     int component_id = 0;
-    m_nodes.clear();
 
     for (int i = (int)transposed.size()-1; i > -1; i--) {
         if (transposed[i]->m_visited) {
+            assert(node_component[i] >= 0);
             continue;
         }
 
@@ -43,19 +45,21 @@ GraphComponent* TC::createDag(TypedAST* root) {
             components[component_id]->m_body.push_back(node->m_value);
         }
 
+        assert(node_component[i] >= 0);
         component_id++;
     }
 
     components.resize(component_id);
 
+    // link components
     for (auto node : nodes_copy) {
-        component_id = node_component[node->m_id];
+        auto component = components[node_component[node->m_id]];
 
         for (auto next : node->m_next) {
-            int next_component = node_component[next->m_id];
+            auto next_component = components[node_component[next->m_id]];
 
-            if (next_component != component_id) {
-                components[component_id]->m_next.insert(components[next_component]);
+            if (node_component[node->m_id] != node_component[next->m_id]) {
+                component->m_next.insert(next_component);
             }
         }
     }
@@ -63,7 +67,26 @@ GraphComponent* TC::createDag(TypedAST* root) {
     return components[graph_root->m_id];
 }
 
-void TC::visit(GraphNode* node) {
+void Dag::transpose() {
+    auto  normal = m_nodes;
+    auto& transposed = m_nodes;
+
+    transposed.clear();
+
+    for (auto node : normal) {
+        transposed.emplace_back(node->m_value);
+    }
+
+    for (auto node : normal) {
+        for (auto next : node->m_next) {
+            auto trans_node = transposed[next->m_id];
+
+            trans_node->m_next.push_back(node);
+        }
+    }
+}
+
+void Dag::visit(GraphNode* node) {
     node->m_visited = true;
 
     for (auto& next : node->m_next) {

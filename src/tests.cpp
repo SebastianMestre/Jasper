@@ -8,6 +8,7 @@
 #include "value.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
+#include "type_dag.hpp"
 // #include "environment.hpp"
 
 void assert_equals(int expected, int received) {
@@ -721,5 +722,33 @@ int main() {
 
 	assert_equals(0, type_decl_list.execute());
 
-	
+	Tester type_dag{R"(
+		f := fn () {
+			return g();
+		};
+		g := fn () {
+			return f();
+		};
+
+		__invoke := fn () {
+			f();
+		}
+	)"};
+
+	type_dag.add_test(+[](Type::Environment& env)->int{
+		TokenArray ta;
+		auto top_level_call_ast = parse_expression("__invoke()", ta);
+		auto top_level_call = get_unique(top_level_call_ast.m_result);	
+		
+		TypeChecker::Dag dag;
+		auto root = dag.create(top_level_call.get());
+
+		// si no se rompe funciona
+		dag.test(root);
+
+		std::cout << "@ line " << __LINE__ << ": Success " << std::endl;
+		return 0;
+	});
+
+	assert_equals(0, type_dag.execute());
 }
