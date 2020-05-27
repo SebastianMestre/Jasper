@@ -74,7 +74,8 @@ void Dag::transpose() {
     transposed.clear();
 
     for (auto node : normal) {
-        transposed.emplace_back(node->m_value);
+        auto tras_node = new GraphNode {node->m_value};
+        transposed.emplace_back(tras_node);
     }
 
     for (auto node : normal) {
@@ -203,7 +204,7 @@ GraphNode* create_graph(TypedAST* ast) {
 	case ast_type::ObjectLiteral:
 	case ast_type::ArrayLiteral:
 	case ast_type::DictionaryLiteral:
-        break;
+        assert(0);
     }
 }
 
