@@ -83,11 +83,11 @@ struct Function : Type {
 	Type* return_type;
 };
 
-static std::unordered_map<std::string, Type*> type_table = {
-	{"int", new Builtin{/* algo */}},
-	{"runtime_error", new Builtin{/* algo */}},
-	{"unit", new Builtin{/* algo */}},
-	{"unit", new Builtin{/* algo */}},
-};
+/* static std::unordered_map<std::string, Type*> type_table = {
+	{"int", new Builtin{}},
+	{"runtime_error", new Builtin{}},
+	{"unit", new Builtin{}},
+	{"unit", new Builtin{}},
+}; */
 
 }
