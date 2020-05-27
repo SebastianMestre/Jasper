@@ -4,20 +4,76 @@
 
 namespace TypeChecker {
 
-void TC::createDag(TypedAST* root) {
+GraphComponent* TC::createDag(TypedAST* root) {
     auto graph_root = create_graph(root);
 
-    // dfs to list the nodes
+    visit(graph_root);
 
-    // traspose graph
-    /* for (auto& node : m_node_list) {
-        
-    } */
+    // transpose graph
+    std::vector<GraphNode*> transposed;
+    std::vector<GraphNode*> nodes_copy = m_nodes;
 
-    // dfs on trasposed graph
-    /* for (auto& node : m_node_list) {
-        // visit(node);
-    } */
+    for (auto node : m_nodes) {
+        transposed.emplace_back(node->m_value);
+    }
+
+    for (auto node : m_nodes) {
+        for (auto next : node->m_next) {
+            transposed[next->m_id]->m_next.push_back(node); 
+        }
+    }
+
+    std::vector<int> node_component(m_nodes.size(), -1);
+    std::vector<GraphComponent*> components(m_nodes.size());
+    int component_id = 0;
+    m_nodes.clear();
+
+    for (int i = (int)transposed.size()-1; i > -1; i--) {
+        if (transposed[i]->m_visited) {
+            continue;
+        }
+
+        visit(transposed[i]);
+
+        while(m_nodes.size()) {
+            auto node = m_nodes.back();
+            m_nodes.pop_back();
+
+            node_component[node->m_id] = component_id;
+            components[component_id]->m_body.push_back(node->m_value);
+        }
+
+        component_id++;
+    }
+
+    components.resize(component_id);
+
+    for (auto node : nodes_copy) {
+        component_id = node_component[node->m_id];
+
+        for (auto next : node->m_next) {
+            int next_component = node_component[next->m_id];
+
+            if (next_component != component_id) {
+                components[component_id]->m_next.insert(components[next_component]);
+            }
+        }
+    }
+
+    return components[graph_root->m_id];
+}
+
+void TC::visit(GraphNode* node) {
+    node->m_visited = true;
+
+    for (auto& next : node->m_next) {
+        if (!next->m_visited) {
+            visit(next);
+        }
+    }
+
+    node->m_id = m_nodes.size();
+    m_nodes.push_back(node);
 }
 
 GraphNode* create_graph(TypedASTDeclaration* ast) {
