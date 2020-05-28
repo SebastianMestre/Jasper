@@ -12,6 +12,7 @@ OBJNAMES := \
 	execute.o \
 	garbage_collector.o \
 	lexer.o \
+	match_identifiers.o \
 	parser.o \
 	parse.o \
 	string_view.o \
