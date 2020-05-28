@@ -49,7 +49,7 @@ FakeEnvironment::FakeEnvironment() {
 }
 
 TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
-	auto scan_scope = [& name = name](Scope& scope) -> TypedASTDeclaration* {
+	auto scan_scope = [name = name](Scope& scope) -> TypedASTDeclaration* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
 			return it->second;

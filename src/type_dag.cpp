@@ -4,11 +4,18 @@
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
 
+#include <iostream>
+template<typename T>
+void print(T value) {
+	// print enum
+	std::cout << static_cast<typename std::underlying_type<T>::type>(value) << std::endl;
+} 
+
 namespace TypeChecker {
 
 void Dag::test(GraphComponent* dag) {
-    for (auto next : dag->m_next) {
-        test(next);
+    for (auto& next : dag->m_next) {
+        test(next.get());
     }
 }
 
@@ -23,6 +30,9 @@ GraphComponent* Dag::create(TypedAST* root) {
 
     std::vector<GraphNode*> transposed = m_nodes;
     m_nodes.clear();
+
+    for (auto node : transposed) 
+        node->m_visited = false;
 
     // find components
     std::vector<int> node_component(m_nodes.size(), -1);
@@ -59,12 +69,21 @@ GraphComponent* Dag::create(TypedAST* root) {
             auto next_component = components[node_component[next->m_id]];
 
             if (node_component[node->m_id] != node_component[next->m_id]) {
-                component->m_next.insert(next_component);
+                component->m_next.insert(
+                    std::unique_ptr<GraphComponent>(next_component));
             }
         }
     }
 
-    return components[graph_root->m_id];
+    auto root_component = components[node_component[graph_root->m_id]];
+
+    // need to delete nodes in nodes_copy and transposed
+    for (int i = 0; i < (int)nodes_copy.size(); i++) {
+        delete nodes_copy[i];
+        delete transposed[i];
+    }
+
+    return root_component;
 }
 
 void Dag::transpose() {
@@ -74,8 +93,8 @@ void Dag::transpose() {
     transposed.clear();
 
     for (auto node : normal) {
-        auto tras_node = new GraphNode {node->m_value};
-        transposed.emplace_back(tras_node);
+        auto trans_node = new GraphNode {node->m_value};
+        transposed.push_back(trans_node);
     }
 
     for (auto node : normal) {
@@ -100,23 +119,28 @@ void Dag::visit(GraphNode* node) {
     m_nodes.push_back(node);
 }
 
-GraphNode* create_graph(TypedASTDeclaration* ast) {
-    auto node_representation = new GraphNode {ast};
-    auto value = create_graph(ast->m_value.get());
-    node_representation->m_next.push_back(value);
-    return node_representation;
+GraphNode* Dag::create_graph(TypedASTDeclaration* ast) {
+    auto node = new GraphNode {ast};
+    m_declarations[ast] = node;
+
+    auto value_node = create_graph(ast->m_value.get());
+    node->m_next.push_back(value_node);
+    
+    return node;
 }
 
-GraphNode* create_graph(TypedASTDeclarationList* ast) {
+GraphNode* Dag::create_graph(TypedASTDeclarationList* ast) {
     auto node = new GraphNode {ast};
+
     for (auto& decl : ast->m_declarations) {
         auto decl_node = create_graph(decl.get());
         node->m_next.push_back(decl_node);
     }
+
     return node;
 }
 
-GraphNode* create_graph(TypedASTBinaryExpression* ast) {
+GraphNode* Dag::create_graph(TypedASTBinaryExpression* ast) {
     auto node = new GraphNode {ast};
 
     auto lhs = create_graph(ast->m_lhs.get());
@@ -128,7 +152,7 @@ GraphNode* create_graph(TypedASTBinaryExpression* ast) {
     return node;
 }
 
-GraphNode* create_graph(TypedASTFunctionLiteral* ast) {
+GraphNode* Dag::create_graph(TypedASTFunctionLiteral* ast) {
     auto node = new GraphNode {ast};
 
     auto body = create_graph(ast->m_body.get());
@@ -142,7 +166,7 @@ GraphNode* create_graph(TypedASTFunctionLiteral* ast) {
     return node;
 }
 
-GraphNode* create_graph(TypedASTCallExpression* ast) {
+GraphNode* Dag::create_graph(TypedASTCallExpression* ast) {
     auto node = new GraphNode {ast};
 
     auto callee_node = create_graph(ast->m_callee.get());
@@ -156,7 +180,7 @@ GraphNode* create_graph(TypedASTCallExpression* ast) {
     return node;
 }
 
-GraphNode* create_graph(TypedASTBlock* ast) {
+GraphNode* Dag::create_graph(TypedASTBlock* ast) {
     auto node = new GraphNode {ast};
 
     for (auto& stmt : ast->m_body) {
@@ -167,7 +191,7 @@ GraphNode* create_graph(TypedASTBlock* ast) {
     return node;
 }
 
-GraphNode* create_graph(TypedASTReturnStatement* ast) {
+GraphNode* Dag::create_graph(TypedASTReturnStatement* ast) {
     auto node = new GraphNode {ast};
 
     auto value_node = create_graph(ast->m_value.get());
@@ -176,7 +200,23 @@ GraphNode* create_graph(TypedASTReturnStatement* ast) {
     return node;
 }
 
-GraphNode* create_graph(TypedAST* ast) {
+GraphNode* Dag::create_graph(TypedASTIdentifier* ast) {
+    auto node = new GraphNode {ast};
+
+    assert(ast->m_declaration);
+
+    auto decl_node = m_declarations[ast->m_declaration];
+    node->m_next.push_back(decl_node);
+
+    return node;
+}
+
+GraphNode* Dag::create_graph(TypedASTNumberLiteral* ast) {return new GraphNode {ast};}
+GraphNode* Dag::create_graph(TypedASTBooleanLiteral* ast) {return new GraphNode {ast};}
+GraphNode* Dag::create_graph(TypedASTStringLiteral* ast) {return new GraphNode {ast};}
+GraphNode* Dag::create_graph(TypedASTNullLiteral* ast) {return new GraphNode {ast};}
+
+GraphNode* Dag::create_graph(TypedAST* ast) {    
     switch(ast->type()) {
     case ast_type::Declaration:
         return create_graph(static_cast<TypedASTDeclaration*>(ast));
@@ -195,12 +235,17 @@ GraphNode* create_graph(TypedAST* ast) {
 	case ast_type::ReturnStatement:
         return create_graph(static_cast<TypedASTReturnStatement*>(ast));
 	case ast_type::Identifier:
+        return create_graph(static_cast<TypedASTIdentifier*>(ast));
+    case ast_type::NumberLiteral:
+        return create_graph(static_cast<TypedASTNumberLiteral*>(ast));
+	case ast_type::StringLiteral:
+        return create_graph(static_cast<TypedASTStringLiteral*>(ast));
+	case ast_type::BooleanLiteral:
+        return create_graph(static_cast<TypedASTBooleanLiteral*>(ast));
+	case ast_type::NullLiteral:
+        return create_graph(static_cast<TypedASTNullLiteral*>(ast));
 	case ast_type::IfStatement:
 	case ast_type::ForStatement:
-    case ast_type::NumberLiteral:
-	case ast_type::StringLiteral:
-	case ast_type::BooleanLiteral:
-	case ast_type::NullLiteral:
 	case ast_type::ObjectLiteral:
 	case ast_type::ArrayLiteral:
 	case ast_type::DictionaryLiteral:

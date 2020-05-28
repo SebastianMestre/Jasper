@@ -9,6 +9,7 @@
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
 #include "type_dag.hpp"
+#include "match_identifiers.hpp"
 // #include "environment.hpp"
 
 void assert_equals(int expected, int received) {
@@ -750,12 +751,9 @@ int main() {
 
 	assert_equals(0, pizza_operator.execute());
 
-	// TODO integrar match_identifiers con type_dag para poder testear su funcionamiento
-	/*
 	Tester type_dag{R"(
 		f := fn () {
-		};
-		g := fn () {
+			return f();
 		};
 	)"};
 
@@ -764,6 +762,8 @@ int main() {
 		auto top_level_call_ast = parse_expression("f()", ta);
 		auto top_level_call = get_unique(top_level_call_ast.m_result);	
 		
+		TypeChecker::match_identifiers(top_level_call.get());
+
 		TypeChecker::Dag dag;
 		auto root = dag.create(top_level_call.get());
 
@@ -774,5 +774,5 @@ int main() {
 		return 0;
 	});
 
-	assert_equals(0, type_dag.execute()); */
+	assert_equals(0, type_dag.execute());
 }
