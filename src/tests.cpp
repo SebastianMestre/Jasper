@@ -722,6 +722,34 @@ int main() {
 
 	assert_equals(0, type_decl_list.execute());
 
+	Tester pizza_operator{R"(
+		f := fn(x) => x + 7;
+		__invoke := fn() => 6 |> f();
+	)"};
+	
+	pizza_operator.add_test(+[](Type::Environment& env)->int{
+
+		TokenArray ta;
+		auto top_level_call_ast = parse_expression("__invoke()", ta);
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
+
+		auto* result = unboxed(eval(top_level_call.get(), env));
+		if(!result)
+			return 1;
+
+		if (result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if (as_int->m_value != 13)
+			return 3;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert_equals(0, pizza_operator.execute());
+
 	// TODO integrar match_identifiers con type_dag para poder testear su funcionamiento
 	/*
 	Tester type_dag{R"(

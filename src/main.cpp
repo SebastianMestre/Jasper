@@ -42,6 +42,8 @@ int main() {
 				Type::print(result);
 			else
 				std::cout << "(nullptr)\n";
+
+			delete top_level_call;
 		}
 
 		return 0;
