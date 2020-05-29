@@ -64,24 +64,39 @@ Mono new_mono () {
 const Mono arrow = new_mono();
 const Mono ident = new_mono(); // identity
 
-Mono hm_var (Poly type, Mono target) {
-    // esta regla se aplica en todas las pruebas de manera previa a
-    // la aplicacion de otras reglas para constatar que un politipo
-    // puede trasnformarse en el tipo deseado
-    //
-    // para una aplicacion practica esta regla ha de ejecutarse de
-    // antemano y su resultado sera idealmente target o de otra forma
-    // tirara error
-    for (auto& id : type.forall_ids) {
-        auto type = mono_id[id];
+struct Env {
+    std::unordered_map<std::string, Poly> types;
+    std::unordered_map<int, Poly> by_id;
+};
 
-        if (type.id == target.id) {
-            return target;
+// hm_var no deberia tirar errores o realizar validaciones
+// solo deberia devolver el tipo mas general
+Mono hm_var (Poly type, Env env) {
+    // por otro lado externamente se tendria que pasar un polytipe
+    // ya parametrizado para que de esa forma la base del polytipe
+    // sea un tipo sin variables libres y var devuelve esa base
+    //
+    // es todo lo que puede hacer var desde un aspecto practico, ya
+    // que si se esperase que var hiciese las sustituciones la funcion
+    // ya no seria fiel a su respectiva regla
+    //
+    // aun asi puede realizar la validacion de que ninguna tipo este
+    // libre
+    
+    auto is_hinted = [env](int var)->bool{
+        return env.by_id.count(var);
+    };
+    
+    for (auto& id : type.forall_ids) {
+        if (!is_hinted(id)) {
+            assert(0);
         }
     }
-
-    assert(0);
+    
+    return type.base; 
 }
+
+void unify(Mono t1, Mono t2) {}
 
 Mono hm_app (Mono t1, Mono t2) {
     Mono t3;
@@ -107,10 +122,6 @@ Mono hm_abs (Mono t1, Mono t2) {
 
     return mono_id[id];
 }
-
-struct Env {
-    std::unordered_map<std::string, Poly> types;
-};
 
 void free(Expression* e, std::vector<std::string>& vars) {
     switch (e->type) {
