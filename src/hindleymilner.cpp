@@ -56,12 +56,13 @@ int id = 0;
 // mapa de identificadores a tipos
 std::unordered_map<int, Mono> mono_id;
 
-int new_id () {
-    return id++;
+Mono new_mono () {
+    mono_id[id].id = id;
+    return mono_id[id++];
 }
 
-const Mono arrow {new_id()};
-const Mono ident {new_id()}; // identity
+const Mono arrow = new_mono();
+const Mono ident = new_mono(); // identity
 
 Mono hm_var (Poly type, Mono target) {
     // esta regla se aplica en todas las pruebas de manera previa a
@@ -85,26 +86,26 @@ Mono hm_var (Poly type, Mono target) {
 Mono hm_app (Mono t1, Mono t2) {
     Mono t3;
 
-    Param fun {
-        new_id(),
+    mono_id[id] = Param {
+        id,
         &arrow,
         {&t2, &t3}
     };
 
-    unify(t1, fun);
+    unify(t1, mono_id[id++]);
 
     return t3;
 }
 
 Mono hm_abs (Mono t1, Mono t2) {
     // se debe verificar que t1 es _newvar_
-    Param fun {
-        new_id(),
+    mono_id[id] = Param {
+        id++,
         &arrow,
         {&t1, &t2}
     };
 
-    return fun;
+    return mono_id[id];
 }
 
 struct Env {
@@ -148,8 +149,8 @@ void hm_let (Poly& x, Expression e1, Env env) {
 
     for (auto& var : free_vars) {
         if (!is_hinted(var)) {
-            // TODO linkear el id al nuevo tipo
-            x.forall_ids.push_back(new_id());
+            // TODO marcar que variables tienen el tipo nuevo
+            x.forall_ids.push_back(new_mono().id);
         }
     }
 }
