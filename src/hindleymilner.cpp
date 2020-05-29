@@ -252,23 +252,20 @@ void hm_gen() {
 } // namespace TypeChecker
 
 
-int id = 0;
-int new_id () {
-	return id++;
-}
+namespace HM {
+
+struct TypeDescriptor {
+	int argcount;
+};
 
 struct Type {
 	virtual bool is_var () const { return false; }
 };
-
-namespace HM {
-
 struct Term : Type {
 	int name;
 	std::vector<Type*> args;
 };
 struct Var : Type {
-	TypeId id;
 	Type* instance { nullptr };
 	bool is_var() const override { return true; }
 };
@@ -278,7 +275,7 @@ const int function_name = 0;
 const int array_name    = 1;
 
 Var* new_var() {
-	return new Var { new_id() };
+	return new Var;
 }
 Term new_array_type (Type* stores) {
 	auto result = new Term();
@@ -305,7 +302,7 @@ void unify(Type* a, Type* b) {
 	if (a->is_var()) {
 		if(a != b){
 			auto va = static_cast<Var*>(a);
-			assert(!occurs(va, b));
+			assert(!occurs_in(va, b));
 			va->instance = b;
 		}
 	} else if (b->is_var()) {
@@ -348,7 +345,7 @@ bool occurs_in (Var* v, Type* t) {
 	
 	auto ttt = static_cast<Term*>(tt);
 	for(Type* c : ttt->args)
-		if(occursin(v, c))
+		if(occurs_in(v, c))
 			return true;
 
 	return false;
@@ -369,6 +366,7 @@ std::vector<Type*> deduce_all(std::vector<AST*> vals, Env& env, set<string>& ng)
 
 struct Ident : AST {
 	string s;
+	Type* type;
 
 	Type* deduce (Env& env, set<string>& ng) override {
 		return get_type(s, env, ng);
