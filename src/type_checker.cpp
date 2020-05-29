@@ -109,6 +109,7 @@ void TypeChecker::deduce (TypedAST* ast) {
 
         // not sure about this
         for (auto& arg : args) {
+            deduce(arg.get());
             args_type.params.push_back(arg->m_vtype.base);
         }
 
