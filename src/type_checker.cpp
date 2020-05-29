@@ -19,6 +19,9 @@ void TypeChecker::deduce (TypedAST* ast) {
     // ValueLiteral -> aplicar [VAR]
     // Declaration -> aplicar [LET]
     // Identifier -> aplicar [VAR]
+    // FunctionLiteral -> aplicar [ABS]
+    // CallExpression -> aplicar [APP]
+
     // Todas las llamadas a VAR requieren que
     // antes se genere un tipo Poly
     if (ast->type() == ast_type::NumberLiteral) {
@@ -56,10 +59,11 @@ void TypeChecker::deduce (TypedAST* ast) {
 
     if (ast->type() == ast_type::Declaration) {
         // TODO appendear al environment los hints de tipos
-        auto type = Poly {
-            ident,
-            {}
-        };
+
+        auto& value = static_cast<TypedASTDeclaration*>(ast)->m_value;
+        deduce(value->get());
+
+        auto type = value->m_vtype;
 
         // expression es una representacion de el valor que
         // se asigna a la variable
@@ -72,10 +76,53 @@ void TypeChecker::deduce (TypedAST* ast) {
         // en el valor asignados. sea
         // valores_utilizados = gather_free_variables(ast->m_value)
 
-        auto& value = static_cast<TypedASTDeclaration*>(ast)->m_value;
-        auto  free_vars = gather_free_variables(value->get());
+        auto free_vars = gather_free_variables(value->get());
 
         ast->m_vtype = hm_let(type, free_vars, env);
+    }
+
+    // Antes de llamar a ABS se deben tipar los argumentos
+    // y el cuerpo
+    if (ast->type() == ast_type::FunctionLiteral) {
+        auto  args = static_cast<TypedASTFunctionLiteral*>(ast)->m_args;
+        auto& body = static_cast<TypedASTFunctionLiteral*>(ast)->m_body;
+
+        deduce(args);
+        deduce(body);
+
+        auto body_type = body->m_vtype;
+        auto args_type = Param {
+            ident,
+            {}
+        };
+
+        for (auto& arg : args) {
+            args_type.params.push_back(&arg->m_vtype.base);
+        }
+
+        ast->m_vtype = hm_abs(args_type, body_type.base);
+    }
+
+    // Antes de llamar a APP se deben tipar los valores y
+    // verificar que la funcion este tipada
+    if (ast->type() == ast_type::CallExpression) {
+        auto args = static_cast<TypedASTFunctionLiteral*>(ast)->m_args;
+        auto callee = static_cast<TypedASTFunctionLiteral*>(ast)->m_callee;
+
+        deduce(args);
+        deduce(callee);
+
+        auto callee_type = callee->m_vtype;
+        auto args_type = Param {
+            ident,
+            {}
+        };
+
+        for (auto& arg : args) {
+            args_type.params.push_back(&arg->m_vtype.base);
+        }
+
+        ast->m_vtype = hm_abs(callee_type, args_type);
     }
 }
 

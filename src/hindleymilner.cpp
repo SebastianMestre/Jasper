@@ -15,7 +15,7 @@ struct Mono {
 // tipos parametricos
 struct Param : Mono {
     const Mono* base;
-    const std::vector<Mono*> params;
+    std::vector<Mono*> params;
 }; 
 
 struct Poly {
@@ -61,7 +61,7 @@ Mono new_mono () {
     return mono_id[id++];
 }
 
-Mono arrow = new_mono();
+const Mono arrow = new_mono();
 Mono ident = new_mono(); // identity
 
 // Constants declaration

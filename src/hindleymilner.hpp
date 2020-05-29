@@ -26,7 +26,7 @@ struct Mono {
 // tipos parametricos
 struct Param : Mono {
     const Mono* base;
-    const std::vector<Mono*> params;
+    std::vector<Mono*> params;
 }; 
 
 struct Poly {

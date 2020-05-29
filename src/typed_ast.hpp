@@ -8,6 +8,7 @@
 #include "token_type.hpp"
 #include "value_type.hpp"
 #include "typed_ast_type.hpp"
+#include "hindleymilner.hpp"
 
 struct AST;
 
@@ -16,7 +17,7 @@ protected:
 	ast_type m_type;
 
 public:
-    ast_vtype m_vtype;
+    HindleyMilner::Poly m_vtype;
 	TypedAST(ast_type type) : m_type{ type }, m_vtype {ast_vtype::Undefined} {}
     TypedAST(ast_type type, ast_vtype vtype) : m_type {type}, m_vtype {vtype} {}
 
