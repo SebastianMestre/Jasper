@@ -57,7 +57,7 @@ inline Type* prune(Type* t) {
 	if (!vt->instance)
 		return vt;
 
-	vt->instance = prune(vt->instance);
+	return vt->instance = prune(vt->instance);
 }
 
 // v must be prunned before passing
