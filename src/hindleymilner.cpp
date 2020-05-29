@@ -235,7 +235,12 @@ void hm_gen() {
 	//
 	// Let's go through it:
 	// the type '(a,b,c)' has free variables {a,b,c}
-	// the type 'forall a.(a,b,c)' has free variables {b,c}, since a is bound to the 'forall a.' qualifier.
+	// the type 'forall a. (a,b,c)' has free variables {b,c}, since a
+	// is bound to the 'forall a.' qualifier.
+	// However, we should probably have implicit forall whenever a
+	// type is explicitly written, so '(a,b,c)' should implicitly
+	// expand to 'forall a b c. (a,b,c)'.
+	// This makes things nicer to use.
 
 	// if
 	//   e : s
@@ -245,3 +250,145 @@ void hm_gen() {
 }
 
 } // namespace TypeChecker
+
+
+int id = 0;
+int new_id () {
+	return id++;
+}
+
+struct Type {
+	virtual bool is_var () const { return false; }
+};
+
+namespace HM {
+
+struct Term : Type {
+	int name;
+	std::vector<Type*> args;
+};
+struct Var : Type {
+	TypeId id;
+	Type* instance { nullptr };
+	bool is_var() const override { return true; }
+};
+
+
+const int function_name = 0;
+const int array_name    = 1;
+
+Var* new_var() {
+	return new Var { new_id() };
+}
+Term new_array_type (Type* stores) {
+	auto result = new Term();
+	result->name = array_name;
+	result->args.push_back(stores);
+	return result;
+}
+Term new_function_type(std::vector<Type*> arg_types, Type* return_type) {
+	// We treat functions as any other polymorphic type (aka Term)
+	// There is something really elegant about not having special
+	// cases for things that are so seemingly fundamental
+	auto result = new Term();
+	result->name = function_name;
+	for(auto* arg_type : arg_types)
+		result->args.push_back(arg_type);
+	result->args.push_back(return_type);
+	return result;
+}
+
+
+// Basically join on disjoint set
+// TODO: maybe decouple the data structure from the logic?
+void unify(Type* a, Type* b) {
+	if (a->is_var()) {
+		if(a != b){
+			auto va = static_cast<Var*>(a);
+			assert(!occurs(va, b));
+			va->instance = b;
+		}
+	} else if (b->is_var()) {
+		return unify(b, a);
+	} else {
+		auto ta = static_cast<Term*>(a);
+		auto tb = static_cast<Term*>(b);
+
+		assert(ta->name == tb->name);
+		assert(ta->args.size() == tb->args.size());
+
+		for (int i { 0 }; i != ta->args.size(); ++i)
+			unify(ta->args[i], tb->args[i]);
+	}
+}
+
+// Basically find on disjoint set
+// TODO: maybe decouple the data structure from the logic?
+Type* prune(Type* t) {
+	assert(t);
+
+	if (!t->is_var())
+		return t;
+
+	auto vt = static_cast<Var*>(t);
+
+	if (!vt->instance)
+		return vt;
+
+	vt->instance = prune(vt->instance);
+}
+
+// v must be its own representative.
+// (i.e. you have to give a prunned Variable)
+bool occurs_in (Var* v, Type* t) {
+	auto tt = prune(t);
+
+	if(v == tt) return true;
+	if(tt->is_var()) return false;
+	
+	auto ttt = static_cast<Term*>(tt);
+	for(Type* c : ttt->args)
+		if(occursin(v, c))
+			return true;
+
+	return false;
+}
+
+
+
+struct AST {
+	virtual Type* deduce (Env& env, set<string>& ng) = 0;
+};
+
+std::vector<Type*> deduce_all(std::vector<AST*> vals, Env& env, set<string>& ng) {
+	std::vector<Type*> result;
+	for(auto ast : vals)
+		result.push_back(ast->deduce(env, ng));
+	return result;
+}
+
+struct Ident : AST {
+	string s;
+
+	Type* deduce (Env& env, set<string>& ng) override {
+		return get_type(s, env, ng);
+	}
+};
+
+struct Call : AST {
+	Type* deduce (Env& env, set<string>& ng) override {
+		auto callee_type = callee->deduce(env, ng);
+		auto arg_types = deduce_all(args, env, ng);
+		auto result_type = new_var();
+		// We assume all callables are functions. This can be
+		// troublesome when dealing with callable objects.
+		// Maybe we can desugar callable object calls to regular
+		// function calls?
+		unify(new_function_type(arg_types, result_type), callee_type);
+		return result_type;
+	}
+};
+
+//TODO: Env y get_type
+
+}
