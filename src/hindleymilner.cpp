@@ -10,6 +10,8 @@ namespace TypeChecker {
  * deduction, so this should be kept separate from the representation
  * that's used in that task.
  *
+ * The only thing we need to know about a type is its kind (i.e. the
+ * amount of type arguments it takes)
  *
 struct TypeDescriptor {
 	int kind; // essentially the amount of type arguments
@@ -30,21 +32,14 @@ struct Term : Mono {
 	std::vector<Mono*> args;
 };
 
-struct Poly {
-	std::vector<int> forall;
-	Mono* base;
-
-	int kind() { return forall.size(); }
-};
-
 namespace Builtin {
 
 	// Ultimately, all types are polytypes. It just so
 	// happens that some of them take no arguments.
-	// auto Int = Poly { {}, Native { /* make_int, (Any)->Integer */ } };
-	// auto Float = Poly { {}, Native { /* make_float, (Any)->Float */ } };
-	// auto Array = Poly { { 1 }, Native { /* make_array, (Any...)->Array */ } };
-	// auto Dictionary = Poly { { 1 }, Native { /* make_dictionary, (Any...)->Array */ } };
+	// auto Int = Poly { ... };
+	// auto Float = Poly { ... };
+	// auto Array = Poly { ... };
+	// auto Dictionary = Poly { ... };
 
 } // namespace Builtin
 
@@ -294,7 +289,7 @@ void unify(Type* a, Type* b) {
 		if(a != b){
 			auto va = static_cast<Var*>(a);
 			assert(!occurs_in(va, b));
-			va->instance = b;
+			va->instance = b; // repr[a] = b
 		}
 	} else if (b->is_var()) {
 		return unify(b, a);
@@ -323,7 +318,7 @@ Type* prune(Type* t) {
 	if (!vt->instance)
 		return vt;
 
-	vt->instance = prune(vt->instance);
+	return vt->instance = prune(vt->instance); // repr[a] = find(a);
 }
 
 // v must be its own representative.
