@@ -29,7 +29,7 @@ void TypeChecker::deduce (TypedAST* ast) {
             integer,
             {}
         };
-        ast->m_vtype = hm_var(type, env);
+        ast->m_vtype = type;
     }
 
     if (ast->type() == ast_type::StringLiteral) {
@@ -37,7 +37,7 @@ void TypeChecker::deduce (TypedAST* ast) {
             string,
             {}
         };
-        ast->m_vtype = hm_var(type, env);
+        ast->m_vtype = type;
     }
 
     if (ast->type() == ast_type::BooleanLiteral) {
@@ -45,7 +45,7 @@ void TypeChecker::deduce (TypedAST* ast) {
             boolean,
             {}
         };
-        ast->m_vtype = hm_var(type, env);
+        ast->m_vtype = type;
     }
 
     if (ast->type() == ast_type::Identifier) {
@@ -54,29 +54,18 @@ void TypeChecker::deduce (TypedAST* ast) {
         assert(env.types.count(identifier));
 
         auto type = env.types[identifier];
-        ast->m_vtype = hm_var(type, env);
+        ast->m_vtype = type;
     }
 
     if (ast->type() == ast_type::Declaration) {
         // TODO appendear al environment los hints de tipos
 
         auto& value = static_cast<TypedASTDeclaration*>(ast)->m_value;
-        deduce(value->get());
+        deduce(value.get());
 
         auto type = value->m_vtype;
 
-        // expression es una representacion de el valor que
-        // se asigna a la variable
-        //
-        // se deberia pasar una estructura representativa del
-        // valor asignado para que hm_let detecte que variables
-        // estan siendo usadas
-        //
-        // podria reemplazarse con un vector de los tipos usados
-        // en el valor asignados. sea
-        // valores_utilizados = gather_free_variables(ast->m_value)
-
-        auto free_vars = gather_free_variables(value->get());
+        auto free_vars = gather_free_variables(value.get());
 
         ast->m_vtype = hm_let(type, free_vars, env);
     }
@@ -87,42 +76,51 @@ void TypeChecker::deduce (TypedAST* ast) {
         auto  args = static_cast<TypedASTFunctionLiteral*>(ast)->m_args;
         auto& body = static_cast<TypedASTFunctionLiteral*>(ast)->m_body;
 
-        deduce(args);
-        deduce(body);
+        std::vector<Poly> args_types;
+        Poly body_type;
 
-        auto body_type = body->m_vtype;
-        auto args_type = Param {
-            ident,
-            {}
-        };
+        deduce(body.get());
+        body_type = body->m_vtype;
 
         for (auto& arg : args) {
-            args_type.params.push_back(&arg->m_vtype.base);
+            deduce(arg.get());
+            args_types.push_back(arg->m_vtype);
         }
 
-        ast->m_vtype = hm_abs(args_type, body_type.base);
+        auto func_type = hm_abs(args_types, hm_var(body_type, env));
+
+        ast->m_vtype = Poly{
+            func_type,
+            {}
+        };
     }
 
     // Antes de llamar a APP se deben tipar los valores y
     // verificar que la funcion este tipada
     if (ast->type() == ast_type::CallExpression) {
-        auto args = static_cast<TypedASTFunctionLiteral*>(ast)->m_args;
-        auto callee = static_cast<TypedASTFunctionLiteral*>(ast)->m_callee;
+        auto  args = static_cast<TypedASTCallExpression*>(ast)->m_args;
+        auto& callee = static_cast<TypedASTCallExpression*>(ast)->m_callee;
 
-        deduce(args);
-        deduce(callee);
+        Param args_type;
+        Poly callee_type;
 
-        auto callee_type = callee->m_vtype;
-        auto args_type = Param {
-            ident,
-            {}
-        };
+        deduce(callee.get());
+        callee_type = callee->m_vtype;
 
+        // not sure about this
         for (auto& arg : args) {
-            args_type.params.push_back(&arg->m_vtype.base);
+            args_type.params.push_back(arg->m_vtype.base);
         }
 
-        ast->m_vtype = hm_abs(callee_type, args_type);
+        // maybe an extra configuration step like
+        // args_type.base = array
+        //
+        // would be required
+
+        ast->m_vtype = Poly{
+            hm_app(hm_var(callee_type, env), args_type),
+            {}
+        };
     }
 }
 
