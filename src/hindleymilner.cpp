@@ -3,47 +3,38 @@
 
 namespace TypeChecker {
 
+/* TODO: these link whatever the type deduction system knows about a
+ * type, and what it actually is.
+ *
+ * Really, most details about a type are not needed when doing type
+ * deduction, so this should be kept separate from the representation
+ * that's used in that task.
+ *
+ *
+struct TypeDescriptor {
+	int kind; // essentially the amount of type arguments
+};
+struct Sum : TypeDescriptor {};
+struct Prod : TypeDescriptor {};
+struct Builtin : TypeDescriptor {};
+*/
+
 struct Mono {};
 
-struct Function : Mono {
-	std::vector<Mono*> arg_type;
-	Mono* return_type;
-};
-
-struct Wildcard : Mono {
+struct Variable : Mono {
 	int id;
 };
 
-struct Native {
-	// NOTE: this seems like a chicken and egg kind of situation.
-	// What should the Integer constructor even take? Of course,
-	// It could take Integers. But that is pretty useless. It could
-	// also take Floats. But how do we even get those floats in the
-	// first place? Maybe it should just take anything and return
-	// an integer or an error.
-	// Or maybe the type cannot be expressed in the type system but
-	// we can detect at compile time whenever something bad gets
-	// passed in, and reject it with a nice error message.
-	//
-	// Same thing happens with Float.
-	//
-	// Expressing the type of the Array constructor requires variadic
-	// arguments, which I have no idea how to work with during type
-	// deduction.
-	//
-	// Even more complicated, Dictionaries take a variable number of
-	// arguments, but the amount should be even, and every other
-	// argument has to be a string (to act as a key)
-	Poly constructor_type;
-
-	// NOTE: Should this be here?
-	// It seems like it couples the TypeChecker with the runtime
-	NativeFunctionType* constructor;
+struct Term : Mono {
+	int base_id;
+	std::vector<Mono*> args;
 };
 
 struct Poly {
 	std::vector<int> forall;
 	Mono* base;
+
+	int kind() { return forall.size(); }
 };
 
 namespace Builtin {
@@ -67,8 +58,8 @@ namespace Builtin {
 // Poly{
 //   { 1 }
 //   Function {
-//     { Builtin::Array ( Wildcard{ 1 } ) },
-//     Builtin::Array ( tuple({ Wildcard{ 1 }, Builtin::Int })
+//     { Builtin::Array ( Variable { 1 } ) },
+//     Builtin::Array ( tuple({ Variable { 1 }, Builtin::Int })
 //   }
 // }
 //
@@ -125,7 +116,7 @@ void hm_app(App* c) {
 	// is not the same type as
 	//
 	// forall a. (a, forall b. (b)->b) -> a
-	// 
+	//
 	// and, furthermore, the second one is not allowed.
 
 	// if
@@ -367,9 +358,12 @@ std::vector<Type*> deduce_all(std::vector<AST*> vals, Env& env, set<string>& ng)
 struct Ident : AST {
 	string s;
 	Type* type;
+	Decl* decl;
 
 	Type* deduce (Env& env, set<string>& ng) override {
-		return get_type(s, env, ng);
+		// since we have access to our own declaration, we don't need
+		// to do a name lookup
+		return decl->type(env,ng);
 	}
 };
 
