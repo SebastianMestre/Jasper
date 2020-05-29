@@ -61,8 +61,13 @@ Mono new_mono () {
     return mono_id[id++];
 }
 
-const Mono arrow = new_mono();
-const Mono ident = new_mono(); // identity
+Mono arrow = new_mono();
+Mono ident = new_mono(); // identity
+
+// Constants declaration
+Mono integer = new_mono();
+Mono string = new_mono();
+Mono boolean = new_mono();
 
 struct Env {
     std::unordered_map<std::string, Poly> types;
@@ -144,15 +149,15 @@ void free(Expression* e, std::vector<std::string>& vars) {
     }
 }
 
-void hm_let (Poly& x, Expression e1, Env env) {
+Poly hm_let (Poly x, std::vector<std::string> free_vars, Env env) {
     // el tipo x debe castearse para ser el mas generico
     x.base = ident;
     // el env serían los hints de tipos por lo que hay
     // que atravesar todos los tipos de t1 viendo cuales
     // no estan hinteados
     
-    std::vector<std::string> free_vars;
-    free(&e1, free_vars);
+    // std::vector<std::string> free_vars;
+    // free(&e1, free_vars);
 
     auto is_hinted = [env](std::string var)->bool{
         return env.types.count(var);
@@ -164,6 +169,8 @@ void hm_let (Poly& x, Expression e1, Env env) {
             x.forall_ids.push_back(new_mono().id);
         }
     }
+
+    return x;
 }
 
 }
