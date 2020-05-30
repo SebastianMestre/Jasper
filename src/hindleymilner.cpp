@@ -1,4 +1,5 @@
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
 #include <cassert>
@@ -15,7 +16,7 @@ namespace HindleyMilner {
 int id = NATIVE_TYPES;
 
 // mapa de identificadores a tipos
-std::vector<Mono*> mono_id{};
+std::unordered_map<int, Mono*> mono_id;
 
 Mono* new_mono () {
     mono_id[id] = new Mono {id};
