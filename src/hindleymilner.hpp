@@ -36,20 +36,20 @@ public:
 };
 
 #define NATIVE_TYPES 6
-const Mono arrow   {mono_type::Mono, 0};
-const Mono ident   {mono_type::Mono, 1};
-const Mono integer {mono_type::Mono, 2};
-const Mono string  {mono_type::Mono, 3};
-const Mono boolean {mono_type::Mono, 4};
-const Mono array   {mono_type::Mono, 5};
+const Mono Arrow   {mono_type::Mono, 0};
+const Mono Void    {mono_type::Mono, 1};
+const Mono Integer {mono_type::Mono, 2};
+const Mono String  {mono_type::Mono, 3};
+const Mono Boolean {mono_type::Mono, 4};
+const Mono Array   {mono_type::Mono, 5};
 
 Mono* new_mono();
 Mono* new_param();
 Mono* new_instance(const Mono);
 
-Mono* hm_var (Poly*);
+Mono* hm_var (Poly);
 Mono* hm_app (Mono*, Mono*);
 Mono* hm_abs (Mono*, Mono*);
-Poly* hm_let (Poly*, std::vector<int>);
+Poly hm_let (Poly, std::vector<int>);
 
 }

@@ -1,8 +1,7 @@
 #include <vector>
+#include <unordered_set>
 #include <algorithm>
 #include <cassert>
-#include <unordered_map>
-#include <unordered_set>
 #include <string>
 
 #include "hindleymilner.hpp"
@@ -16,7 +15,7 @@ namespace HindleyMilner {
 int id = NATIVE_TYPES;
 
 // mapa de identificadores a tipos
-std::unordered_map<int, Mono*> mono_id{};
+std::vector<int, Mono*> mono_id{};
 
 Mono* new_mono () {
     mono_id[id] = new Mono {id};
@@ -33,53 +32,44 @@ Mono* new_instance (const Mono base) {
     return mono_id[id++];
 }
 
-Mono* instanciate(Mono* base) {
-    // TODO
+Mono* instanciate(Mono* base, std::unordered_set<int>& forall) {
+    // this function should recursionate over the tree type
+    // changing the quantified types in the forall specifier
+    // for new fresh types
+    
     if (base->type == mono_type::Mono) {
-        mono_id[id] = new Mono {mono_type::Mono, id};
+        if (forall.count(base->id)) {
+            mono_id[id] = new Mono {mono_type::Mono, id};
+        } else {
+            return base;
+        }
     } else {
-        // los variables cuantificadas se tienen que 
-        // reemplazar por variables nuevas
         auto p_base = static_cast<Param*>(base);
 
         mono_id[id] = new Param {id};
 
-        auto inst = static_cast<Param*>(mono_id[id]);
+        Mono* fresh_base = instanciate(p_base->base, forall);
 
-        
-        std::sort(p_base->params.begin(), p_base->params.end());
-        std::sort(type.forall_ids.begin(), type.forall_ids.end());
-
-        int i = 0;
-        for (auto& var_id : type.forall_ids) {
-            while (var_id > p_base->params[i].id && 
-                   var_id > p_base->base.id) i++;
-            
-            if (p_base->base.id == var_id) {
-                // could be param
-                p_base->base = new_mono();
-            }
-
-            if (p_base->params[i].id == var_id) {
-                // could be param
-                p_base->params[i] = new_mono();
-            }
+        std::vector<Mono*> fresh_params;
+        for (auto param : p_base->params) {
+            fresh_params.push_back(instanciate(p_base->base, forall));
         }
         
-        inst->base   = p_base->base;
-        inst->params = p_base->params;
+        auto param = static_cast<Param*>(mono_id[id]);
+        param->base   = fresh_base;
+        param->params = fresh_params;
     }
+
+    return mono_id[id++];
 }
 
-Mono* hm_var (Poly* type) {
-    // es todo lo que puede hacer var desde un aspecto practico, ya
-    // que si se esperase que var hiciese las sustituciones la funcion
-    // ya no seria fiel a su respectiva regla
-    //
-    // aun asi puede realizar la validacion de que ninguna tipo este
-    // libre
-    
-    mono_id[id] = instanciate(type->base);
+Mono* instanciate(Poly type) {
+    std::unordered_set<int> forall {type.forall_ids.begin(), type.forall_ids.end()};
+    return instanciate(type.base, forall);
+}
+
+Mono* hm_var (Poly type) {
+    mono_id[id] = instanciate(type);
     
     return mono_id[id++]; 
 }
@@ -93,7 +83,7 @@ Mono* hm_app (Mono* t1, Mono* t2) {
     mono_id[id] = new Param {id};
 
     Param* param = static_cast<Param*>(mono_id[id]);
-    param->base = new_instance(arrow);
+    param->base = new_instance(Arrow);
     param->params = std::vector<Mono*>{t2, t3};
 
     unify(t1, mono_id[id++]);
@@ -105,18 +95,18 @@ Mono* hm_abs (Mono* args, Mono* ret) { // ret(urn)
     mono_id[id] = new Param {id};
 
     Param* param = static_cast<Param*>(mono_id[id]);
-    param->base = new_instance(arrow);
+    param->base = new_instance(Arrow);
     param->params = std::vector<Mono*>{args, ret};
 
     return mono_id[id++];
 }
 
-Poly* hm_let (Poly* value, std::vector<int> free_vars) {
+Poly hm_let (Poly value, std::vector<int> free_vars) {
     // las variables libres deben asignarse al
     // tipo poly en los valores forall
 
     for (auto id : free_vars) {
-        value->forall_ids.push_back(id);
+        value.forall_ids.push_back(id);
     }
 
     return value;

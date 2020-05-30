@@ -2,11 +2,16 @@
 #include <cassert>
 
 #include "hindleymilner.hpp"
+#include "type_checker.hpp"
 #include "typed_ast.hpp"
 
 namespace HindleyMilner {
 
 class TypeChecker {
+    // TODO function check 
+    // One of the check function responsabilities is to
+    // check all return values inside a function declaration
+    // return the same type
     Env env;
     void deduce(TypedAST*);
     void deduce(TypedASTNumberLiteral*);
@@ -21,7 +26,6 @@ class TypeChecker {
     bool is_bound(Mono*);
 };
 
-// TODO funcion check que tras deduce checkee los tipos
 // TODO assert vtype after deduce calls
 
 bool TypeChecker::is_bound(Mono* type) {
@@ -82,7 +86,7 @@ void TypeChecker::gather_free_variables(
 
 void TypeChecker::deduce(TypedASTNumberLiteral* ast) {
     auto type = Poly {
-        &integer, // new variable associated to integer
+        new_instance(Integer),
         {}
     };
     ast->m_vtype = type;
@@ -90,7 +94,7 @@ void TypeChecker::deduce(TypedASTNumberLiteral* ast) {
 
 void TypeChecker::deduce(TypedASTStringLiteral* ast) {
     auto type = Poly {
-        &string,
+        new_instance(String),
         {}
     };
     ast->m_vtype = type;
@@ -98,7 +102,7 @@ void TypeChecker::deduce(TypedASTStringLiteral* ast) {
 
 void TypeChecker::deduce(TypedASTBooleanLiteral* ast) {
     auto type = Poly {
-        boolean,
+        new_instance(Boolean),
         {}
     };
     ast->m_vtype = type;
@@ -130,20 +134,35 @@ void TypeChecker::deduce(TypedASTDeclaration* ast) {
 }
 
 void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
-    auto  args = ast->m_args;
-    auto& body = ast->m_body;
+    auto args = ast->m_args;
 
     Mono* args_type = new_param();
     auto p_args_type = static_cast<Param*>(args_type);
 
-    // should deduce using particular rule
-    // to get the return value
-    Mono return_type;
-    
-    // the return statements must return a monotype
-    // value
+    Mono* return_type = nullptr;
 
-    p_args_type->base = array;
+    deduce(ast->m_body.get());
+    assert(ast->m_body->type() == ast_type::Block); // TODO check
+    auto body = static_cast<TypedASTBlock*>(ast->m_body.get());
+
+    for (auto& stmt : body->m_body) {
+        if (stmt->type() == ast_type::ReturnStatement) {
+            auto type = stmt->m_vtype;
+
+            // the return statements must return a monotype
+            // value
+            assert(type.forall_ids.size() == 0);
+            return_type = type.base;
+
+            break;
+        }
+    }
+
+    if (!return_type) {
+        return_type = new_instance(Void);
+    }
+
+    p_args_type->base = new_instance(Array);
 
     for (auto& arg : args) {
         deduce(arg.get());
@@ -170,23 +189,21 @@ void TypeChecker::deduce (TypedASTCallExpression* ast) {
     auto p_args_type = static_cast<Param*>(args_type);
     Poly callee_type;
 
-    // what does callee really store
-    // if it's not an identifier maybe it's not right
-    // to use it right away
+    assert(callee->type() == ast_type::Identifier);
+
     deduce(callee.get());
     callee_type = callee->m_vtype;
 
-    p_args_type->base = array;
+    p_args_type->base = new_instance(Array);
 
     for (auto& arg : args) {
         deduce(arg.get());
 
         auto arg_type = arg->m_vtype.base;
-
         p_args_type->params.push_back(arg_type);
     }
 
-    auto result_type = hm_app(hm_var(callee_type, env), args_type);
+    auto result_type = hm_app(hm_var(callee_type), args_type);
 
     ast->m_vtype = Poly{
         result_type,
