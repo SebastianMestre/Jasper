@@ -125,7 +125,7 @@ void TypeChecker::deduce(TypedASTDeclaration* ast) {
 }
 
 void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
-    auto args = ast->m_args;
+    auto& args = ast->m_args;
 
     Mono* args_type = new_param();
     auto p_args_type = static_cast<Param*>(args_type);
@@ -173,7 +173,7 @@ void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
 }
 
 void TypeChecker::deduce (TypedASTCallExpression* ast) {
-    auto  args = ast->m_args;
+    auto& args = ast->m_args;
     auto& callee = ast->m_callee;
 
     Mono* args_type = new_param();

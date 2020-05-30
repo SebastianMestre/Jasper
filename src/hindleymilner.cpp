@@ -15,7 +15,7 @@ namespace HindleyMilner {
 int id = NATIVE_TYPES;
 
 // mapa de identificadores a tipos
-std::vector<int, Mono*> mono_id{};
+std::vector<Mono*> mono_id{};
 
 Mono* new_mono () {
     mono_id[id] = new Mono {id};
@@ -52,7 +52,7 @@ Mono* instanciate(Mono* base, std::unordered_set<int>& forall) {
 
         std::vector<Mono*> fresh_params;
         for (auto param : p_base->params) {
-            fresh_params.push_back(instanciate(p_base->base, forall));
+            fresh_params.push_back(instanciate(param, forall));
         }
         
         auto param = static_cast<Param*>(mono_id[id]);

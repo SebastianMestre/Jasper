@@ -11,6 +11,7 @@ OBJNAMES := \
 	eval.o \
 	execute.o \
 	garbage_collector.o \
+	hindleymilner.o \
 	lexer.o \
 	match_identifiers.o \
 	parser.o \
@@ -19,6 +20,7 @@ OBJNAMES := \
 	tester.o \
 	token.o \
 	typed_ast.o \
+	type_checker.o \
 	value.o \
 	native.o
 
