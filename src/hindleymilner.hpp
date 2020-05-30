@@ -1,8 +1,6 @@
 #pragma once
 
-#include <unordered_map>
 #include <vector>
-#include <string>
 
 namespace HindleyMilner {
 
@@ -11,44 +9,47 @@ enum class mono_type {
     Param
 };
 
-struct Mono {
+class Mono {
+public:
     mono_type type;
     int id;
 
-    bool operator<(Mono);
+    Mono(int _id): type(mono_type::Mono), id(_id) {}
+    Mono(mono_type _type, int _id): type(_type), id(_id) {}
 };
 
+// TODO hacer unique_ptr todos los punteros a mono
 // las funciones son un subconjuntos de los
 // tipos parametricos
-struct Param : Mono {
-    Mono base;
-    std::vector<Mono> params;
+class Param : public Mono {
+public:
+    Mono* base {nullptr};
+    std::vector<Mono*> params {};
+
+    Param(int _id): Mono(mono_type::Param, _id) {}
 }; 
 
-struct Poly {
-    Mono base;
+class Poly {
+public:
+    Mono* base;
     std::vector<int> forall_ids;
 };
 
-struct Env {
-    std::unordered_map<std::string, Poly> types;
-};
+#define NATIVE_TYPES 6
+const Mono arrow   {mono_type::Mono, 0};
+const Mono ident   {mono_type::Mono, 1};
+const Mono integer {mono_type::Mono, 2};
+const Mono string  {mono_type::Mono, 3};
+const Mono boolean {mono_type::Mono, 4};
+const Mono array   {mono_type::Mono, 5};
 
-// Mono arrow;
-// Mono ident;
-// Mono integer;
-// Mono string;
-// Mono boolean;
-// Mono array;
+Mono* new_mono();
+Mono* new_param();
+Mono* new_instance(const Mono);
 
-void unify (Mono, Mono);
-
-Mono new_mono();
-Mono new_param();
-
-Mono hm_var (Poly, Env);
-Mono hm_app (Mono, Mono);
-Mono hm_abs (Mono, Mono);
-Poly hm_let (Poly, std::vector<std::string>, Env);
+Mono* hm_var (Poly*);
+Mono* hm_app (Mono*, Mono*);
+Mono* hm_abs (Mono*, Mono*);
+Poly* hm_let (Poly*, std::vector<int>);
 
 }

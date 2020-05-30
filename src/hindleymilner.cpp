@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 #include "hindleymilner.hpp"
@@ -12,58 +13,40 @@ namespace HindleyMilner {
 // al inicio del programa mas los wildcards que se vayan 
 // definiendo
 
-int id = 0;
+int id = NATIVE_TYPES;
 
 // mapa de identificadores a tipos
-std::unordered_map<int, Mono> mono_id;
+std::unordered_map<int, Mono*> mono_id{};
 
-Mono new_mono () {
-    mono_id[id] = Mono {mono_type::Mono, id};
+Mono* new_mono () {
+    mono_id[id] = new Mono {id};
     return mono_id[id++];
 }
 
-Mono new_param () {
-    mono_id[id] = Param {mono_type::Mono, id};
+Mono* new_param () {
+    mono_id[id] = new Param {id};
     return mono_id[id++];
 }
 
-const Mono arrow = new_mono();
-Mono ident = new_mono(); // identity
-
-// Constants declaration
-Mono integer = new_mono();
-Mono string = new_mono();
-Mono boolean = new_mono();
-Mono array = new_mono();
-
-struct Env {
-    std::unordered_map<std::string, Poly> types;
-};
-
-bool Mono::operator<(Mono other) {
-    return id < other.id;
+Mono* new_instance (const Mono base) {
+    mono_id[id] = new Mono {base.id};
+    return mono_id[id++];
 }
 
-Mono hm_var (Poly type, Env env) {
-    // es todo lo que puede hacer var desde un aspecto practico, ya
-    // que si se esperase que var hiciese las sustituciones la funcion
-    // ya no seria fiel a su respectiva regla
-    //
-    // aun asi puede realizar la validacion de que ninguna tipo este
-    // libre
-    
-    Mono base = type.base;
-    if (base.type == mono_type::Mono) {
-        mono_id[id] = Mono {mono_type::Mono, id};
+Mono* instanciate(Mono* base) {
+    // TODO
+    if (base->type == mono_type::Mono) {
+        mono_id[id] = new Mono {mono_type::Mono, id};
     } else {
-        // los variables de tipo cuantificadas se tienen que 
+        // los variables cuantificadas se tienen que 
         // reemplazar por variables nuevas
-        auto p_base = static_cast<Param*>(&base);
+        auto p_base = static_cast<Param*>(base);
 
-        mono_id[id] = Param {mono_type::Param,id};
+        mono_id[id] = new Param {id};
 
-        auto inst = static_cast<Param*>(&mono_id[id]);
+        auto inst = static_cast<Param*>(mono_id[id]);
 
+        
         std::sort(p_base->params.begin(), p_base->params.end());
         std::sort(type.forall_ids.begin(), type.forall_ids.end());
 
@@ -86,52 +69,54 @@ Mono hm_var (Poly type, Env env) {
         inst->base   = p_base->base;
         inst->params = p_base->params;
     }
+}
+
+Mono* hm_var (Poly* type) {
+    // es todo lo que puede hacer var desde un aspecto practico, ya
+    // que si se esperase que var hiciese las sustituciones la funcion
+    // ya no seria fiel a su respectiva regla
+    //
+    // aun asi puede realizar la validacion de que ninguna tipo este
+    // libre
+    
+    mono_id[id] = instanciate(type->base);
     
     return mono_id[id++]; 
 }
 
-void unify(Mono t1, Mono t2) {}
+void unify(Mono* t1, Mono* t2) {}
 
-Mono hm_app (Mono t1, Mono t2) {
+Mono* hm_app (Mono* t1, Mono* t2) {
     // maybe should use Param instead of mono
-    Mono t3 = new_mono();
+    Mono* t3 = new_mono();
 
-    mono_id[id] = Param {
-        mono_type::Param,
-        id,
-        arrow,
-        {t2, t3}
-    };
+    mono_id[id] = new Param {id};
+
+    Param* param = static_cast<Param*>(mono_id[id]);
+    param->base = new_instance(arrow);
+    param->params = std::vector<Mono*>{t2, t3};
 
     unify(t1, mono_id[id++]);
 
     return t3;
 }
 
-Mono hm_abs (Mono callee, Mono args) {
-    auto type = Param {
-        mono_type::Param,
-        id++,
-        arrow,
-        {callee, args}
-    };
+Mono* hm_abs (Mono* args, Mono* ret) { // ret(urn)
+    mono_id[id] = new Param {id};
 
-    return type;
+    Param* param = static_cast<Param*>(mono_id[id]);
+    param->base = new_instance(arrow);
+    param->params = std::vector<Mono*>{args, ret};
+
+    return mono_id[id++];
 }
 
-Poly hm_let (Poly value, std::vector<std::string> free_vars, Env env) {
-    // el env serían los hints de tipos por lo que hay
-    // que atravesar todos los tipos de t1 viendo cuales
-    // no estan hinteados
+Poly* hm_let (Poly* value, std::vector<int> free_vars) {
+    // las variables libres deben asignarse al
+    // tipo poly en los valores forall
 
-    auto is_hinted = [env](std::string var)->bool{
-        return env.types.count(var);
-    };
-
-    for (auto& var : free_vars) {
-        if (!is_hinted(var)) {
-            value.forall_ids.push_back(new_mono().id);
-        }
+    for (auto id : free_vars) {
+        value->forall_ids.push_back(id);
     }
 
     return value;
