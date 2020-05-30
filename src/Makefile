@@ -19,7 +19,6 @@ OBJNAMES := \
 	tester.o \
 	token.o \
 	typed_ast.o \
-	type_checker_types.o \
 	value.o \
 	native.o
 
