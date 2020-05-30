@@ -22,7 +22,7 @@ class TypeChecker {
     void deduce(TypedASTFunctionLiteral*);
     void deduce(TypedASTCallExpression*);
     void gather_free_variables(TypedAST*, std::vector<int>&);
-    void gather_free_variables(Param*, std::vector<int>&);
+    void gather_free_variables(Mono*, std::vector<int>&);
     bool is_bound(Mono*);
 };
 
@@ -33,24 +33,21 @@ bool TypeChecker::is_bound(Mono* type) {
 }
 
 void TypeChecker::gather_free_variables(
-        Param* type, std::vector<int>& free_vars) {
+        Mono* type, std::vector<int>& free_vars) {
     // the objective of the function is to recursionate over the
     // type tree and get the free variables
-    auto base = type->base;
-    auto params = type->params;
 
-    assert(base->type == mono_type::Mono);
-    if (!is_bound(base)) {
-        free_vars.push_back(base->id);
-    }
+    if (type->type == mono_type::Mono) {
+        if (!is_bound(type)) {
+            free_vars.push_back(type->id);
+        }
+    } else {
+        auto p_type = static_cast<Param*>(type);
 
-    for (auto param : params) {
-        if (param->type == mono_type::Mono) {
-            if (!is_bound(base)) {
-                free_vars.push_back(base->id);
-            }
-        } else {
-            gather_free_variables(static_cast<Param*>(param), free_vars);
+        gather_free_variables(p_type->base, free_vars);
+
+        for (auto param : p_type->params) {
+            gather_free_variables(param, free_vars);
         }
     }
 }
@@ -74,13 +71,7 @@ void TypeChecker::gather_free_variables(
         auto decl = static_cast<TypedASTDeclaration*>(arg.get());
         auto base = decl->m_vtype.base;
 
-        if (base->type == mono_type::Mono) {
-            if (!is_bound(base)) {
-                free_vars.push_back(base->id);
-            }
-        } else {
-            gather_free_variables(static_cast<Param*>(base), free_vars);
-        }
+        gather_free_variables(base, free_vars);
     }
 }
 
