@@ -18,8 +18,8 @@ protected:
 
 public:
     HindleyMilner::Poly m_vtype;
-	TypedAST(ast_type type) : m_type{ type }, m_vtype {ast_vtype::Undefined} {}
-    TypedAST(ast_type type, ast_vtype vtype) : m_type {type}, m_vtype {vtype} {}
+	TypedAST(ast_type type) : m_type{ type } {}
+    TypedAST(ast_type type, ast_vtype vtype) : m_type {type} {}
 
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;

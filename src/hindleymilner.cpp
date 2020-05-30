@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include <cassert>
 #include <unordered_map>
 #include <string>
@@ -17,7 +18,12 @@ int id = 0;
 std::unordered_map<int, Mono> mono_id;
 
 Mono new_mono () {
-    mono_id[id].id = id;
+    mono_id[id] = Mono {mono_type::Mono, id};
+    return mono_id[id++];
+}
+
+Mono new_param () {
+    mono_id[id] = Param {mono_type::Mono, id};
     return mono_id[id++];
 }
 
@@ -28,19 +34,17 @@ Mono ident = new_mono(); // identity
 Mono integer = new_mono();
 Mono string = new_mono();
 Mono boolean = new_mono();
+Mono array = new_mono();
 
 struct Env {
     std::unordered_map<std::string, Poly> types;
-    std::unordered_map<int, Poly> by_id;
 };
 
-// hm_var no deberia tirar errores o realizar validaciones
-// solo deberia devolver el tipo mas general
+bool Mono::operator<(Mono other) {
+    return id < other.id;
+}
+
 Mono hm_var (Poly type, Env env) {
-    // por otro lado externamente se tendria que pasar un polytipe
-    // ya parametrizado para que de esa forma la base del polytipe
-    // sea un tipo sin variables libres y var devuelve esa base
-    //
     // es todo lo que puede hacer var desde un aspecto practico, ya
     // que si se esperase que var hiciese las sustituciones la funcion
     // ya no seria fiel a su respectiva regla
@@ -52,13 +56,35 @@ Mono hm_var (Poly type, Env env) {
     if (base.type == mono_type::Mono) {
         mono_id[id] = Mono {mono_type::Mono, id};
     } else {
+        // los variables de tipo cuantificadas se tienen que 
+        // reemplazar por variables nuevas
         auto p_base = static_cast<Param*>(&base);
-        mono_id[id] = Param {
-            mono_type::Param,
-            id,
-            p_base->base,
-            p_base->params
-        };
+
+        mono_id[id] = Param {mono_type::Param,id};
+
+        auto inst = static_cast<Param*>(&mono_id[id]);
+
+        std::sort(p_base->params.begin(), p_base->params.end());
+        std::sort(type.forall_ids.begin(), type.forall_ids.end());
+
+        int i = 0;
+        for (auto& var_id : type.forall_ids) {
+            while (var_id > p_base->params[i].id && 
+                   var_id > p_base->base.id) i++;
+            
+            if (p_base->base.id == var_id) {
+                // could be param
+                p_base->base = new_mono();
+            }
+
+            if (p_base->params[i].id == var_id) {
+                // could be param
+                p_base->params[i] = new_mono();
+            }
+        }
+        
+        inst->base   = p_base->base;
+        inst->params = p_base->params;
     }
     
     return mono_id[id++]; 
@@ -82,26 +108,12 @@ Mono hm_app (Mono t1, Mono t2) {
     return t3;
 }
 
-Mono hm_abs (std::vector<Poly> args, Mono callee) {
-    // maybe a base tipe like array could be passed
-    Param args_type {mono_type::Param, id};
-
-    for (Poly arg : args) {
-        // the type of the args can be overwritten without
-        // problems for the global state of the types
-        //
-        // that means we don't have to create an instation
-        // of the arg before we use it
-        args_type.params.push_back(arg.base);
-    }
-
-    mono_id[id++] = args_type;
-    
+Mono hm_abs (Mono callee, Mono args) {
     auto type = Param {
         mono_type::Param,
         id++,
         arrow,
-        {callee, args_type}
+        {callee, args}
     };
 
     return type;
