@@ -49,7 +49,8 @@ FakeEnvironment::FakeEnvironment() {
 }
 
 TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
-	auto scan_scope = [& name = name](Scope& scope) -> TypedASTDeclaration* {
+	auto scan_scope
+	    = [](Scope& scope, std::string const& name) -> TypedASTDeclaration* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
 			return it->second;
@@ -58,7 +59,7 @@ TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
 
 	// iterate until we are no longer nested, excluding the global scope
 	for (int i = m_scopes.size() - 1; i > 0; --i) {
-		auto ptr = scan_scope(m_scopes[i]);
+		auto ptr = scan_scope(m_scopes[i], name);
 		if (ptr)
 			return ptr;
 
@@ -68,7 +69,7 @@ TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
 	}
 
 	// now scan the global scope
-	auto ptr = scan_scope(m_scopes[0]);
+	auto ptr = scan_scope(m_scopes[0], name);
 	if (ptr)
 		return ptr;
 
