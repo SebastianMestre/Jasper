@@ -7,25 +7,6 @@
 
 namespace HindleyMilner {
 
-class TypeChecker {
-    // TODO function check 
-    // One of the check function responsabilities is to
-    // check all return values inside a function declaration
-    // return the same type
-    Env env;
-    void deduce(TypedAST*);
-    void deduce(TypedASTNumberLiteral*);
-    void deduce(TypedASTStringLiteral*);
-    void deduce(TypedASTBooleanLiteral*);
-    void deduce(TypedASTDeclaration*);
-    void deduce(TypedASTIdentifier*);
-    void deduce(TypedASTFunctionLiteral*);
-    void deduce(TypedASTCallExpression*);
-    void gather_free_variables(TypedAST*, std::vector<int>&);
-    void gather_free_variables(Mono*, std::vector<int>&);
-    bool is_bound(Mono*);
-};
-
 // TODO assert vtype after deduce calls
 
 bool TypeChecker::is_bound(Mono* type) {
@@ -120,16 +101,11 @@ void TypeChecker::deduce(TypedASTDeclaration* ast) {
     
     gather_free_variables(value.get(), free_vars);
 
-    ast->m_vtype = hm_let(value->m_vtype, free_vars);
+    ast->m_vtype = hm_let(type, free_vars);
     env.types[identifier] = ast->m_vtype;
 }
 
 void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
-    auto& args = ast->m_args;
-
-    Mono* args_type = new_param();
-    auto p_args_type = static_cast<Param*>(args_type);
-
     Mono* return_type = nullptr;
 
     deduce(ast->m_body.get());
@@ -141,7 +117,6 @@ void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
             auto type = stmt->m_vtype;
 
             // the return statements must return a monotype
-            // value
             assert(type.forall_ids.size() == 0);
             return_type = type.base;
 
@@ -153,15 +128,21 @@ void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
         return_type = new_instance(Void);
     }
 
-    p_args_type->base = new_instance(Array);
+    auto& args = ast->m_args;
+
+    Param* args_type = static_cast<Param*>(new_param());
+
+    args_type->base = new_instance(Array);
 
     for (auto& arg : args) {
         deduce(arg.get());
 
-        // maybe should instantiate the base
         auto arg_type = arg->m_vtype.base;
 
-        p_args_type->params.push_back(arg_type);
+        // arg should be monotype
+        assert(arg->m_vtype.forall_ids.size() == 0);
+
+        args_type->params.push_back(arg_type);
     }
 
     auto func_type = hm_abs(args_type, return_type);
@@ -176,8 +157,7 @@ void TypeChecker::deduce (TypedASTCallExpression* ast) {
     auto& args = ast->m_args;
     auto& callee = ast->m_callee;
 
-    Mono* args_type = new_param();
-    auto p_args_type = static_cast<Param*>(args_type);
+    Param* args_type = static_cast<Param*>(new_param());
     Poly callee_type;
 
     assert(callee->type() == ast_type::Identifier);
@@ -185,13 +165,17 @@ void TypeChecker::deduce (TypedASTCallExpression* ast) {
     deduce(callee.get());
     callee_type = callee->m_vtype;
 
-    p_args_type->base = new_instance(Array);
+    args_type->base = new_instance(Array);
 
     for (auto& arg : args) {
         deduce(arg.get());
 
         auto arg_type = arg->m_vtype.base;
-        p_args_type->params.push_back(arg_type);
+
+        // arg should be monotype
+        assert(arg->m_vtype.forall_ids.size() == 0);
+
+        args_type->params.push_back(arg_type);
     }
 
     auto result_type = hm_app(hm_var(callee_type), args_type);

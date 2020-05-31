@@ -9,13 +9,11 @@
 
 namespace HindleyMilner {
 
-// Los tipos van a estar limitados a las ids predefinidas
-// al inicio del programa mas los wildcards que se vayan 
-// definiendo
-
+// the monotypes' id shouldn't start before the native
+// types id
 int id = NATIVE_TYPES;
 
-// mapa de identificadores a tipos
+// map from id to monotype
 std::unordered_map<int, Mono*> mono_id;
 
 Mono* new_mono () {
