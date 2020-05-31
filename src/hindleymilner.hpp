@@ -19,14 +19,18 @@ public:
 };
 
 // TODO hacer unique_ptr todos los punteros a mono
-// las funciones son un subconjuntos de los
-// tipos parametricos
+// tipo parametrico puede ser desde
+// Ej: funcion a -> b (infija)
+//     lista   list a
+//     mapa    map  a b
+//     lista de funcion list (a -> b)
 class Param : public Mono {
 public:
-    Mono* base {nullptr};
+    const Mono* base; // responsabilidad del programador no poner variables de base
     std::vector<Mono*> params {};
 
-    Param(int _id): Mono(mono_type::Param, _id) {}
+    Param(int _id, const Mono* _base): 
+        Mono(mono_type::Param, _id), base(_base) {}
 }; 
 
 class Poly {
@@ -44,8 +48,15 @@ const Mono Boolean {mono_type::Mono, 4};
 const Mono Array   {mono_type::Mono, 5};
 
 Mono* new_mono();
-Mono* new_param();
+Mono* new_param(const Mono);
 Mono* new_instance(const Mono);
+
+// representative devuelve la instancia mas
+// refinada del tipo que se pasa
+// Maybe it's a good idea to have a class named
+// representative and limit the operations of
+// mono
+Mono* representative(Mono*);
 
 class Env;
 

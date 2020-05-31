@@ -10,7 +10,10 @@ namespace HindleyMilner {
 // TODO assert vtype after deduce calls
 
 bool Env::is_bound(Mono* type) {
-    return bounded_types.count(type->id);
+    // is bound deberia checkear si el tipo representativo
+    // de type (osea el mas actual o mas refinado) esta boundeado
+    Mono* rep = representative(type);
+    return bounded_types.count(rep->id);
 }
 
 void TypeChecker::gather_free_variables(
@@ -25,7 +28,7 @@ void TypeChecker::gather_free_variables(
     } else {
         auto p_type = static_cast<Param*>(type);
 
-        gather_free_variables(p_type->base, free_vars);
+        // p_type->base is not a free variable
 
         for (auto param : p_type->params) {
             gather_free_variables(param, free_vars);
@@ -130,9 +133,7 @@ void TypeChecker::deduce(TypedASTFunctionLiteral* ast) {
 
     auto& args = ast->m_args;
 
-    Param* args_type = static_cast<Param*>(new_param());
-
-    args_type->base = new_instance(Array);
+    Param* args_type = static_cast<Param*>(new_param(Array));
 
     for (auto& arg : args) {
         deduce(arg.get());
@@ -157,15 +158,13 @@ void TypeChecker::deduce (TypedASTCallExpression* ast) {
     auto& args = ast->m_args;
     auto& callee = ast->m_callee;
 
-    Param* args_type = static_cast<Param*>(new_param());
+    Param* args_type = static_cast<Param*>(new_param(Array));
     Poly callee_type;
 
     assert(callee->type() == ast_type::Identifier);
 
     deduce(callee.get());
     callee_type = callee->m_vtype;
-
-    args_type->base = new_instance(Array);
 
     for (auto& arg : args) {
         deduce(arg.get());
