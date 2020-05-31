@@ -31,12 +31,12 @@ int main() {
 		cmp : bool = a < c;
 
 		sqrt5 := obt{x:=1;y:=2;} |> norm();
-		sixteen := my_lib.times_pi(my_lib.five()) + 1;
+		// sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
-	y := fn () {
-		print(1,z(),4);
-	};
+	// y := fn () {
+		// print(1,z(),4);
+	// };
 
 	w := fn (a,b:int,c){
 		for(i := b; i < 3; i = i + 1)
@@ -45,24 +45,24 @@ int main() {
 					return j;
 				j = 2*j;
 			}
-		return c*i;
+		return 0;
 	};
 
-	f := obt {
-		greeting := "Hello, ";
-		__invoke := fn (name : string) {
-			print(greeting + name);
-		};
-	};
+	// f := obt {
+		// greeting := "Hello, ";
+		// __invoke := fn (name : string) {
+			// print(greeting + name);
+		// };
+	// };
 
 	funct := fn (name : string) {};
 
 	sqrt := fn (x) { return (x+1) * 0.5; };
 
 	norm := fn(p){
-		f.greeting = "Hey, ";
-		f(" Sailor!");
-		return sqrt(p.x * p.x + p.y * p.y);
+		// f.greeting = "Hey, ";
+		// f(" Sailor!");
+		// return sqrt(p.x * p.x + p.y * p.y);
 	};
 
 	my_lib := dict {
@@ -96,7 +96,7 @@ int main() {
 		return 0;
 	});
 
-	// assert(0 == monolithic_test.execute(false));
+	assert(0 == monolithic_test.execute(false));
 
 	Tester bexp_tester(R"(
 		int_val := 1 + 2 + 3 + 4;
