@@ -73,9 +73,55 @@ Mono* hm_var (Poly type) {
     return mono_id[id++]; 
 }
 
-void unify(Mono* t1, Mono* t2) {}
+Mono* representative(Mono* t) {
+    Mono* rep = mono_id[t->id];
+    if (rep->id == t->id) {
+        return rep;
+    } else {
+        mono_id[id] = representative(rep);
+        return mono_id[id];
+    }
+}
 
-Mono* hm_app (Mono* t1, Mono* t2) {
+void connect(Mono* t1, Mono* t2) {
+    Mono* r2 = representative(t2);
+    mono_id[t1->id]->id = r2->id;
+}
+
+void unify(Mono* t1, Mono* t2, Env env) {
+    Mono* r1 = representative(t1);
+    Mono* r2 = representative(t2);
+
+    if (t1->type == mono_type::Mono) {
+        if (t2->type == mono_type::Mono) {
+            if (!env.is_bound(t1))
+                connect(t1, t2);
+            else if (!env.is_bound(t2))
+                connect(t2, t1);
+            else
+                assert(r1 == r2);
+        } else {
+            assert(!env.is_bound(t1));
+            connect(t1, t2);
+        }
+    } else if (t2->type == mono_type::Mono) {
+        assert(!env.is_bound(t2));
+        connect(t2, t1);
+    } else {
+        assert(r1 == r2);
+
+        Param* p1 = static_cast<Param*>(t1);
+        Param* p2 = static_cast<Param*>(t2);
+
+        assert(p1->params.size() == p2->params.size());
+
+        for (int i = 0; i < (int)p1->params.size(); i++) {
+            unify(p1->params[i], p2->params[i], env);
+        }
+    }
+}
+
+Mono* hm_app (Mono* t1, Mono* t2, Env env) {
     // maybe should use Param instead of mono
     Mono* t3 = new_mono();
 
@@ -85,7 +131,7 @@ Mono* hm_app (Mono* t1, Mono* t2) {
     param->base = new_instance(Arrow);
     param->params = std::vector<Mono*>{t2, t3};
 
-    unify(t1, mono_id[id++]);
+    unify(t1, mono_id[id++], env);
 
     return t3;
 }

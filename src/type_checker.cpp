@@ -9,8 +9,8 @@ namespace HindleyMilner {
 
 // TODO assert vtype after deduce calls
 
-bool TypeChecker::is_bound(Mono* type) {
-    return env.bounded_types.count(type->id);
+bool Env::is_bound(Mono* type) {
+    return bounded_types.count(type->id);
 }
 
 void TypeChecker::gather_free_variables(
@@ -19,7 +19,7 @@ void TypeChecker::gather_free_variables(
     // type tree and get the free variables
 
     if (type->type == mono_type::Mono) {
-        if (!is_bound(type)) {
+        if (!env.is_bound(type)) {
             free_vars.push_back(type->id);
         }
     } else {

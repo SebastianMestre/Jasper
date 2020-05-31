@@ -35,6 +35,11 @@ public:
     std::vector<int> forall_ids;
 };
 
+class Env {
+public:
+    bool is_bound(Mono*);
+};
+
 #define NATIVE_TYPES 6
 const Mono Arrow   {mono_type::Mono, 0};
 const Mono Void    {mono_type::Mono, 1};

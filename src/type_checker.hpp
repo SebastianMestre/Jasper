@@ -12,6 +12,7 @@ class Env {
 public:
     std::unordered_map<std::string, HindleyMilner::Poly> types;
     std::unordered_set<int> bounded_types;
+    bool is_bound(Mono*);
 };
 
 class TypeChecker {
@@ -30,7 +31,6 @@ class TypeChecker {
     void deduce(TypedASTCallExpression*);
     void gather_free_variables(TypedAST*, std::vector<int>&);
     void gather_free_variables(Mono*, std::vector<int>&);
-    bool is_bound(Mono*);
 };
 
 }
