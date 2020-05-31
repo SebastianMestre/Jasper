@@ -91,9 +91,14 @@ void TypeSystemData::unify(MonoId a, MonoId b) {
 		TypeFunctionId type_function = term_data[ta].type_function;
 		int argument_count = type_function_data[type_function].argument_count;
 
-		if (a_data.arguments.size() != argument_count
-		    || b_data.arguments.size() != argument_count) {
-			assert(0 && "instanciating polymorphic type with wrong argument count");
+		if (argument_count != -1) {
+			if (a_data.arguments.size() != argument_count
+			    || b_data.arguments.size() != argument_count) {
+				assert(0 && "instanciating polymorphic type with wrong argument count");
+			}
+		} else if (a_data.arguments.size() != b_data.arguments.size()) {
+			// for instance: (int,float)->int == (int)->int
+			assert(0 && "deduced two instances of a variadic type with different amount of arguments to be equal.");
 		}
 
 		for (int i { 0 }; i != argument_count; ++i) {

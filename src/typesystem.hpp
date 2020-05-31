@@ -8,6 +8,7 @@ using MonoId = int;
 using PolyId = int;
 
 struct TypeFunctionData {
+	// -1 means variadic.
 	int argument_count;
 };
 
