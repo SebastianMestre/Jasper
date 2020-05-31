@@ -178,7 +178,7 @@ void TypeChecker::deduce (TypedASTCallExpression* ast) {
         args_type->params.push_back(arg_type);
     }
 
-    auto result_type = hm_app(hm_var(callee_type), args_type);
+    auto result_type = hm_app(hm_var(callee_type), args_type, env);
 
     ast->m_vtype = Poly{
         result_type,

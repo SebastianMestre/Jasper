@@ -5,12 +5,13 @@
 #include <string>
 
 #include "hindleymilner.hpp"
+#include "typed_ast.hpp"
 
 namespace HindleyMilner {
 
 class Env {
 public:
-    std::unordered_map<std::string, HindleyMilner::Poly> types;
+    std::unordered_map<std::string, Poly> types;
     std::unordered_set<int> bounded_types;
     bool is_bound(Mono*);
 };

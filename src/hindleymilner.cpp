@@ -6,6 +6,7 @@
 #include <string>
 
 #include "hindleymilner.hpp"
+#include "type_checker.hpp"
 
 namespace HindleyMilner {
 
