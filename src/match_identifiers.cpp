@@ -161,8 +161,16 @@ void FakeEnvironment::match_identifiers(TypedASTIndexExpression* ast) {
 }
 
 void FakeEnvironment::match_identifiers(TypedASTDeclarationList* ast) {
-	for (auto& decl : ast->m_declarations)
-		match_identifiers(decl.get());
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedASTDeclaration*>(decl.get());
+		declare_name(d->identifier_text(), d);
+	}
+
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedASTDeclaration*>(decl.get());
+		if (d->m_value)
+			match_identifiers(d->m_value.get());
+	}
 }
 
 void FakeEnvironment::match_identifiers(TypedAST* ast) {
