@@ -4,21 +4,30 @@
 
 namespace HindleyMilner {
 
+// fwd declarations
+class Representative;
+class Env;
+
 enum class mono_type {
     Mono,
     Param
 };
 
 class Mono {
+private:
+    int id;
 public:
     mono_type type;
-    int id;
 
-    Mono(int _id): type(mono_type::Mono), id(_id) {}
-    Mono(mono_type _type, int _id): type(_type), id(_id) {}
+    void const set_id(int _id) {id = _id;}
+
+    friend Representative representative(Mono*);
+    friend Mono* new_instance(const Mono);
+
+    Mono(int _id): id(_id), type(mono_type::Mono) {}
+    Mono(mono_type _type, int _id): id(_id), type(_type) {}
 };
 
-// TODO hacer unique_ptr todos los punteros a mono
 // tipo parametrico puede ser desde
 // Ej: funcion a -> b (infija)
 //     lista   list a
@@ -26,12 +35,19 @@ public:
 //     lista de funcion list (a -> b)
 class Param : public Mono {
 public:
-    const Mono* base; // responsabilidad del programador no poner variables de base
+    // responsabilidad del programador no poner de base una variable
+    const Mono* base; 
     std::vector<Mono*> params {};
 
     Param(int _id, const Mono* _base): 
         Mono(mono_type::Param, _id), base(_base) {}
 }; 
+
+class Representative {
+public:
+    int id;
+    Mono* subject;
+};
 
 class Poly {
 public:
@@ -53,12 +69,7 @@ Mono* new_instance(const Mono);
 
 // representative devuelve la instancia mas
 // refinada del tipo que se pasa
-// Maybe it's a good idea to have a class named
-// representative and limit the operations of
-// mono
-Mono* representative(Mono*);
-
-class Env;
+Representative representative(Mono*);
 
 Mono* hm_var (Poly);
 Mono* hm_app (Mono*, Mono*, Env);

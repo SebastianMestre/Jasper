@@ -15,6 +15,7 @@ namespace HindleyMilner {
 int id = NATIVE_TYPES;
 
 // map from id to monotype
+// TODO los punteros deberian ser unicos
 std::unordered_map<int, Mono*> mono_id{
     {0, new Mono{0}},
     {1, new Mono{1}},               // fixed values for representative
@@ -44,20 +45,14 @@ Mono* instanciate(Mono* base, std::unordered_map<int, Mono*>& forall) {
     // changing the quantified types in the forall specifier
     // for new fresh types
     
-    // TODO check if its fixed
-    // si hay un tipo a->a
-    // el algoritmo actual lo instancia b->c
-    // ademas el algoritmo usa el id del tipo que quizas no 
-    // es su representacion actual (representative)
-    // entonces a->a podria verlo como a->b
     if (base->type == mono_type::Mono) {
-        Mono* rep = representative(base);
-        if (forall.count(rep->id)) {
-            if (forall[rep->id]) {
-                return forall[rep->id];
+        Representative rep = representative(base);
+        if (forall.count(rep.id)) {
+            if (forall[rep.id]) {
+                return forall[rep.id];
             } else {
-                forall[rep->id] = new Mono {mono_type::Mono, id};
-                mono_id[id] = forall[rep->id];
+                forall[rep.id] = new Mono {mono_type::Mono, id};
+                mono_id[id] = forall[rep.id];
             }
         } else {
             return base;
@@ -93,27 +88,36 @@ Mono* hm_var (Poly type) {
     return mono_id[id++]; 
 }
 
-Mono* representative(Mono* t) {
+Representative representative(Mono* t) {
+    // representative returns the most actual
+    // or refined version of the type passed
+
     Mono* rep = mono_id[t->id];
     if (rep->id == t->id) {
-        return rep;
+        return Representative {
+            rep->id,
+            rep
+        };
     } else {
-        Mono* rep_rep = representative(rep);
-        t->id = rep_rep->id;
+        Representative rep_rep = representative(rep);
+        t->id = rep_rep.id;
         return rep_rep;
     }
 }
 
-bool appears_in(Mono* var, Mono* type) {
+bool appears_in(Representative& r1, Representative& r2) {
     // checks whether var appears in type
+    Mono* type = r2.subject;
 
     if (type->type == mono_type::Mono) {
-        return (var->id == type->id);
+        return (r1.id == r2.id);
     } else {
         Param* p_type = static_cast<Param*>(type);
 
         for (Mono* param : p_type->params) {
-            if (appears_in(var, param)) {
+            Representative r_param = representative(param);
+
+            if (appears_in(r1, r_param)) {
                 return true;
             }
         }
@@ -122,26 +126,29 @@ bool appears_in(Mono* var, Mono* type) {
     return false;
 }
 
-void connect(Mono* r1, Mono* r2) {
+void connect(Representative& r1, Representative& r2) {
     // connect expects two representatives
     // and the first has to be a variable
-    assert(r1->type == mono_type::Mono);
+    Mono* t1 = r1.subject;
+    Mono* t2 = r2.subject;
 
-    // the function should check r1 doesn't appear in r2
-    if (r2->type == mono_type::Param) {
-        Param* p2 = static_cast<Param*>(r2);
+    assert(t1->type == mono_type::Mono);
+
+    if (t2->type == mono_type::Param) {
+        Param* p2 = static_cast<Param*>(t2);
 
         for (Mono* param : p2->params) {
-            assert(!appears_in(r1, param));
+            Representative r_param = representative(param);
+            assert(!appears_in(r1, r_param));
         }
     }
 
-    r1->id = r2->id;
+    t1->set_id(r2.id); 
 }
 
 void unify(Mono* t1, Mono* t2, Env env) {
-    Mono* r1 = representative(t1);
-    Mono* r2 = representative(t2);
+    Representative r1 = representative(t1);
+    Representative r2 = representative(t2);
 
     // checkear de no conectar una variable con
     // un tipo que contenga la variable
@@ -155,7 +162,7 @@ void unify(Mono* t1, Mono* t2, Env env) {
             else if (!env.is_bound(r2))
                 connect(r2, r1);
             else
-                assert(r1 == r2);
+                assert(r1.id == r2.id);
         } else {
             assert(!env.is_bound(r1));
             connect(r1, r2);

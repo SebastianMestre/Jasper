@@ -13,7 +13,7 @@ class Env {
 public:
     std::unordered_map<std::string, Poly> types;
     std::unordered_set<int> bounded_types;
-    bool is_bound(Mono*);
+    bool is_bound(Representative&);
 };
 
 class TypeChecker {

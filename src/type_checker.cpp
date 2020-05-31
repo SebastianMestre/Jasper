@@ -9,11 +9,10 @@ namespace HindleyMilner {
 
 // TODO assert vtype after deduce calls
 
-bool Env::is_bound(Mono* type) {
+bool Env::is_bound(Representative& rep) {
     // is bound deberia checkear si el tipo representativo
     // de type (osea el mas actual o mas refinado) esta boundeado
-    Mono* rep = representative(type);
-    return bounded_types.count(rep->id);
+    return bounded_types.count(rep.id);
 }
 
 void TypeChecker::gather_free_variables(
@@ -22,8 +21,9 @@ void TypeChecker::gather_free_variables(
     // type tree and get the free variables
 
     if (type->type == mono_type::Mono) {
-        if (!env.is_bound(type)) {
-            free_vars.push_back(type->id);
+        Representative r_type = representative(type);
+        if (!env.is_bound(r_type)) {
+            free_vars.push_back(r_type.id);
         }
     } else {
         auto p_type = static_cast<Param*>(type);
