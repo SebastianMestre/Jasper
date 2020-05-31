@@ -12,10 +12,9 @@ struct TypeFunctionData {
 	int argument_count;
 };
 
+enum class mono_type { Var, Term };
 struct MonoData {
-	enum class Type {
-		Var, Term
-	} type;
+	mono_type type;
 	int data_id;
 };
 
