@@ -96,7 +96,7 @@ int main() {
 		return 0;
 	});
 
-	assert(0 == monolithic_test.execute(false));
+	// assert(0 == monolithic_test.execute(false));
 
 	Tester bexp_tester(R"(
 		int_val := 1 + 2 + 3 + 4;
@@ -474,6 +474,7 @@ int main() {
 			array_append(A, 10);
 			return A;
 		};
+		array_append := null; // TODO: remove
 	)"};
 
 	native_array_append.add_test(+[](Type::Environment& env)->int{
@@ -512,6 +513,7 @@ int main() {
 			array_extend(A, array{10});
 			return A;
 		};
+		array_extend := null; // TODO: remove
 	)"};
 
 	native_array_extend.add_test(+[](Type::Environment& env)->int{
@@ -548,6 +550,7 @@ int main() {
 			A := array {10;10};
 			return size(A);
 		};
+		size := null; // TODO: remove
 	)"};
 
 	native_size.add_test(+[](Type::Environment& env)->int{
@@ -577,6 +580,7 @@ int main() {
 			A := array {10;10};
 			return array_join(A, ",");
 		};
+		array_join := null; // TODO: remove
 	)"};
 
 	native_array_join.add_test(+[](Type::Environment& env)->int{
