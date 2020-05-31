@@ -78,8 +78,9 @@ Mono* representative(Mono* t) {
     if (rep->id == t->id) {
         return rep;
     } else {
-        mono_id[id] = representative(rep);
-        return mono_id[id];
+        Mono* rep_rep = representative(rep);
+        mono_id[t->id]->id = rep_rep->id;
+        return rep_rep;
     }
 }
 
