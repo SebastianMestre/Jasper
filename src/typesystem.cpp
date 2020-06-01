@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-MonoId TypeSystemData::new_var() {
+MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();
 	int mono = mono_data.size();
 
@@ -13,7 +13,7 @@ MonoId TypeSystemData::new_var() {
 	return mono;
 }
 
-MonoId TypeSystemData::new_term(TypeFunctionId type_function, std::vector<int> args) {
+MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args) {
 	int term = term_data.size();
 	int mono = mono_data.size();
 
@@ -26,7 +26,7 @@ MonoId TypeSystemData::new_term(TypeFunctionId type_function, std::vector<int> a
 // qualifies all unbound variables in the given monotype
 // PolyId new_poly (MonoId mono, Env&) { } // TODO
 
-MonoId TypeSystemData::find(MonoId mono) {
+MonoId TypeSystemCore::find(MonoId mono) {
 	if (mono_data[mono].type != mono_type::Var)
 		return mono;
 
@@ -40,7 +40,7 @@ MonoId TypeSystemData::find(MonoId mono) {
 	return data.equals = find(data.equals);
 }
 
-bool TypeSystemData::occurs_in(VarId var, MonoId mono) {
+bool TypeSystemCore::occurs_in(VarId var, MonoId mono) {
 	mono = find(mono);
 
 	if (mono_data[mono].type == mono_type::Var) {
@@ -58,7 +58,7 @@ bool TypeSystemData::occurs_in(VarId var, MonoId mono) {
 	return false;
 }
 
-void TypeSystemData::unify(MonoId a, MonoId b) {
+void TypeSystemCore::unify(MonoId a, MonoId b) {
 	if (a == b)
 		return;
 
@@ -107,7 +107,7 @@ void TypeSystemData::unify(MonoId a, MonoId b) {
 	}
 }
 
-MonoId TypeSystemData::inst_impl(
+MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<VarId, MonoId> const& mapping) {
 	MonoData const& data = mono_data[mono];
 
@@ -127,7 +127,7 @@ MonoId TypeSystemData::inst_impl(
 	assert(0 && "invalid term type");
 }
 
-MonoId TypeSystemData::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
+MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 	PolyData const& data = poly_data[poly];
 
 	assert(data.vars.size() == vals.size());
@@ -140,7 +140,7 @@ MonoId TypeSystemData::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 	inst_impl(data.base, old_to_new);
 }
 
-MonoId TypeSystemData::inst_fresh(PolyId poly) {
+MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
 	for (int i { 0 }; i != poly_data[poly].vars.size(); ++i) {
 		vals.push_back(new_var());

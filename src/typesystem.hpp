@@ -32,7 +32,7 @@ struct PolyData {
 	std::vector<VarId> vars;
 };
 
-struct TypeSystemData {
+struct TypeSystemCore {
 	std::vector<MonoData> mono_data;
 	std::vector<VarData> var_data;
 	std::vector<TermData> term_data;
@@ -40,7 +40,8 @@ struct TypeSystemData {
 	std::vector<TypeFunctionData> type_function_data;
 	std::vector<PolyData> poly_data;
 
-	// std::vector<std::unordered_map<std::string, >> scopes; // TODO
+	// TODO: move to a separate class
+	// std::vector<std::unordered_map<std::string, >> scopes;
 
 	MonoId new_var();
 	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
