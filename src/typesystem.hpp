@@ -69,6 +69,7 @@ struct TypeSystemCore {
 	// PolyId new_poly (MonoId mono, Env&) { } // TODO
 
 	MonoId find(MonoId mono);
+	// expects the variable to be its own representative
 	bool occurs_in(VarId var, MonoId mono);
 	void unify(MonoId a, MonoId b);
 

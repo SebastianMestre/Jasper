@@ -47,6 +47,13 @@ MonoId TypeSystemCore::find(MonoId mono) {
 }
 
 bool TypeSystemCore::occurs_in(VarId var, MonoId mono) {
+
+	{
+		// the variable must point to itself
+		MonoData const& var_mono_data = mono_data[var_data[var].equals];
+		assert(var_mono_data.type == mono_type::Var && var == var_mono_data.data_id);
+	}
+
 	mono = find(mono);
 
 	if (mono_data[mono].type == mono_type::Var) {
@@ -65,12 +72,13 @@ bool TypeSystemCore::occurs_in(VarId var, MonoId mono) {
 }
 
 void TypeSystemCore::unify(MonoId a, MonoId b) {
+	a = find(a);
+	b = find(b);
+
 	if (a == b)
 		return;
 
 	if (mono_data[a].type == mono_type::Var) {
-		assert(a == find(a));
-
 		VarId va = mono_data[a].data_id;
 
 		if (occurs_in(va, b)) {
