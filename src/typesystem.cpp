@@ -138,7 +138,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 		old_to_new[data.vars[i]] = vals[i];
 	}
 
-	inst_impl(data.base, old_to_new);
+	return inst_impl(data.base, old_to_new);
 }
 
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
