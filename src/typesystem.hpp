@@ -59,14 +59,13 @@ struct TypeSystemCore {
 	std::vector<TypeFunctionData> type_function_data;
 	std::vector<PolyData> poly_data;
 
-	// TODO: move to a separate class
-	// std::vector<std::unordered_map<std::string, >> scopes;
+	// TODO: add an environment.
 
 	MonoId new_var();
 	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
 
 	// qualifies all unbound variables in the given monotype
-	// PolyId new_poly (MonoId mono, Env&) { } // TODO
+	// PolyId new_poly (MonoId mono) { } // TODO
 
 	MonoId find(MonoId mono);
 	// expects the variable to be its own representative
