@@ -110,6 +110,11 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<VarId, MonoId> const& mapping) {
+
+	// NOTE(Mestre): Is just calling find good enough? It means we
+	// should only ever qualify variables that are their own
+	// representative, which does seem to make sense. I think.
+	mono = find(mono);
 	MonoData const& data = mono_data[mono];
 
 	if (data.type == mono_type::Var) {
