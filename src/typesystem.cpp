@@ -14,6 +14,12 @@ MonoId TypeSystemCore::new_var() {
 }
 
 MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args) {
+	int argument_count = type_function_data[type_function].argument_count;
+
+	if (argument_count != -1 && argument_count != args.size()) {
+		assert(0 && "instanciating polymorphic type with wrong argument count");
+	}
+
 	int term = term_data.size();
 	int mono = mono_data.size();
 
@@ -91,14 +97,9 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TypeFunctionId type_function = term_data[ta].type_function;
 		int argument_count = type_function_data[type_function].argument_count;
 
-		if (argument_count != -1) {
-			if (a_data.arguments.size() != argument_count
-			    || b_data.arguments.size() != argument_count) {
-				assert(0 && "instanciating polymorphic type with wrong argument count");
-			}
-		} else if (a_data.arguments.size() != b_data.arguments.size()) {
+		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
-			assert(0 && "deduced two instances of a variadic type with different amount of arguments to be equal.");
+			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
 		}
 
 		for (int i { 0 }; i != argument_count; ++i) {
