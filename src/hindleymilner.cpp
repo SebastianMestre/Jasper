@@ -58,3 +58,67 @@ void hm_let(Let* l) {
 	//   (let x = e0 in e1) : t
 }
 
+void hm_rec(Rec* l) {
+	// rec stands for Recursion.
+	
+	// The rec syntax says that we can define self-referential names.
+	//
+	// Example:
+	//
+	// rec
+	//   g = (\x. if x == 0 then 0 else 1 + g(x - 1))
+	// in
+	//   g(5)
+	//
+	// The type of g will be available as a monotype inside its own
+	// definition, And it will only be generalized to a polytype
+	// within the 'in block'
+	//
+	// This allows unification to ocurr between variables on the type
+	// of g, and variables that show up in the body of g.
+	//
+	// Furthermore, rec allows multiple definitions to exist within
+	// the same block, allowing for mutual recursion.
+	//
+	// rec
+	//   g = (\x. if x == 0 then 0 else 1 + f(x - 1))
+	//   f = (\x. if x == 0 then 0 else 2 + g(x - 1))
+	// in
+	//   g(5)
+	//
+	// Since we have a single type of name-binding in our language
+	// (:=), we have to detect when each rule should be applied.
+	//
+	// In particular, we have to find which functions have mutual
+	// reference, and group them together in a 'rec-and' block.
+	//
+	// f := fn(x){
+	//   if(x == 0) return 0;
+	//   return g(x-1)+1;
+	// };
+	//
+	// g := fn(x){
+	//   if(x == 0) return 0;
+	//   return f(x-1)+2;
+	// };
+	//
+	// h := fn(x){
+	//   return g(x) + f(x);
+	// }
+	//
+	// translates to:
+	//
+	// rec
+	//   f = ...
+	//   g = ...
+	// in
+	//   let
+	//     h = ...
+	//   in
+	//     ...
+	//
+	// Doing this means finding the dependency graph between these
+	// definitions and breaking it up into strongly-connected
+	// components. Those components then become our rec blocks.
+}
+

@@ -38,7 +38,7 @@ MonoId TypeChecker::rule_abs() {
 // TODO
 MonoId TypeChecker::rule_let(MonoId mono) {
 	assert(0);
-	// return generalize(mono);
+	// return m_core.generalize(mono);
 }
 
 // TODO
