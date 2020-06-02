@@ -17,12 +17,12 @@ int id = NATIVE_TYPES;
 // map from id to monotype
 // TODO los punteros deberian ser unicos
 std::unordered_map<int, Mono*> mono_id{
-    {0, new Mono{0}},
-    {1, new Mono{1}},               // fixed values for representative
-    {2, new Mono{2}},               // of native types
-    {3, new Mono{3}},
-    {4, new Mono{4}},
-    {5, new Mono{5}},
+    // {0, new Mono{0}},
+    // {1, new Mono{1}},               // fixed values for representative
+    // {2, new Mono{2}},               // of native types
+    // {3, new Mono{3}},
+    // {4, new Mono{4}},
+    // {5, new Mono{5}},
 };
 
 Mono* new_mono () {
