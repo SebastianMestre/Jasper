@@ -1,8 +1,8 @@
 #pragma once
 
 enum class ast_vtype {
-    Null,
-	
+	Null,
+
 	Integer,
 	Float,
 	Boolean,
@@ -12,12 +12,13 @@ enum class ast_vtype {
 	Array,
 	Object,
 	Dictionary,
-	
+
 	Function,
 	NativeFunction,
-	
+
 	TypeError,
 	Void,
 	Undefined,
 	Wildcard
 };
+
