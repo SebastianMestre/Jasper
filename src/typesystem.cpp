@@ -6,7 +6,6 @@ MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();
 	int mono = mono_data.size();
 
-	// we could put -1 instead, not sure which is better
 	var_data.push_back({ mono });
 	mono_data.push_back({ mono_type::Var, var });
 
