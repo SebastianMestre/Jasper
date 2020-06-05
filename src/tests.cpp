@@ -34,9 +34,9 @@ int main() {
 		// sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
-	// y := fn () {
-		// print(1,z(),4);
-	// };
+	y := fn () {
+		print(1,z(),4);
+	};
 
 	w := fn (a,b:int,c){
 		for(i := b; i < 3; i = i + 1)
@@ -62,7 +62,7 @@ int main() {
 	norm := fn(p){
 		// f.greeting = "Hey, ";
 		// f(" Sailor!");
-		// return sqrt(p.x * p.x + p.y * p.y);
+		return sqrt(p.x * p.x + p.y * p.y);
 	};
 
 	my_lib := dict {
