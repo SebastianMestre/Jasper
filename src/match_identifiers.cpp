@@ -41,6 +41,17 @@ struct FakeEnvironment {
 
 void match_identifiers(TypedAST* ast) {
 	FakeEnvironment env;
+
+	// TODO: put this in a better place
+	// HACK: this is an ugly hack. bear with me...
+	TypedASTDeclaration dummy;
+
+	env.declare_name("size", &dummy);
+	env.declare_name("print", &dummy);
+	env.declare_name("array_append", &dummy);
+	env.declare_name("array_extend", &dummy);
+	env.declare_name("array_join", &dummy);
+	
 	return env.match_identifiers(ast);
 }
 
