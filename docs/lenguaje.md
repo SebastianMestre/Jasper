@@ -12,12 +12,12 @@ Eso pensamos obtenerlo mediante varias features:
  - Sintaxis consistente (WIP)
  - Todo es un valor (WIP)
  - Semantica de valor (TODO)
- - Polimorfismo parametrico (TODO)
- - Deduccion de tipos (TODO)
+ - Polimorfismo parametrico (WIP)
+ - Deduccion de tipos (WIP)
 
 Aparte, hay cositas que metimos porque nos parecen lindas.
 
- - Operador pipeline `|>` (TODO)
+ - Operador pipeline `|>`
  - inyeccion de scopes (TODO)
  - Tipo de datos decimal (TODO)
  - Objetos llamables (TODO)
@@ -27,8 +27,10 @@ Aparte, hay cositas que metimos porque nos parecen lindas.
 
 En JS++, un programa es una lista de declaraciones.
 
-> Una declaracion es un identificador, seguido de un especificador de tipo
-> opcional y un valor inicial. ejemplos: `a := 15; b : int = 10;`
+> Una declaracion asocia un valor con un nombre.
+>
+> Sintacticamente, es un identificador, seguido de un especificador de tipo
+> (opcional) y un valor inicial. ejemplos: `a := 15; b : int = 10;`
 
 Una de estas declaraciones debe ser el punto de entrada, una funcion llamada
 `__invoke`.
@@ -69,6 +71,9 @@ El operador pizza nos permite escribir pipelines en nuestro codigo. Es muy util
 para dos cosas:
  - Extender la funcionalidad de un objeto sin agregarle dependencias
  - Escribir codigo en estilo funcional
+
+El operador pizza transforma una expresion de la forma `x |> f(y...)` a una de
+la forma `f(x,y...)`.
 
 Aca hay un ejemplo de uso junto a su version des-azucarada:
 
