@@ -51,6 +51,15 @@ void match_identifiers(TypedAST* ast) {
 	env.declare_name("array_append", &dummy);
 	env.declare_name("array_extend", &dummy);
 	env.declare_name("array_join", &dummy);
+
+	env.declare_name("+", &dummy);
+	env.declare_name("-", &dummy);
+	env.declare_name("*", &dummy);
+	env.declare_name("/", &dummy);
+	env.declare_name("<", &dummy);
+	env.declare_name("=", &dummy);
+	env.declare_name("==", &dummy);
+	env.declare_name(".", &dummy);
 	
 	return env.match_identifiers(ast);
 }
