@@ -51,6 +51,7 @@ struct Parser {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(token_type);
 	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_expression_list(token_type, token_type, bool);
 
+	Writer<std::unique_ptr<AST::AST>> parse_identifier();
 	Writer<std::unique_ptr<AST::AST>> parse_top_level();
 	Writer<std::unique_ptr<AST::AST>> parse_declaration();
 	Writer<std::unique_ptr<AST::AST>> parse_expression(int bp = 0);

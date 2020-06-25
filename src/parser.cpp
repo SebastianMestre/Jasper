@@ -476,6 +476,19 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	return result;
 }
 
+Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
+	Writer<std::unique_ptr<AST::AST>> result
+	    = { { "Parse Error: Failed to parse identifier" } };
+
+	auto token = require(token_type::IDENTIFIER);
+	if (handle_error(result, token))
+		return result;
+
+	auto e = std::make_unique<ASTIdentifier>();
+	e->m_token = token.m_result;
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+}
+
 Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal () {
 	Writer<std::unique_ptr<AST::AST>> result
 	    = { { "Failed to parse array literal" } };
