@@ -226,7 +226,7 @@ Type::Value* eval(TypedASTBinaryExpression* ast, Type::Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	switch (ast->m_op) {
+	switch (ast->m_op_token->m_type) {
 	case token_type::ADD: {
 		
 		// TODO: proper error handling

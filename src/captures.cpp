@@ -75,7 +75,7 @@ Set gather_captures(TypedASTIdentifier* ast) {
 
 Set gather_captures(TypedASTBinaryExpression* ast) {
 	Set result = gather_captures(ast->m_lhs.get());
-	if(ast->m_op != token_type::DOT){
+	if(ast->m_op_token->m_type != token_type::DOT){
 		Set secondary = gather_captures(ast->m_rhs.get());
 		for(auto const& identifier : secondary)
 			result.insert(identifier);

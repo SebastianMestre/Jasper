@@ -126,7 +126,7 @@ struct TypedASTIdentifier : public TypedAST {
 
 // the value depends on the operator
 struct TypedASTBinaryExpression : public TypedAST {
-	token_type m_op;
+	Token const* m_op_token;
 	std::unique_ptr<TypedAST> m_lhs;
 	std::unique_ptr<TypedAST> m_rhs;
 

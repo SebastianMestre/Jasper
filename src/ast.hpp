@@ -101,7 +101,7 @@ struct ASTIdentifier : public AST {
 };
 
 struct ASTBinaryExpression : public AST {
-	token_type m_op;
+	Token const* m_op_token;
 	std::unique_ptr<AST> m_lhs;
 	std::unique_ptr<AST> m_rhs;
 

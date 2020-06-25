@@ -364,7 +364,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_expression(int bp) {
 
 		auto e = std::make_unique<ASTBinaryExpression>();
 
-		e->m_op = op->m_type;
+		e->m_op_token = op;
 		e->m_lhs = std::move(lhs.m_result);
 		e->m_rhs = std::move(rhs.m_result);
 

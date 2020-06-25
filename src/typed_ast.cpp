@@ -126,11 +126,11 @@ TypedAST* convertASTPizza(ASTBinaryExpression* ast) {
 
 TypedAST* convertAST(ASTBinaryExpression* ast) {
 
-	if (ast->m_op == token_type::PIZZA)
+	if (ast->m_op_token->m_type == token_type::PIZZA)
 		return convertASTPizza(ast);
 
 	auto typed_be = new TypedASTBinaryExpression;
-	typed_be->m_op = ast->m_op;
+	typed_be->m_op_token = ast->m_op_token;
 	typed_be->m_lhs = get_unique(ast->m_lhs);
 	typed_be->m_rhs = get_unique(ast->m_rhs);
 	return typed_be;
