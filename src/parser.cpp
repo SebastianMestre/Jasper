@@ -920,6 +920,7 @@ Writer<std::unique_ptr<AST>> Parser::parse_type_term() {
 
 		args.push_back(std::move(arg.m_result));
 	}
+	m_lexer->advance();
 
 	e->m_args = std::move(args);
 	return make_writer<std::unique_ptr<AST>>(std::move(e));

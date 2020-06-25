@@ -153,6 +153,8 @@ struct ForStatement : public AST {
 struct TypeTerm : public AST {
 	std::unique_ptr<AST> m_callee;
 	std::vector<std::unique_ptr<AST>> m_args;
+
+	ASTTypeTerm() : AST { ast_type::TypeTerm } {}
 };
 
 void print (AST*, int);
