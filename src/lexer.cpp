@@ -269,6 +269,8 @@ void Lexer::consume_token() {
 
 	case '>':
 		switch (next_char()) {
+		case ')':
+			push_token(token_type::POLY_CLOSE, 2);
 		case '=':
 			push_token(token_type::GTE, 2);
 			break;
@@ -288,8 +290,15 @@ void Lexer::consume_token() {
 		break;
 
 	case '(':
-		push_token(token_type::PAREN_OPEN, 1);
+		switch (next_char()) {
+		case '<':
+			push_token(token_type::POLY_OPEN, 2);
+			break;
+		default:
+			push_token(token_type::PAREN_OPEN, 1);
+		}
 		break;
+
 	case ')':
 		push_token(token_type::PAREN_CLOSE, 1);
 		break;

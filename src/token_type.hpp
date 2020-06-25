@@ -47,10 +47,12 @@ constexpr const char* token_type_string[] = {
 	"BRACE_OPEN",
 	"BRACKET_OPEN",
 	"PAREN_OPEN",
+	"POLY_OPEN",
 
 	"BRACE_CLOSE",
 	"BRACKET_CLOSE",
 	"PAREN_CLOSE",
+	"POLY_CLOSE",
 
 	"SEMICOLON",
 	"COLON",
@@ -121,10 +123,12 @@ enum class token_type {
 	BRACE_OPEN,
 	BRACKET_OPEN,
 	PAREN_OPEN,
+	POLY_OPEN,
 
 	BRACE_CLOSE,
 	BRACKET_CLOSE,
 	PAREN_CLOSE,
+	POLY_CLOSE,
 
 	SEMICOLON,
 	COLON,
