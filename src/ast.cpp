@@ -179,6 +179,16 @@ void print(ForStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(ASTTypeTerm* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ TypeTerm\n";
+	print(ast->m_callee.get(), d+1);
+	for (auto& arg : ast->m_args)
+		print(arg.get(), d+1);
+	std::cout << stab << "]\n";
+}
+
 void print(AST* ast, int d) {
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
@@ -217,6 +227,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<IfStatement*>(ast), d);
 	case ast_type::ForStatement:
 		return print(static_cast<ForStatement*>(ast), d);
+	case ast_type::TypeTerm:
+		return print(static_cast<TypeTerm*>(ast), d);
 	}
 }
 
