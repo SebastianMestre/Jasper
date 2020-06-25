@@ -22,7 +22,13 @@ char Lexer::char_at(int index) {
 }
 
 void Lexer::push_token(token_type tt, int width) {
-	Token t = { tt, {}, m_current_line, m_current_column, m_current_line,
+
+	std::string text;
+	text.resize(width);
+	for (int i = 0; i < width; ++i)
+		text[i] = m_source[m_source_index + i];
+
+	Token t = { tt, std::move(text), m_current_line, m_current_column, m_current_line,
 		m_current_column + width };
 
 	m_tokens.push_back(t);
