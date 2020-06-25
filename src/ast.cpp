@@ -24,8 +24,10 @@ void print(Declaration* ast, int d) {
 	std::cout << stab << "[ Declaration\n"
 		<< tab << "Name: " << ast->identifier_text() << '\n';
 
-	if(ast->m_typename_token)
-		std::cout << tab << "Type: " <<  ast->typename_text() << '\n';
+	if (ast->m_type) {
+		std::cout << tab << "Type:\n";
+		print(ast->m_type.get(), d + 1);
+	}
 
 	if (ast->m_value) {
 		std::cout << tab << "Initializer:\n";

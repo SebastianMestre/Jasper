@@ -97,7 +97,7 @@ TypedAST* convertAST(AST::Declaration* ast) {
     auto typed_dec = new Declaration;
 
     typed_dec->m_identifier_token = ast->m_identifier_token;
-    typed_dec->m_typename_token   = ast->m_typename_token;
+    // typed_dec->m_typename_token   = ast->m_typename_token;
     if(ast->m_value)
 		typed_dec->m_value = get_unique(ast->m_value);
 

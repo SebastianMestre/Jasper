@@ -166,7 +166,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	if (handle_error(result, name))
 		return result;
 
-	Writer<Token const*> type;
+	Writer<std::unique_ptr<AST>> type;
 
 	auto p0 = peek();
 
@@ -175,7 +175,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	} else if (p0->m_type == token_type::DECLARE) {
 		m_lexer->advance();
 
-		type = require(token_type::IDENTIFIER);
+		type = parse_type_term();
 		if (handle_error(result, type))
 			return result;
 
@@ -197,8 +197,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	auto p = std::make_unique<AST::Declaration>();
 
 	p->m_identifier_token = name.m_result;
-	if (type.m_result)
-		p->m_typename_token = type.m_result;
+	p->m_type = std::move(type.m_result);
 	p->m_value = std::move(value.m_result);
 
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(p));
@@ -605,23 +604,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 			m_lexer->advance();
 			auto p1 = peek();
 			if (p1->m_type == token_type::DECLARE) {
+				m_lexer->advance();
 				// consume type separator (:)
 				// must be followed by a type
 
-				m_lexer->advance();
-				auto p2 = peek();
-				if (p2->m_type == token_type::IDENTIFIER) {
-					// consume type
-					arg->m_typename_token = p2;
-
-					m_lexer->advance();
-					p1 = peek();
-				} else {
-					// no type found, report error
-					result.m_error.m_sub_errors.push_back(
-					    make_expected_error("a type", p2));
+				auto type = parse_type_term();
+				if (handle_error(result, type))
 					return result;
-				}
+
+				arg->m_type = std::move(type.m_result);
+
+				p1 = peek();
 			}
 
 			args.push_back(std::move(arg));
