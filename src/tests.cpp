@@ -602,6 +602,43 @@ int main() {
 
 	assert(0 == native_array_join.execute());
 
+	Tester compound_types{R"(
+		// TODO: fix inability to use keyword 'array' and others in types
+		first_arr := fn(arr : Array(<Array(<Int>)>)) => arr[0];
+		first_int := fn(arr : Array(<Ant>)) => arr[0];
+		__invoke := fn(){
+			mat := array {
+				array { 4; 5; 6; };
+				array { 1; 2; 3; };
+			};
+			arr := first_arr(mat);
+			val := first_int(arr);
+			return val;
+		};
+	)"};
+
+	compound_types.add_test(+[](Type::Environment& env) -> int {
+		TokenArray ta;
+		auto top_level_call_ast = parse_expression("__invoke()", ta);
+		auto top_level_call = get_unique(top_level_call_ast.m_result);
+
+		auto* result = unboxed(eval(top_level_call.get(), env));
+		if (!result)
+			return 1;
+
+		if (result->type() != value_type::Integer)
+			return 2;
+
+		auto* as_int = static_cast<Type::Integer*>(result);
+		if (as_int->m_value != 4)
+			return 3;
+
+		std::cout << "@ line " << __LINE__ << ": Success \n";
+		return 0;
+	});
+
+	assert(0 == compound_types.execute());
+
 	Tester pizza_operator{R"(
 		f := fn(x) => x + 7;
 		__invoke := fn() => 6 |> f();
