@@ -902,3 +902,33 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 
 	return result;
 }
+
+Writer<std::unique_ptr<AST>> Parser::parse_type_term() {
+	Writer<std::unique_ptr<AST>> result
+	    = { { "Parse Error: Failed to parse type" } };
+
+	auto callee = parse_identifier();
+	if (handle_error(result, callee))
+		return result;
+
+	auto e = std::make_unique<ASTTypeTerm>();
+	e->m_callee = std::move(callee.m_result);
+
+	if (peek()->m_type != token_type::POLY_OPEN)
+		return make_writer<std::unique_ptr<AST>>(std::move(e));
+
+	m_lexer->advance();
+
+	std::vector<std::unique_ptr<AST>> args;
+	while (peek()->m_type != token_type::POLY_CLOSE) {
+		auto arg = parse_type_term();
+		if (handle_error(result, arg))
+			return result;
+
+		args.push_back(std::move(arg.m_result));
+	}
+
+	e->m_args = std::move(args);
+	return make_writer<std::unique_ptr<AST>>(std::move(e));
+}
+
