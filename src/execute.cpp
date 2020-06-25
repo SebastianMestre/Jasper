@@ -4,9 +4,10 @@
 #include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
+#include "match_identifiers.hpp"
+#include "native.hpp"
 #include "parse.hpp"
 #include "token_array.hpp"
-#include "native.hpp"
 #include "typed_ast.hpp"
 
 int execute(std::string const& source, bool dump_ast, Runner* runner) {
@@ -33,6 +34,7 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	declare_native_functions(env);
 
 	auto top_level = get_unique(top_level_ast);
+	TypeChecker::match_identifiers(top_level.get());
 	gather_captures(top_level.get());
 	eval(top_level.get(), env);
 

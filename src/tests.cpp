@@ -31,7 +31,7 @@ int main() {
 		cmp : bool = a < c;
 
 		sqrt5 := obt{x:=1;y:=2;} |> norm();
-		sixteen := my_lib.times_pi(my_lib.five()) + 1;
+		// sixteen := my_lib.times_pi(my_lib.five()) + 1;
 	};
 
 	y := fn () {
@@ -45,23 +45,23 @@ int main() {
 					return j;
 				j = 2*j;
 			}
-		return c*i;
+		return 0;
 	};
 
-	f := obt {
-		greeting := "Hello, ";
-		__invoke := fn (name : string) {
-			print(greeting + name);
-		};
-	};
+	// f := obt {
+		// greeting := "Hello, ";
+		// __invoke := fn (name : string) {
+			// print(greeting + name);
+		// };
+	// };
 
 	funct := fn (name : string) {};
 
 	sqrt := fn (x) { return (x+1) * 0.5; };
 
 	norm := fn(p){
-		f.greeting = "Hey, ";
-		f(" Sailor!");
+		// f.greeting = "Hey, ";
+		// f(" Sailor!");
 		return sqrt(p.x * p.x + p.y * p.y);
 	};
 

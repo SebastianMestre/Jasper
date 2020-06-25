@@ -41,6 +41,17 @@ struct FakeEnvironment {
 
 void match_identifiers(TypedAST* ast) {
 	FakeEnvironment env;
+
+	// TODO: put this in a better place
+	// HACK: this is an ugly hack. bear with me...
+	TypedASTDeclaration dummy;
+
+	env.declare_name("size", &dummy);
+	env.declare_name("print", &dummy);
+	env.declare_name("array_append", &dummy);
+	env.declare_name("array_extend", &dummy);
+	env.declare_name("array_join", &dummy);
+	
 	return env.match_identifiers(ast);
 }
 
@@ -49,7 +60,8 @@ FakeEnvironment::FakeEnvironment() {
 }
 
 TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
-	auto scan_scope = [& name = name](Scope& scope) -> TypedASTDeclaration* {
+	auto scan_scope
+	    = [](Scope& scope, std::string const& name) -> TypedASTDeclaration* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
 			return it->second;
@@ -58,7 +70,7 @@ TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
 
 	// iterate until we are no longer nested, excluding the global scope
 	for (int i = m_scopes.size() - 1; i > 0; --i) {
-		auto ptr = scan_scope(m_scopes[i]);
+		auto ptr = scan_scope(m_scopes[i], name);
 		if (ptr)
 			return ptr;
 
@@ -68,7 +80,7 @@ TypedASTDeclaration* FakeEnvironment::access_name(std::string const& name) {
 	}
 
 	// now scan the global scope
-	auto ptr = scan_scope(m_scopes[0]);
+	auto ptr = scan_scope(m_scopes[0], name);
 	if (ptr)
 		return ptr;
 
@@ -161,8 +173,16 @@ void FakeEnvironment::match_identifiers(TypedASTIndexExpression* ast) {
 }
 
 void FakeEnvironment::match_identifiers(TypedASTDeclarationList* ast) {
-	for (auto& decl : ast->m_declarations)
-		match_identifiers(decl.get());
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedASTDeclaration*>(decl.get());
+		declare_name(d->identifier_text(), d);
+	}
+
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedASTDeclaration*>(decl.get());
+		if (d->m_value)
+			match_identifiers(d->m_value.get());
+	}
 }
 
 void FakeEnvironment::match_identifiers(TypedAST* ast) {
