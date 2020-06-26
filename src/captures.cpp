@@ -73,16 +73,6 @@ Set gather_captures(TypedASTIdentifier* ast) {
 	return {{ ast->text() }};
 }
 
-Set gather_captures(TypedASTBinaryExpression* ast) {
-	Set result = gather_captures(ast->m_lhs.get());
-	if(ast->m_op_token->m_type != token_type::DOT){
-		Set secondary = gather_captures(ast->m_rhs.get());
-		for(auto const& identifier : secondary)
-			result.insert(identifier);
-	}
-	return result;
-}
-
 Set gather_captures(TypedASTCallExpression* ast) {
 	Set result = gather_captures(ast->m_callee.get());
 	for(auto& child : ast->m_args){
@@ -180,8 +170,6 @@ Set gather_captures(TypedAST* ast) {
 		return gather_captures(static_cast<TypedASTDeclaration*>(ast));
 	case ast_type::Identifier:
 		return gather_captures(static_cast<TypedASTIdentifier*>(ast));
-	case ast_type::BinaryExpression:
-		return gather_captures(static_cast<TypedASTBinaryExpression*>(ast));
 	case ast_type::CallExpression:
 		return gather_captures(static_cast<TypedASTCallExpression*>(ast));
 	case ast_type::IndexExpression:
@@ -194,6 +182,8 @@ Set gather_captures(TypedAST* ast) {
 		return gather_captures(static_cast<TypedASTIfStatement*>(ast));
 	case ast_type::ForStatement:
 		return gather_captures(static_cast<TypedASTForStatement*>(ast));
+	case ast_type::BinaryExpression:
+		assert(0);
 	}
 
 	return {};
