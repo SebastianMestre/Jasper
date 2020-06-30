@@ -117,7 +117,7 @@ void print(ASTBinaryExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ BinaryExpression\n"
-	          << tab << "Operator: " << token_type_string[int(ast->m_op)] << '\n'
+	          << tab << "Operator: " << token_type_string[int(ast->m_op_token->m_type)] << '\n'
 	          << tab << "Left Operand:\n";
 	print(ast->m_lhs.get(), d + 1);
 	std::cout << tab << "Right Operand:\n";

@@ -124,16 +124,38 @@ TypedAST* convertASTPizza(ASTBinaryExpression* ast) {
 	return result;
 }
 
+TypedAST* convertASTDot(ASTBinaryExpression* ast) {
+	// TODO: error handling
+
+	// TODO: move this check to the parser
+	assert(ast->m_rhs->type() == ast_type::Identifier);
+	auto ident = static_cast<ASTIdentifier*>(ast->m_rhs.get());
+
+	auto tok = ast->m_op_token;
+	std::cerr << "Error: @" << tok->m_line0+1 << ":" << tok->m_col0 << " | Dot (.) operator not implemented yet\n";
+
+	return new TypedASTNullLiteral;
+}
+
+// This function desugars binary operators into function calls
 TypedAST* convertAST(ASTBinaryExpression* ast) {
 
-	if (ast->m_op == token_type::PIZZA)
+	if (ast->m_op_token->m_type == token_type::PIZZA)
 		return convertASTPizza(ast);
 
-	auto typed_be = new TypedASTBinaryExpression;
-	typed_be->m_op = ast->m_op;
-	typed_be->m_lhs = get_unique(ast->m_lhs);
-	typed_be->m_rhs = get_unique(ast->m_rhs);
-	return typed_be;
+	if (ast->m_op_token->m_type == token_type::DOT)
+		return convertASTDot(ast);
+
+	auto identifier = std::make_unique<TypedASTIdentifier>();
+	identifier->m_token = ast->m_op_token;
+
+	auto typed_ast = new TypedASTCallExpression;
+	typed_ast->m_callee = std::move(identifier);
+
+	typed_ast->m_args.push_back(get_unique(ast->m_lhs));
+	typed_ast->m_args.push_back(get_unique(ast->m_rhs));
+
+	return typed_ast;
 }
 
 TypedAST* convertAST(ASTCallExpression* ast) {

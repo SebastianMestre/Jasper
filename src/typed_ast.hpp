@@ -124,15 +124,6 @@ struct TypedASTIdentifier : public TypedAST {
 	TypedASTIdentifier() : TypedAST{ ast_type::Identifier } {}
 };
 
-// the value depends on the operator
-struct TypedASTBinaryExpression : public TypedAST {
-	token_type m_op;
-	std::unique_ptr<TypedAST> m_lhs;
-	std::unique_ptr<TypedAST> m_rhs;
-
-	TypedASTBinaryExpression() : TypedAST{ ast_type::BinaryExpression } {}
-};
-
 // the value depends on the return value of callee
 struct TypedASTCallExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_callee;
