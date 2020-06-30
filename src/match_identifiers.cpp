@@ -34,7 +34,6 @@ struct FakeEnvironment {
 	void match_identifiers(TypedASTFunctionLiteral* ast);
 	void match_identifiers(TypedASTCallExpression* ast);
 	void match_identifiers(TypedASTReturnStatement* ast);
-	void match_identifiers(TypedASTBinaryExpression* ast);
 	void match_identifiers(TypedASTIndexExpression* ast);
 	void match_identifiers(TypedASTDeclarationList* ast);
 };
@@ -171,11 +170,6 @@ void FakeEnvironment::match_identifiers(TypedASTReturnStatement* ast) {
 	match_identifiers(ast->m_value.get());
 }
 
-void FakeEnvironment::match_identifiers(TypedASTBinaryExpression* ast) {
-	match_identifiers(ast->m_lhs.get());
-	match_identifiers(ast->m_rhs.get());
-}
-
 void FakeEnvironment::match_identifiers(TypedASTIndexExpression* ast) {
 	match_identifiers(ast->m_callee.get());
 	match_identifiers(ast->m_index.get());
@@ -213,12 +207,12 @@ void FakeEnvironment::match_identifiers(TypedAST* ast) {
 		return match_identifiers(static_cast<TypedASTCallExpression*>(ast));
 	case ast_type::ReturnStatement:
 		return match_identifiers(static_cast<TypedASTReturnStatement*>(ast));
-	case ast_type::BinaryExpression:
-		return match_identifiers(static_cast<TypedASTBinaryExpression*>(ast));
 	case ast_type::IndexExpression:
 		return match_identifiers(static_cast<TypedASTIndexExpression*>(ast));
 	case ast_type::DeclarationList:
 		return match_identifiers(static_cast<TypedASTDeclarationList*>(ast));
+	case ast_type::BinaryExpression:
+		assert(0);
 	case ast_type::StringLiteral:
 	case ast_type::NumberLiteral:
 	case ast_type::NullLiteral:
