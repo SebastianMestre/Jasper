@@ -8,14 +8,16 @@
 #include "value_fwd.hpp"
 #include "environment_fwd.hpp"
 
-struct TypedASTFunctionLiteral;
+namespace TypedAST {
+struct FunctionLiteral;
+}
 
 namespace Type {
 
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using ArrayType = std::vector<Value*>;
-using FunctionType = ::TypedASTFunctionLiteral*;
+using FunctionType = TypedAST::FunctionLiteral*;
 using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
 
 // Returns the value pointed to by a reference

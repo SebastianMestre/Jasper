@@ -18,7 +18,8 @@ void assert_equals(int expected, int received) {
 }
 
 int main() {
-	using namespace Test;
+	using Test::Tester;
+	using TypedAST::get_unique;
 
 	Tester monolithic_test = {R"(
 	x : dec = 1.4;
