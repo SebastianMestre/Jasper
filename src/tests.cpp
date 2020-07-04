@@ -18,7 +18,8 @@ void assert_equals(int expected, int received) {
 }
 
 int main() {
-	using namespace Test;
+	using Test::Tester;
+	using TypedAST::get_unique;
 
 	Tester monolithic_test = {R"(
 	x : dec = 1.4;
@@ -600,126 +601,6 @@ int main() {
 	});
 
 	assert(0 == native_array_join.execute());
-
-	Tester type_declaration{""};
-
-	type_declaration.add_test(+[](Type::Environment& env)->int{
-		auto decl = TypedASTDeclaration();
-		auto value = new TypedASTNumberLiteral;
-
-		decl.m_value = std::unique_ptr<TypedAST>(value);
-
-		typeAST(&decl);
-		if (decl.m_vtype != ast_vtype::Integer) {
-			return 1;
-		}
-
-		value->m_vtype = ast_vtype::Undefined;
-
-		typeAST(&decl);
-		if (decl.m_vtype != ast_vtype::Undefined) {
-			return 2;
-		}
-
-		value->m_vtype = ast_vtype::TypeError;
-
-		typeAST(&decl);
-		if (decl.m_vtype != ast_vtype::TypeError) {
-			return 3;
-		}
-
-		value->m_vtype = ast_vtype::Void;
-
-		typeAST(&decl);
-		if (decl.m_vtype != ast_vtype::TypeError) {
-			return 4;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
-	});
-
-	assert_equals(0, type_declaration.execute());
-
-	Tester type_array{""};
-
-	type_array.add_test(+[](Type::Environment& env)->int{
-		auto array = TypedASTArrayLiteral();
-		auto v1 = new TypedASTNumberLiteral;
-		auto v2 = new TypedASTNumberLiteral;
-
-		array.m_elements.push_back(std::unique_ptr<TypedAST>(v1));
-		array.m_elements.push_back(std::unique_ptr<TypedAST>(v2));
-
-
-		typeAST(&array);
-		if (array.m_vtype != ast_vtype::Array) {
-			return 1;
-		}
-
-		v1->m_vtype = ast_vtype::Undefined;
-
-		typeAST(&array);
-		if (array.m_vtype != ast_vtype::Undefined) {
-			return 2;
-		}
-
-		v2->m_vtype = ast_vtype::TypeError;
-
-		typeAST(&array);
-		if (array.m_vtype != ast_vtype::TypeError) {
-			return 3;
-		}
-
-		v1->m_vtype = ast_vtype::Integer;
-		v2->m_vtype = ast_vtype::String;
-
-		typeAST(&array);
-		if (array.m_vtype != ast_vtype::TypeError) {
-			return 4;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
-	});
-
-	assert_equals(0, type_array.execute());
-	
-	Tester type_decl_list{""};
-
-	type_decl_list.add_test(+[](Type::Environment& env)->int{
-		auto decl_list = TypedASTDeclarationList();
-		auto decl = new TypedASTDeclaration;
-		
-		decl_list.m_declarations.push_back(
-			std::unique_ptr<TypedAST>(decl));
-
-		decl->m_vtype = ast_vtype::Array;
-
-		typeAST(&decl_list);
-		if (decl_list.m_vtype != ast_vtype::Void) {
-			return 1;
-		}
-
-		decl->m_vtype = ast_vtype::Undefined;
-
-		typeAST(&decl_list);
-		if (decl_list.m_vtype != ast_vtype::Void) {
-			return 2;
-		}
-
-		decl->m_vtype = ast_vtype::TypeError;
-
-		typeAST(&decl_list);
-		if (decl_list.m_vtype != ast_vtype::TypeError) {
-			return 3;
-		}
-		
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
-	});
-
-	assert_equals(0, type_decl_list.execute());
 
 	Tester pizza_operator{R"(
 		f := fn(x) => x + 7;

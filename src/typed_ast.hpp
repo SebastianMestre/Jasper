@@ -11,6 +11,8 @@
 
 struct AST;
 
+namespace TypedAST {
+
 struct TypedAST {
 protected:
 	ast_type m_type;
@@ -25,85 +27,84 @@ public:
 };
 
 TypedAST* convertAST(AST*);
-void typeAST(TypedAST*);
 bool valid_vtype(TypedAST*);
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
-struct TypedASTNumberLiteral : public TypedAST {
+struct NumberLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	TypedASTNumberLiteral() : 
+	NumberLiteral() : 
         TypedAST{ ast_type::NumberLiteral, ast_vtype::Integer } {}
 };
 
-struct TypedASTStringLiteral : public TypedAST {
+struct StringLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	TypedASTStringLiteral() : 
+	StringLiteral() : 
         TypedAST{ ast_type::StringLiteral, ast_vtype::String } {}
 };
 
-struct TypedASTBooleanLiteral : public TypedAST {
+struct BooleanLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	TypedASTBooleanLiteral() : 
+	BooleanLiteral() : 
         TypedAST{ ast_type::BooleanLiteral, ast_vtype::Boolean } {}
 };
 
-struct TypedASTNullLiteral : public TypedAST {
+struct NullLiteral : public TypedAST {
 
-	TypedASTNullLiteral() : 
+	NullLiteral() : 
         TypedAST{ ast_type::NullLiteral, ast_vtype::Null } {}
 };
 
-struct TypedASTObjectLiteral : public TypedAST {
+struct ObjectLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
     // future feature 
     // the value type for objects must be followeb by a class identifier
-	TypedASTObjectLiteral() : 
+	ObjectLiteral() : 
         TypedAST{ ast_type::ObjectLiteral, ast_vtype::Object } {}
 };
 
-struct TypedASTArrayLiteral : public TypedAST {
+struct ArrayLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_elements;
 
-	TypedASTArrayLiteral() : TypedAST{ ast_type::ArrayLiteral } {}
+	ArrayLiteral() : TypedAST{ ast_type::ArrayLiteral } {}
 };
 
-struct TypedASTDictionaryLiteral : public TypedAST {
+struct DictionaryLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
-	TypedASTDictionaryLiteral() : 
+	DictionaryLiteral() : 
         TypedAST{ ast_type::DictionaryLiteral, ast_vtype::Dictionary } {}
 };
 
-struct TypedASTFunctionLiteral : public TypedAST {
+struct FunctionLiteral : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 	std::vector<std::string> m_captures;
 
-	TypedASTFunctionLiteral() : 
+	FunctionLiteral() : 
         TypedAST{ ast_type::FunctionLiteral } {}
 };
 
 // doesnt have a ast_vtype
-struct TypedASTDeclarationList : public TypedAST {
+struct DeclarationList : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_declarations;
 
-	TypedASTDeclarationList() : TypedAST{ ast_type::DeclarationList } {}
+	DeclarationList() : TypedAST{ ast_type::DeclarationList } {}
 };
 
 // doesnt have a ast_vtype
-struct TypedASTDeclaration : public TypedAST {
+struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	Token const* m_typename_token { nullptr }; // can be nullptr
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
@@ -111,58 +112,60 @@ struct TypedASTDeclaration : public TypedAST {
 	std::string const& identifier_text() const { return m_identifier_token->m_text; }
 	std::string const& typename_text() const { return m_typename_token->m_text; }
 
-	TypedASTDeclaration() : TypedAST{ ast_type::Declaration } {}
+	Declaration() : TypedAST{ ast_type::Declaration } {}
 };
 
 // the ast_vtype must be computed
-struct TypedASTIdentifier : public TypedAST {
+struct Identifier : public TypedAST {
 	Token const* m_token;
-	TypedASTDeclaration* m_declaration { nullptr };
+	Declaration* m_declaration { nullptr };
 
 	std::string const& text () { return m_token->m_text; }
 
-	TypedASTIdentifier() : TypedAST{ ast_type::Identifier } {}
+	Identifier() : TypedAST{ ast_type::Identifier } {}
 };
 
 // the value depends on the return value of callee
-struct TypedASTCallExpression : public TypedAST {
+struct CallExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_callee;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 
-	TypedASTCallExpression() : TypedAST{ ast_type::CallExpression } {}
+	CallExpression() : TypedAST{ ast_type::CallExpression } {}
 };
 
-struct TypedASTIndexExpression : public TypedAST {
+struct IndexExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_callee;
 	std::unique_ptr<TypedAST> m_index;
 
-	TypedASTIndexExpression() : TypedAST{ ast_type::IndexExpression } {}
+	IndexExpression() : TypedAST{ ast_type::IndexExpression } {}
 };
 
-struct TypedASTBlock : public TypedAST {
+struct Block : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
-	TypedASTBlock() : TypedAST{ ast_type::Block } {}
+	Block() : TypedAST{ ast_type::Block } {}
 };
 
-struct TypedASTReturnStatement : public TypedAST {
+struct ReturnStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_value;
 
-	TypedASTReturnStatement() : TypedAST{ ast_type::ReturnStatement } {}
+	ReturnStatement() : TypedAST{ ast_type::ReturnStatement } {}
 };
 
-struct TypedASTIfStatement : public TypedAST {
+struct IfStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_condition;
 	std::unique_ptr<TypedAST> m_body;
 
-	TypedASTIfStatement() : TypedAST{ ast_type::IfStatement } {}
+	IfStatement() : TypedAST{ ast_type::IfStatement } {}
 };
 
-struct TypedASTForStatement : public TypedAST {
+struct ForStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_declaration;
 	std::unique_ptr<TypedAST> m_condition;
 	std::unique_ptr<TypedAST> m_action;
 	std::unique_ptr<TypedAST> m_body;
 
-	TypedASTForStatement() : TypedAST{ ast_type::ForStatement } {}
+	ForStatement() : TypedAST{ ast_type::ForStatement } {}
 };
+
+} // namespace TypedAST

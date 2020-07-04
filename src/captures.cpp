@@ -7,9 +7,9 @@
 
 using Set = std::unordered_set<std::string>;
 
-Set gather_captures(TypedASTFunctionLiteral* ast) {
+Set gather_captures(TypedAST::FunctionLiteral* ast) {
 
-	auto* body = dynamic_cast<TypedASTBlock*>(ast->m_body.get());
+	auto* body = dynamic_cast<TypedAST::Block*>(ast->m_body.get());
 	assert(body);
 
 	Set internals;
@@ -24,14 +24,14 @@ Set gather_captures(TypedASTFunctionLiteral* ast) {
 	// Do not capture own arguments
 	for (auto& argp : ast->m_args) {
 		assert(argp->type() == ast_type::Declaration);
-		auto decl = static_cast<TypedASTDeclaration*>(argp.get());
+		auto decl = static_cast<TypedAST::Declaration*>(argp.get());
 		internals.insert(decl->identifier_text());
 	}
 
 	for (auto& stmt : body->m_body) {
 		// do not capture locals
 		if (stmt->type() == ast_type::Declaration) {
-			auto* decl = static_cast<TypedASTDeclaration*>(stmt.get());
+			auto* decl = static_cast<TypedAST::Declaration*>(stmt.get());
 			internals.insert(decl->identifier_text());
 		}
 
@@ -49,31 +49,31 @@ Set gather_captures(TypedASTFunctionLiteral* ast) {
 	return externals;
 }
 
-Set gather_captures(TypedASTDeclaration* ast) {
+Set gather_captures(TypedAST::Declaration* ast) {
 	return gather_captures(ast->m_value.get());
 }
 
-Set gather_captures(TypedASTNumberLiteral* ast) {
+Set gather_captures(TypedAST::NumberLiteral* ast) {
 	return {};
 }
 
-Set gather_captures(TypedASTStringLiteral* ast) {
+Set gather_captures(TypedAST::StringLiteral* ast) {
 	return {};
 }
 
-Set gather_captures(TypedASTBooleanLiteral* ast) {
+Set gather_captures(TypedAST::BooleanLiteral* ast) {
 	return {};
 }
 
-Set gather_captures(TypedASTNullLiteral* ast) {
+Set gather_captures(TypedAST::NullLiteral* ast) {
 	return {};
 }
 
-Set gather_captures(TypedASTIdentifier* ast) {
+Set gather_captures(TypedAST::Identifier* ast) {
 	return {{ ast->text() }};
 }
 
-Set gather_captures(TypedASTCallExpression* ast) {
+Set gather_captures(TypedAST::CallExpression* ast) {
 	Set result = gather_captures(ast->m_callee.get());
 	for(auto& child : ast->m_args){
 		Set child_captures = gather_captures(child.get());
@@ -83,7 +83,7 @@ Set gather_captures(TypedASTCallExpression* ast) {
 	return result;
 }
 
-Set gather_captures(TypedASTIndexExpression* ast) {
+Set gather_captures(TypedAST::IndexExpression* ast) {
 	Set result = gather_captures(ast->m_callee.get());
 	Set secondary = gather_captures(ast->m_index.get());
 	for(auto const& identifier : secondary)
@@ -91,7 +91,7 @@ Set gather_captures(TypedASTIndexExpression* ast) {
 	return result;
 }
 
-Set gather_captures(TypedASTBlock* ast) {
+Set gather_captures(TypedAST::Block* ast) {
 	Set result {};
 	for(auto& child : ast->m_body){
 		Set child_captures = gather_captures(child.get());
@@ -101,16 +101,16 @@ Set gather_captures(TypedASTBlock* ast) {
 	return result;
 }
 
-Set gather_captures(TypedASTReturnStatement* ast) {
+Set gather_captures(TypedAST::ReturnStatement* ast) {
 	return gather_captures(ast->m_value.get());
 }
 
-Set gather_captures(TypedASTObjectLiteral* ast) {
+Set gather_captures(TypedAST::ObjectLiteral* ast) {
 	// TODO
 	return {};
 }
 
-Set gather_captures(TypedASTArrayLiteral* ast) {
+Set gather_captures(TypedAST::ArrayLiteral* ast) {
 	Set result {};
 	for(auto& child : ast->m_elements){
 		Set child_captures = gather_captures(child.get());
@@ -120,68 +120,68 @@ Set gather_captures(TypedASTArrayLiteral* ast) {
 	return result;
 }
 
-Set gather_captures(TypedASTDictionaryLiteral* ast) {
+Set gather_captures(TypedAST::DictionaryLiteral* ast) {
 	// TODO
 	return {};
 }
 
-Set gather_captures(TypedASTDeclarationList* ast) {
+Set gather_captures(TypedAST::DeclarationList* ast) {
 	// TODO: figure out exactly what this should do
 	for(auto& decl : ast->m_declarations){
 		assert(decl->type() == ast_type::Declaration);
-		auto* child = static_cast<TypedASTDeclaration*>(decl.get());
+		auto* child = static_cast<TypedAST::Declaration*>(decl.get());
 		auto child_captures = gather_captures(child);
 	}
 	return {};
 }
 
-Set gather_captures(TypedASTIfStatement* ast) {
+Set gather_captures(TypedAST::IfStatement* ast) {
 	// TODO
 	return {};
 }
 
-Set gather_captures(TypedASTForStatement* ast) {
+Set gather_captures(TypedAST::ForStatement* ast) {
 	// TODO
 	return {};
 }
 
-Set gather_captures(TypedAST* ast) {
+Set gather_captures(TypedAST::TypedAST* ast) {
 
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
-		return gather_captures(static_cast<TypedASTNumberLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::NumberLiteral*>(ast));
 	case ast_type::StringLiteral:
-		return gather_captures(static_cast<TypedASTStringLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::StringLiteral*>(ast));
 	case ast_type::BooleanLiteral:
-		return gather_captures(static_cast<TypedASTBooleanLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::BooleanLiteral*>(ast));
 	case ast_type::NullLiteral:
-		return gather_captures(static_cast<TypedASTNullLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::NullLiteral*>(ast));
 	case ast_type::ObjectLiteral:
-		return gather_captures(static_cast<TypedASTObjectLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::ObjectLiteral*>(ast));
 	case ast_type::ArrayLiteral:
-		return gather_captures(static_cast<TypedASTArrayLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::ArrayLiteral*>(ast));
 	case ast_type::DictionaryLiteral:
-		return gather_captures(static_cast<TypedASTDictionaryLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::DictionaryLiteral*>(ast));
 	case ast_type::FunctionLiteral:
-		return gather_captures(static_cast<TypedASTFunctionLiteral*>(ast));
+		return gather_captures(static_cast<TypedAST::FunctionLiteral*>(ast));
 	case ast_type::DeclarationList:
-		return gather_captures(static_cast<TypedASTDeclarationList*>(ast));
+		return gather_captures(static_cast<TypedAST::DeclarationList*>(ast));
 	case ast_type::Declaration:
-		return gather_captures(static_cast<TypedASTDeclaration*>(ast));
+		return gather_captures(static_cast<TypedAST::Declaration*>(ast));
 	case ast_type::Identifier:
-		return gather_captures(static_cast<TypedASTIdentifier*>(ast));
+		return gather_captures(static_cast<TypedAST::Identifier*>(ast));
 	case ast_type::CallExpression:
-		return gather_captures(static_cast<TypedASTCallExpression*>(ast));
+		return gather_captures(static_cast<TypedAST::CallExpression*>(ast));
 	case ast_type::IndexExpression:
-		return gather_captures(static_cast<TypedASTIndexExpression*>(ast));
+		return gather_captures(static_cast<TypedAST::IndexExpression*>(ast));
 	case ast_type::Block:
-		return gather_captures(static_cast<TypedASTBlock*>(ast));
+		return gather_captures(static_cast<TypedAST::Block*>(ast));
 	case ast_type::ReturnStatement:
-		return gather_captures(static_cast<TypedASTReturnStatement*>(ast));
+		return gather_captures(static_cast<TypedAST::ReturnStatement*>(ast));
 	case ast_type::IfStatement:
-		return gather_captures(static_cast<TypedASTIfStatement*>(ast));
+		return gather_captures(static_cast<TypedAST::IfStatement*>(ast));
 	case ast_type::ForStatement:
-		return gather_captures(static_cast<TypedASTForStatement*>(ast));
+		return gather_captures(static_cast<TypedAST::ForStatement*>(ast));
 	case ast_type::BinaryExpression:
 		assert(0);
 	}

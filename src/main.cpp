@@ -34,7 +34,7 @@ int main() {
 		{
 			TokenArray ta;
 			auto top_level_call_ast = parse_expression("__invoke()", ta);
-			auto top_level_call = convertAST(top_level_call_ast.m_result.get());
+			auto top_level_call = TypedAST::convertAST(top_level_call_ast.m_result.get());
 
 			auto* result = eval(top_level_call, env);
 

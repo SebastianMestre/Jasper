@@ -8,15 +8,15 @@
 #include "environment.hpp"
 #include "value.hpp"
 
-Type::Value* eval(TypedASTDeclarationList* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::DeclarationList* ast, Type::Environment& e) {
 	for(auto& decl : ast->m_declarations){
 		assert(decl->type() == ast_type::Declaration);
-		eval(static_cast<TypedASTDeclaration*>(decl.get()), e);
+		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
 	return nullptr;
 };
 
-Type::Value* eval(TypedASTDeclaration* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::Declaration* ast, Type::Environment& e) {
 	// TODO: type and mutable check -> return error
 	e.declare(ast->identifier_text(), e.null());
 	if (ast->m_value) {
@@ -28,7 +28,7 @@ Type::Value* eval(TypedASTDeclaration* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedASTNumberLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::NumberLiteral* ast, Type::Environment& e) {
 	for (char a : ast->text())
 		if (a == '.')
 			return e.new_float(std::stof(ast->text()));
@@ -36,25 +36,25 @@ Type::Value* eval(TypedASTNumberLiteral* ast, Type::Environment& e) {
 	return e.new_integer(std::stoi(ast->text()));
 };
 
-Type::Value* eval(TypedASTStringLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::StringLiteral* ast, Type::Environment& e) {
 	return e.new_string(ast->text());
 };
 
-Type::Value* eval(TypedASTBooleanLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::BooleanLiteral* ast, Type::Environment& e) {
 	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 
-Type::Value* eval(TypedASTNullLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::NullLiteral* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedASTObjectLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::ObjectLiteral* ast, Type::Environment& e) {
 	Type::ObjectType declarations;
 
 	for(auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedASTDeclaration* decl = static_cast<TypedASTDeclaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
@@ -68,12 +68,12 @@ Type::Value* eval(TypedASTObjectLiteral* ast, Type::Environment& e) {
 	return e.new_object(std::move(declarations));
 };
 
-Type::Value* eval(TypedASTDictionaryLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::DictionaryLiteral* ast, Type::Environment& e) {
 	Type::ObjectType declarations;
 
 	for(auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedASTDeclaration* decl = static_cast<TypedASTDeclaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
@@ -86,7 +86,7 @@ Type::Value* eval(TypedASTDictionaryLiteral* ast, Type::Environment& e) {
 	return e.new_dictionary(std::move(declarations));
 };
 
-Type::Value* eval(TypedASTArrayLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::ArrayLiteral* ast, Type::Environment& e) {
 	std::vector<Type::Value*> elements;
 	for(auto& element : ast->m_elements){
 		elements.push_back(unboxed(eval(element.get(), e)));
@@ -94,11 +94,11 @@ Type::Value* eval(TypedASTArrayLiteral* ast, Type::Environment& e) {
 	return e.new_list(std::move(elements));
 };
 
-Type::Value* eval(TypedASTIdentifier* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::Identifier* ast, Type::Environment& e) {
 	return e.access(ast->text());
 };
 
-Type::Value* eval(TypedASTBlock* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::Block* ast, Type::Environment& e) {
 
 	e.new_nested_scope();
 
@@ -113,7 +113,7 @@ Type::Value* eval(TypedASTBlock* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedASTReturnStatement* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::ReturnStatement* ast, Type::Environment& e) {
 	// TODO: proper error handling
 	auto* returning = unboxed(eval(ast->m_value.get(), e));
 	assert(returning);
@@ -141,7 +141,7 @@ Type::Value* eval_call_function(
 		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
 		assert(argdeclTypeErased);
 		assert(argdeclTypeErased->type() == ast_type::Declaration);
-		auto* argdecl = static_cast<TypedASTDeclaration*>(argdeclTypeErased);
+		auto* argdecl = static_cast<TypedAST::Declaration*>(argdeclTypeErased);
 
 		e.declare(argdecl->identifier_text(), unboxed(args[i]));
 	}
@@ -152,7 +152,7 @@ Type::Value* eval_call_function(
 		e.direct_declare(kv.first, static_cast<Type::Reference*>(kv.second));
 	}
 
-	auto* body = dynamic_cast<TypedASTBlock*>(callee->m_def->m_body.get());
+	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body.get());
 	assert(body);
 
 	eval(body, e);
@@ -183,7 +183,7 @@ Type::Value* eval_call_callable(Type::Value* callee, std::vector<Type::Value*> a
 	}
 }
 
-Type::Value* eval(TypedASTCallExpression* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::CallExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = unboxed(eval(ast->m_callee.get(), e));
@@ -200,7 +200,7 @@ Type::Value* eval(TypedASTCallExpression* ast, Type::Environment& e) {
 	return eval_call_callable(callee, std::move(args), e);
 };
 
-Type::Value* eval(TypedASTIndexExpression* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::IndexExpression* ast, Type::Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = unboxed(eval(ast->m_callee.get(), e));
@@ -217,7 +217,7 @@ Type::Value* eval(TypedASTIndexExpression* ast, Type::Environment& e) {
 	return array_callee->at(int_index->m_value);
 };
 
-Type::Value* eval(TypedASTFunctionLiteral* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::FunctionLiteral* ast, Type::Environment& e) {
 	std::unordered_map<std::string, Type::Value*> captures;
 	for(auto const& identifier : ast->m_captures){
 		captures[identifier] = e.m_scope->access(identifier);
@@ -225,7 +225,7 @@ Type::Value* eval(TypedASTFunctionLiteral* ast, Type::Environment& e) {
 	return e.new_function(ast, std::move(captures));
 };
 
-Type::Value* eval(TypedASTIfStatement* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::IfStatement* ast, Type::Environment& e) {
 	auto* condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
@@ -239,7 +239,7 @@ Type::Value* eval(TypedASTIfStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedASTForStatement* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::ForStatement* ast, Type::Environment& e) {
 	e.new_nested_scope();
 	
 	auto* declaration = eval(ast->m_declaration.get(), e);
@@ -269,43 +269,43 @@ Type::Value* eval(TypedASTForStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST* ast, Type::Environment& e) {
+Type::Value* eval(TypedAST::TypedAST* ast, Type::Environment& e) {
 
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
-		return eval(static_cast<TypedASTNumberLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
 	case ast_type::StringLiteral:
-		return eval(static_cast<TypedASTStringLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
 	case ast_type::BooleanLiteral:
-		return eval(static_cast<TypedASTBooleanLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::BooleanLiteral*>(ast), e);
 	case ast_type::NullLiteral:
-		return eval(static_cast<TypedASTNullLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::NullLiteral*>(ast), e);
 	case ast_type::ObjectLiteral:
-		return eval(static_cast<TypedASTObjectLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::ObjectLiteral*>(ast), e);
 	case ast_type::ArrayLiteral:
-		return eval(static_cast<TypedASTArrayLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::ArrayLiteral*>(ast), e);
 	case ast_type::DictionaryLiteral:
-		return eval(static_cast<TypedASTDictionaryLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::DictionaryLiteral*>(ast), e);
 	case ast_type::FunctionLiteral:
-		return eval(static_cast<TypedASTFunctionLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::FunctionLiteral*>(ast), e);
 	case ast_type::DeclarationList:
-		return eval(static_cast<TypedASTDeclarationList*>(ast), e);
+		return eval(static_cast<TypedAST::DeclarationList*>(ast), e);
 	case ast_type::Declaration:
-		return eval(static_cast<TypedASTDeclaration*>(ast), e);
+		return eval(static_cast<TypedAST::Declaration*>(ast), e);
 	case ast_type::Identifier:
-		return eval(static_cast<TypedASTIdentifier*>(ast), e);
+		return eval(static_cast<TypedAST::Identifier*>(ast), e);
 	case ast_type::CallExpression:
-		return eval(static_cast<TypedASTCallExpression*>(ast), e);
+		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
 	case ast_type::IndexExpression:
-		return eval(static_cast<TypedASTIndexExpression*>(ast), e);
+		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
 	case ast_type::Block:
-		return eval(static_cast<TypedASTBlock*>(ast), e);
+		return eval(static_cast<TypedAST::Block*>(ast), e);
 	case ast_type::ReturnStatement:
-		return eval(static_cast<TypedASTReturnStatement*>(ast), e);
+		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
 	case ast_type::IfStatement:
-		return eval(static_cast<TypedASTIfStatement*>(ast), e);
+		return eval(static_cast<TypedAST::IfStatement*>(ast), e);
 	case ast_type::ForStatement:
-		return eval(static_cast<TypedASTForStatement*>(ast), e);
+		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
 	case ast_type::BinaryExpression:
 		assert(0);
 	default:
