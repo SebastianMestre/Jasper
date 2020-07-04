@@ -25,7 +25,6 @@ public:
 };
 
 TypedAST* convertAST(AST*);
-void typeAST(TypedAST*);
 bool valid_vtype(TypedAST*);
 std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
 
