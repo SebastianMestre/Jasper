@@ -7,6 +7,8 @@
 #include "token.hpp"
 #include "ast_type.hpp"
 
+namespace AST {
+
 struct AST {
 protected:
 	ast_type m_type;
@@ -19,69 +21,67 @@ public:
 	virtual ~AST() = default;
 };
 
-
-struct ASTNumberLiteral : public AST {
+struct NumberLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	ASTNumberLiteral() : AST{ ast_type::NumberLiteral } {}
+	NumberLiteral() : AST{ ast_type::NumberLiteral } {}
 };
 
-struct ASTStringLiteral : public AST {
+struct StringLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	ASTStringLiteral() : AST{ ast_type::StringLiteral } {}
+	StringLiteral() : AST{ ast_type::StringLiteral } {}
 };
 
-struct ASTBooleanLiteral : public AST {
+struct BooleanLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	ASTBooleanLiteral() : AST{ ast_type::BooleanLiteral } {}
+	BooleanLiteral() : AST{ ast_type::BooleanLiteral } {}
 };
 
-struct ASTNullLiteral : public AST {
+struct NullLiteral : public AST {
 
-	ASTNullLiteral() : AST{ ast_type::NullLiteral } {}
+	NullLiteral() : AST{ ast_type::NullLiteral } {}
 };
 
-struct ASTObjectLiteral : public AST {
+struct ObjectLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
-	ASTObjectLiteral() : AST{ ast_type::ObjectLiteral } {}
+	ObjectLiteral() : AST{ ast_type::ObjectLiteral } {}
 };
 
-struct ASTArrayLiteral : public AST {
+struct ArrayLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_elements;
 
-	ASTArrayLiteral() : AST{ ast_type::ArrayLiteral } {}
+	ArrayLiteral() : AST{ ast_type::ArrayLiteral } {}
 };
 
-struct ASTDictionaryLiteral : public AST {
+struct DictionaryLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
-	ASTDictionaryLiteral() : AST{ ast_type::DictionaryLiteral } {}
+	DictionaryLiteral() : AST{ ast_type::DictionaryLiteral } {}
 };
 
-struct ASTFunctionLiteral : public AST {
+struct FunctionLiteral : public AST {
 	std::unique_ptr<AST> m_body;
 	std::vector<std::unique_ptr<AST>> m_args;
 
-	ASTFunctionLiteral() : AST{ ast_type::FunctionLiteral } {}
+	FunctionLiteral() : AST{ ast_type::FunctionLiteral } {}
 };
 
-
-struct ASTDeclarationList : public AST {
+struct DeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
 
-	ASTDeclarationList() : AST{ ast_type::DeclarationList } {}
+	DeclarationList() : AST{ ast_type::DeclarationList } {}
 };
 
-struct ASTDeclaration : public AST {
+struct Declaration : public AST {
 	Token const* m_identifier_token;
 	Token const* m_typename_token { nullptr }; // can be nullptr
 	std::unique_ptr<AST> m_value; // can be nullptr
@@ -89,65 +89,67 @@ struct ASTDeclaration : public AST {
 	std::string const& identifier_text() const { return m_identifier_token->m_text; }
 	std::string const& typename_text() const { return m_typename_token->m_text; }
 
-	ASTDeclaration() : AST{ ast_type::Declaration } {}
+	Declaration() : AST{ ast_type::Declaration } {}
 };
 
-struct ASTIdentifier : public AST {
+struct Identifier : public AST {
 	Token const* m_token;
 
 	std::string const& text () { return m_token->m_text; }
 
-	ASTIdentifier() : AST{ ast_type::Identifier } {}
+	Identifier() : AST{ ast_type::Identifier } {}
 };
 
-struct ASTBinaryExpression : public AST {
+struct BinaryExpression : public AST {
 	Token const* m_op_token;
 	std::unique_ptr<AST> m_lhs;
 	std::unique_ptr<AST> m_rhs;
 
-	ASTBinaryExpression() : AST{ ast_type::BinaryExpression } {}
+	BinaryExpression() : AST{ ast_type::BinaryExpression } {}
 };
 
-struct ASTCallExpression : public AST {
+struct CallExpression : public AST {
 	std::unique_ptr<AST> m_callee;
 	std::vector<std::unique_ptr<AST>> m_args;
 
-	ASTCallExpression() : AST{ ast_type::CallExpression } {}
+	CallExpression() : AST{ ast_type::CallExpression } {}
 };
 
-struct ASTIndexExpression : public AST {
+struct IndexExpression : public AST {
 	std::unique_ptr<AST> m_callee;
 	std::unique_ptr<AST> m_index;
 
-	ASTIndexExpression() : AST{ ast_type::IndexExpression } {}
+	IndexExpression() : AST{ ast_type::IndexExpression } {}
 };
 
-struct ASTBlock : public AST {
+struct Block : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
-	ASTBlock() : AST{ ast_type::Block } {}
+	Block() : AST{ ast_type::Block } {}
 };
 
-struct ASTReturnStatement : public AST {
+struct ReturnStatement : public AST {
 	std::unique_ptr<AST> m_value;
 
-	ASTReturnStatement() : AST{ ast_type::ReturnStatement } {}
+	ReturnStatement() : AST{ ast_type::ReturnStatement } {}
 };
 
-struct ASTIfStatement : public AST {
+struct IfStatement : public AST {
 	std::unique_ptr<AST> m_condition;
 	std::unique_ptr<AST> m_body;
 
-	ASTIfStatement() : AST{ ast_type::IfStatement } {}
+	IfStatement() : AST{ ast_type::IfStatement } {}
 };
 
-struct ASTForStatement : public AST {
+struct ForStatement : public AST {
 	std::unique_ptr<AST> m_declaration;
 	std::unique_ptr<AST> m_condition;
 	std::unique_ptr<AST> m_action;
 	std::unique_ptr<AST> m_body;
 
-	ASTForStatement() : AST{ ast_type::ForStatement } {}
+	ForStatement() : AST{ ast_type::ForStatement } {}
 };
 
 void print (AST*, int);
+
+}
