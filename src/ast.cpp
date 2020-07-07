@@ -6,13 +6,11 @@
 
 #include "value.hpp"
 
-namespace {
+namespace AST {
 
 constexpr char tabc = ' ';
 
-}
-
-void print(ASTDeclarationList* ast, int d) {
+void print(DeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ DeclarationList\n";
 	for (auto& decl : ast->m_declarations)
@@ -20,7 +18,7 @@ void print(ASTDeclarationList* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTDeclaration* ast, int d) {
+void print(Declaration* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Declaration\n"
@@ -36,27 +34,27 @@ void print(ASTDeclaration* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTNumberLiteral* ast, int d) {
+void print(NumberLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ Number " << ast->text() << " ]\n";
 }
 
-void print(ASTStringLiteral* ast, int d) {
+void print(StringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ StringLiteral " << ast->text() << "]\n";
 }
 
-void print(ASTBooleanLiteral* ast, int d) {
+void print(BooleanLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ BooleanLiteral " << ast->text() << "]\n";
 }
 
-void print(ASTNullLiteral* ast, int d) {
+void print(NullLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ NullLiteral ]\n";
 }
 
-void print(ASTObjectLiteral* ast, int d) {
+void print(ObjectLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ObjectLiteral\n"
@@ -66,7 +64,7 @@ void print(ASTObjectLiteral* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTArrayLiteral* ast, int d) {
+void print(ArrayLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ArrayLiteral\n"
@@ -76,7 +74,7 @@ void print(ASTArrayLiteral* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTDictionaryLiteral* ast, int d) {
+void print(DictionaryLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ DictionaryLiteral\n"
@@ -86,12 +84,12 @@ void print(ASTDictionaryLiteral* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTIdentifier* ast, int d) {
+void print(Identifier* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ Identifier " << ast->text() << " ]\n";
 }
 
-void print(ASTBlock* ast, int d) {
+void print(Block* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ Block\n";
 	for (auto& child : ast->m_body)
@@ -99,7 +97,7 @@ void print(ASTBlock* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTFunctionLiteral* ast, int d) {
+void print(FunctionLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Function\n"
@@ -113,7 +111,7 @@ void print(ASTFunctionLiteral* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTBinaryExpression* ast, int d) {
+void print(BinaryExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ BinaryExpression\n"
@@ -125,7 +123,7 @@ void print(ASTBinaryExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTCallExpression* ast, int d) {
+void print(CallExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ CallExpression\n"
@@ -137,7 +135,7 @@ void print(ASTCallExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTIndexExpression* ast, int d) {
+void print(IndexExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ IndexExpression\n"
@@ -148,14 +146,14 @@ void print(ASTIndexExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTReturnStatement* ast, int d) {
+void print(ReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
 	print(ast->m_value.get(), d+1);
 	std::cout << stab << "]\n";
 }
 
-void print(ASTIfStatement* ast, int d) {
+void print(IfStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ IfStatement\n"
@@ -166,7 +164,7 @@ void print(ASTIfStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTForStatement* ast, int d) {
+void print(ForStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ForStatement\n"
@@ -184,41 +182,42 @@ void print(ASTForStatement* ast, int d) {
 void print(AST* ast, int d) {
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
-		return print(static_cast<ASTNumberLiteral*>(ast), d);
+		return print(static_cast<NumberLiteral*>(ast), d);
 	case ast_type::StringLiteral:
-		return print(static_cast<ASTStringLiteral*>(ast), d);
+		return print(static_cast<StringLiteral*>(ast), d);
 	case ast_type::BooleanLiteral:
-		return print(static_cast<ASTBooleanLiteral*>(ast), d);
+		return print(static_cast<BooleanLiteral*>(ast), d);
 	case ast_type::NullLiteral:
-		return print(static_cast<ASTNullLiteral*>(ast), d);
+		return print(static_cast<NullLiteral*>(ast), d);
 	case ast_type::ObjectLiteral:
-		return print(static_cast<ASTObjectLiteral*>(ast), d);
+		return print(static_cast<ObjectLiteral*>(ast), d);
 	case ast_type::ArrayLiteral:
-		return print(static_cast<ASTArrayLiteral*>(ast), d);
+		return print(static_cast<ArrayLiteral*>(ast), d);
 	case ast_type::DictionaryLiteral:
-		return print(static_cast<ASTDictionaryLiteral*>(ast), d);
+		return print(static_cast<DictionaryLiteral*>(ast), d);
 	case ast_type::FunctionLiteral:
-		return print(static_cast<ASTFunctionLiteral*>(ast), d);
+		return print(static_cast<FunctionLiteral*>(ast), d);
 	case ast_type::DeclarationList:
-		return print(static_cast<ASTDeclarationList*>(ast), d);
+		return print(static_cast<DeclarationList*>(ast), d);
 	case ast_type::Declaration:
-		return print(static_cast<ASTDeclaration*>(ast), d);
+		return print(static_cast<Declaration*>(ast), d);
 	case ast_type::Identifier:
-		return print(static_cast<ASTIdentifier*>(ast), d);
+		return print(static_cast<Identifier*>(ast), d);
 	case ast_type::BinaryExpression:
-		return print(static_cast<ASTBinaryExpression*>(ast), d);
+		return print(static_cast<BinaryExpression*>(ast), d);
 	case ast_type::CallExpression:
-		return print(static_cast<ASTCallExpression*>(ast), d);
+		return print(static_cast<CallExpression*>(ast), d);
 	case ast_type::IndexExpression:
-		return print(static_cast<ASTIndexExpression*>(ast), d);
+		return print(static_cast<IndexExpression*>(ast), d);
 	case ast_type::Block:
-		return print(static_cast<ASTBlock*>(ast), d);
+		return print(static_cast<Block*>(ast), d);
 	case ast_type::ReturnStatement:
-		return print(static_cast<ASTReturnStatement*>(ast), d);
+		return print(static_cast<ReturnStatement*>(ast), d);
 	case ast_type::IfStatement:
-		return print(static_cast<ASTIfStatement*>(ast), d);
+		return print(static_cast<IfStatement*>(ast), d);
 	case ast_type::ForStatement:
-		return print(static_cast<ASTForStatement*>(ast), d);
+		return print(static_cast<ForStatement*>(ast), d);
 	}
+}
 
 }

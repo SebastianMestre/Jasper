@@ -9,7 +9,9 @@
 #include "value_type.hpp"
 #include "typed_ast_type.hpp"
 
+namespace AST {
 struct AST;
+}
 
 namespace TypedAST {
 
@@ -26,9 +28,9 @@ public:
 	virtual ~TypedAST() = default;
 };
 
-TypedAST* convertAST(AST*);
+TypedAST* convertAST(AST::AST*);
 bool valid_vtype(TypedAST*);
-std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST>&);
+std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
