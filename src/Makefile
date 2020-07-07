@@ -15,6 +15,7 @@ OBJNAMES := \
 	match_identifiers.o \
 	parser.o \
 	parse.o \
+	simple_ast.o \
 	string_view.o \
 	tester.o \
 	token.o \
