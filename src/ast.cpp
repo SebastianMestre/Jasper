@@ -181,7 +181,7 @@ void print(ForStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(ASTTypeTerm* ast, int d) {
+void print(TypeTerm* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ TypeTerm\n";

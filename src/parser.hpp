@@ -48,7 +48,6 @@ struct Parser {
 	/* token handler */
 	Lexer* m_lexer;
 
-<<<<<<< HEAD
 	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(token_type);
 	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_expression_list(token_type, token_type, bool);
 

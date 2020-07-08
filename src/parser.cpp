@@ -166,7 +166,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	if (handle_error(result, name))
 		return result;
 
-	Writer<std::unique_ptr<AST>> type;
+	Writer<std::unique_ptr<AST::AST>> type;
 
 	auto p0 = peek();
 
@@ -483,7 +483,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 	if (handle_error(result, token))
 		return result;
 
-	auto e = std::make_unique<ASTIdentifier>();
+	auto e = std::make_unique<AST::Identifier>();
 	e->m_token = token.m_result;
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
@@ -896,23 +896,23 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	return result;
 }
 
-Writer<std::unique_ptr<AST>> Parser::parse_type_term() {
-	Writer<std::unique_ptr<AST>> result
+Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
+	Writer<std::unique_ptr<AST::AST>> result
 	    = { { "Parse Error: Failed to parse type" } };
 
 	auto callee = parse_identifier();
 	if (handle_error(result, callee))
 		return result;
 
-	auto e = std::make_unique<ASTTypeTerm>();
+	auto e = std::make_unique<AST::TypeTerm>();
 	e->m_callee = std::move(callee.m_result);
 
 	if (peek()->m_type != token_type::POLY_OPEN)
-		return make_writer<std::unique_ptr<AST>>(std::move(e));
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 
 	m_lexer->advance();
 
-	std::vector<std::unique_ptr<AST>> args;
+	std::vector<std::unique_ptr<AST::AST>> args;
 	while (peek()->m_type != token_type::POLY_CLOSE) {
 		auto arg = parse_type_term();
 		if (handle_error(result, arg))
@@ -923,6 +923,6 @@ Writer<std::unique_ptr<AST>> Parser::parse_type_term() {
 	m_lexer->advance();
 
 	e->m_args = std::move(args);
-	return make_writer<std::unique_ptr<AST>>(std::move(e));
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
