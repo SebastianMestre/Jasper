@@ -20,6 +20,9 @@ enum class rtast_type {
 };
 
 struct RTAST {
+	rtast_type m_type;
+
+	// Everything is an expression, so everything has a monotype
 	int m_monotype;
 };
 
@@ -41,7 +44,7 @@ struct RecBlock final : public RTAST {
 };
 
 struct LetBlock final : public RTAST {
-	MonomorphicDeclaration m_declaration_block;
+	PolymorphicDeclaration m_declaration_block;
 	std::unique_ptr<RTAST> m_in_block;
 };
 
@@ -50,7 +53,9 @@ struct FunctionCall final : public RTAST {
 };
 
 struct ConstructorCall final : public RTAST {
+	// TODO: what if we are not given a fully instanced type?
 	int m_monotype_callee;
+
 	std::vector<std::unique_ptr<RTAST>> m_callee;
 };
 
@@ -69,6 +74,10 @@ struct StringLiteral final : public RTAST {
 struct FunctionLiteral final : public RTAST {
 	std::vector<MonomorphicDeclaration> m_arguments;
 	std::unique_ptr<RTAST> m_body;
+};
+
+struct Sequence final : public RTAST {
+	std::vector<std::unique_ptr<RTAST>> m_values;
 };
 
 }
