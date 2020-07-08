@@ -11,7 +11,8 @@ enum class rtast_type {
 	ConstructorCall,
 	Sequence,
 
-	NumberLiteral,
+	IntegerLiteral,
+	RealLiteral,
 	StringLiteral,
 	FunctionLiteral,
 
@@ -24,6 +25,8 @@ struct RTAST {
 
 	// Everything is an expression, so everything has a monotype
 	int m_monotype;
+
+	RTAST(rtast_type type) : m_type { type } {}
 };
 
 struct MonomorphicDeclaration {
@@ -41,15 +44,18 @@ struct PolymorphicDeclaration {
 struct RecBlock final : public RTAST {
 	std::vector<MonomorphicDeclaration> m_declaration_block;
 	std::unique_ptr<RTAST> m_in_block;
+	RecBlock() : RTAST { rtast_type::RecBlock } {}
 };
 
 struct LetBlock final : public RTAST {
 	PolymorphicDeclaration m_declaration_block;
 	std::unique_ptr<RTAST> m_in_block;
+	LetBlock() : RTAST { rtast_type::LetBlock } {}
 };
 
 struct FunctionCall final : public RTAST {
 	std::unique_ptr<RTAST> m_callee;
+	FunctionCall() : RTAST { rtast_type::FunctionCall } {}
 };
 
 struct ConstructorCall final : public RTAST {
@@ -57,27 +63,33 @@ struct ConstructorCall final : public RTAST {
 	int m_monotype_callee;
 
 	std::vector<std::unique_ptr<RTAST>> m_callee;
+	ConstructorCall() : RTAST { rtast_type::ConstructorCall } {}
 };
 
 struct RealLiteral final : public RTAST {
 	double m_value;
+	RealLiteral() : RTAST { rtast_type::RealLiteral } {}
 };
 
 struct IntegerLiteral final : public RTAST {
 	int m_value;
+	IntegerLiteral() : RTAST { rtast_type::IntegerLiteral } {}
 };
 
 struct StringLiteral final : public RTAST {
 	std::string m_value;
+	StringLiteral() : RTAST { rtast_type::StringLiteral } {}
 };
 
 struct FunctionLiteral final : public RTAST {
 	std::vector<MonomorphicDeclaration> m_arguments;
 	std::unique_ptr<RTAST> m_body;
+	FunctionLiteral() : RTAST { rtast_type::FunctionLiteral } {}
 };
 
 struct Sequence final : public RTAST {
 	std::vector<std::unique_ptr<RTAST>> m_values;
+	Sequence() : RTAST { rtast_type::Sequence } {}
 };
 
 }
