@@ -8,50 +8,13 @@
 #include "value.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
-// #include "environment.hpp"
-#include "execute.hpp"
+#include "test_utils.hpp"
 
 void assert_equals(int expected, int received) {
 	if (expected != received) {
 		std::cout << "Error: expected " << expected << " but got " << received << std::endl;
 		assert(0);
 	}
-}
-
-/**
- * T - C++ scalar type of the value to check against
- * U - Type::Value counterpart
- */
-template <typename T, typename U>
-int scalar_equals(const std::string& expr, const value_type v_type, const T& value, Type::Environment& env) {
-	using TypedAST::get_unique;
-
-	TokenArray ta;
-	auto top_level_call_ast = parse_expression(std::move(expr), ta);
-	auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-	auto* result = eval(top_level_call.get(), env);
-	if(!result) {
-		std::cerr << "ERROR: Null result\n";
-		return 1;
-	}
-
-	if(result->type() != v_type) {
-		std::cerr << "ERROR: Type discrepancy\n";
-		return 2;
-	}
-
-	auto* as_u = static_cast<U*>(result);
-	if(as_u->m_value != value){
-		std::cerr
-			<< "ERROR\n"
-			<< "Expected: " << value << std::endl
-			<< "Got: " << as_u->m_value << std::endl;
-		return 3;
-	}
-
-	std::cout << "Success\n";
-	return 0;
 }
 
 int main() {
