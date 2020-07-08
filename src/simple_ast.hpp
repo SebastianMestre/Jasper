@@ -10,6 +10,7 @@ enum class rtast_type {
 	FunctionCall,
 	ConstructorCall,
 	Sequence,
+	Return,
 
 	IntegerLiteral,
 	RealLiteral,
@@ -90,6 +91,11 @@ struct FunctionLiteral final : public RTAST {
 struct Sequence final : public RTAST {
 	std::vector<std::unique_ptr<RTAST>> m_values;
 	Sequence() : RTAST { rtast_type::Sequence } {}
+};
+
+struct Return final : public RTAST {
+	std::unique_ptr<RTAST> m_value;
+	Return() : RTAST { rtast_type::Return } {}
 };
 
 }
