@@ -105,7 +105,7 @@ int main() {
 		},
 
 		+[](Type::Environment& env) -> int {
-			return Assert::equals("float_val", (float)3.5, env);
+			return Assert::equals("float_val", 3.5, env);
 		},
 
 		+[](Type::Environment& env) -> int {
@@ -117,7 +117,7 @@ int main() {
 		},
 
 		+[](Type::Environment& env) -> int {
-			return Assert::equals("float_div", (float)0.5, env);
+			return Assert::equals("float_div", 0.5, env);
 		},
 	} );
 

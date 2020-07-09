@@ -68,7 +68,7 @@ int equals(std::string const& expr, float value, Type::Environment& env) {
 
 // NOTE: allows literals to be used (e.g. 3.5), may need to change in the future?
 int equals(std::string const& expr, double value, Type::Environment& env) {
-	return scalar_equals<float, Type::Float>(expr, value_type::Float, value, env);
+	return equals(expr, float(value), env);
 }
 
 int is_true(std::string const& expr, Type::Environment& env) {
