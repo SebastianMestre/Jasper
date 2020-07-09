@@ -8,7 +8,7 @@
 #include "value.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_type.hpp"
-// #include "environment.hpp"
+#include "test_utils.hpp"
 
 void assert_equals(int expected, int received) {
 	if (expected != received) {
@@ -84,15 +84,7 @@ int main() {
 )"};
 
 	monolithic_test.add_test(+[](Type::Environment& env) -> int {
-		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
-		// this means we need to create a call expression node to run the program.
-		// TODO: We need to clean this up
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		eval(top_level_call.get(), env);
-
+		Assert::eval_expression("__invoke()", env);
 		std::cout << "@ line " << __LINE__ << ": Success\n";
 		return 0;
 	});
@@ -107,42 +99,27 @@ int main() {
 		float_div := 1.0 / 2.0;
 	)");
 
-	bexp_tester.add_test(
+	bexp_tester.add_tests( {
 		+[](Type::Environment& env) -> int {
-			auto* expected_10 = unboxed(env.m_scope->access("int_val"));
-			auto* as_integer = dynamic_cast<Type::Integer*>(expected_10);
-			assert(as_integer);
-			assert(as_integer->m_value == 10);
-			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+			return Assert::equals("int_val", 10, env);
+		},
 
-			auto* expected_3_5 = unboxed(env.m_scope->access("float_val"));
-			auto* as_float = dynamic_cast<Type::Float*>(expected_3_5);
-			assert(as_float);
-			assert(as_float->m_value == 3.5);
-			std::cout << "@@ Value is: " << as_float->m_value << '\n';
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("float_val", 3.5, env);
+		},
 
-			auto* expected_testing = unboxed(env.m_scope->access("string_val"));
-			auto* as_string = dynamic_cast<Type::String*>(expected_testing);
-			assert(as_string);
-			assert(as_string->m_value == "testing.");
-			std::cout << "@@ Value is: " << as_string->m_value << '\n';
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("string_val", "testing.", env);
+		},
 
-			auto* expected_0 = unboxed(env.m_scope->access("int_div"));
-			as_integer = dynamic_cast<Type::Integer*>(expected_0);
-			assert(as_integer);
-			assert(as_integer->m_value == 0);
-			std::cout << "@@ Value is: " << as_integer->m_value << '\n';
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("int_div", 0, env);
+		},
 
-			auto* expected_0_5 = unboxed(env.m_scope->access("float_div"));
-			as_float = dynamic_cast<Type::Float*>(expected_0_5);
-			assert(as_float);
-			assert(as_float->m_value == 0.5);
-			std::cout << "@@ Value is: " << as_float->m_value << '\n';
-
-			std::cout << "@ line " << __LINE__ << ": Success\n";
-			return 0;
-		}
-	);
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("float_div", 0.5, env);
+		},
+	} );
 
 	assert(0 == bexp_tester.execute());
 
@@ -155,19 +132,7 @@ int main() {
 	)"};
 
 	function_return.add_test(+[](Type::Environment& env) -> int {
-		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
-		// this means we need to create a call expression node to run the program.
-		// TODO: We need to clean this up
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("f()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		Type::Value* returned = eval(top_level_call.get(), env);
-		auto exitcode = (dynamic_cast<Type::Integer*>(returned)->m_value == 3) ? 0 : 1;
-		if(!exitcode)
-			std::cout << "@ line " << __LINE__ << ": Success\n";
-
-		return exitcode;
+		return Assert::equals("f()", 3, env);
 	});
 
 	assert(0 == function_return.execute());
@@ -182,29 +147,7 @@ int main() {
 	)"};
 
 	function_captures.add_test(+[](Type::Environment& env) -> int {
-		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
-		// this means we need to create a call expression node to run the program.
-		// TODO: We need to clean this up
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("f()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		Type::Value* returned = eval(top_level_call.get(), env);
-
-		if (!returned)
-			return 1;
-
-		if (returned->type() != value_type::Integer)
-			return 1;
-
-		auto* as_int = static_cast<Type::Integer*>(returned);
-		if (as_int->m_value != 42){
-			std::cerr << "@@ Value is " << as_int->m_value << '\n';
-			return 1;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+		return Assert::equals("f()", 42, env);
 	});
 
 	assert(0 == function_captures.execute());
@@ -216,25 +159,8 @@ int main() {
 		__invoke := fn () => I(42);
 	)"};
 
-	short_functions.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = eval(top_level_call.get(), env);
-		if(!result)
-			return 1;
-
-		if(result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if(as_int->m_value != 42){
-			return 3;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+	short_functions.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 42, env);
 	});
 
 	assert(0 == short_functions.execute());
@@ -258,25 +184,8 @@ int main() {
 		};
 	)"};
 
-	array_index.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = eval(top_level_call.get(), env);
-		if(!result)
-			return 1;
-
-		if(result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if(as_int->m_value != 2){
-			return 3;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+	array_index.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 2, env);
 	});
 
 	assert(0 == array_index.execute());
@@ -321,25 +230,8 @@ int main() {
 		};
 	)"};
 
-	binary_search_tree.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = eval(top_level_call.get(), env);
-		if(!result)
-			return 1;
-
-		if(result->type() != value_type::String)
-			return 2;
-
-		auto* as_str = static_cast<Type::String*>(result);
-		if(as_str->m_value != "abcdefg"){
-			return 3;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+	binary_search_tree.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", "abcdefg", env);
 	});
 
 	assert(0 == binary_search_tree.execute());
@@ -350,56 +242,18 @@ int main() {
 		nullv := fn () { return null; };
 	)"};
 	
-	bool_and_null_literals.add_test(+[](Type::Environment& env)->int{
-		{
-			TokenArray ta;
-			auto top_level_call_ast = parse_expression("litt()", ta);
-			auto top_level_call = get_unique(top_level_call_ast.m_result);
+	bool_and_null_literals.add_tests({
+		+[](Type::Environment& env) -> int {
+			return Assert::is_true("litt()", env);
+		},	
 
-			auto* result = eval(top_level_call.get(), env);
-			if(!result)
-				return 1;
+		+[](Type::Environment& env) -> int {
+			return Assert::is_false("litf()", env);
+		},
 
-			if(result->type() != value_type::Boolean)
-				return 2;
-
-			auto* as_bool = static_cast<Type::Boolean*>(result);
-			if(as_bool->m_value != true){
-				return 3;
-			}
+		+[](Type::Environment& env) -> int {
+			return Assert::is_null("nullv()", env);
 		}
-		{	
-			TokenArray ta;
-			auto top_level_call_ast = parse_expression("litf()", ta);
-			auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-			auto* result = eval(top_level_call.get(), env);
-			if(!result)
-				return 1;
-
-			if(result->type() != value_type::Boolean)
-				return 2;
-
-			auto* as_bool = static_cast<Type::Boolean*>(result);
-			if(as_bool->m_value != false){
-				return 3;
-			}
-		}
-		{
-			TokenArray ta;
-			auto top_level_call_ast = parse_expression("nullv()", ta);
-			auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-			auto* result = eval(top_level_call.get(), env);
-			if(!result)
-				return 1;
-
-			if(result->type() != value_type::Null)
-				return 2;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
 	});
 	
 	assert(0 == bool_and_null_literals.execute());
@@ -412,25 +266,8 @@ int main() {
 		__invoke := fn() => fib(6);
 	)"};
 
-	recursion.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = eval(top_level_call.get(), env);
-		if(!result)
-			return 1;
-
-		if(result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if(as_int->m_value != 8){
-			return 3;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+	recursion.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 8, env);
 	});
 
 	assert(0 == recursion.execute());
@@ -446,25 +283,8 @@ int main() {
 		};
 	)"};
 
-	sum_first_integers.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = unboxed(eval(top_level_call.get(), env));
-		if(!result)
-			return 1;
-
-		if(result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if(as_int->m_value != 120){
-			return 3;
-		}
-
-		std::cout << "@ line " << __LINE__ << ": Success\n";
-		return 0;
+	sum_first_integers.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 120, env);
 	});
 	
 	assert(0 == sum_first_integers.execute());
@@ -478,11 +298,8 @@ int main() {
 	)"};
 
 	native_array_append.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
+		auto* result = Assert::eval_expression("__invoke()", env);
 
-		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -516,11 +333,8 @@ int main() {
 	)"};
 
 	native_array_extend.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
+		auto* result = Assert::eval_expression("__invoke()", env);
 
-		auto* result = unboxed(eval(top_level_call.get(), env));
 		if(!result)
 			return 1;
 
@@ -551,24 +365,8 @@ int main() {
 		};
 	)"};
 
-	native_size.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = unboxed(eval(top_level_call.get(), env));
-		if(!result)
-			return 1;
-
-		if (result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if (as_int->m_value != 2)
-			return 3;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
+	native_size.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 2, env);
 	});
 
 	assert(0 == native_size.execute());
@@ -580,24 +378,8 @@ int main() {
 		};
 	)"};
 
-	native_array_join.add_test(+[](Type::Environment& env)->int{
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = unboxed(eval(top_level_call.get(), env));
-		if(!result)
-			return 1;
-
-		if (result->type() != value_type::String)
-			return 2;
-
-		auto* as_string = static_cast<Type::String*>(result);
-		if (as_string->m_value != "10,10")
-			return 3;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
+	native_array_join.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", "10,10", env);
 	});
 
 	assert(0 == native_array_join.execute());
@@ -644,25 +426,8 @@ int main() {
 		__invoke := fn() => 6 |> f();
 	)"};
 	
-	pizza_operator.add_test(+[](Type::Environment& env)->int{
-
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = unboxed(eval(top_level_call.get(), env));
-		if(!result)
-			return 1;
-
-		if (result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if (as_int->m_value != 13)
-			return 3;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
+	pizza_operator.add_test(+[](Type::Environment& env) -> int {
+		return Assert::equals("__invoke()", 13, env);
 	});
 
 	assert_equals(0, pizza_operator.execute());
