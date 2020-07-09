@@ -108,11 +108,9 @@ struct DeclarationList : public TypedAST {
 // doesnt have a ast_vtype
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
-	Token const* m_typename_token { nullptr }; // can be nullptr
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
 
 	std::string const& identifier_text() const { return m_identifier_token->m_text; }
-	std::string const& typename_text() const { return m_typename_token->m_text; }
 
 	Declaration() : TypedAST{ ast_type::Declaration } {}
 };

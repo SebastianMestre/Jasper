@@ -24,8 +24,10 @@ void print(Declaration* ast, int d) {
 	std::cout << stab << "[ Declaration\n"
 		<< tab << "Name: " << ast->identifier_text() << '\n';
 
-	if(ast->m_typename_token)
-		std::cout << tab << "Type: " <<  ast->typename_text() << '\n';
+	if (ast->m_type) {
+		std::cout << tab << "Type:\n";
+		print(ast->m_type.get(), d + 1);
+	}
 
 	if (ast->m_value) {
 		std::cout << tab << "Initializer:\n";
@@ -179,6 +181,16 @@ void print(ForStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(TypeTerm* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ TypeTerm\n";
+	print(ast->m_callee.get(), d+1);
+	for (auto& arg : ast->m_args)
+		print(arg.get(), d+1);
+	std::cout << stab << "]\n";
+}
+
 void print(AST* ast, int d) {
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
@@ -217,6 +229,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<IfStatement*>(ast), d);
 	case ast_type::ForStatement:
 		return print(static_cast<ForStatement*>(ast), d);
+	case ast_type::TypeTerm:
+		return print(static_cast<TypeTerm*>(ast), d);
 	}
 }
 
