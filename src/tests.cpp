@@ -297,30 +297,15 @@ int main() {
 		};
 	)"};
 
-	native_array_append.add_test(+[](Type::Environment& env)->int{
-		auto* result = Assert::eval_expression("__invoke()", env);
+	native_array_append.add_tests( {
+		+[](Type::Environment& env) -> int {
+			return Assert::array_of_size("__invoke()", 1, env);
+		},
 
-		if(!result)
-			return 1;
-
-		if (result->type() != value_type::Array)
-			return 2;
-
-		auto* array = static_cast<Type::Array*>(result);
-		if (array->m_value.size() != 1)
-			return 3;
-
-		if (array->m_value[0]->type() != value_type::Integer) {
-			return 4;
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("__invoke()[0]", 10, env);
 		}
-
-		auto* value = static_cast<Type::Integer*>(array->m_value[0]);
-		if (value->m_value != 10)
-			return 5;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
-	});
+	} );
 
 	assert(0 == native_array_append.execute());
 
@@ -332,29 +317,15 @@ int main() {
 		};
 	)"};
 
-	native_array_extend.add_test(+[](Type::Environment& env)->int{
-		auto* result = Assert::eval_expression("__invoke()", env);
+	native_array_extend.add_tests( {
+		+[](Type::Environment& env) -> int {
+			return Assert::array_of_size("__invoke()", 1, env);
+		},
 
-		if(!result)
-			return 1;
-
-		if (result->type() != value_type::Array)
-			return 2;
-
-		auto* array = static_cast<Type::Array*>(result);
-		if (array->m_value.size() != 1)
-			return 3;
-
-		if (array->m_value[0]->type() != value_type::Integer)
-			return 4;
-
-		auto* value = static_cast<Type::Integer*>(array->m_value[0]);
-		if (value->m_value != 10)
-			return 5;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
-	});
+		+[](Type::Environment& env) -> int {
+			return Assert::equals("__invoke()[0]", 10, env);
+		}
+	} );
 
 	assert(0 == native_array_extend.execute());
 
@@ -400,23 +371,7 @@ int main() {
 	)"};
 
 	compound_types.add_test(+[](Type::Environment& env) -> int {
-		TokenArray ta;
-		auto top_level_call_ast = parse_expression("__invoke()", ta);
-		auto top_level_call = get_unique(top_level_call_ast.m_result);
-
-		auto* result = unboxed(eval(top_level_call.get(), env));
-		if (!result)
-			return 1;
-
-		if (result->type() != value_type::Integer)
-			return 2;
-
-		auto* as_int = static_cast<Type::Integer*>(result);
-		if (as_int->m_value != 4)
-			return 3;
-
-		std::cout << "@ line " << __LINE__ << ": Success \n";
-		return 0;
+		return Assert::equals("__invoke()", 4, env);
 	});
 
 	assert(0 == compound_types.execute());
