@@ -110,56 +110,6 @@ TypedAST* convertAST(AST::Identifier* ast) {
     return typed_id;
 }
 
-TypedAST* convertASTPizza(AST::BinaryExpression* ast) {
-	// TODO: error handling
-	assert(ast->m_rhs->type() == ast_type::CallExpression);
-	auto call = static_cast<AST::CallExpression*>(ast->m_rhs.get());
-
-	auto result = new CallExpression;
-
-	result->m_args.push_back(get_unique(ast->m_lhs));
-	for (auto& arg : call->m_args)
-		result->m_args.push_back(get_unique(arg));
-
-	result->m_callee = get_unique(call->m_callee);
-
-	return result;
-}
-
-TypedAST* convertASTDot(AST::BinaryExpression* ast) {
-	// TODO: error handling
-
-	// TODO: move this check to the parser
-	assert(ast->m_rhs->type() == ast_type::Identifier);
-	auto ident = static_cast<AST::Identifier*>(ast->m_rhs.get());
-
-	auto tok = ast->m_op_token;
-	std::cerr << "Error: @" << tok->m_line0+1 << ":" << tok->m_col0 << " | Dot (.) operator not implemented yet\n";
-
-	return new NullLiteral;
-}
-
-// This function desugars binary operators into function calls
-TypedAST* convertAST(AST::BinaryExpression* ast) {
-
-	if (ast->m_op_token->m_type == token_type::PIZZA)
-		return convertASTPizza(ast);
-
-	if (ast->m_op_token->m_type == token_type::DOT)
-		return convertASTDot(ast);
-
-	auto identifier = std::make_unique<Identifier>();
-	identifier->m_token = ast->m_op_token;
-
-	auto typed_ast = new CallExpression;
-	typed_ast->m_callee = std::move(identifier);
-
-	typed_ast->m_args.push_back(get_unique(ast->m_lhs));
-	typed_ast->m_args.push_back(get_unique(ast->m_rhs));
-
-	return typed_ast;
-}
-
 TypedAST* convertAST(AST::CallExpression* ast) {
     auto typed_ce = new CallExpression;
 
@@ -243,8 +193,6 @@ TypedAST* convertAST (AST::AST* ast) {
         return convertAST(static_cast<AST::Declaration*>(ast));
     case ast_type::Identifier:
         return convertAST(static_cast<AST::Identifier*>(ast));
-    case ast_type::BinaryExpression:
-        return convertAST(static_cast<AST::BinaryExpression*>(ast));
     case ast_type::CallExpression:
         return convertAST(static_cast<AST::CallExpression*>(ast));
     case ast_type::IndexExpression:
@@ -257,6 +205,8 @@ TypedAST* convertAST (AST::AST* ast) {
         return convertAST(static_cast<AST::IfStatement*>(ast));
     case ast_type::ForStatement:
         return convertAST(static_cast<AST::ForStatement*>(ast));
+    case ast_type::BinaryExpression:
+        assert(0);
     default:
         std::cerr << "Error: AST type not handled in convertAST" << std::endl;
         assert(0);
