@@ -1,6 +1,7 @@
 #include "execute.hpp"
 
 #include "captures.hpp"
+#include "desugar.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
@@ -31,9 +32,11 @@ int execute(std::string const& source, bool dump_ast, Runner* runner) {
 	if (top_level_ast->type() != ast_type::DeclarationList)
 		return 1;
 
+	auto desugared_ast = AST::desugar(std::move(top_level_ast));
+
 	declare_native_functions(env);
 
-	auto top_level = TypedAST::get_unique(top_level_ast);
+	auto top_level = TypedAST::get_unique(desugared_ast);
 	TypeChecker::match_identifiers(top_level.get());
 	gather_captures(top_level.get());
 	eval(top_level.get(), env);

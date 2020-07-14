@@ -6,6 +6,7 @@ OBJDIR := ../build
 OBJNAMES := \
 	ast.o \
 	captures.o \
+	desugar.o \
 	environment.o \
 	error.o \
 	eval.o \
