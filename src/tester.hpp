@@ -11,6 +11,7 @@ struct Tester {
 
 	std::vector<TestSet> m_test_sets;
 
+	Tester() = default;
 	Tester(TestSet);
 	Tester(std::vector<TestSet>);
 

@@ -36,7 +36,7 @@ void Tester::execute(bool dump_ast) {
 			errors.push_back(ts_answer);
 			std::cout << 'E';
 			break;
-		case test_type::NullResult:
+		case test_type::NullError:
 		case test_type::TypeError:
 		case test_type::ValueError:
 			errors.push_back(ts_answer);

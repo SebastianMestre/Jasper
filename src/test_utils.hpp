@@ -29,7 +29,7 @@ test_type scalar_equals(Type::Value* rv, const value_type v_type, const CV& expe
 	if (test_type::Ok != fail)
 		return fail;
 
-	if ((static_cast<RV*>(v))->m_value != value)
+	if ((static_cast<RV*>(rv))->m_value != expected)
 		return test_type::TypeError;
 
 	return test_type::Ok;
@@ -70,7 +70,7 @@ test_type array_of_size(Type::Value* rv, unsigned int size) {
 	if (test_type::Ok != fail)
 		return fail;
 
-	if ((static_cast<Type::Array*>(result))->m_value.size() != size)
+	if ((static_cast<Type::Array*>(rv))->m_value.size() != size)
 		return test_type::ValueError;
 
 	return test_type::Ok;

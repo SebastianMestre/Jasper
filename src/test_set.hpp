@@ -4,7 +4,7 @@
 #include <string>
 
 #include "test_type.hpp"
-#include "environment.hpp"
+#include "environment_fwd.hpp"
 
 namespace Test {
 
@@ -15,11 +15,11 @@ struct TestSet {
 	std::string m_source;
 	std::vector<TestFunction> m_testers;
 
-	Tester(std::string);
-	Tester(std::string, TestFunction);
-	Tester(std::string, std::vector<TestFunction>);
+	TestSet(std::string);
+	TestSet(std::string, TestFunction);
+	TestSet(std::string, std::vector<TestFunction>);
 
-	test_type execute(Type::Environment& env);
+	test_type execute(bool);
 };
 
 }
