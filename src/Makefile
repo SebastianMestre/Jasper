@@ -17,6 +17,7 @@ OBJNAMES := \
 	parse.o \
 	string_view.o \
 	tester.o \
+	test_set.o \
 	token.o \
 	typechecker.o \
 	typed_ast.o \
