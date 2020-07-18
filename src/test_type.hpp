@@ -6,7 +6,7 @@ constexpr const char* test_type_string[] = {
 	"ParseError",
 	"TopLevelTypeError",
 
-	"NullResult",
+	"NullError",
 	"TypeError",
 	"ValueError",
 
@@ -19,7 +19,7 @@ enum class test_type {
 	ParseError,
 	TopLevelTypeError,
 
-	NullResult,
+	NullError,
 	TypeError,
 	ValueError,
 
