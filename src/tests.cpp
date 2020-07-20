@@ -72,9 +72,9 @@ int main() {
 				user2 := "anne";
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			eval_expression("__invoke()", env);
-			return test_type::Ok;
+			return exit_status_type::Ok;
 		}}
 	);
 
@@ -87,23 +87,23 @@ int main() {
 			float_div := 1.0 / 2.0;
 		)",
 		{
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("int_val", env), 10);
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("float_val", env), 3.5);
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("string_val", env), "testing.");
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("int_div", env), 0);
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("float_div", env), 0.5);
 			},
 		}}
@@ -117,7 +117,7 @@ int main() {
 				return a + b;
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("f()", env), 3);
 		}}
 	);
@@ -131,7 +131,7 @@ int main() {
 				return K(a)(b);
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("f()", env), 42);
 		}}
 	);
@@ -143,7 +143,7 @@ int main() {
 			I := S(K)(K);
 			__invoke := fn () => I(42);
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 42);
 		}}
 	);
@@ -167,7 +167,7 @@ int main() {
 				return car(cdr(cdr(a)));
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		}}
 	);
@@ -212,7 +212,7 @@ int main() {
 				return print_inorder(t7);
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
 		}}
 	);
@@ -224,15 +224,15 @@ int main() {
 			nullv := fn () { return null; };
 		)",
 		{
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::is_true(eval_expression("litt()", env));
 			},	
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::is_false(eval_expression("litf()", env));
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::is_null(eval_expression("nullv()", env));
 			}
 		}}
@@ -246,7 +246,7 @@ int main() {
 			};
 			__invoke := fn() => fib(6);
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 8);
 		}}
 	);
@@ -262,7 +262,7 @@ int main() {
 				return sum;
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 120);
 		}}
 	);
@@ -276,11 +276,11 @@ int main() {
 			};
 		)",
 		{
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 			}
 		}}
@@ -295,11 +295,11 @@ int main() {
 			};
 		)",
 		{
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 			},
 
-			+[](Type::Environment& env) -> test_type {
+			+[](Type::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 			}
 		}}
@@ -312,12 +312,11 @@ int main() {
 				return size(A);
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		}}
 	);
 
-	// FIXME: MEMORY LEAK IN THIS TEST //
 	tests.add_test(
 		TestSet{R"(
 			__invoke := fn () {
@@ -325,8 +324,8 @@ int main() {
 				return array_join(A, ",");
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
-			return Assert::equals(eval_expression("__invoke()", env), "10");
+		+[](Type::Environment& env) -> exit_status_type {
+			return Assert::equals(eval_expression("__invoke()", env), "10,10");
 		}}
 	);
 
@@ -345,7 +344,7 @@ int main() {
 				return val;
 			};
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 4);
 		}}
 	);
@@ -355,7 +354,7 @@ int main() {
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
-		+[](Type::Environment& env) -> test_type {
+		+[](Type::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 13);
 		}}
 	);
