@@ -1,6 +1,6 @@
 #pragma once
 
-constexpr const char* test_type_string[] = {
+constexpr const char* exit_status_type_string[] = {
 	"Ok",
 
 	"ParseError",
@@ -13,8 +13,8 @@ constexpr const char* test_type_string[] = {
 	"Empty",
 };
 
-enum class test_type {
-	Ok,
+enum class exit_status_type {
+	Ok = 0,
 
 	ParseError,
 	TopLevelTypeError,
