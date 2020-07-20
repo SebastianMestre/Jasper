@@ -11,7 +11,7 @@
 #include "token_array.hpp"
 #include "value.hpp"
 #include "typed_ast.hpp"
-#include "test_type.hpp"
+#include "exit_status_type.hpp"
 
 int main() {
 
@@ -26,7 +26,7 @@ int main() {
 
 	std::string source = file_content.str();
 
-	test_type exit_code = execute(source, false, +[](Type::Environment& env) -> test_type {
+	exit_status_type exit_code = execute(source, false, +[](Type::Environment& env) -> exit_status_type {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
@@ -47,7 +47,7 @@ int main() {
 			delete top_level_call;
 		}
 
-		return test_type::Ok;
+		return exit_status_type::Ok;
 	});
 
 	return static_cast<int>(exit_code);

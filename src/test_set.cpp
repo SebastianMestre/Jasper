@@ -13,18 +13,18 @@ TestSet::TestSet(std::string s, std::vector<TestFunction> tfs)
 
 
 
-test_type TestSet::execute(bool dump_ast) {
+exit_status_type TestSet::execute(bool dump_ast) {
 	if (m_testers.empty())
-		return test_type::Empty;
+		return exit_status_type::Empty;
 
 	for(auto* f : m_testers) {
-		test_type answer = ::execute(m_source, dump_ast, f);
+		exit_status_type answer = ::execute(m_source, dump_ast, f);
 
-		if (test_type::Ok != answer)
+		if (exit_status_type::Ok != answer)
 			return answer;
 	}
 
-	return test_type::Ok;
+	return exit_status_type::Ok;
 }
 
 }

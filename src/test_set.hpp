@@ -3,12 +3,12 @@
 #include <vector>
 #include <string>
 
-#include "test_type.hpp"
+#include "exit_status_type.hpp"
 #include "environment_fwd.hpp"
 
 namespace Test {
 
-using TestFunction = test_type (*)(Type::Environment&);
+using TestFunction = exit_status_type (*)(Type::Environment&);
 
 struct TestSet {
 
@@ -19,7 +19,7 @@ struct TestSet {
 	TestSet(std::string, TestFunction);
 	TestSet(std::string, std::vector<TestFunction>);
 
-	test_type execute(bool);
+	exit_status_type execute(bool);
 };
 
 }
