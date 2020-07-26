@@ -33,7 +33,7 @@ LIBS := -lasan
 CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
 CPPFLAGS := 
 
-all: $(BINDIR)/iseeaparse
+all: $(BINDIR)/jasperi
 
 test_program: $(BINDIR)/test_program
 
@@ -41,7 +41,7 @@ clean:
 	rm $(BINDIR) -r
 	rm $(OBJDIR) -r
 
-$(BINDIR)/iseeaparse: $(OBJS) $(OBJDIR)/main.o | $(BINDIR)
+$(BINDIR)/jasperi: $(OBJS) $(OBJDIR)/main.o | $(BINDIR)
 	$(CXX) -o $@ $^ $(LIBS)
 
 $(BINDIR)/test_program: $(OBJS) $(OBJDIR)/tests.o | $(BINDIR)
