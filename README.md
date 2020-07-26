@@ -1,6 +1,6 @@
-# JS++
+# Jasper
 
-We are trying to make nice programming language.
+We are trying to make a nice programming language.
 
  - easy to refactor
  - consistent
@@ -34,6 +34,7 @@ __invoke := fn () {
 	print(f("Programmer"));
 };
 ```
+(record types and objects have not yet been implemented)
 
 ## Compiling the source
 
