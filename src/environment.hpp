@@ -23,9 +23,13 @@ struct Scope {
 
 struct Environment {
 	GarbageCollector::GC* m_gc;
+	Scope m_global_scope;
+
 	Scope* m_scope;
-	Scope* m_global_scope;
 	Value* m_return_value {nullptr};
+
+	Environment(GarbageCollector::GC* gc)
+	    : m_gc { gc }, m_scope { &m_global_scope } {}
 
 	Scope* new_scope();
 	Scope* new_nested_scope();

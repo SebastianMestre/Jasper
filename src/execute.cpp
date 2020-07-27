@@ -36,8 +36,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	gather_captures(top_level.get());
 
 	GarbageCollector::GC gc;
-	Type::Scope scope;
-	Type::Environment env = { &gc, &scope, &scope };
+	Type::Environment env = { &gc };
 	declare_native_functions(env);
 	eval(top_level.get(), env);
 
