@@ -1,8 +1,6 @@
-# JS++
+# Jasper
 
-El lenguaje no tiene nombre. Le decimos JS++ provisionalmente.
-
-Los objetivos principales son:
+Los objetivos principales del lenguaje son:
 
  - Buena usabilidad
  - Facilidad al refactorizar
