@@ -25,10 +25,7 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 };
 
 Scope& CompileTimeEnvironment::current_scope() {
-	if (m_scopes.empty())
-		return m_global_scope;
-	else
-		return m_scopes.back();
+	return m_scopes.empty() ? m_global_scope : m_scopes.back();
 }
 
 void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declaration* decl) {
