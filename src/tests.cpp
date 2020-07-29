@@ -11,7 +11,6 @@ int main() {
 
 	Test::Tester tests;
 
-	/* 
 	tests.add_test(
 		TestSet{R"(
 			x : dec = 1.4;
@@ -78,7 +77,6 @@ int main() {
 			return exit_status_type::Ok;
 		}}
 	);
-	*/
 
 	tests.add_test(
 		TestSet{R"(
@@ -361,5 +359,5 @@ int main() {
 		}}
 	);
 
-	tests.execute(true);
+	tests.execute(false);
 }

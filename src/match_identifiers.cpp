@@ -23,9 +23,6 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 	assert(declaration);
 	ast->m_declaration = declaration;
 
-	std::cout << __PRETTY_FUNCTION__ << '\n';
-	std::cout << "Identifier: " << ast->text() << '\n';
-	std::cout << declaration->m_surrounding_function << '\n';
 	for(int i = env.m_function_stack.size(); i--;){
 		auto* func = env.m_function_stack[i];
 
