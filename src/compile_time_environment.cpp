@@ -64,4 +64,17 @@ void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
 }
 
+
+TypedAST::FunctionLiteral* CompileTimeEnvironment::current_function() {
+	return m_function_stack.empty() ? nullptr : m_function_stack.back();
+}
+
+void CompileTimeEnvironment::enter_function(TypedAST::FunctionLiteral* func) {
+	m_function_stack.push_back(func);
+}
+
+void CompileTimeEnvironment::exit_function() {
+	m_function_stack.pop_back();
+}
+
 } // namespace Frontend
