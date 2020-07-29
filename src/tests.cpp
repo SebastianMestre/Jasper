@@ -359,5 +359,5 @@ int main() {
 		}}
 	);
 
-	tests.execute(false);
+	tests.execute(true);
 }
