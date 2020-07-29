@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "ast_type.hpp"
@@ -83,6 +85,7 @@ struct FunctionLiteral : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 	std::vector<std::string> m_captures;
+	std::unordered_set<std::string> m_captures_future;
 
 	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}
 };

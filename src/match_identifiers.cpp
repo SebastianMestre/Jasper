@@ -21,6 +21,15 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 	TypedAST::Declaration* declaration = env.access(ast->text());
 	assert(declaration);
 	ast->m_declaration = declaration;
+
+	for(int i = env.m_function_stack.size(); i--;){
+		auto* func = env.m_function_stack[i];
+
+		if(func == declaration->m_surrounding_function)
+			break;
+
+		func->m_captures_future.insert(ast->text());
+	}
 }
 
 void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
