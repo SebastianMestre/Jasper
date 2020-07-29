@@ -5,7 +5,6 @@ BINDIR := ../bin
 OBJDIR := ../build
 OBJNAMES := \
 	ast.o \
-	captures.o \
 	compile_time_environment.o \
 	desugar.o \
 	environment.o \

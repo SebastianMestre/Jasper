@@ -28,7 +28,7 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 		if(func == declaration->m_surrounding_function)
 			break;
 
-		func->m_captures_future.insert(ast->text());
+		func->m_captures.insert(ast->text());
 	}
 }
 

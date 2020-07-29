@@ -84,8 +84,7 @@ struct DictionaryLiteral : public TypedAST {
 struct FunctionLiteral : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
-	std::vector<std::string> m_captures;
-	std::unordered_set<std::string> m_captures_future;
+	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}
 };
