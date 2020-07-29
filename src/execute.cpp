@@ -1,6 +1,7 @@
 #include "execute.hpp"
 
 #include "captures.hpp"
+#include "compile_time_environment.hpp"
 #include "desugar.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
@@ -23,21 +24,23 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	if (dump_ast)
 		print(parse_result.m_result.get(), 1);
 
-	GarbageCollector::GC gc;
-	Type::Scope scope;
-	Type::Environment env = { &gc, &scope, &scope };
-
 	auto top_level_ast = std::move(parse_result.m_result);
+
+	// Can this even happen? parse_program should always either return a
+	// DeclarationList or an error
 	if (top_level_ast->type() != ast_type::DeclarationList)
 		return exit_status_type::TopLevelTypeError;
 
 	auto desugared_ast = AST::desugar(std::move(top_level_ast));
-
-	declare_native_functions(env);
-
 	auto top_level = TypedAST::get_unique(desugared_ast);
-	TypeChecker::match_identifiers(top_level.get());
+	Frontend::CompileTimeEnvironment ct_env;
+
+	TypeChecker::match_identifiers(top_level.get(), ct_env);
 	gather_captures(top_level.get());
+
+	GarbageCollector::GC gc;
+	Type::Environment env = { &gc };
+	declare_native_functions(env);
 	eval(top_level.get(), env);
 
 	exit_status_type runner_exit_code = runner(env);
