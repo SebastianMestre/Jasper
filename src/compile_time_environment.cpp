@@ -7,7 +7,7 @@ namespace Frontend {
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
 	// HACK: this is an ugly hack. bear with me...
-	TypedAST::Declaration dummy;
+	static TypedAST::Declaration dummy;
 	declare("size", &dummy);
 	declare("print", &dummy);
 	declare("array_append", &dummy);
