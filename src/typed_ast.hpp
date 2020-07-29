@@ -94,10 +94,12 @@ struct DeclarationList : public TypedAST {
 	DeclarationList() : TypedAST { ast_type::DeclarationList } {}
 };
 
-// doesnt have a ast_vtype
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
+
+	// nullptr means global
+	FunctionLiteral* m_surrounding_function { nullptr };
 
 	std::string const& identifier_text() const {
 		return m_identifier_token->m_text;
