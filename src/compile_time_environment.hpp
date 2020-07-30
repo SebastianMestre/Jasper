@@ -7,6 +7,7 @@
 namespace TypedAST {
 
 struct Declaration;
+struct FunctionLiteral;
 
 }
 
@@ -20,14 +21,18 @@ struct Scope {
 struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
+	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
 
 	CompileTimeEnvironment();
-
-	Scope& current_scope();
 
 	void declare(std::string const&, TypedAST::Declaration*);
 	TypedAST::Declaration* access(std::string const&);
 
+	TypedAST::FunctionLiteral* current_function();
+	void enter_function(TypedAST::FunctionLiteral*);
+	void exit_function();
+
+	Scope& current_scope();
 	void new_scope();
 	void new_nested_scope();
 	void end_scope();

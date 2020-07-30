@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "ast_type.hpp"
@@ -82,7 +84,7 @@ struct DictionaryLiteral : public TypedAST {
 struct FunctionLiteral : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
-	std::vector<std::string> m_captures;
+	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}
 };
@@ -94,10 +96,12 @@ struct DeclarationList : public TypedAST {
 	DeclarationList() : TypedAST { ast_type::DeclarationList } {}
 };
 
-// doesnt have a ast_vtype
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
+
+	// nullptr means global
+	FunctionLiteral* m_surrounding_function { nullptr };
 
 	std::string const& identifier_text() const {
 		return m_identifier_token->m_text;

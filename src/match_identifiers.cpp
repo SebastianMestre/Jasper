@@ -1,6 +1,7 @@
 #include "match_identifiers.hpp"
 
 #include <unordered_map>
+#include <iostream>
 
 #include "typed_ast.hpp"
 #include "compile_time_environment.hpp"
@@ -10,6 +11,7 @@
 namespace TypeChecker {
 
 void match_identifiers(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
 	if (ast->m_value) {
 		match_identifiers(ast->m_value.get(), env);
@@ -20,6 +22,15 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 	TypedAST::Declaration* declaration = env.access(ast->text());
 	assert(declaration);
 	ast->m_declaration = declaration;
+
+	for(int i = env.m_function_stack.size(); i--;){
+		auto* func = env.m_function_stack[i];
+
+		if(func == declaration->m_surrounding_function)
+			break;
+
+		func->m_captures.insert(ast->text());
+	}
 }
 
 void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
@@ -42,6 +53,8 @@ void match_identifiers(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvir
 
 void match_identifiers(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	// TODO: captures
+	env.enter_function(ast);
+	// NOTE: this is nested because of lexical scoping / captures
 	env.new_nested_scope();
 	// declare arguments
 	for (auto& decl : ast->m_args)
@@ -52,6 +65,7 @@ void match_identifiers(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvi
 	for (auto& child : body->m_body)
 		match_identifiers(child.get(), env);
 	env.end_scope();
+	env.exit_function();
 }
 
 void match_identifiers(TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
@@ -76,6 +90,7 @@ void match_identifiers(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvi
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		env.declare(d->identifier_text(), d);
+		d->m_surrounding_function = env.current_function();
 	}
 
 	for (auto& decl : ast->m_declarations) {

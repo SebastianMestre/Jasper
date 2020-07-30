@@ -7,7 +7,7 @@ namespace Frontend {
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
 	// HACK: this is an ugly hack. bear with me...
-	TypedAST::Declaration dummy;
+	static TypedAST::Declaration dummy;
 	declare("size", &dummy);
 	declare("print", &dummy);
 	declare("array_append", &dummy);
@@ -62,6 +62,19 @@ void CompileTimeEnvironment::new_nested_scope() {
 
 void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
+}
+
+
+TypedAST::FunctionLiteral* CompileTimeEnvironment::current_function() {
+	return m_function_stack.empty() ? nullptr : m_function_stack.back();
+}
+
+void CompileTimeEnvironment::enter_function(TypedAST::FunctionLiteral* func) {
+	m_function_stack.push_back(func);
+}
+
+void CompileTimeEnvironment::exit_function() {
+	m_function_stack.pop_back();
 }
 
 } // namespace Frontend

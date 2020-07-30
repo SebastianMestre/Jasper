@@ -1,6 +1,5 @@
 #include "execute.hpp"
 
-#include "captures.hpp"
 #include "compile_time_environment.hpp"
 #include "desugar.hpp"
 #include "environment.hpp"
@@ -36,7 +35,6 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	Frontend::CompileTimeEnvironment ct_env;
 
 	TypeChecker::match_identifiers(top_level.get(), ct_env);
-	gather_captures(top_level.get());
 
 	GarbageCollector::GC gc;
 	Type::Environment env = { &gc };

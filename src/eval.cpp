@@ -217,11 +217,14 @@ Type::Value* eval(TypedAST::IndexExpression* ast, Type::Environment& e) {
 	return array_callee->at(int_index->m_value);
 };
 
+
 Type::Value* eval(TypedAST::FunctionLiteral* ast, Type::Environment& e) {
 	std::unordered_map<std::string, Type::Value*> captures;
+
 	for(auto const& identifier : ast->m_captures){
 		captures[identifier] = e.m_scope->access(identifier);
 	}
+
 	return e.new_function(ast, std::move(captures));
 };
 
