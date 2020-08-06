@@ -21,16 +21,16 @@ Furthermore, we have put some things because they appeared pretty to us.
  - Callable objects (TODO)
  - Function closures (WIP)
 
-## Introdution - The structure of a program
+## Introduction - The structure of a program
 
 In JS++, a program is a list of declarations.
 
 > A delaration associates a value with a name.e.
 >
-> Syntaxically, it is an identifier, following a type specifier
+> Syntaxically, it is an identifier, followed by a type specifier
 > (optional) and an initial value. Examples: `a := 15; b : int = 10;`
 
-Among those declarations, one must be the entry point, a function calledmada
+Among those declarations, one must be the entry point, a function named
 `__invoke`.
 
 > In JS++, functions are defined with the keyword `fn`, followed by a list of
