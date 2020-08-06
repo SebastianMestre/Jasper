@@ -11,15 +11,13 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>& ast) {
 }
 
 TypedAST* convertAST(AST::NumberLiteral* ast) {
-    auto typed_number = new NumberLiteral;
+	auto typed_number = new NumberLiteral;
 
-    // desambiguar el tipo en float
-    // por defecto es int
-    // chequeo si es float:
-    //      typed_number->m_vtype = ast_vtype::Float
+	// TODO: disambiguate between int and float. int is assumed for now.
 
-    typed_number->m_token = ast->m_token;
-    return typed_number;
+	typed_number->m_token = ast->m_token;
+
+	return typed_number;
 }
 
 TypedAST* convertAST(AST::StringLiteral* ast) {
