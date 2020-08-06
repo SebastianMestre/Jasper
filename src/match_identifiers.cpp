@@ -10,6 +10,14 @@
 
 namespace TypeChecker {
 
+void match_identifiers(TypedAST::NumberLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_value_type = env.m_typechecker.mono_int();
+}
+
+void match_identifiers(TypedAST::StringLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_value_type = env.m_typechecker.mono_string();
+}
+
 void match_identifiers(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
@@ -107,6 +115,8 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 
 	// TODO: Compound literals
 	switch (ast->type()) {
+		DISPATCH(NumberLiteral);
+		DISPATCH(StringLiteral);
 		DISPATCH(Declaration);
 		DISPATCH(Identifier);
 		DISPATCH(Block);
@@ -119,8 +129,6 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(DeclarationList);
 	case ast_type::BinaryExpression:
 		assert(0);
-	case ast_type::StringLiteral:
-	case ast_type::NumberLiteral:
 	case ast_type::NullLiteral:
 	case ast_type::BooleanLiteral:
 		return;
