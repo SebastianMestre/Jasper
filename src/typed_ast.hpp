@@ -20,11 +20,11 @@ namespace TypedAST {
 struct TypedAST {
 protected:
 	ast_type m_type;
-	MonoId m_value_type;
 
 public:
 	TypedAST(ast_type type) : m_type { type } {}
 
+	MonoId m_value_type;
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
 };

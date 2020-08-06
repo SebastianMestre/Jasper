@@ -13,8 +13,6 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>& ast) {
 TypedAST* convertAST(AST::NumberLiteral* ast) {
 	auto typed_number = new NumberLiteral;
 
-	// TODO: disambiguate between int and float. int is assumed for now.
-
 	typed_number->m_token = ast->m_token;
 
 	return typed_number;

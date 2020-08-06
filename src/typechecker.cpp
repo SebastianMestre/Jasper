@@ -7,13 +7,25 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	// arrow, for functions, id 0
-	m_core.type_function_data.push_back({ -1 });
+	m_core.type_function_data.push_back({ -1 }); // 0 | function
+	m_core.type_function_data.push_back({  0 }); // 1 | int
+	m_core.type_function_data.push_back({  0 }); // 2 | float
+	m_core.type_function_data.push_back({  0 }); // 3 | string
+
+	m_core.term_data.push_back({ 1, {}}); // 0 | int(<>)
+	m_core.term_data.push_back({ 2, {}}); // 1 | float(<>)
+	m_core.term_data.push_back({ 3, {}}); // 2 | string(<>)
+
+	m_core.mono_data.push_back({ mono_type::Term, 0 }); // 0 | int(<>)
+	m_core.mono_data.push_back({ mono_type::Term, 1 }); // 1 | float(<>)
+	m_core.mono_data.push_back({ mono_type::Term, 2 }); // 2 | string(<>)
 }
 
-TypeFunctionId arrow_type_function() {
-	return 0;
-}
+TypeFunctionId tf_function() { return 0; }
+
+MonoId TypeChecker::mono_int() { return 0; }
+MonoId TypeChecker::mono_float() { return 1; }
+MonoId TypeChecker::mono_string() { return 2; }
 
 MonoId TypeChecker::rule_var(PolyId poly) {
 	return m_core.inst_fresh(poly);
@@ -25,7 +37,7 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 
 	args_types.push_back(return_type);
 	MonoId deduced_func_type
-	    = m_core.new_term(arrow_type_function(), std::move(args_types));
+	    = m_core.new_term(tf_function(), std::move(args_types));
 
 	m_core.unify(func_type, deduced_func_type);
 
