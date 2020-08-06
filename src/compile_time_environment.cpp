@@ -7,21 +7,20 @@ namespace Frontend {
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
 	// HACK: this is an ugly hack. bear with me...
-	static TypedAST::Declaration dummy;
-	declare("size", &dummy);
-	declare("print", &dummy);
-	declare("array_append", &dummy);
-	declare("array_extend", &dummy);
-	declare("array_join", &dummy);
+	declare_builtin("size");
+	declare_builtin("print");
+	declare_builtin("array_append");
+	declare_builtin("array_extend");
+	declare_builtin("array_join");
 
-	declare("+", &dummy);
-	declare("-", &dummy);
-	declare("*", &dummy);
-	declare("/", &dummy);
-	declare("<", &dummy);
-	declare("=", &dummy);
-	declare("==", &dummy);
-	declare(".", &dummy);
+	declare_builtin("+");
+	declare_builtin("-");
+	declare_builtin("*");
+	declare_builtin("/");
+	declare_builtin("<");
+	declare_builtin("=");
+	declare_builtin("==");
+	declare_builtin(".");
 };
 
 Scope& CompileTimeEnvironment::current_scope() {
@@ -30,6 +29,11 @@ Scope& CompileTimeEnvironment::current_scope() {
 
 void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declaration* decl) {
 	current_scope().m_vars[name] = decl;
+}
+
+void CompileTimeEnvironment::declare_builtin(std::string const& name){
+	static TypedAST::Declaration dummy;
+	declare(name, &dummy);
 }
 
 TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
