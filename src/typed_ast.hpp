@@ -9,6 +9,7 @@
 #include "token.hpp"
 #include "token_type.hpp"
 #include "value_type.hpp"
+#include "typesystem_types.hpp"
 
 namespace AST {
 struct AST;
@@ -19,6 +20,7 @@ namespace TypedAST {
 struct TypedAST {
 protected:
 	ast_type m_type;
+	MonoId m_value_type;
 
 public:
 	TypedAST(ast_type type) : m_type { type } {}

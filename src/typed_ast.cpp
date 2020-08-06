@@ -3,7 +3,6 @@
 
 #include "ast.hpp"
 #include "typed_ast.hpp"
-#include "typed_ast_type.hpp"
 
 namespace TypedAST {
 

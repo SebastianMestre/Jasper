@@ -1,11 +1,7 @@
 #include <vector>
 #include <unordered_map>
 
-using TypeFunctionId = int;
-using VarId = int;
-using TermId = int;
-using MonoId = int;
-using PolyId = int;
+#include "typesystem_types.hpp"
 
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
