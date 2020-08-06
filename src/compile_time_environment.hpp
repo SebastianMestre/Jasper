@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "typechecker.hpp"
+
 namespace TypedAST {
 
 struct Declaration;
@@ -22,6 +24,7 @@ struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
+	TypeChecker::TypeChecker m_typechecker;
 
 	CompileTimeEnvironment();
 

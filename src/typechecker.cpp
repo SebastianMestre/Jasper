@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+namespace TypeChecker {
+
 TypeChecker::TypeChecker() {
 	// arrow, for functions, id 0
 	m_core.type_function_data.push_back({ -1 });
@@ -44,4 +46,6 @@ MonoId TypeChecker::rule_let(MonoId mono) {
 // TODO
 MonoId TypeChecker::rule_rec() {
 	assert(0);
+}
+
 }

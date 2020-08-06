@@ -1,5 +1,7 @@
 #include "typesystem.hpp"
 
+namespace TypeChecker {
+
 struct TypeChecker {
 
 	TypeSystemCore m_core;
@@ -12,3 +14,5 @@ struct TypeChecker {
 	MonoId rule_let(MonoId mono);
 	MonoId rule_rec();
 };
+
+}
