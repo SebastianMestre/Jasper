@@ -1,5 +1,6 @@
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "typesystem_types.hpp"
 
@@ -59,9 +60,12 @@ struct TypeSystemCore {
 
 	MonoId new_var();
 	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
+	PolyId new_poly(MonoId mono);
 
 	// qualifies all unbound variables in the given monotype
 	// PolyId new_poly (MonoId mono) { } // TODO
+
+	void gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars);
 
 	MonoId find(MonoId mono);
 	// expects the variable to be its own representative

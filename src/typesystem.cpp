@@ -28,8 +28,44 @@ MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> a
 	return mono;
 }
 
-// qualifies all unbound variables in the given monotype
-// PolyId new_poly (MonoId mono, Env&) { } // TODO
+void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
+	MonoId repr = find(mono);
+	MonoData const& data = mono_data[repr];
+	if (data.type == mono_type::Var) {
+		VarId var = data.data_id;
+		free_vars.insert(var);
+	} else {
+		TermId term = data.data_id;
+		for (MonoId arg : term_data[term].arguments)
+			gather_free_vars(arg, free_vars);
+	}
+}
+
+// qualifies all free variables in the given monotype
+// TODO(Mestre): I dont think this is right, we are supposed to only qualify
+// 'unbound' variables... whatever than means.
+PolyId TypeSystemCore::new_poly(MonoId mono) {
+	std::unordered_set<VarId> free_vars;
+	gather_free_vars(mono, free_vars);
+
+	std::vector<MonoId> new_vars;
+	for(int i = free_vars.size(); i--;)
+		new_vars.push_back(new_var());
+
+	std::unordered_map<VarId, MonoId> mapping;
+	int i = 0;
+	for(VarId var : free_vars)
+		mapping[var] = new_vars[i++];
+
+	MonoId base = inst_impl(mono, mapping);
+	PolyData data;
+	data.base = base;
+	for(MonoId m : new_vars){
+		data.vars.push_back(mono_data[m].data_id);
+	}
+
+	poly_data.push_back(data);
+}
 
 MonoId TypeSystemCore::find(MonoId mono) {
 	if (mono_data[mono].type != mono_type::Var)
@@ -126,6 +162,7 @@ MonoId TypeSystemCore::inst_impl(
 
 	if (data.type == mono_type::Var) {
 		auto it = mapping.find(data.data_id);
+		// TODO: make a new mono with the same var?
 		return it == mapping.end() ? mono : it->second;
 	}
 
