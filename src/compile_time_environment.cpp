@@ -35,7 +35,7 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name){
 	m_builtin_declarations.push_back({});
 
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
-	decl->m_value_type = m_typechecker.new_var();
+	decl->m_decl_type = m_typechecker.m_core.generalize(m_typechecker.new_var());
 
 	declare(name, decl);
 }

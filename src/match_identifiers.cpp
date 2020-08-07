@@ -24,9 +24,9 @@ void match_identifiers(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironm
 	if (ast->m_value) {
 		match_identifiers(ast->m_value.get(), env);
 		// TODO: should this be a Var instead of just an id copy?
-		ast->m_value_type = ast->m_value->m_value_type;
+		ast->m_decl_type = env.m_typechecker.m_core.new_poly(ast->m_value->m_value_type, {});
 	} else {
-		ast->m_value_type = env.m_typechecker.new_var();
+		ast->m_decl_type = env.m_typechecker.m_core.new_poly(env.m_typechecker.new_var(), {});
 	}
 }
 
@@ -45,7 +45,7 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 	}
 
 	// TODO: should this be a Var instead of just an id copy?
-	ast->m_value_type = ast->m_declaration->m_value_type;
+	ast->m_value_type = env.m_typechecker.m_core.inst_fresh(declaration->m_decl_type);
 }
 
 void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
@@ -122,9 +122,13 @@ void match_identifiers(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvi
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		if (d->m_value) {
 			match_identifiers(d->m_value.get(), env);
-			d->m_value_type = d->m_value->m_value_type;
+			d->m_decl_type
+			    = env.m_typechecker.m_core.generalize(d->m_value->m_value_type);
 		} else {
-			d->m_value_type = env.m_typechecker.new_var();
+			// TODO SPEED: dont create a variable and then generalize it, create a
+			// generalized variable directly
+			d->m_decl_type
+			    = env.m_typechecker.m_core.generalize(env.m_typechecker.new_var());
 		}
 	}
 }

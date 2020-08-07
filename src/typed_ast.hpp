@@ -24,6 +24,7 @@ protected:
 public:
 	TypedAST(ast_type type) : m_type { type } {}
 
+	// is not set on declarations
 	MonoId m_value_type;
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
@@ -101,6 +102,7 @@ struct DeclarationList : public TypedAST {
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
+	PolyId m_decl_type;
 
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function { nullptr };
