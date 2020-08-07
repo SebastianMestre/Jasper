@@ -23,6 +23,10 @@ void match_identifiers(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironm
 	env.declare(ast->identifier_text(), ast);
 	if (ast->m_value) {
 		match_identifiers(ast->m_value.get(), env);
+		// TODO: should this be a Var instead of just an id copy?
+		ast->m_value_type = ast->m_value->m_value_type;
+	} else {
+		ast->m_value_type = env.m_typechecker.new_var();
 	}
 }
 
@@ -39,6 +43,9 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 
 		func->m_captures.insert(ast->text());
 	}
+
+	// TODO: should this be a Var instead of just an id copy?
+	ast->m_value_type = ast->m_declaration->m_value_type;
 }
 
 void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
@@ -57,21 +64,31 @@ void match_identifiers(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvir
 	match_identifiers(ast->m_callee.get(), env);
 	for (auto& arg : ast->m_args)
 		match_identifiers(arg.get(), env);
+
+	std::vector<MonoId> arg_types;
+	for (auto& arg : ast->m_args)
+		arg_types.push_back(arg->m_value_type);
+
+	ast->m_value_type = env.m_typechecker.rule_app(std::move(arg_types), ast->m_callee->m_value_type);
 }
 
 void match_identifiers(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	// TODO: captures
+	// TODO: do something better, use the type hints
+	ast->m_value_type = env.m_typechecker.new_var();
+
 	env.enter_function(ast);
-	// NOTE: this is nested because of lexical scoping / captures
-	env.new_nested_scope();
+	env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
+
 	// declare arguments
 	for (auto& decl : ast->m_args)
 		match_identifiers(decl.get(), env);
+
 	// scan body
 	assert(ast->m_body->type() == ast_type::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		match_identifiers(child.get(), env);
+
 	env.end_scope();
 	env.exit_function();
 }
@@ -103,8 +120,12 @@ void match_identifiers(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvi
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		if (d->m_value)
+		if (d->m_value) {
 			match_identifiers(d->m_value.get(), env);
+			d->m_value_type = d->m_value->m_value_type;
+		} else {
+			d->m_value_type = env.m_typechecker.new_var();
+		}
 	}
 }
 
