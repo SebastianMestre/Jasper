@@ -28,6 +28,15 @@ MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> a
 	return mono;
 }
 
+PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
+	PolyData data;
+	data.base = mono;
+	data.vars = std::move(vars);
+	PolyId poly = poly_data.size();
+	poly_data.push_back(data);
+	return poly;
+}
+
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
 	MonoId repr = find(mono);
 	MonoData const& data = mono_data[repr];
@@ -44,7 +53,7 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& fr
 // qualifies all free variables in the given monotype
 // TODO(Mestre): I dont think this is right, we are supposed to only qualify
 // 'unbound' variables... whatever than means.
-PolyId TypeSystemCore::new_poly(MonoId mono) {
+PolyId TypeSystemCore::generalize(MonoId mono) {
 	std::unordered_set<VarId> free_vars;
 	gather_free_vars(mono, free_vars);
 
@@ -58,13 +67,11 @@ PolyId TypeSystemCore::new_poly(MonoId mono) {
 		mapping[var] = new_vars[i++];
 
 	MonoId base = inst_impl(mono, mapping);
-	PolyData data;
-	data.base = base;
-	for(MonoId m : new_vars){
-		data.vars.push_back(mono_data[m].data_id);
-	}
+	std::vector<VarId> vars;
+	for(MonoId m : new_vars)
+		vars.push_back(mono_data[m].data_id);
 
-	poly_data.push_back(data);
+	return new_poly(base, std::move(vars));
 }
 
 MonoId TypeSystemCore::find(MonoId mono) {

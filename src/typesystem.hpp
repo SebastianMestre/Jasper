@@ -60,7 +60,8 @@ struct TypeSystemCore {
 
 	MonoId new_var();
 	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
-	PolyId new_poly(MonoId mono);
+	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
+	PolyId generalize(MonoId mono);
 
 	// qualifies all unbound variables in the given monotype
 	// PolyId new_poly (MonoId mono) { } // TODO
