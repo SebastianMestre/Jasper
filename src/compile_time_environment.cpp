@@ -32,8 +32,12 @@ void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declarat
 }
 
 void CompileTimeEnvironment::declare_builtin(std::string const& name){
-	static TypedAST::Declaration dummy;
-	declare(name, &dummy);
+	m_builtin_declarations.push_back({});
+
+	TypedAST::Declaration* decl = &m_builtin_declarations.back();
+	decl->m_value_type = m_typechecker.new_var();
+
+	declare(name, decl);
 }
 
 TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {

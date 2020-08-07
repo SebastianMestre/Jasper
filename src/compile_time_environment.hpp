@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "typechecker.hpp"
+#include "chunked_array.hpp"
 
 namespace TypedAST {
 
@@ -24,6 +25,7 @@ struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
+	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 	TypeChecker::TypeChecker m_typechecker;
 
 	CompileTimeEnvironment();
