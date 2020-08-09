@@ -32,6 +32,7 @@ struct CompileTimeEnvironment {
 
 	void declare(std::string const&, TypedAST::Declaration*);
 	void declare_builtin(std::string const&);
+	void declare_builtin(std::string const&, PolyId);
 	TypedAST::Declaration* access(std::string const&);
 
 	TypedAST::FunctionLiteral* current_function();

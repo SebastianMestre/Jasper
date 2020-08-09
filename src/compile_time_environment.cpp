@@ -32,11 +32,19 @@ void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declarat
 }
 
 void CompileTimeEnvironment::declare_builtin(std::string const& name){
+	// TODO: remove this
+	// totally general type. just for convenience during development.
+	auto mono_id = m_typechecker.new_var();
+	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
+	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
+
+	declare_builtin(name, poly_id);
+}
+
+void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly){
 	m_builtin_declarations.push_back({});
-
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
-	decl->m_decl_type = m_typechecker.m_core.generalize(m_typechecker.new_var());
-
+	decl->m_decl_type = poly;
 	declare(name, decl);
 }
 
