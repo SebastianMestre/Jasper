@@ -1,6 +1,30 @@
 #include "typesystem.hpp"
 
+#include <iostream>
+
 #include <cassert>
+
+void TypeSystemCore::print_type (MonoId mono, int d) {
+	MonoData& data = mono_data[mono];
+	for(int i = d; i--;) std::cerr << ' ';
+	std::cerr << "[" << mono << "] ";
+	if(data.type == mono_type::Var){
+		VarId var = data.data_id;
+		VarData& data = var_data[var];
+		if (data.equals == mono){
+			std::cerr << "Free Var\n";
+		} else {
+			std::cerr << "Var\n";
+			print_type(data.equals, d+1);
+		}
+	} else {
+		TermId term = data.data_id;
+		TermData& data = term_data[term];
+		std::cerr << "Term ("<<data.type_function<<")\n";
+		for(int i = 0; i < data.arguments.size(); ++i)
+			print_type(data.arguments[i], d+1);
+	}
+}
 
 MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();

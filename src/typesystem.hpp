@@ -77,4 +77,6 @@ struct TypeSystemCore {
 	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
+
+	void print_type(MonoId, int d=0);
 };
