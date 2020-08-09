@@ -12,7 +12,7 @@ MonoId TypeSystemCore::new_var() {
 	return mono;
 }
 
-MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args) {
+MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args, char const* tag) {
 	int argument_count = type_function_data[type_function].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
@@ -22,7 +22,7 @@ MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> a
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({ type_function, std::move(args) });
+	term_data.push_back({ type_function, std::move(args), tag });
 	mono_data.push_back({ mono_type::Term, term });
 
 	return mono;

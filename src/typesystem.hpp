@@ -39,6 +39,7 @@ struct VarData {
 struct TermData {
 	TypeFunctionId type_function;
 	std::vector<MonoId> arguments;
+	char const* debug_data {nullptr};
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -59,7 +60,7 @@ struct TypeSystemCore {
 	// TODO: add an environment.
 
 	MonoId new_var();
-	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args, char const* tag=nullptr);
 	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
 	PolyId generalize(MonoId mono);
 
