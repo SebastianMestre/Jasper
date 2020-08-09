@@ -168,13 +168,14 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 			assert(0 && "deduced two different polymorphic types to be equal");
 		}
 
-		TypeFunctionId type_function = term_data[ta].type_function;
-		int argument_count = type_function_data[type_function].argument_count;
 
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
 			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
 		}
+
+		TypeFunctionId type_function = term_data[ta].type_function;
+		int argument_count = a_data.arguments.size();
 
 		for (int i { 0 }; i != argument_count; ++i) {
 			unify(a_data.arguments[i], b_data.arguments[i]);
