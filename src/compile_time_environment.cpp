@@ -15,7 +15,6 @@ Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
     , m_arg_index { arg_index } {}
 
 TypedAST::Declaration* Binding::get_decl() {
-	if(m_type != BindingType::Declaration){ *(int*)0 = 0; }
 	assert(m_type == BindingType::Declaration);
 	return m_decl;
 }
