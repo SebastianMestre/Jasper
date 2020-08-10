@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-#include "typed_ast.hpp"
+#include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "value.hpp"
 

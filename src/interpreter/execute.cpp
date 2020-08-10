@@ -1,15 +1,15 @@
 #include "execute.hpp"
 
-#include "compile_time_environment.hpp"
-#include "desugar.hpp"
+#include "../compile_time_environment.hpp"
+#include "../desugar.hpp"
+#include "../match_identifiers.hpp"
+#include "../parse.hpp"
+#include "../token_array.hpp"
+#include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
-#include "match_identifiers.hpp"
 #include "native.hpp"
-#include "parse.hpp"
-#include "token_array.hpp"
-#include "typed_ast.hpp"
 
 exit_status_type execute(std::string const& source, bool dump_ast, Runner* runner) {
 

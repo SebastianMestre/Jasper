@@ -8,7 +8,6 @@
 #include "ast_type.hpp"
 #include "token.hpp"
 #include "token_type.hpp"
-#include "value_type.hpp"
 
 namespace AST {
 struct AST;
