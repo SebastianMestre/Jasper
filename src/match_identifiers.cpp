@@ -33,6 +33,10 @@ void match_identifiers(
 
 void match_identifiers(
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
+#if DEBUG
+	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
+#endif
+
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
 
@@ -44,6 +48,15 @@ void match_identifiers(
 	                           : env.m_typechecker.new_var();
 
 	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+
+#if DEBUG
+	{
+		std::cerr << "Type of " << ast->identifier_text() << " is:\n";
+		auto poly = ast->m_decl_type;
+		auto mono = env.m_typechecker.m_core.poly_data[poly].base;
+		env.m_typechecker.m_core.print_type(mono);
+	}
+#endif
 }
 
 void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
@@ -197,6 +210,18 @@ void match_identifiers(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvi
 			: env.m_typechecker.new_var();
 
 		d->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+
+#if DEBUG
+		{
+			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
+			env.m_typechecker.m_core.print_type(mono);
+
+			auto poly = d->m_decl_type;
+			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
+
+			std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+		}
+#endif
 	}
 }
 
