@@ -84,7 +84,17 @@ struct DictionaryLiteral : public TypedAST {
 	DictionaryLiteral() : TypedAST { ast_type::DictionaryLiteral } {}
 };
 
+struct FunctionArgument {
+	Token const* m_identifier_token;
+	MonoId m_value_type;
+
+	std::string const& identifier_text() const {
+		return m_identifier_token->m_text;
+	}
+};
+
 struct FunctionLiteral : public TypedAST {
+	MonoId m_return_type;
 	std::unique_ptr<TypedAST> m_body;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 	std::unordered_set<std::string> m_captures;
