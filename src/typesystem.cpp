@@ -190,7 +190,7 @@ MonoId TypeSystemCore::inst_impl(
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
 	mono = find(mono);
-	MonoData const& data = mono_data[mono];
+	MonoData data = mono_data[mono];
 
 	if (data.type == mono_type::Var) {
 		auto it = mapping.find(data.data_id);
@@ -199,11 +199,11 @@ MonoId TypeSystemCore::inst_impl(
 	}
 
 	if (data.type == mono_type::Term) {
-		TermData const& t_data = term_data[data.data_id];
+		TermId term = data.data_id;
 		std::vector<MonoId> new_args;
-		for (MonoId argument : t_data.arguments)
+		for (MonoId argument : term_data[term].arguments)
 			new_args.push_back(inst_impl(argument, mapping));
-		return new_term(t_data.type_function, std::move(new_args));
+		return new_term(term_data[term].type_function, std::move(new_args));
 	}
 
 	assert(0 && "invalid term type");
