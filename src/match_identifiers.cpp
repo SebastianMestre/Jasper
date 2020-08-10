@@ -37,21 +37,47 @@ void match_identifiers(
 }
 
 void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
-	TypedAST::Declaration* declaration = env.access(ast->text());
-	assert(declaration);
-	ast->m_declaration = declaration;
+	Frontend::Binding* binding = env.access_binding(ast->text());
+	assert(binding && "accessed an undeclared identifier");
 
-	for(int i = env.m_function_stack.size(); i--;){
-		auto* func = env.m_function_stack[i];
+	// here we implement the [var] rule
+	// TODO: refactor
+	TypedAST::FunctionLiteral* surrounding_function = nullptr;
+	MonoId mono = -1;
+	if (binding->m_type == Frontend::BindingType::Declaration) {
+		TypedAST::Declaration* declaration = binding->get_decl();
 
-		if(func == declaration->m_surrounding_function)
-			break;
+		assert(declaration);
+		ast->m_declaration = declaration;
 
-		func->m_captures.insert(ast->text());
+		surrounding_function = declaration->m_surrounding_function;
+		mono = env.m_typechecker.m_core.inst_fresh(declaration->m_decl_type);
+	} else {
+		TypedAST::FunctionArgument& arg = binding->get_arg();
+
+		// This is only used to build the top-level-declaration graph. since this
+		// points to a function argument, it doesn't play a role in the graph, so
+		// it's ok that it is nullptr.
+		ast->m_declaration = nullptr;
+
+		surrounding_function = binding->get_func();
+		mono = arg.m_value_type;
 	}
 
-	// TODO: should this be a Var instead of just an id copy?
-	ast->m_value_type = env.m_typechecker.m_core.inst_fresh(declaration->m_decl_type);
+	assert(mono != -1);
+
+	ast->m_value_type = mono;
+
+	// dont capture globals
+	if(surrounding_function) {
+		for (int i = env.m_function_stack.size(); i--;) {
+			auto* func = env.m_function_stack[i];
+			if (func == surrounding_function)
+				break;
+			func->m_captures.insert(ast->text());
+		}
+	}
+
 }
 
 void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
