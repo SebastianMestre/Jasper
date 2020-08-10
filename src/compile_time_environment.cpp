@@ -2,7 +2,33 @@
 
 #include "typed_ast.hpp"
 
+#include <cassert>
+
 namespace Frontend {
+
+Binding::Binding(TypedAST::Declaration* decl)
+    : m_type { BindingType::Declaration }, m_decl { decl } {}
+
+Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
+    : m_type { BindingType::Argument }
+    , m_func { func }
+    , m_arg_index { arg_index } {}
+
+TypedAST::Declaration* Binding::get_decl() {
+	if(m_type != BindingType::Declaration){ *(int*)0 = 0; }
+	assert(m_type == BindingType::Declaration);
+	return m_decl;
+}
+
+TypedAST::FunctionArgument& Binding::get_arg() {
+	assert(m_type == BindingType::Argument);
+	return m_func->m_args[m_arg_index];
+}
+
+TypedAST::FunctionLiteral* Binding::get_func() {
+	assert(m_type == BindingType::Argument);
+	return m_func;
+}
 
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
@@ -43,7 +69,13 @@ Scope& CompileTimeEnvironment::current_scope() {
 }
 
 void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declaration* decl) {
-	current_scope().m_vars[name] = decl;
+	// current_scope().m_vars[name] = decl;
+	current_scope().m_vars.insert({name, decl});
+}
+
+void CompileTimeEnvironment::declare_arg(
+    std::string const& name, TypedAST::FunctionLiteral* func, int arg_index) {
+	current_scope().m_vars.insert({ name, { func, arg_index } });
 }
 
 void CompileTimeEnvironment::declare_builtin(std::string const& name){
@@ -63,12 +95,11 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId pol
 	declare(name, decl);
 }
 
-TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
-	auto scan_scope
-	    = [](Scope& scope, std::string const& name) -> TypedAST::Declaration* {
+Binding* CompileTimeEnvironment::access_binding(std::string const& name) {
+	auto scan_scope = [](Scope& scope, std::string const& name) -> Binding* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
-			return it->second;
+			return &it->second;
 		return nullptr;
 	};
 
@@ -81,6 +112,11 @@ TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
 
 	// fall back to global scope lookup
 	return scan_scope(m_global_scope, name);
+}
+
+TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
+	auto binding = access_binding(name);
+	return !binding ? nullptr : binding->get_decl();
 }
 
 void CompileTimeEnvironment::new_scope() {
