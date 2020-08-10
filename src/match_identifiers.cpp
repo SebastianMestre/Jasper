@@ -154,8 +154,13 @@ void match_identifiers(TypedAST::ForStatement* ast, Frontend::CompileTimeEnviron
 	env.end_scope();
 }
 
-void match_identifiers(TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_value.get(), env);
+
+	auto mono = ast->m_value->m_value_type;
+	auto func = env.current_function();
+	env.m_typechecker.m_core.unify(func->m_return_type, mono);
 }
 
 void match_identifiers(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
