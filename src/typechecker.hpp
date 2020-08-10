@@ -11,6 +11,8 @@ struct TypeChecker {
 	MonoId mono_int();
 	MonoId mono_float();
 	MonoId mono_string();
+	MonoId mono_boolean();
+	MonoId mono_unit();
 
 	MonoId new_var() { return m_core.new_var(); }
 

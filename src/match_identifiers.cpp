@@ -22,6 +22,16 @@ void match_identifiers(
 }
 
 void match_identifiers(
+    TypedAST::BooleanLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_value_type = env.m_typechecker.mono_boolean();
+}
+
+void match_identifiers(
+    TypedAST::NullLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_value_type = env.m_typechecker.mono_unit();
+}
+
+void match_identifiers(
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
@@ -198,6 +208,9 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);
 		DISPATCH(StringLiteral);
+		DISPATCH(BooleanLiteral);
+		DISPATCH(NullLiteral);
+
 		DISPATCH(Declaration);
 		DISPATCH(Identifier);
 		DISPATCH(Block);
@@ -210,8 +223,6 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(DeclarationList);
 	case ast_type::BinaryExpression:
 		assert(0);
-	case ast_type::NullLiteral:
-	case ast_type::BooleanLiteral:
 		return;
 	}
 
