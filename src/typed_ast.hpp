@@ -96,7 +96,7 @@ struct FunctionArgument {
 struct FunctionLiteral : public TypedAST {
 	MonoId m_return_type;
 	std::unique_ptr<TypedAST> m_body;
-	std::vector<std::unique_ptr<TypedAST>> m_args;
+	std::vector<FunctionArgument> m_args;
 	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}

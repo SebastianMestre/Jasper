@@ -70,7 +70,10 @@ TypedAST* convertAST(AST::FunctionLiteral* ast) {
     auto typed_function = new FunctionLiteral;
 
     for (auto& arg : ast->m_args) {
-        typed_function->m_args.push_back(get_unique(arg));
+		assert(arg->type() == ast_type::Declaration);
+		auto* decl = static_cast<AST::Declaration*>(arg.get());
+
+		typed_function->m_args.push_back({ decl->m_identifier_token });
     }
 
     typed_function->m_body = get_unique(ast->m_body);
