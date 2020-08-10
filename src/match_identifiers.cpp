@@ -127,9 +127,6 @@ void match_identifiers(
 		int arg_count = ast->m_args.size();
 		std::vector<MonoId> arg_types;
 
-		// return type
-		arg_types.push_back(ast->m_return_type);
-
 		for (int i = 0; i < arg_count; ++i){
 			auto& arg_decl = ast->m_args[i];
 
@@ -140,6 +137,10 @@ void match_identifiers(
 
 			env.declare_arg(arg_decl.identifier_text(), ast, i);
 		}
+
+		// return type
+		arg_types.push_back(ast->m_return_type);
+
 
 		MonoId term_mono_id = env.m_typechecker.m_core.new_term(BuiltinType::Function, std::move(arg_types));
 		ast->m_value_type = term_mono_id;
