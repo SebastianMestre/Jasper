@@ -3,31 +3,37 @@
 #include <unordered_map>
 #include <iostream>
 
-#include "typed_ast.hpp"
 #include "compile_time_environment.hpp"
+#include "typed_ast.hpp"
+#include "typesystem_types.hpp"
 
 #include <cassert>
 
 namespace TypeChecker {
 
-void match_identifiers(TypedAST::NumberLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::NumberLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_value_type = env.m_typechecker.mono_int();
 }
 
-void match_identifiers(TypedAST::StringLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::StringLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_value_type = env.m_typechecker.mono_string();
 }
 
-void match_identifiers(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
-	if (ast->m_value) {
+
+	// this is where we implement let-polymorphism. TODO: refactor (duplication).
+	if (ast->m_value)
 		match_identifiers(ast->m_value.get(), env);
-		// TODO: should this be a Var instead of just an id copy?
-		ast->m_decl_type = env.m_typechecker.m_core.new_poly(ast->m_value->m_value_type, {});
-	} else {
-		ast->m_decl_type = env.m_typechecker.m_core.new_poly(env.m_typechecker.new_var(), {});
-	}
+
+	MonoId mono = ast->m_value ? ast->m_value->m_value_type
+	                           : env.m_typechecker.new_var();
+
+	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono);
 }
 
 void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
@@ -73,11 +79,38 @@ void match_identifiers(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvir
 }
 
 void match_identifiers(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	// TODO: do something better, use the type hints
-	ast->m_value_type = env.m_typechecker.new_var();
 
 	env.enter_function(ast);
 	env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
+
+	{
+		// TODO: do something better, use the type hints
+
+		int arg_count = ast->m_args.size();
+		std::vector<MonoId> arg_types;
+
+		// return type
+		arg_types.push_back(env.m_typechecker.new_var());
+
+		for (int i = 0; i < arg_count; ++i){
+			auto decl = static_cast<TypedAST::Declaration*>(ast->m_args[i].get());
+
+			int mono = env.m_typechecker.new_var();
+			arg_types.push_back(mono);
+
+			// don't generalize the variable: wrap it in a poly type but leave it
+			// free, succeptible to unification inside the function body.
+			// TODO: This is a hack. we should better differentiate between
+			// function arguments and declarations
+			decl->m_decl_type = env.m_typechecker.m_core.new_poly(mono, {});
+			decl->m_surrounding_function = ast;
+
+			env.declare(decl->identifier_text(), decl);
+		}
+
+		MonoId term_mono_id = env.m_typechecker.m_core.new_term(BuiltinType::Function, std::move(arg_types));
+		ast->m_value_type = term_mono_id;
+	}
 
 	// declare arguments
 	for (auto& decl : ast->m_args)
@@ -120,16 +153,15 @@ void match_identifiers(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvi
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		if (d->m_value) {
+
+		// this is where we implement let-polymorphism. TODO: refactor.
+		if (d->m_value)
 			match_identifiers(d->m_value.get(), env);
-			d->m_decl_type
-			    = env.m_typechecker.m_core.generalize(d->m_value->m_value_type);
-		} else {
-			// TODO SPEED: dont create a variable and then generalize it, create a
-			// generalized variable directly
-			d->m_decl_type
-			    = env.m_typechecker.m_core.generalize(env.m_typechecker.new_var());
-		}
+
+		MonoId mono = d->m_value ? d->m_value->m_value_type
+			: env.m_typechecker.new_var();
+
+		d->m_decl_type = env.m_typechecker.m_core.generalize(mono);
 	}
 }
 
