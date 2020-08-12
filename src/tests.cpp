@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cassert>
 
-#include "execute.hpp"
-#include "tester.hpp"
+#include "interpreter/environment_fwd.hpp"
+#include "interpreter/execute.hpp"
 #include "test_utils.hpp"
-#include "environment_fwd.hpp"
+#include "tester.hpp"
 
 int main() {
 	using Test::TestSet;

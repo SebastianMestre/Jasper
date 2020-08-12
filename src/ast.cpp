@@ -4,8 +4,6 @@
 
 #include <cassert>
 
-#include "value.hpp"
-
 namespace AST {
 
 constexpr char tabc = ' ';

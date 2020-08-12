@@ -4,14 +4,14 @@
 #include <string>
 #include <vector>
 
+#include "../parse.hpp"
+#include "../token_array.hpp"
+#include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
-#include "parse.hpp"
-#include "token_array.hpp"
-#include "value.hpp"
-#include "typed_ast.hpp"
 #include "exit_status_type.hpp"
+#include "value.hpp"
 
 int main() {
 
