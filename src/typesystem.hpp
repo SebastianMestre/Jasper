@@ -1,11 +1,8 @@
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
-using TypeFunctionId = int;
-using VarId = int;
-using TermId = int;
-using MonoId = int;
-using PolyId = int;
+#include "typesystem_types.hpp"
 
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
@@ -42,6 +39,7 @@ struct VarData {
 struct TermData {
 	TypeFunctionId type_function;
 	std::vector<MonoId> arguments;
+	char const* debug_data {nullptr};
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -62,10 +60,14 @@ struct TypeSystemCore {
 	// TODO: add an environment.
 
 	MonoId new_var();
-	MonoId new_term(TypeFunctionId type_function, std::vector<int> args);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args, char const* tag=nullptr);
+	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
+	PolyId generalize(MonoId mono);
 
 	// qualifies all unbound variables in the given monotype
 	// PolyId new_poly (MonoId mono) { } // TODO
+
+	void gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars);
 
 	MonoId find(MonoId mono);
 	// expects the variable to be its own representative
@@ -75,4 +77,6 @@ struct TypeSystemCore {
 	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
+
+	void print_type(MonoId, int d=0);
 };

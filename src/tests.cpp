@@ -11,6 +11,7 @@ int main() {
 
 	Test::Tester tests;
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			x : dec = 1.4;
@@ -77,6 +78,7 @@ int main() {
 			return exit_status_type::Ok;
 		}}
 	);
+	*/
 
 	tests.add_test(
 		TestSet{R"(
@@ -136,6 +138,7 @@ int main() {
 		}}
 	);
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			K := fn (x) => fn (y) => x;
@@ -147,7 +150,9 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), 42);
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			cons := fn (l,r) {
@@ -171,7 +176,9 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			Leaf := fn() => array { "Leaf" };
@@ -216,6 +223,7 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
 		}}
 	);
+	*/
 
 	tests.add_test(
 		TestSet{R"(
@@ -238,6 +246,7 @@ int main() {
 		}}
 	);
 	
+	/*
 	tests.add_test(
 		TestSet{R"(
 			fib := fn(n){
@@ -250,6 +259,7 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), 8);
 		}}
 	);
+	*/
 
 	tests.add_test(
 		TestSet{R"(
@@ -267,6 +277,7 @@ int main() {
 		}}
 	);
 	
+	/*
 	tests.add_test(
 		TestSet{R"(
 			__invoke := fn () {
@@ -285,7 +296,9 @@ int main() {
 			}
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			__invoke := fn () {
@@ -304,7 +317,9 @@ int main() {
 			}
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			__invoke := fn () {
@@ -316,7 +331,9 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			__invoke := fn () {
@@ -328,7 +345,9 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), "10,10");
 		}}
 	);
+	*/
 
+	/*
 	tests.add_test(
 		TestSet{R"(
 			// TODO: fix inability to use keyword 'array' and others in types
@@ -348,6 +367,7 @@ int main() {
 			return Assert::equals(eval_expression("__invoke()", env), 4);
 		}}
 	);
+	*/
 
 	tests.add_test(
 		TestSet{R"(
