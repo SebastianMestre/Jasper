@@ -1,6 +1,30 @@
 #include "typesystem.hpp"
 
+#include <iostream>
+
 #include <cassert>
+
+void TypeSystemCore::print_type (MonoId mono, int d) {
+	MonoData& data = mono_data[mono];
+	for(int i = d; i--;) std::cerr << ' ';
+	std::cerr << "[" << mono << "] ";
+	if(data.type == mono_type::Var){
+		VarId var = data.data_id;
+		VarData& data = var_data[var];
+		if (data.equals == mono){
+			std::cerr << "Free Var\n";
+		} else {
+			std::cerr << "Var\n";
+			print_type(data.equals, d+1);
+		}
+	} else {
+		TermId term = data.data_id;
+		TermData& data = term_data[term];
+		std::cerr << "Term ("<<data.type_function<<")\n";
+		for(int i = 0; i < data.arguments.size(); ++i)
+			print_type(data.arguments[i], d+1);
+	}
+}
 
 MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();
@@ -12,7 +36,7 @@ MonoId TypeSystemCore::new_var() {
 	return mono;
 }
 
-MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args) {
+MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args, char const* tag) {
 	int argument_count = type_function_data[type_function].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
@@ -22,14 +46,57 @@ MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> a
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({ type_function, std::move(args) });
+	term_data.push_back({ type_function, std::move(args), tag });
 	mono_data.push_back({ mono_type::Term, term });
 
 	return mono;
 }
 
-// qualifies all unbound variables in the given monotype
-// PolyId new_poly (MonoId mono, Env&) { } // TODO
+PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
+	PolyData data;
+	data.base = mono;
+	data.vars = std::move(vars);
+	PolyId poly = poly_data.size();
+	poly_data.push_back(data);
+	return poly;
+}
+
+void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
+	MonoId repr = find(mono);
+	MonoData const& data = mono_data[repr];
+	if (data.type == mono_type::Var) {
+		VarId var = data.data_id;
+		free_vars.insert(var);
+	} else {
+		TermId term = data.data_id;
+		for (MonoId arg : term_data[term].arguments)
+			gather_free_vars(arg, free_vars);
+	}
+}
+
+// qualifies all free variables in the given monotype
+// TODO(Mestre): I dont think this is right, we are supposed to only qualify
+// 'unbound' variables... whatever than means.
+PolyId TypeSystemCore::generalize(MonoId mono) {
+	std::unordered_set<VarId> free_vars;
+	gather_free_vars(mono, free_vars);
+
+	std::vector<MonoId> new_vars;
+	for(int i = free_vars.size(); i--;)
+		new_vars.push_back(new_var());
+
+	std::unordered_map<VarId, MonoId> mapping;
+	int i = 0;
+	for(VarId var : free_vars)
+		mapping[var] = new_vars[i++];
+
+	MonoId base = inst_impl(mono, mapping);
+	std::vector<VarId> vars;
+	for(MonoId m : new_vars)
+		vars.push_back(mono_data[m].data_id);
+
+	return new_poly(base, std::move(vars));
+}
 
 MonoId TypeSystemCore::find(MonoId mono) {
 	if (mono_data[mono].type != mono_type::Var)
@@ -101,13 +168,14 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 			assert(0 && "deduced two different polymorphic types to be equal");
 		}
 
-		TypeFunctionId type_function = term_data[ta].type_function;
-		int argument_count = type_function_data[type_function].argument_count;
 
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
 			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
 		}
+
+		TypeFunctionId type_function = term_data[ta].type_function;
+		int argument_count = a_data.arguments.size();
 
 		for (int i { 0 }; i != argument_count; ++i) {
 			unify(a_data.arguments[i], b_data.arguments[i]);
@@ -122,19 +190,20 @@ MonoId TypeSystemCore::inst_impl(
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
 	mono = find(mono);
-	MonoData const& data = mono_data[mono];
+	MonoData data = mono_data[mono];
 
 	if (data.type == mono_type::Var) {
 		auto it = mapping.find(data.data_id);
+		// TODO: make a new mono with the same var?
 		return it == mapping.end() ? mono : it->second;
 	}
 
 	if (data.type == mono_type::Term) {
-		TermData const& t_data = term_data[data.data_id];
+		TermId term = data.data_id;
 		std::vector<MonoId> new_args;
-		for (MonoId argument : t_data.arguments)
+		for (MonoId argument : term_data[term].arguments)
 			new_args.push_back(inst_impl(argument, mapping));
-		return new_term(t_data.type_function, std::move(new_args));
+		return new_term(term_data[term].type_function, std::move(new_args));
 	}
 
 	assert(0 && "invalid term type");

@@ -4,15 +4,8 @@
 
 #include "token.hpp"
 #include "token_type.hpp"
+#include "token_array.hpp"
 
-struct TokenArray;
-
-/**
- * Converts raw bytes to tokens.
- *
- * Ensures reference stability for the Tokens it
- * hands out.
- */
 struct Lexer {
 	std::vector<char> m_source;
 	TokenArray& m_tokens;

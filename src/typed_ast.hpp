@@ -9,6 +9,7 @@
 #include "token.hpp"
 #include "token_type.hpp"
 #include "value_type.hpp"
+#include "typesystem_types.hpp"
 
 namespace AST {
 struct AST;
@@ -23,6 +24,8 @@ protected:
 public:
 	TypedAST(ast_type type) : m_type { type } {}
 
+	// is not set on declarations
+	MonoId m_value_type;
 	ast_type type() const { return m_type; }
 	virtual ~TypedAST() = default;
 };
@@ -81,9 +84,19 @@ struct DictionaryLiteral : public TypedAST {
 	DictionaryLiteral() : TypedAST { ast_type::DictionaryLiteral } {}
 };
 
+struct FunctionArgument {
+	Token const* m_identifier_token;
+	MonoId m_value_type;
+
+	std::string const& identifier_text() const {
+		return m_identifier_token->m_text;
+	}
+};
+
 struct FunctionLiteral : public TypedAST {
+	MonoId m_return_type;
 	std::unique_ptr<TypedAST> m_body;
-	std::vector<std::unique_ptr<TypedAST>> m_args;
+	std::vector<FunctionArgument> m_args;
 	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}
@@ -99,6 +112,7 @@ struct DeclarationList : public TypedAST {
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
+	PolyId m_decl_type;
 
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function { nullptr };

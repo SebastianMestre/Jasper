@@ -2,26 +2,65 @@
 
 #include "typed_ast.hpp"
 
+#include <cassert>
+
 namespace Frontend {
+
+Binding::Binding(TypedAST::Declaration* decl)
+    : m_type { BindingType::Declaration }, m_decl { decl } {}
+
+Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
+    : m_type { BindingType::Argument }
+    , m_func { func }
+    , m_arg_index { arg_index } {}
+
+TypedAST::Declaration* Binding::get_decl() {
+	assert(m_type == BindingType::Declaration);
+	return m_decl;
+}
+
+TypedAST::FunctionArgument& Binding::get_arg() {
+	assert(m_type == BindingType::Argument);
+	return m_func->m_args[m_arg_index];
+}
+
+TypedAST::FunctionLiteral* Binding::get_func() {
+	assert(m_type == BindingType::Argument);
+	return m_func;
+}
 
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
 	// HACK: this is an ugly hack. bear with me...
-	static TypedAST::Declaration dummy;
-	declare("size", &dummy);
-	declare("print", &dummy);
-	declare("array_append", &dummy);
-	declare("array_extend", &dummy);
-	declare("array_join", &dummy);
+	declare_builtin("size");
+	declare_builtin("print");
+	declare_builtin("array_append");
+	declare_builtin("array_extend");
+	declare_builtin("array_join");
 
-	declare("+", &dummy);
-	declare("-", &dummy);
-	declare("*", &dummy);
-	declare("/", &dummy);
-	declare("<", &dummy);
-	declare("=", &dummy);
-	declare("==", &dummy);
-	declare(".", &dummy);
+	// TODO: refactor, figure out a nice way to build types
+	auto var_mono_id = m_typechecker.new_var();
+	auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+
+	// TODO: i use the same mono thrice... does this make sense?
+	auto term_mono_id = m_typechecker.m_core.new_term(
+		TypeChecker::BuiltinType::Function,
+		{var_mono_id, var_mono_id, var_mono_id},
+		"[builtin] (a, a) -> a");
+
+	auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+
+	// TODO: re using the same PolyId... is this ok?
+	// I think this is fine because we always do inst_fresh when we use a poly
+	// , so it can't somehow get mutated
+	declare_builtin("+" , poly_id);
+	declare_builtin("-" , poly_id);
+	declare_builtin("*" , poly_id);
+	declare_builtin("/" , poly_id);
+	declare_builtin("<" , poly_id);
+	declare_builtin("=" , poly_id);
+	declare_builtin("==", poly_id);
+	declare_builtin("." , poly_id);
 };
 
 Scope& CompileTimeEnvironment::current_scope() {
@@ -29,15 +68,37 @@ Scope& CompileTimeEnvironment::current_scope() {
 }
 
 void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declaration* decl) {
-	current_scope().m_vars[name] = decl;
+	// current_scope().m_vars[name] = decl;
+	current_scope().m_vars.insert({name, decl});
 }
 
-TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
-	auto scan_scope
-	    = [](Scope& scope, std::string const& name) -> TypedAST::Declaration* {
+void CompileTimeEnvironment::declare_arg(
+    std::string const& name, TypedAST::FunctionLiteral* func, int arg_index) {
+	current_scope().m_vars.insert({ name, { func, arg_index } });
+}
+
+void CompileTimeEnvironment::declare_builtin(std::string const& name){
+	// TODO: remove this
+	// totally general type. just for convenience during development.
+	auto mono_id = m_typechecker.new_var();
+	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
+	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
+
+	declare_builtin(name, poly_id);
+}
+
+void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly){
+	m_builtin_declarations.push_back({});
+	TypedAST::Declaration* decl = &m_builtin_declarations.back();
+	decl->m_decl_type = poly;
+	declare(name, decl);
+}
+
+Binding* CompileTimeEnvironment::access_binding(std::string const& name) {
+	auto scan_scope = [](Scope& scope, std::string const& name) -> Binding* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
-			return it->second;
+			return &it->second;
 		return nullptr;
 	};
 
@@ -50,6 +111,11 @@ TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
 
 	// fall back to global scope lookup
 	return scan_scope(m_global_scope, name);
+}
+
+TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
+	auto binding = access_binding(name);
+	return !binding ? nullptr : binding->get_decl();
 }
 
 void CompileTimeEnvironment::new_scope() {

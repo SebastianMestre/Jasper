@@ -138,12 +138,8 @@ Type::Value* eval_call_function(
 
 	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
-		auto* argdeclTypeErased = callee->m_def->m_args[i].get();
-		assert(argdeclTypeErased);
-		assert(argdeclTypeErased->type() == ast_type::Declaration);
-		auto* argdecl = static_cast<TypedAST::Declaration*>(argdeclTypeErased);
-
-		e.declare(argdecl->identifier_text(), unboxed(args[i]));
+		auto& argdecl = callee->m_def->m_args[i];
+		e.declare(argdecl.identifier_text(), unboxed(args[i]));
 	}
 
 	for (auto& kv : callee->m_captures) {

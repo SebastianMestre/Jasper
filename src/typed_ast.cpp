@@ -3,7 +3,6 @@
 
 #include "ast.hpp"
 #include "typed_ast.hpp"
-#include "typed_ast_type.hpp"
 
 namespace TypedAST {
 
@@ -12,15 +11,11 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>& ast) {
 }
 
 TypedAST* convertAST(AST::NumberLiteral* ast) {
-    auto typed_number = new NumberLiteral;
+	auto typed_number = new NumberLiteral;
 
-    // desambiguar el tipo en float
-    // por defecto es int
-    // chequeo si es float:
-    //      typed_number->m_vtype = ast_vtype::Float
+	typed_number->m_token = ast->m_token;
 
-    typed_number->m_token = ast->m_token;
-    return typed_number;
+	return typed_number;
 }
 
 TypedAST* convertAST(AST::StringLiteral* ast) {
@@ -75,7 +70,10 @@ TypedAST* convertAST(AST::FunctionLiteral* ast) {
     auto typed_function = new FunctionLiteral;
 
     for (auto& arg : ast->m_args) {
-        typed_function->m_args.push_back(get_unique(arg));
+		assert(arg->type() == ast_type::Declaration);
+		auto* decl = static_cast<AST::Declaration*>(arg.get());
+
+		typed_function->m_args.push_back({ decl->m_identifier_token });
     }
 
     typed_function->m_body = get_unique(ast->m_body);
