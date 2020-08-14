@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-struct KorasajuSolver {
+struct KosarajuSolver {
 private:
 	int vertex_count;
 	std::vector<bool> visited;
@@ -45,7 +45,7 @@ private:
 	}
 
 public:
-	KorasajuSolver(int n)
+	KosarajuSolver(int n)
 	    : vertex_count { n }
 	    , visited(n)
 	    , graph(n)
