@@ -1,20 +1,26 @@
+#include <vector>
+#include <set>
+#include <algorithm>
+
+#include <cassert>
 
 struct KorasajuSolver {
 private:
-	vector<bool> visited;
-	vector<vector<int>> graph;
-	vector<vector<int>> transpose_graph;
-	vector<int> component_of_vertex;
+	std::vector<bool> visited;
+	std::vector<std::vector<int>> graph;
+	std::vector<std::vector<int>> transpose_graph;
+	std::vector<int> component_of_vertex;
 
-	vector<vector<int>> component_vertices;
-	vector<set<int>> component_graph;
+	std::vector<std::vector<int>> component_vertices;
+	std::vector<std::set<int>> component_graph;
 
-	vector<int> vertex_order;
+	std::vector<int> vertex_order;
 
 	int new_component () {
+		int c = component_graph.size();
 		component_graph.push_back({});
 		component_vertices.push_back({});
-		return component_vertices.size();
+		return c;
 	}
 
 	void visit(int u) {
@@ -29,20 +35,24 @@ private:
 	}
 
 	void assign(int u, int root) {
-		if(component_of_vertex[u] == -1)
+		if(component_of_vertex[u] != -1)
 			return;
 
 		component_of_vertex[u] = root;
 		for (int v : transpose_graph[u])
-			dfs2(v, root);
+			assign(v, root);
 	}
 
 public:
 	void solve () {
+		const int n = graph.size();
+
 		for(int u = 0; u != n; ++u)
 			visit(u);
 
-		reverse(vertex_order.begin(), vertex_order.end());
+		assert(vertex_order.size() == n);
+
+		std::reverse(vertex_order.begin(), vertex_order.end());
 
 		component_of_vertex.assign(n, -1);
 		for(int i = 0; i != n; ++i){
