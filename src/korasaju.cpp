@@ -6,6 +6,7 @@
 
 struct KorasajuSolver {
 private:
+	int vertex_count;
 	std::vector<bool> visited;
 	std::vector<std::vector<int>> graph;
 	std::vector<std::vector<int>> transpose_graph;
@@ -44,6 +45,24 @@ private:
 	}
 
 public:
+	KorasajuSolver(int n)
+	    : vertex_count { n }
+	    , visited(n)
+	    , graph(n)
+	    , transpose_graph(n)
+	    , component_of_vertex(n) {
+		vertex_order.reserve(n);
+	}
+
+	void add_edge(int i, int j) {
+		assert(0 <= i);
+		assert(0 <= j);
+		assert(i < vertex_count);
+		assert(j < vertex_count);
+		graph[i].push_back(j);
+		graph[j].push_back(i);
+	}
+
 	void solve () {
 		const int n = graph.size();
 
