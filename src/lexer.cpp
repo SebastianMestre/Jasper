@@ -398,38 +398,8 @@ void Lexer::consume_token() {
 				m_current_line,
 				m_current_column });
 
-		} else if (isdigit(current_char())) {
-			std::string text;
-			text.push_back(current_char());
-
-			while (isdigit(next_char())) {
-				m_source_index += 1;
-				m_current_column += 1;
-				text.push_back(current_char());
-			}
-
-			if (next_char() == '.') {
-				m_source_index += 1;
-				m_current_column += 1;
-				text.push_back(current_char());
-			}
-
-			while (isdigit(next_char())) {
-				m_source_index += 1;
-				m_current_column += 1;
-				text.push_back(current_char());
-			}
-
-			m_source_index += 1;
-			m_current_column += 1;
-			m_tokens.push_back({
-				token_type::NUMBER,
-				text,
-				m_current_line,
-				m_current_column - int(text.size()),
-				m_current_line,
-				m_current_column });
-
+		} else if (consume_number()) {
+			return;
 		} else {
 			if (current_char() == '\n') {
 				m_current_line += 1;
@@ -440,6 +410,46 @@ void Lexer::consume_token() {
 			m_source_index += 1;
 		}
 	}
+}
+
+bool Lexer::consume_number() {
+	if (isdigit(current_char()))
+		return false;
+
+	std::string text;
+	text.push_back(current_char());
+
+	bool is_int = true;
+	while (isdigit(next_char())) {
+		m_source_index += 1;
+		m_current_column += 1;
+		text.push_back(current_char());
+	}
+
+	if (next_char() == '.') {
+		is_int = false;
+		m_source_index += 1;
+		m_current_column += 1;
+		text.push_back(current_char());
+
+		while (isdigit(next_char())) {
+			m_source_index += 1;
+			m_current_column += 1;
+			text.push_back(current_char());
+		}
+	}
+
+	token_type type = is_int ? token_type::INTEGER : token_type::NUMBER;
+	m_source_index += 1;
+	m_current_column += 1;
+	m_tokens.push_back({ type,
+	                     text,
+	                     m_current_line,
+	                     m_current_column - int(text.size()),
+	                     m_current_line,
+	                     m_current_column });
+
+	return true;
 }
 
 bool Lexer::consume_comment () {

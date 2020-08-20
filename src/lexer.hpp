@@ -26,6 +26,7 @@ struct Lexer {
 	bool consume_comment();
 	void consume_token();
 	bool consume_keyword();
+	bool consume_number();
 	void push_token(token_type, int);
 
 	void advance();
