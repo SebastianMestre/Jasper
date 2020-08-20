@@ -10,11 +10,15 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>& ast) {
     return std::unique_ptr<TypedAST>(convertAST(ast.get()));
 }
 
+TypedAST* convertAST(AST::IntegerLiteral* ast) {
+	auto typed_number = new NumberLiteral;
+	typed_number->m_token = ast->m_token;
+	return typed_number;
+}
+
 TypedAST* convertAST(AST::NumberLiteral* ast) {
 	auto typed_number = new NumberLiteral;
-
 	typed_number->m_token = ast->m_token;
-
 	return typed_number;
 }
 
