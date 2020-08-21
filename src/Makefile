@@ -79,6 +79,6 @@ $(OBJDIR)/%.o : %.cpp
 $(OBJDIR)/%.d: %.cpp | $(OBJDIR)
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,\($(*F)\)\.o[ :]*,$(OBJDIR)/$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
