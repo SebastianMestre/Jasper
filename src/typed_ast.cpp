@@ -11,9 +11,9 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>& ast) {
 }
 
 TypedAST* convertAST(AST::IntegerLiteral* ast) {
-	auto typed_number = new NumberLiteral;
-	typed_number->m_token = ast->m_token;
-	return typed_number;
+	auto typed_integer = new IntegerLiteral;
+	typed_integer->m_token = ast->m_token;
+	return typed_integer;
 }
 
 TypedAST* convertAST(AST::NumberLiteral* ast) {
@@ -175,6 +175,8 @@ TypedAST* convertAST (AST::AST* ast) {
     switch (ast->type()) {
     case ast_type::NumberLiteral:
         return convertAST(static_cast<AST::NumberLiteral*>(ast));
+    case ast_type::IntegerLiteral:
+        return convertAST(static_cast<AST::NumberLiteral*>(ast));
     case ast_type::StringLiteral:
         return convertAST(static_cast<AST::StringLiteral*>(ast));
     case ast_type::BooleanLiteral:
@@ -209,10 +211,9 @@ TypedAST* convertAST (AST::AST* ast) {
         return convertAST(static_cast<AST::ForStatement*>(ast));
     case ast_type::BinaryExpression:
         assert(0);
-    default:
-        std::cerr << "Error: AST type not handled in convertAST" << std::endl;
-        assert(0);
     }
+	std::cerr << "Error: AST type not handled in convertAST: " << ast_type_string[(int)ast->type()] << std::endl;
+	assert(0);
 }
 
 } // namespace TypedAST
