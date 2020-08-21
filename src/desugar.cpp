@@ -163,6 +163,7 @@ Own<AST> desugar (Own<AST> ast) {
 
 	switch (ast->type()) {
 		RETURN(NumberLiteral);
+		RETURN(IntegerLiteral);
 		RETURN(StringLiteral);
 		RETURN(BooleanLiteral);
 		RETURN(NullLiteral);
@@ -181,10 +182,9 @@ Own<AST> desugar (Own<AST> ast) {
 		DISPATCH(IfStatement);
 		DISPATCH(ForStatement);
 		RETURN(TypeTerm);
-	default:
-		std::cerr << "Error: AST type not handled in desugar" << std::endl;
-		assert(0);
 	}
+	std::cerr << "Error: AST type not handled in desugar: " << ast_type_string[(int)ast->type()] << std::endl;
+	assert(0);
 
 #undef RETURN
 #undef DISPATCH
