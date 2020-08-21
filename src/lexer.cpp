@@ -413,7 +413,7 @@ void Lexer::consume_token() {
 }
 
 bool Lexer::consume_number() {
-	if (isdigit(current_char()))
+	if (!isdigit(current_char()))
 		return false;
 
 	std::string text;
