@@ -60,7 +60,7 @@ public:
 		assert(i < vertex_count);
 		assert(j < vertex_count);
 		graph[i].push_back(j);
-		graph[j].push_back(i);
+		transpose_graph[j].push_back(i);
 	}
 
 	void solve() {
