@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "interpreter/exit_status_type.hpp"
+#include "../interpreter/exit_status_type.hpp"
 
 namespace Test {
 
