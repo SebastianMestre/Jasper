@@ -176,7 +176,7 @@ TypedAST* convertAST (AST::AST* ast) {
     case ast_type::NumberLiteral:
         return convertAST(static_cast<AST::NumberLiteral*>(ast));
     case ast_type::IntegerLiteral:
-        return convertAST(static_cast<AST::NumberLiteral*>(ast));
+        return convertAST(static_cast<AST::IntegerLiteral*>(ast));
     case ast_type::StringLiteral:
         return convertAST(static_cast<AST::StringLiteral*>(ast));
     case ast_type::BooleanLiteral:
