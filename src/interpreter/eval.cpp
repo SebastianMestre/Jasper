@@ -29,12 +29,12 @@ Type::Value* eval(TypedAST::Declaration* ast, Type::Environment& e) {
 };
 
 Type::Value* eval(TypedAST::NumberLiteral* ast, Type::Environment& e) {
-	for (char a : ast->text())
-		if (a == '.')
-			return e.new_float(std::stof(ast->text()));
+	return e.new_float(std::stof(ast->text()));
+}
 
+Type::Value* eval(TypedAST::IntegerLiteral* ast, Type::Environment& e) {
 	return e.new_integer(std::stoi(ast->text()));
-};
+}
 
 Type::Value* eval(TypedAST::StringLiteral* ast, Type::Environment& e) {
 	return e.new_string(ast->text());
@@ -273,6 +273,8 @@ Type::Value* eval(TypedAST::TypedAST* ast, Type::Environment& e) {
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
+	case ast_type::IntegerLiteral:
+		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
 	case ast_type::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
 	case ast_type::BooleanLiteral:
@@ -307,10 +309,10 @@ Type::Value* eval(TypedAST::TypedAST* ast, Type::Environment& e) {
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
 	case ast_type::BinaryExpression:
 		assert(0);
-	default:
-		std::cerr << "@ Internal Error: unhandled case in eval:\n";
-		std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
 	}
+
+	std::cerr << "@ Internal Error: unhandled case in eval:\n";
+	std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
 
 	return nullptr;
 }
