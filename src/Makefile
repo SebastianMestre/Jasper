@@ -3,6 +3,7 @@
 
 BINDIR := ../bin
 OBJDIR := ../build
+
 OBJNAMES := \
 	ast.o \
 	compile_time_environment.o \
@@ -13,12 +14,13 @@ OBJNAMES := \
 	parser.o \
 	parse.o \
 	string_view.o \
-	tester.o \
-	test_set.o \
 	token.o \
 	typechecker.o \
 	typed_ast.o \
-	typesystem.o \
+	typesystem.o
+
+# ITPR stands for "interpreter"
+ITPR_OBJNAMES := \
 	interpreter/environment.o \
 	interpreter/error.o \
 	interpreter/eval.o \
@@ -27,28 +29,39 @@ OBJNAMES := \
 	interpreter/value.o \
 	interpreter/native.o
 
+TEST_OBJNAMES := \
+	test/tester.o \
+	test/test_set.o
+
+ITPR_ENTRY_POINT := $(OBJDIR)/interpreter/main.o
+TEST_ENTRY_POINT := $(OBJDIR)/test/main.o
+
+ENTRY_POINTS := $(ITPR_ENTRY_POINT) $(TEST_ENTRY_POINT)
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
+TEST_OBJS := $(addprefix $(OBJDIR)/,$(TEST_OBJNAMES))
+ITPR_OBJS := $(addprefix $(OBJDIR)/,$(ITPR_OBJNAMES))
+ALL_OBJS := $(OBJS) $(ITPR_OBJS) $(TEST_OBJS)
 
 LIBS := -lasan
 
 CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
-CPPFLAGS := 
 
-all: $(BINDIR)/jasperi
-
+# maybe we should build the tests as well?
+all: interpreter
+interpreter: $(BINDIR)/jasperi
 test_program: $(BINDIR)/test_program
 
 clean:
 	rm $(BINDIR) -r
 	rm $(OBJDIR) -r
 
-$(BINDIR)/jasperi: $(OBJS) $(OBJDIR)/interpreter/main.o | $(BINDIR)
+$(BINDIR)/jasperi: $(OBJS) $(ITPR_OBJS) $(ITPR_ENTRY_POINT) | $(BINDIR)
 	$(CXX) -o $@ $^ $(LIBS)
 
-$(BINDIR)/test_program: $(OBJS) $(OBJDIR)/tests.o | $(BINDIR)
+$(BINDIR)/test_program: $(OBJS) $(ITPR_OBJS) $(TEST_OBJS) $(TEST_ENTRY_POINT) | $(BINDIR)
 	$(CXX) -o $@ $^ $(LIBS)
 
-$(OBJS) $(OBJDIR)/interpreter/main.o $(OBJDIR)/tests.o: | $(OBJDIR)
+$(ALL_OBJS) $(ENTRY_POINTS): | $(OBJDIR)
 
 $(BINDIR):
 	mkdir $(BINDIR)
@@ -56,10 +69,10 @@ $(BINDIR):
 $(OBJDIR):
 	mkdir $(OBJDIR)
 	mkdir $(OBJDIR)/interpreter
+	mkdir $(OBJDIR)/test
 
-include $(OBJDIR)/interpreter/main.d
-include $(OBJDIR)/tests.d
-include $(OBJS:.o=.d)
+include $(ENTRY_POINTS:.o=.d)
+include $(ALL_OBJS:.o=.d)
 		
 $(OBJDIR)/%.o : %.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -67,6 +80,6 @@ $(OBJDIR)/%.o : %.cpp
 $(OBJDIR)/%.d: %.cpp | $(OBJDIR)
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,\($(*F)\)\.o[ :]*,$(OBJDIR)/$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 

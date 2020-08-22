@@ -1,6 +1,6 @@
 # Jasper
 
-We are trying to make a nice programming language.
+We are trying to make a nice programming language which is
 
  - easy to refactor
  - consistent
@@ -19,41 +19,35 @@ __invoke := fn () {
 };
 ```
 
-And here is a possible refactor: Wrap a funcion in an object to add some configuration.
+## Using the interpreter
 
-```c++
-f := obt {
-	greeting := "Hello, ";
-	__invoke := fn (name) {
-		return greeting + name;
-	};
-};
+First, you have to compile it using the following command:
 
-__invoke := fn () {
-	f.greeting = "Hey, ";
-	print(f("Programmer"));
-};
-```
-(record types and objects have not yet been implemented)
-
-## Compiling the source
-
-The source files have to be compiled for the program
-to work. So, for a standard compilation proccess
-you'll have to execute the following statements.
-
-```
-cd src
-make
+```shell
+make -C ./src interpreter
 ```
 
-If anything goes wrong you should execute 
+Once it is compiled, you can find the executable under `bin/jasperi`, and execute
+it following the user guide, which can be found in multiple languages in the
+`docs` directory.
 
+> NOTES:
+> Our Makefile uses non-standard features of gnu make
+>
+> Jasper is written in C++14, so you will need a C++14 compatible compiler, such
+> as GCC 6.1 or later (a version as early as GCC 4.9 might also work, but we make
+> no promises)
+
+## Running the tests
+
+We also have small test suite, which can be compiled with
+
+```shell
+make -C ./src test_program
 ```
-make clean
+
+and then run with
+
+```shell
+./bin/test_program
 ```
-
-To avoid further errors and try compiling again.
-
-Once the program is compiled you can find it under the
-_bin_ folder and execute it following the user guide.

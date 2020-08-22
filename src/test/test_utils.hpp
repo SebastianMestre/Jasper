@@ -3,9 +3,9 @@
 #include <string>
 #include <iostream>
 
-#include "interpreter/environment.hpp"
-#include "interpreter/execute.hpp"
-#include "interpreter/value.hpp"
+#include "../interpreter/environment.hpp"
+#include "../interpreter/execute.hpp"
+#include "../interpreter/value.hpp"
 
 namespace Assert {
 

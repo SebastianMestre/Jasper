@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 
-#include "interpreter/exit_status_type.hpp"
-#include "interpreter/environment_fwd.hpp"
+#include "../interpreter/exit_status_type.hpp"
+#include "../interpreter/environment_fwd.hpp"
 
 namespace Test {
 

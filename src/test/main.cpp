@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cassert>
 
-#include "interpreter/environment_fwd.hpp"
-#include "interpreter/execute.hpp"
+#include "../interpreter/environment_fwd.hpp"
+#include "../interpreter/execute.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
 
