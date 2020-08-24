@@ -13,6 +13,11 @@ namespace TypeChecker {
 
 void match_identifiers(
     TypedAST::NumberLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_value_type = env.m_typechecker.mono_float();
+}
+
+void match_identifiers(
+    TypedAST::IntegerLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_value_type = env.m_typechecker.mono_int();
 }
 
@@ -233,6 +238,7 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 	// TODO: Compound literals
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);
+		DISPATCH(IntegerLiteral);
 		DISPATCH(StringLiteral);
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);

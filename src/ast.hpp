@@ -21,6 +21,14 @@ public:
 	virtual ~AST() = default;
 };
 
+struct IntegerLiteral : public AST {
+	Token const* m_token;
+
+	std::string const& text () { return m_token->m_text; }
+
+	IntegerLiteral() : AST{ ast_type::IntegerLiteral } {}
+};
+
 struct NumberLiteral : public AST {
 	Token const* m_token;
 

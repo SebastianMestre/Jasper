@@ -403,6 +403,13 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
+	if (token->m_type == token_type::INTEGER) {
+		auto e = std::make_unique<AST::IntegerLiteral>();
+		e->m_token = token;
+		m_lexer->advance();
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	}
+
 	if (token->m_type == token_type::NUMBER) {
 		auto e = std::make_unique<AST::NumberLiteral>();
 		e->m_token = token;

@@ -2,6 +2,7 @@
 
 constexpr const char* ast_type_string[] = {
 	"NumberLiteral",
+	"IntegerLiteral",
 	"StringLiteral",
 	"BooleanLiteral",
 	"NullLiteral",
@@ -26,6 +27,7 @@ constexpr const char* ast_type_string[] = {
 
 enum class ast_type {
 	NumberLiteral,
+	IntegerLiteral,
 	StringLiteral,
 	BooleanLiteral,
 	NullLiteral,

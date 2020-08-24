@@ -39,6 +39,11 @@ void print(NumberLiteral* ast, int d) {
 	std::cout << stab << "[ Number " << ast->text() << " ]\n";
 }
 
+void print(IntegerLiteral* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::cout << stab << "[ Integer " << ast->text() << " ]\n";
+}
+
 void print(StringLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ StringLiteral " << ast->text() << "]\n";
@@ -193,6 +198,8 @@ void print(AST* ast, int d) {
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
 		return print(static_cast<NumberLiteral*>(ast), d);
+	case ast_type::IntegerLiteral:
+		return print(static_cast<IntegerLiteral*>(ast), d);
 	case ast_type::StringLiteral:
 		return print(static_cast<StringLiteral*>(ast), d);
 	case ast_type::BooleanLiteral:

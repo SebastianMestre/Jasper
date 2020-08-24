@@ -42,6 +42,14 @@ struct NumberLiteral : public TypedAST {
 	NumberLiteral() : TypedAST { ast_type::NumberLiteral } {}
 };
 
+struct IntegerLiteral : public TypedAST {
+	Token const* m_token;
+
+	std::string const& text() { return m_token->m_text; }
+
+	IntegerLiteral() : TypedAST { ast_type::IntegerLiteral } {}
+};
+
 struct StringLiteral : public TypedAST {
 	Token const* m_token;
 

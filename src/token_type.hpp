@@ -58,6 +58,7 @@ constexpr const char* token_type_string[] = {
 	"COLON",
 
 	"NUMBER",
+	"INTEGER",
 	"STRING",
 	"KEYWORD_FALSE",
 	"KEYWORD_TRUE",
@@ -134,6 +135,7 @@ enum class token_type {
 	COLON,
 
 	NUMBER,
+	INTEGER,
 	STRING,
 	KEYWORD_FALSE,
 	KEYWORD_TRUE,
