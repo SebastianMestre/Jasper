@@ -11,6 +11,8 @@
 #include "garbage_collector.hpp"
 #include "native.hpp"
 
+namespace Interpreter {
+
 exit_status_type execute(std::string const& source, bool dump_ast, Runner* runner) {
 
 	TokenArray ta;
@@ -36,8 +38,8 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 
 	TypeChecker::match_identifiers(top_level.get(), ct_env);
 
-	GarbageCollector::GC gc;
-	Type::Environment env = { &gc };
+	GC gc;
+	Environment env = { &gc };
 	declare_native_functions(env);
 	eval(top_level.get(), env);
 
@@ -52,11 +54,13 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 // this means we need to create a call expression node to run the program.
 // Having the TokenArray die here is not good, as it takes ownership of the tokens
 // TODO: We need to clean this up
-Type::Value* eval_expression(const std::string& expr, Type::Environment& env) {
+Value* eval_expression(const std::string& expr, Environment& env) {
 	TokenArray ta;
 
 	auto top_level_call_ast = parse_expression(expr, ta);
 	auto top_level_call = TypedAST::get_unique(top_level_call_ast.m_result);
 
-	return Type::unboxed(eval(top_level_call.get(), env));
+	return unboxed(eval(top_level_call.get(), env));
 }
+
+} // namespace Interpreter

@@ -4,7 +4,7 @@
 
 #include "garbage_collector.hpp"
 
-namespace Type {
+namespace Interpreter {
 
 void Scope::declare(const Identifier& i, Reference* v) {
 	// TODO: check name collision
@@ -16,7 +16,7 @@ Reference* Scope::access(const Identifier& i) {
 
 	if (v != m_declarations.end()){
 		assert(v->second->type() == value_type::Reference);
-		return static_cast<Type::Reference*>(v->second);
+		return static_cast<Reference*>(v->second);
 	}
 
 	if (m_parent != nullptr)
@@ -44,7 +44,7 @@ void Environment::end_scope() {
 	m_scope = prev;
 }
 
-void Environment::save_return_value(Type::Value* v) {
+void Environment::save_return_value(Value* v) {
 	// check if not stepping on another value
 	assert(!m_return_value);
 	m_return_value = v;

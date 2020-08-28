@@ -12,7 +12,7 @@ namespace TypedAST {
 struct FunctionLiteral;
 }
 
-namespace Type {
+namespace Interpreter {
 
 using Identifier = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
@@ -123,4 +123,4 @@ struct Reference : Value {
 	Reference(Value* value);
 };
 
-} // namespace Type
+} // namespace Interpreter

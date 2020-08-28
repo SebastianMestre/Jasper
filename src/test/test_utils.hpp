@@ -9,7 +9,7 @@
 
 namespace Assert {
 
-exit_status_type of_type(Type::Value* rv, value_type v_type) {
+exit_status_type of_type(Interpreter::Value* rv, value_type v_type) {
 
 	if (!rv)
 		return exit_status_type::NullError;
@@ -21,7 +21,7 @@ exit_status_type of_type(Type::Value* rv, value_type v_type) {
 }
 
 template <typename RuntimeValue, typename NativeValue>
-exit_status_type scalar_equals(Type::Value* rv, const value_type v_type, const NativeValue& expected) {
+exit_status_type scalar_equals(Interpreter::Value* rv, const value_type v_type, const NativeValue& expected) {
 	exit_status_type fail = of_type(rv, v_type);
 
 	if (exit_status_type::Ok != fail)
@@ -33,42 +33,42 @@ exit_status_type scalar_equals(Type::Value* rv, const value_type v_type, const N
 	return exit_status_type::Ok;
 }
 
-exit_status_type equals(Type::Value* rv, std::string const& expected) {
-	return scalar_equals<Type::String, std::string>(rv, value_type::String, expected);
+exit_status_type equals(Interpreter::Value* rv, std::string const& expected) {
+	return scalar_equals<Interpreter::String, std::string>(rv, value_type::String, expected);
 }
 
-exit_status_type equals(Type::Value* rv, int expected) {
-	return scalar_equals<Type::Integer, int>(rv, value_type::Integer, expected);
+exit_status_type equals(Interpreter::Value* rv, int expected) {
+	return scalar_equals<Interpreter::Integer, int>(rv, value_type::Integer, expected);
 }
 
-exit_status_type equals(Type::Value* rv, float expected) {
-	return scalar_equals<Type::Float, float>(rv, value_type::Float, expected);
+exit_status_type equals(Interpreter::Value* rv, float expected) {
+	return scalar_equals<Interpreter::Float, float>(rv, value_type::Float, expected);
 }
 
 // NOTE: allows literals to be used (e.g. 3.5), may need to change in the future?
-exit_status_type equals(Type::Value* rv, double expected) {
+exit_status_type equals(Interpreter::Value* rv, double expected) {
 	return equals(rv, float(expected));
 }
 
-exit_status_type is_true(Type::Value* rv) {
-	return scalar_equals<Type::Boolean, bool>(rv, value_type::Boolean, true);
+exit_status_type is_true(Interpreter::Value* rv) {
+	return scalar_equals<Interpreter::Boolean, bool>(rv, value_type::Boolean, true);
 }
 
-exit_status_type is_false(Type::Value* rv) {
-	return scalar_equals<Type::Boolean, bool>(rv, value_type::Boolean, false);
+exit_status_type is_false(Interpreter::Value* rv) {
+	return scalar_equals<Interpreter::Boolean, bool>(rv, value_type::Boolean, false);
 }
 
-exit_status_type is_null(Type::Value* rv) {
+exit_status_type is_null(Interpreter::Value* rv) {
 	return of_type(rv, value_type::Null);
 }
 
-exit_status_type array_of_size(Type::Value* rv, unsigned int size) {
+exit_status_type array_of_size(Interpreter::Value* rv, unsigned int size) {
 	exit_status_type fail = of_type(rv, value_type::Array);
 
 	if (exit_status_type::Ok != fail)
 		return fail;
 
-	if ((static_cast<Type::Array*>(rv))->m_value.size() != size)
+	if ((static_cast<Interpreter::Array*>(rv))->m_value.size() != size)
 		return exit_status_type::ValueError;
 
 	return exit_status_type::Ok;

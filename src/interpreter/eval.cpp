@@ -8,7 +8,9 @@
 #include "environment.hpp"
 #include "value.hpp"
 
-Type::Value* eval(TypedAST::DeclarationList* ast, Type::Environment& e) {
+namespace Interpreter {
+
+Value* eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for(auto& decl : ast->m_declarations){
 		assert(decl->type() == ast_type::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
@@ -16,7 +18,7 @@ Type::Value* eval(TypedAST::DeclarationList* ast, Type::Environment& e) {
 	return nullptr;
 };
 
-Type::Value* eval(TypedAST::Declaration* ast, Type::Environment& e) {
+Value* eval(TypedAST::Declaration* ast, Environment& e) {
 	// TODO: type and mutable check -> return error
 	e.declare(ast->identifier_text(), e.null());
 	if (ast->m_value) {
@@ -28,29 +30,29 @@ Type::Value* eval(TypedAST::Declaration* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST::NumberLiteral* ast, Type::Environment& e) {
+Value* eval(TypedAST::NumberLiteral* ast, Environment& e) {
 	return e.new_float(std::stof(ast->text()));
 }
 
-Type::Value* eval(TypedAST::IntegerLiteral* ast, Type::Environment& e) {
+Value* eval(TypedAST::IntegerLiteral* ast, Environment& e) {
 	return e.new_integer(std::stoi(ast->text()));
 }
 
-Type::Value* eval(TypedAST::StringLiteral* ast, Type::Environment& e) {
+Value* eval(TypedAST::StringLiteral* ast, Environment& e) {
 	return e.new_string(ast->text());
 };
 
-Type::Value* eval(TypedAST::BooleanLiteral* ast, Type::Environment& e) {
+Value* eval(TypedAST::BooleanLiteral* ast, Environment& e) {
 	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 
-Type::Value* eval(TypedAST::NullLiteral* ast, Type::Environment& e) {
+Value* eval(TypedAST::NullLiteral* ast, Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST::ObjectLiteral* ast, Type::Environment& e) {
-	Type::ObjectType declarations;
+Value* eval(TypedAST::ObjectLiteral* ast, Environment& e) {
+	ObjectType declarations;
 
 	for(auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
@@ -68,8 +70,8 @@ Type::Value* eval(TypedAST::ObjectLiteral* ast, Type::Environment& e) {
 	return e.new_object(std::move(declarations));
 };
 
-Type::Value* eval(TypedAST::DictionaryLiteral* ast, Type::Environment& e) {
-	Type::ObjectType declarations;
+Value* eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
+	ObjectType declarations;
 
 	for(auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
@@ -86,19 +88,19 @@ Type::Value* eval(TypedAST::DictionaryLiteral* ast, Type::Environment& e) {
 	return e.new_dictionary(std::move(declarations));
 };
 
-Type::Value* eval(TypedAST::ArrayLiteral* ast, Type::Environment& e) {
-	std::vector<Type::Value*> elements;
+Value* eval(TypedAST::ArrayLiteral* ast, Environment& e) {
+	std::vector<Value*> elements;
 	for(auto& element : ast->m_elements){
 		elements.push_back(unboxed(eval(element.get(), e)));
 	}
 	return e.new_list(std::move(elements));
 };
 
-Type::Value* eval(TypedAST::Identifier* ast, Type::Environment& e) {
+Value* eval(TypedAST::Identifier* ast, Environment& e) {
 	return e.access(ast->text());
 };
 
-Type::Value* eval(TypedAST::Block* ast, Type::Environment& e) {
+Value* eval(TypedAST::Block* ast, Environment& e) {
 
 	e.new_nested_scope();
 
@@ -113,7 +115,7 @@ Type::Value* eval(TypedAST::Block* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST::ReturnStatement* ast, Type::Environment& e) {
+Value* eval(TypedAST::ReturnStatement* ast, Environment& e) {
 	// TODO: proper error handling
 	auto* returning = unboxed(eval(ast->m_value.get(), e));
 	assert(returning);
@@ -122,7 +124,7 @@ Type::Value* eval(TypedAST::ReturnStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-auto is_callable_value (Type::Value* v) -> bool {
+auto is_callable_value (Value* v) -> bool {
 	if (!v)
 		return false;
 
@@ -130,8 +132,8 @@ auto is_callable_value (Type::Value* v) -> bool {
 	return type == value_type::Function || type == value_type::NativeFunction;
 }
 
-Type::Value* eval_call_function(
-    Type::Function* callee, std::vector<Type::Value*> args, Type::Environment& e) {
+Value* eval_call_function(
+    Function* callee, std::vector<Value*> args, Environment& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
@@ -145,7 +147,7 @@ Type::Value* eval_call_function(
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == value_type::Reference);
-		e.direct_declare(kv.first, static_cast<Type::Reference*>(kv.second));
+		e.direct_declare(kv.first, static_cast<Reference*>(kv.second));
 	}
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body.get());
@@ -158,28 +160,28 @@ Type::Value* eval_call_function(
 	return e.fetch_return_value();
 }
 
-Type::Value* eval_call_native_function(
-    Type::NativeFunction* callee,
-    std::vector<Type::Value*> args,
-    Type::Environment& e) {
+Value* eval_call_native_function(
+    NativeFunction* callee,
+    std::vector<Value*> args,
+    Environment& e) {
 	return callee->m_fptr(std::move(args), e);
 }
 
-Type::Value* eval_call_callable(Type::Value* callee, std::vector<Type::Value*> args, Type::Environment& e){
+Value* eval_call_callable(Value* callee, std::vector<Value*> args, Environment& e){
 	assert(is_callable_value(callee));
 	if (callee->type() == value_type::Function) {
 		return eval_call_function(
-		    static_cast<Type::Function*>(callee), std::move(args), e);
+		    static_cast<Function*>(callee), std::move(args), e);
 	} else if (callee->type() == value_type::NativeFunction) {
 		return eval_call_native_function(
-		    static_cast<Type::NativeFunction*>(callee), std::move(args), e);
+		    static_cast<NativeFunction*>(callee), std::move(args), e);
 	} else {
 		assert(0);
 		return nullptr;
 	}
 }
 
-Type::Value* eval(TypedAST::CallExpression* ast, Type::Environment& e) {
+Value* eval(TypedAST::CallExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = unboxed(eval(ast->m_callee.get(), e));
@@ -187,7 +189,7 @@ Type::Value* eval(TypedAST::CallExpression* ast, Type::Environment& e) {
 
 	auto& arglist = ast->m_args;
 
-	std::vector<Type::Value*> args;
+	std::vector<Value*> args;
 	for (int i = 0; i < int(arglist.size()); ++i) {
 		auto* argvalue = eval(arglist[i].get(), e);
 		args.push_back(argvalue);
@@ -196,7 +198,7 @@ Type::Value* eval(TypedAST::CallExpression* ast, Type::Environment& e) {
 	return eval_call_callable(callee, std::move(args), e);
 };
 
-Type::Value* eval(TypedAST::IndexExpression* ast, Type::Environment& e) {
+Value* eval(TypedAST::IndexExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
 	auto* callee = unboxed(eval(ast->m_callee.get(), e));
@@ -207,15 +209,15 @@ Type::Value* eval(TypedAST::IndexExpression* ast, Type::Environment& e) {
 	assert(index);
 	assert(index->type() == value_type::Integer);
 
-	auto* array_callee = static_cast<Type::Array*>(callee);
-	auto* int_index = static_cast<Type::Integer*>(index);
+	auto* array_callee = static_cast<Array*>(callee);
+	auto* int_index = static_cast<Integer*>(index);
 
 	return array_callee->at(int_index->m_value);
 };
 
 
-Type::Value* eval(TypedAST::FunctionLiteral* ast, Type::Environment& e) {
-	std::unordered_map<std::string, Type::Value*> captures;
+Value* eval(TypedAST::FunctionLiteral* ast, Environment& e) {
+	std::unordered_map<std::string, Value*> captures;
 
 	for(auto const& identifier : ast->m_captures){
 		captures[identifier] = e.m_scope->access(identifier);
@@ -224,12 +226,12 @@ Type::Value* eval(TypedAST::FunctionLiteral* ast, Type::Environment& e) {
 	return e.new_function(ast, std::move(captures));
 };
 
-Type::Value* eval(TypedAST::IfStatement* ast, Type::Environment& e) {
+Value* eval(TypedAST::IfStatement* ast, Environment& e) {
 	auto* condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
 	assert(condition_result->type() == value_type::Boolean);
-	auto* condition_result_b = static_cast<Type::Boolean*>(condition_result);
+	auto* condition_result_b = static_cast<Boolean*>(condition_result);
 
 	if(condition_result_b->m_value){
 		eval(ast->m_body.get(), e);
@@ -238,7 +240,7 @@ Type::Value* eval(TypedAST::IfStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST::ForStatement* ast, Type::Environment& e) {
+Value* eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.new_nested_scope();
 	
 	auto* declaration = eval(ast->m_declaration.get(), e);
@@ -249,7 +251,7 @@ Type::Value* eval(TypedAST::ForStatement* ast, Type::Environment& e) {
 		assert(condition_result);
 
 		assert(condition_result->type() == value_type::Boolean);
-		auto* condition_result_b = static_cast<Type::Boolean*>(condition_result);
+		auto* condition_result_b = static_cast<Boolean*>(condition_result);
 
 		if (!condition_result_b->m_value)
 			break;
@@ -268,7 +270,7 @@ Type::Value* eval(TypedAST::ForStatement* ast, Type::Environment& e) {
 	return e.null();
 };
 
-Type::Value* eval(TypedAST::TypedAST* ast, Type::Environment& e) {
+Value* eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:
@@ -316,3 +318,5 @@ Type::Value* eval(TypedAST::TypedAST* ast, Type::Environment& e) {
 
 	return nullptr;
 }
+
+} // namespace Interpreter
