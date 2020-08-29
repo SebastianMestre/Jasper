@@ -7,5 +7,9 @@ namespace TypedAST {
 struct TypedAST;
 }
 
-Type::Value* eval(TypedAST::TypedAST*, Type::Environment&);
+namespace Interpreter {
+
+Value* eval(TypedAST::TypedAST*, Environment&);
+
+}
 

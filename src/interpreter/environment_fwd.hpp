@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Type {
+namespace Interpreter {
 
 struct Environment;
 

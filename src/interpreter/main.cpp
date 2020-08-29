@@ -26,7 +26,7 @@ int main() {
 
 	std::string source = file_content.str();
 
-	exit_status_type exit_code = execute(source, false, +[](Type::Environment& env) -> exit_status_type {
+	exit_status_type exit_code = execute(source, false, +[](Interpreter::Environment& env) -> exit_status_type {
 
 		// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		// this means we need to create a call expression node to run the program.
@@ -40,7 +40,7 @@ int main() {
 			auto* result = eval(top_level_call, env);
 
 			if (result)
-				Type::print(result);
+				Interpreter::print(result);
 			else
 				std::cout << "(nullptr)\n";
 

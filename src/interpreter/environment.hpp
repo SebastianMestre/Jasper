@@ -3,13 +3,9 @@
 #include "value.hpp"
 #include "error.hpp"
 
-namespace GarbageCollector {
+namespace Interpreter {
 
 struct GC;
-
-}
-
-namespace Type {
 
 struct Scope {
 	Scope* m_parent {nullptr};
@@ -22,20 +18,20 @@ struct Scope {
 };
 
 struct Environment {
-	GarbageCollector::GC* m_gc;
+	GC* m_gc;
 	Scope m_global_scope;
 
 	Scope* m_scope;
 	Value* m_return_value {nullptr};
 
-	Environment(GarbageCollector::GC* gc)
+	Environment(GC* gc)
 	    : m_gc { gc }, m_scope { &m_global_scope } {}
 
 	Scope* new_scope();
 	Scope* new_nested_scope();
 	void end_scope();
 
-	void save_return_value(Type::Value*);
+	void save_return_value(Value*);
 	Value* fetch_return_value();
 
 	// used as a short-hand

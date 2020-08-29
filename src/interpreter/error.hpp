@@ -2,7 +2,7 @@
 
 #include "value.hpp"
 
-namespace Type {
+namespace Interpreter {
 
 struct Error : Value {
 	std::string m_error;
@@ -14,4 +14,4 @@ struct Error : Value {
 Error make_reference_error(const Identifier&);
 Error make_range_error(int,int);
 
-}
+} // namespace Interpreter

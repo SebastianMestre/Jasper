@@ -8,7 +8,7 @@
 
 namespace Test {
 
-using TestFunction = exit_status_type (*)(Type::Environment&);
+using TestFunction = exit_status_type (*)(Interpreter::Environment&);
 
 struct TestSet {
 

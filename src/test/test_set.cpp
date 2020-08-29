@@ -18,7 +18,7 @@ exit_status_type TestSet::execute(bool dump_ast) {
 		return exit_status_type::Empty;
 
 	for(auto* f : m_testers) {
-		exit_status_type answer = ::execute(m_source, dump_ast, f);
+		exit_status_type answer = Interpreter::execute(m_source, dump_ast, f);
 
 		if (exit_status_type::Ok != answer)
 			return answer;

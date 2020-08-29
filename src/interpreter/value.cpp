@@ -7,9 +7,9 @@
 #include "environment.hpp"
 #include "error.hpp"
 
-namespace Type {
+namespace Interpreter {
 
-Type::Value* unboxed(Type::Value* value) {
+Value* unboxed(Value* value) {
 	if (!value)
 		return value;
 
@@ -17,7 +17,7 @@ Type::Value* unboxed(Type::Value* value) {
 		return value;
 
 	// try unboxing recursively?
-	auto ref = static_cast<Type::Reference*>(value);
+	auto ref = static_cast<Reference*>(value);
 	return ref->m_value;
 }
 
@@ -309,4 +309,4 @@ void print(Value* v, int d) {
 	}
 }
 
-} // namespace Type
+} // namespace Interpreter
