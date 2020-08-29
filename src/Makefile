@@ -13,6 +13,7 @@ OBJNAMES := \
 	parser.o \
 	parse.o \
 	string_view.o \
+	tarjan_solver.o \
 	token.o \
 	typechecker.o \
 	typed_ast.o \
