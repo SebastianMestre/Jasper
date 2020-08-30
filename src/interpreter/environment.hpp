@@ -44,18 +44,18 @@ struct Environment {
 	void direct_declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier&);
 
-	Null*           null();
-	Integer*        new_integer(int);
-	Float*          new_float(float);
-	Boolean*        new_boolean(bool);
-	String*         new_string(std::string);
-	Array*          new_list(ArrayType);
-	Object*         new_object(ObjectType);
-	Dictionary*     new_dictionary(ObjectType);
-	Function*       new_function(FunctionType, ObjectType);
-	NativeFunction* new_native_function(NativeFunctionType*);
-	Error*          new_error(std::string);
-	Reference*      new_reference(Value*);
+	auto null() -> Null*;
+	auto new_integer(int) -> Integer*;
+	auto new_float(float) -> Float*;
+	auto new_boolean(bool) -> Boolean*;
+	auto new_string(std::string) -> String*;
+	auto new_list(ArrayType) -> Array*;
+	auto new_object(ObjectType) -> Object*;
+	auto new_dictionary(ObjectType) -> Dictionary*;
+	auto new_function(FunctionType, ObjectType) -> Function*;
+	auto new_native_function(NativeFunctionType*) -> NativeFunction*;
+	auto new_error(std::string) -> Error*;
+	auto new_reference(Value*) -> Reference*;
 };
 
 } // Interpreter

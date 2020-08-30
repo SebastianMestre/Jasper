@@ -49,11 +49,11 @@ void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
+
+
 Null* GC::null() {
 	return m_null;
 }
-
-
 
 Object* GC::new_object(ObjectType declarations) {
 	auto result = new Object;
