@@ -6,8 +6,8 @@
 #include <cassert>
 
 TarjanSolver::TarjanSolver(int vertex_count)
-    : m_vertex_count { vertex_count }
-    , m_graph(vertex_count)
+    : m_graph(vertex_count)
+    , m_vertex_count { vertex_count }
     , m_discovery_time(vertex_count, 0)
     , m_lowest_visible(vertex_count, std::numeric_limits<int>::max())
     , m_component_of(vertex_count, -1) {}

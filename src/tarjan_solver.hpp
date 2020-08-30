@@ -14,8 +14,8 @@ private:
 	void visit(int u);
 
 	// inputs
-	int m_vertex_count;
 	std::vector<std::vector<int>> m_graph;
+	int m_vertex_count;
 
 	// intermediate state
 	int m_current_time { 0 };
