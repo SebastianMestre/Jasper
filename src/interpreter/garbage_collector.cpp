@@ -42,7 +42,7 @@ void GC::sweep() {
 }
 
 void GC::sweep_all() {
-	mark_roots();
+	unmark_all();
 	sweep();
 }
 
