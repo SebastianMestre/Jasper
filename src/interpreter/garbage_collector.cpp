@@ -11,6 +11,7 @@ GC::GC() {
 }
 
 GC::~GC(){
+	sweep_all();
 	delete m_null;
 }
 
