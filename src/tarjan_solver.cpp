@@ -69,3 +69,13 @@ void TarjanSolver::visit(int u) {
 		}
 	}
 }
+
+std::vector<std::vector<int>> const& TarjanSolver::vertices_of_components() const {
+	assert(m_solved);
+	return m_scc_vertices;
+}
+
+std::vector<int> const& TarjanSolver::component_of_vertices() const {
+	assert(m_solved);
+	return m_component_of;
+}
