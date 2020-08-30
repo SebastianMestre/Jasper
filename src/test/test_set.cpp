@@ -11,8 +11,6 @@ InterpreterTestSet::InterpreterTestSet(std::string s, Interpret tf)
 InterpreterTestSet::InterpreterTestSet(std::string s, std::vector<Interpret> tfs)
     : m_source(std::move(s)), m_testers(std::move(tfs)) {};
 
-
-
 TestReport InterpreterTestSet::execute() {
 	if (m_testers.empty())
 		return { test_status::Empty };
@@ -31,4 +29,29 @@ TestReport InterpreterTestSet::execute() {
 	return { test_status::Ok };
 }
 
+
+NormalTestSet::NormalTestSet() {}
+
+NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
+    : m_testers { std::move(testers) } {}
+
+TestReport NormalTestSet::execute() {
+	if (m_testers.empty())
+		return { test_status::Empty };
+
+	try {
+		for (auto* test : m_testers) {
+			auto report = test();
+
+			// FUTURE: Accumulate failed tests
+			if (report.m_code != test_status::Ok)
+				return report;
+		}
+	} catch (std::exception const& e) {
+		return { test_status::Error, e.what() };
+	}
+
+	return { test_status::Ok };
 }
+
+} // namespace Test
