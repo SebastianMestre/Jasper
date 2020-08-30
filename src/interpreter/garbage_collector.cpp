@@ -40,6 +40,11 @@ void GC::sweep() {
 	    std::remove_if(m_blocks.begin(), m_blocks.end(), is_null), m_blocks.end());
 }
 
+void GC::sweep_all() {
+	mark_roots();
+	sweep();
+}
+
 void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }

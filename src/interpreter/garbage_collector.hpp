@@ -21,6 +21,8 @@ public:
 	void unmark_all();
 	void mark_roots();
 	void sweep();
+	void sweep_all();
+
 	void add_root(Value* new_root);
 	Null* null();
 
