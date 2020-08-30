@@ -60,6 +60,16 @@ Value* Environment::fetch_return_value() {
 
 
 
+void Environment::run_gc() {
+	for (Scope* scope_it = m_scope; scope_it != nullptr; scope_it = scope_it->m_prev)
+		for (auto& p : scope_it->m_declarations)
+			gc_visit(p.second);
+
+	m_gc->sweep();
+}
+
+
+
 void Environment::direct_declare(const Identifier& i, Reference* r) {
 	if(r->type() != value_type::Reference){
 		assert(0 && "directly declared a non-reference!");

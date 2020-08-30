@@ -34,6 +34,8 @@ struct Environment {
 	void save_return_value(Value*);
 	Value* fetch_return_value();
 
+	void run_gc();
+
 	// SHORT-HANDS
 
 	// Binds a name to a new reference of the given value
