@@ -13,20 +13,26 @@ TarjanSolver::TarjanSolver(int vertex_count)
     , m_component_of(vertex_count, -1) {}
 
 void TarjanSolver::add_adge(int u, int v) {
+	assert(!m_solved);
 	assert(0 <= u && u < m_vertex_count);
 	assert(0 <= v && v < m_vertex_count);
 	m_graph[u].push_back(v);
 }
 
 void TarjanSolver::solve() {
+	assert(!m_solved);
+
 	for (int u { 0 }; u < m_vertex_count; ++u) {
 		if (!m_discovery_time[u]) {
 			visit(u);
 		}
 	}
+
+	m_solved = true;
 }
 
 void TarjanSolver::visit(int u) {
+	assert(!m_solved);
 	assert(0 <= u && u < m_vertex_count);
 
 	m_current_time += 1;

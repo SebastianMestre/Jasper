@@ -26,4 +26,6 @@ private:
 	// they also happen to be in topological order
 	std::vector<std::vector<int>> m_scc_vertices;
 	std::vector<int> m_vertex_stack;
+
+	bool m_solved { false };
 };
