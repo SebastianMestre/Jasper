@@ -30,4 +30,15 @@ struct InterpreterTestSet : public TestSet {
 	TestReport execute() override;
 };
 
+struct NormalTestSet : public TestSet {
+	using TestFunction = TestReport (*)();
+
+	NormalTestSet();
+	NormalTestSet(std::vector<TestFunction>);
+
+	std::vector<TestFunction> m_testers;
+
+	TestReport execute() override;
+};
+
 }
