@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "test_set.hpp"
 
@@ -9,14 +10,14 @@ namespace Test {
 
 struct Tester {
 
-	std::vector<TestSet> m_test_sets;
+	std::vector<std::unique_ptr<TestSet>> m_test_sets;
 
 	Tester() = default;
-	Tester(TestSet);
-	Tester(std::vector<TestSet>);
+	Tester(std::unique_ptr<TestSet>);
+	Tester(std::vector<std::unique_ptr<TestSet>>);
 
-	void add_test(TestSet);
-	void add_tests(const std::vector<TestSet>&);
+	void add_test(std::unique_ptr<TestSet>);
+	void add_tests(std::vector<std::unique_ptr<TestSet>>);
 	void execute();
 };
 

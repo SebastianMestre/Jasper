@@ -9,31 +9,23 @@
 
 namespace Test {
 
-using Run = TestReport (*)();
-
 struct TestSet {
 
-	std::vector<Run> m_runners;
-
-	TestSet() = default;
-	TestSet(Run);
-	TestSet(std::vector<Run>);
-
-	virtual TestReport execute();
+	virtual TestReport execute() = 0;
 	virtual ~TestSet() = default;
 };
 
 using Interpret = exit_status_type (*)(Interpreter::Environment&);
 
-struct TestInterpreter : public TestSet {
+struct InterpreterTestSet : public TestSet {
 
 	std::string m_source;
 	std::vector<Interpret> m_testers;
 	bool m_dump = false;
 
-	TestInterpreter(std::string);
-	TestInterpreter(std::string, Interpret);
-	TestInterpreter(std::string, std::vector<Interpret>);
+	InterpreterTestSet(std::string);
+	InterpreterTestSet(std::string, Interpret);
+	InterpreterTestSet(std::string, std::vector<Interpret>);
 
 	TestReport execute() override;
 };

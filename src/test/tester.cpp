@@ -3,28 +3,35 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "test_status.hpp"
 
 namespace Test {
 
-Tester::Tester(TestSet ts) : m_test_sets({ std::move(ts) }) {};
-Tester::Tester(std::vector<TestSet> tss) : m_test_sets(std::move(tss)) {};
+template<typename T>
+using Own = std::unique_ptr<T>;
 
-void Tester::add_test(TestSet ts) {
-	m_test_sets.push_back(ts);
+Tester::Tester(Own<TestSet> ts) {
+	m_test_sets.push_back(std::move(ts));
 }
 
-void Tester::add_tests(const std::vector<TestSet>& tss) {
-	for (auto ts : tss)
-		m_test_sets.push_back(ts);
+Tester::Tester(std::vector<Own<TestSet>> tss) : m_test_sets(std::move(tss)) {}
+
+void Tester::add_test(Own<TestSet> ts) {
+	m_test_sets.push_back(std::move(ts));
+}
+
+void Tester::add_tests(std::vector<Own<TestSet>> tss) {
+	for (int i = 0; i < tss.size(); ++i)
+		m_test_sets.push_back(std::move(tss[i]));
 }
 
 void Tester::execute() {
 	std::vector<std::string> reports;
 
-	for (auto ts : m_test_sets) {
-		TestReport ts_answer = ts.execute();
+	for (int i = 0; i < m_test_sets.size(); ++i) {
+		TestReport ts_answer = m_test_sets[i]->execute();
 		
 		switch(ts_answer.m_code){
 		case test_status::Ok:
