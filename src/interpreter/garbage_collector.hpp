@@ -18,21 +18,23 @@ public:
 	GC();
 	~GC();
 	
-	void run ();
-	void add_root (Value* new_root);
+	void unmark_all();
+	void mark_roots();
+	void sweep();
+	void add_root(Value* new_root);
 	Null* null();
 
-	Object* new_object (ObjectType);
-	Dictionary* new_dictionary (ObjectType);
-	Array* new_list (ArrayType);
-	Integer* new_integer (int);
-	Float* new_float (float);
-	Boolean* new_boolean (bool);
-	String* new_string (std::string);
-	Function* new_function (FunctionType, ObjectType);
-	NativeFunction* new_native_function (NativeFunctionType*);
-	Error* new_error (std::string);
-	Reference* new_reference (Value*);
+	Object*         new_object(ObjectType);
+	Dictionary*     new_dictionary(ObjectType);
+	Array*          new_list(ArrayType);
+	Integer*        new_integer(int);
+	Float*          new_float(float);
+	Boolean*        new_boolean(bool);
+	String*         new_string(std::string);
+	Function*       new_function(FunctionType, ObjectType);
+	NativeFunction* new_native_function(NativeFunctionType*);
+	Error*          new_error(std::string);
+	Reference*      new_reference(Value*);
 };
 
 } // namespace Interpreter

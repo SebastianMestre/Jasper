@@ -14,15 +14,19 @@ GC::~GC(){
 	delete m_null;
 }
 
-void GC::run() {
+void GC::unmark_all() {
 	for (auto* block : m_blocks) {
 		block->m_visited = false;
 	}
+}
 
+void GC::mark_roots() {
 	for (auto* root : m_roots) {
 		gc_visit(root);
 	}
+}
 
+void GC::sweep() {
 	for (auto*& block : m_blocks) {
 		if (not block->m_visited) {
 			delete block;
