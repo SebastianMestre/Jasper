@@ -3,28 +3,32 @@
 
 namespace Test {
 
-TestSet::TestSet(std::string s) : m_source(std::move(s)) {};
+InterpreterTestSet::InterpreterTestSet(std::string s) : m_source(std::move(s)) {};
 
-TestSet::TestSet(std::string s, TestFunction tf)
+InterpreterTestSet::InterpreterTestSet(std::string s, Interpret tf)
     : m_source(std::move(s)), m_testers({ tf }) {};
 
-TestSet::TestSet(std::string s, std::vector<TestFunction> tfs)
+InterpreterTestSet::InterpreterTestSet(std::string s, std::vector<Interpret> tfs)
     : m_source(std::move(s)), m_testers(std::move(tfs)) {};
 
 
 
-exit_status_type TestSet::execute(bool dump_ast) {
+TestReport InterpreterTestSet::execute() {
 	if (m_testers.empty())
-		return exit_status_type::Empty;
+		return { test_status::Empty };
 
-	for(auto* f : m_testers) {
-		exit_status_type answer = Interpreter::execute(m_source, dump_ast, f);
+	try {
+		for(auto* f : m_testers) {
+			exit_status_type answer = Interpreter::execute(m_source, m_dump, f);
 
-		if (exit_status_type::Ok != answer)
-			return answer;
+			if (exit_status_type::Ok != answer)
+				return { test_status::Fail };
+		}
+	} catch(const std::exception& e) {
+		return { test_status::Error, e.what() };
 	}
 
-	return exit_status_type::Ok;
+	return { test_status::Ok };
 }
 
 }

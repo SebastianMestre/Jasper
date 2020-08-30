@@ -1,19 +1,21 @@
 #include <iostream>
 #include <cassert>
+#include <memory>
 
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
 
-int main() {
-	using Test::TestSet;
+void interpreter_tests() {
+	using TestCase = Test::InterpreterTestSet;
+	using Testers = std::vector<Test::Interpret>;
 
 	Test::Tester tests;
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			x : dec = 1.4;
 			y : int = 3;
 			z := fn () {
@@ -76,19 +78,19 @@ int main() {
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			eval_expression("__invoke()", env);
 			return exit_status_type::Ok;
-		}}
+		})
 	);
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			int_val := 1 + 2 + 3 + 4;
 			float_val := 1.0 + 1.5 + 1.0;
 			string_val := "test" + "ing" + ".";
 			int_div := 1 / 2;
 			float_div := 1.0 / 2.0;
 		)",
-		{
+		Testers{
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("int_val", env), 10);
 			},
@@ -108,11 +110,11 @@ int main() {
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("float_div", env), 0.5);
 			},
-		}}
+		})
 	);
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			f := fn() {
 				a := 1;
 				b := 2;
@@ -121,11 +123,11 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("f()", env), 3);
-		}}
+		})
 	);
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			K := fn (x) { return fn (y) { return x; }; };
 			f := fn () {
 				a := 42;
@@ -135,12 +137,12 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("f()", env), 42);
-		}}
+		})
 	);
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			K := fn (x) => fn (y) => x;
 			S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
 			I := S(K)(K);
@@ -148,13 +150,13 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 42);
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			cons := fn (l,r) {
 				return array { l; r; };
 			};
@@ -174,13 +176,13 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			Leaf := fn() => array { "Leaf" };
 			Node := fn(x,l,r) => array { "Node"; x; l; r };
 
@@ -221,17 +223,17 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
-		}}
+		})
 	);
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			litt := fn () { return true; };
 			litf := fn () { return false; };
 			nullv := fn () { return null; };
 		)",
-		{
+		Testers{
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::is_true(eval_expression("litt()", env));
 			},	
@@ -243,12 +245,12 @@ int main() {
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::is_null(eval_expression("nullv()", env));
 			}
-		}}
+		})
 	);
 	
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			fib := fn(n){
 				if(n < 2) return n;
 				return fib(n-1) + fib(n-2);
@@ -257,12 +259,12 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 8);
-		}}
+		})
 	);
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
 				sum := 0;
 				N := 16;
@@ -274,19 +276,19 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 120);
-		}}
+		})
 	);
 	
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
 				A := array {};
 				array_append(A, 10);
 				return A;
 			};
 		)",
-		{
+		Testers{
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 			},
@@ -294,20 +296,20 @@ int main() {
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 			}
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
 				A := array {};
 				array_extend(A, array{10});
 				return A;
 			};
 		)",
-		{
+		Testers{
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 			},
@@ -315,13 +317,13 @@ int main() {
 			+[](Interpreter::Environment& env) -> exit_status_type {
 				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 			}
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return size(A);
@@ -329,13 +331,13 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return array_join(A, ",");
@@ -343,13 +345,13 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), "10,10");
-		}}
+		})
 	);
 	*/
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			// TODO: fix inability to use keyword 'array' and others in types
 			first_arr := fn(arr : Array(<Array(<Int>)>)) => arr[0];
 			first_int := fn(arr : Array(<Ant>)) => arr[0];
@@ -365,19 +367,23 @@ int main() {
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 4);
-		}}
+		})
 	);
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		std::make_unique<TestCase>(R"(
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
 		+[](Interpreter::Environment& env) -> exit_status_type {
 			return Assert::equals(eval_expression("__invoke()", env), 13);
-		}}
+		})
 	);
 
-	tests.execute(false);
+	tests.execute();
+}
+
+int main() {
+	interpreter_tests();
 }
