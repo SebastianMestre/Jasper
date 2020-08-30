@@ -7,13 +7,13 @@
 #include "tester.hpp"
 
 int main() {
-	using Test::TestSet;
+	using Test::TestInterpreter;
 
 	Test::Tester tests;
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			x : dec = 1.4;
 			y : int = 3;
 			z := fn () {
@@ -81,7 +81,7 @@ int main() {
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			int_val := 1 + 2 + 3 + 4;
 			float_val := 1.0 + 1.5 + 1.0;
 			string_val := "test" + "ing" + ".";
@@ -112,7 +112,7 @@ int main() {
 	);
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			f := fn() {
 				a := 1;
 				b := 2;
@@ -125,7 +125,7 @@ int main() {
 	);
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			K := fn (x) { return fn (y) { return x; }; };
 			f := fn () {
 				a := 42;
@@ -140,7 +140,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			K := fn (x) => fn (y) => x;
 			S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
 			I := S(K)(K);
@@ -154,7 +154,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			cons := fn (l,r) {
 				return array { l; r; };
 			};
@@ -180,7 +180,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			Leaf := fn() => array { "Leaf" };
 			Node := fn(x,l,r) => array { "Node"; x; l; r };
 
@@ -226,7 +226,7 @@ int main() {
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			litt := fn () { return true; };
 			litf := fn () { return false; };
 			nullv := fn () { return null; };
@@ -248,7 +248,7 @@ int main() {
 	
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			fib := fn(n){
 				if(n < 2) return n;
 				return fib(n-1) + fib(n-2);
@@ -262,7 +262,7 @@ int main() {
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			__invoke := fn () {
 				sum := 0;
 				N := 16;
@@ -279,7 +279,7 @@ int main() {
 	
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			__invoke := fn () {
 				A := array {};
 				array_append(A, 10);
@@ -300,7 +300,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			__invoke := fn () {
 				A := array {};
 				array_extend(A, array{10});
@@ -321,7 +321,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return size(A);
@@ -335,7 +335,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return array_join(A, ",");
@@ -349,7 +349,7 @@ int main() {
 
 	/*
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			// TODO: fix inability to use keyword 'array' and others in types
 			first_arr := fn(arr : Array(<Array(<Int>)>)) => arr[0];
 			first_int := fn(arr : Array(<Ant>)) => arr[0];
@@ -370,7 +370,7 @@ int main() {
 	*/
 
 	tests.add_test(
-		TestSet{R"(
+		TestInterpreter{R"(
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
@@ -379,5 +379,5 @@ int main() {
 		}}
 	);
 
-	tests.execute(false);
+	tests.execute();
 }

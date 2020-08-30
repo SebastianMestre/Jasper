@@ -17,7 +17,7 @@ struct Tester {
 
 	void add_test(TestSet);
 	void add_tests(const std::vector<TestSet>&);
-	void execute(bool = false);
+	void execute();
 };
 
 }

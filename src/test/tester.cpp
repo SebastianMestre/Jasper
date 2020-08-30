@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../interpreter/exit_status_type.hpp"
+#include "test_status.hpp"
 
 namespace Test {
 
@@ -20,40 +20,36 @@ void Tester::add_tests(const std::vector<TestSet>& tss) {
 		m_test_sets.push_back(ts);
 }
 
-void Tester::execute(bool dump_ast) {
-	// TODO: dump ast to file to prevent
-	// unreadable test output
-	std::vector<exit_status_type> errors;
+void Tester::execute() {
+	std::vector<std::string> reports;
 
 	for (auto ts : m_test_sets) {
-		exit_status_type ts_answer = ts.execute(dump_ast);
-		switch(ts_answer){
-		case exit_status_type::Ok:
+		TestReport ts_answer = ts.execute();
+		
+		switch(ts_answer.m_code){
+		case test_status::Ok:
 			std::cout << '.';
 			break;
-		case exit_status_type::ParseError:
-		case exit_status_type::TopLevelTypeError:
-			errors.push_back(ts_answer);
+		case test_status::Error:
 			std::cout << 'E';
 			break;
-		case exit_status_type::NullError:
-		case exit_status_type::TypeError:
-		case exit_status_type::ValueError:
-			errors.push_back(ts_answer);
+		case test_status::Fail:
 			std::cout << 'F';
 			break;
-		case exit_status_type::Empty:
-			errors.push_back(ts_answer);
+		case test_status::Empty:
 			std::cout << 'R';
 			break;
 		default:
 			std::cout << " -Unknown test code- ";
 		}
-	}
-	std::cout << std::endl;
 
-	for(auto tt : errors)
-		std::cout << exit_status_type_string[static_cast<int>(tt)] << std::endl;
+		if (ts_answer.m_msg.size())
+			reports.push_back(ts_answer.m_msg);
+	}
+
+	std::cout << std::endl;
+	for(const auto& r : reports)
+		std::cout << r << std::endl;
 }
 
 }
