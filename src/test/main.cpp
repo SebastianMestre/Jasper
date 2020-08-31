@@ -7,11 +7,9 @@
 #include "test_utils.hpp"
 #include "tester.hpp"
 
-void interpreter_tests() {
+void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
 	using Testers = std::vector<Test::Interpret>;
-
-	Test::Tester tests;
 
 	/*
 	tests.add_test(
@@ -381,9 +379,10 @@ void interpreter_tests() {
 		})
 	);
 
-	tests.execute();
 }
 
 int main() {
-	interpreter_tests();
+	Test::Tester tests;
+	interpreter_tests(tests);
+	tests.execute();
 }
