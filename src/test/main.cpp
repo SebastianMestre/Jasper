@@ -4,6 +4,8 @@
 
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
+#include "../tarjan_solver.hpp"
+#include "test_status.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
 
@@ -381,8 +383,51 @@ void interpreter_tests(Test::Tester& tests) {
 
 }
 
+void tarjan_algorithm_tests(Test::Tester& tester) {
+	tester.add_test(std::make_unique<Test::NormalTestSet>(std::vector<Test::NormalTestSet::TestFunction>{
+		+[]() -> TestReport {
+			TarjanSolver solver (3);
+			solver.add_edge(0, 1);
+			solver.add_edge(1, 2);
+			solver.add_edge(2, 0);
+			solver.solve();
+
+			auto const& cov = solver.component_of_vertices();
+
+			if (cov[0] != cov[1] || cov[0] != cov[2])
+			    return {
+				    test_status::Fail,
+				    "All vertices in a 3-cycle should be in the same SCC"
+			    };
+
+		    return { test_status::Ok };
+		},
+		+[]() -> TestReport {
+
+			TarjanSolver solver (2);
+			solver.add_edge(0, 1);
+			solver.solve();
+
+			auto const& cov = solver.component_of_vertices();
+		    if (cov[0] == cov[1])
+				return {
+					test_status::Fail,
+					"Vertices that are only weakly connected should not be in the same SCC"
+				};
+
+			if (cov[0] < cov[1])
+				return {
+					test_status::Fail,
+					"SCCs should be in reverse topological sort."
+				};
+
+		    return { test_status::Ok };
+		} }));
+}
+
 int main() {
 	Test::Tester tests;
 	interpreter_tests(tests);
+	tarjan_algorithm_tests(tests);
 	tests.execute();
 }
