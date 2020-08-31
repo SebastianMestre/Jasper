@@ -26,6 +26,7 @@ ITPR_OBJNAMES := \
 	interpreter/eval.o \
 	interpreter/execute.o \
 	interpreter/garbage_collector.o \
+	interpreter/gc_ptr.o \
 	interpreter/value.o \
 	interpreter/native.o
 
