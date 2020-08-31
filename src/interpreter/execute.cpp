@@ -45,8 +45,6 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 
 	exit_status_type runner_exit_code = runner(env);
 
-	gc.run();
-
 	return runner_exit_code;
 }
 

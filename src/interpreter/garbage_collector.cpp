@@ -11,18 +11,23 @@ GC::GC() {
 }
 
 GC::~GC(){
+	sweep_all();
 	delete m_null;
 }
 
-void GC::run() {
+void GC::unmark_all() {
 	for (auto* block : m_blocks) {
 		block->m_visited = false;
 	}
+}
 
+void GC::mark_roots() {
 	for (auto* root : m_roots) {
 		gc_visit(root);
 	}
+}
 
+void GC::sweep() {
 	for (auto*& block : m_blocks) {
 		if (not block->m_visited) {
 			delete block;
@@ -36,15 +41,20 @@ void GC::run() {
 	    std::remove_if(m_blocks.begin(), m_blocks.end(), is_null), m_blocks.end());
 }
 
+void GC::sweep_all() {
+	unmark_all();
+	sweep();
+}
+
 void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
+
+
 Null* GC::null() {
 	return m_null;
 }
-
-
 
 Object* GC::new_object(ObjectType declarations) {
 	auto result = new Object;
