@@ -5,7 +5,7 @@
 struct TarjanSolver {
 public:
 	TarjanSolver(int vertex_count);
-	void add_adge(int u, int v);
+	void add_edge(int u, int v);
 	void solve();
 	std::vector<std::vector<int>> const& vertices_of_components() const;
 	std::vector<int> const& component_of_vertices() const;
