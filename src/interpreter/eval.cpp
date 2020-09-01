@@ -11,15 +11,15 @@
 
 namespace Interpreter {
 
-Value* eval(TypedAST::DeclarationList* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for(auto& decl : ast->m_declarations){
 		assert(decl->type() == ast_type::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
-	return nullptr;
+	return e.null();
 };
 
-Value* eval(TypedAST::Declaration* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	// TODO: type and mutable check -> return error
 	e.declare(ast->identifier_text(), e.null());
 	if (ast->m_value) {
@@ -48,32 +48,32 @@ gc_ptr<Value> eval(TypedAST::BooleanLiteral* ast, Environment& e) {
 	return e.new_boolean(b);
 };
 
-Value* eval(TypedAST::NullLiteral* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::NullLiteral* ast, Environment& e) {
 	return e.null();
 };
 
-Value* eval(TypedAST::ObjectLiteral* ast, Environment& e) {
-	ObjectType declarations;
+gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
+	auto result = e.new_object({});
 
-	for(auto& declTypeErased : ast->m_body) {
+	for (auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl
+		    = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			declarations[decl->identifier_text()] = value.get();
-		}
-		else {
+			result->m_value[decl->identifier_text()] = value.get();
+		} else {
 			std::cerr << "ERROR: declaration in object must have a value";
 			assert(0);
 		}
-
 	}
-	return e.new_object(std::move(declarations));
-};
 
-Value* eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
-	ObjectType declarations;
+	return result;
+}
+
+gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
+	auto result = e.new_dictionary({});
 
 	for(auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
@@ -81,17 +81,17 @@ Value* eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			declarations[decl->identifier_text()] = value.get();
-		}
-		else {
+			result->m_value[decl->identifier_text()] = value.get();
+		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);
 		}
 	}
-	return e.new_dictionary(std::move(declarations));
-};
 
-Value* eval(TypedAST::ArrayLiteral* ast, Environment& e) {
+	return result;
+}
+
+gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 	auto result = e.new_list({});
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
@@ -101,15 +101,15 @@ Value* eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 	return result;
 };
 
-Value* eval(TypedAST::Identifier* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 	return e.access(ast->text());
 };
 
-Value* eval(TypedAST::Block* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
 	e.new_nested_scope();
 
-	for(auto &stmt : ast->m_body){
+	for (auto& stmt : ast->m_body) {
 		eval(stmt.get(), e);
 		if (e.m_return_value)
 			break;
@@ -120,7 +120,7 @@ Value* eval(TypedAST::Block* ast, Environment& e) {
 	return e.null();
 };
 
-Value* eval(TypedAST::ReturnStatement* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::ReturnStatement* ast, Environment& e) {
 	// TODO: proper error handling
 	auto value = eval(ast->m_value.get(), e);
 	auto returning = unboxed(value.get());
@@ -138,8 +138,8 @@ auto is_callable_value (Value* v) -> bool {
 	return type == value_type::Function || type == value_type::NativeFunction;
 }
 
-Value* eval_call_function(
-    Function* callee, std::vector<Value*> args, Environment& e) {
+gc_ptr<Value> eval_call_function(
+    gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
@@ -147,8 +147,9 @@ Value* eval_call_function(
 	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
-		e.declare(argdecl.identifier_text(), unboxed(args[i]));
+		e.declare(argdecl.identifier_text(), unboxed(args[i].get()));
 	}
+	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
@@ -166,29 +167,32 @@ Value* eval_call_function(
 	return e.fetch_return_value();
 }
 
-Value* eval_call_native_function(
-    NativeFunction* callee,
-    std::vector<Value*> args,
-    Environment& e) {
-	return callee->m_fptr(std::move(args), e);
+gc_ptr<Value> eval_call_native_function(
+    gc_ptr<NativeFunction> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
+	// TODO: don't do this conversion
+	std::vector<Value*> passable_args;
+	passable_args.reserve(args.size());
+	for (auto& arg : args)
+		passable_args.push_back(arg.get());
+	return callee->m_fptr(std::move(passable_args), e);
 }
 
-Value* eval_call_callable(Value* callee, std::vector<Value*> args, Environment& e){
-	assert(is_callable_value(callee));
+gc_ptr<Value> eval_call_callable(gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e){
+	// TODO: proper error handling
+	assert(is_callable_value(callee.get()));
 	if (callee->type() == value_type::Function) {
 		return eval_call_function(
-		    static_cast<Function*>(callee), std::move(args), e);
+		    static_cast<Function*>(callee.get()), std::move(args), e);
 	} else if (callee->type() == value_type::NativeFunction) {
 		return eval_call_native_function(
-		    static_cast<NativeFunction*>(callee), std::move(args), e);
+		    static_cast<NativeFunction*>(callee.get()), std::move(args), e);
 	} else {
 		assert(0);
 		return nullptr;
 	}
 }
 
-Value* eval(TypedAST::CallExpression* ast, Environment& e) {
-	// TODO: proper error handling
+gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 
 	auto value = eval(ast->m_callee.get(), e);
 	auto* callee = unboxed(value.get());
@@ -196,16 +200,15 @@ Value* eval(TypedAST::CallExpression* ast, Environment& e) {
 
 	auto& arglist = ast->m_args;
 
-	std::vector<Value*> args;
+	std::vector<gc_ptr<Value>> args;
 	for (int i = 0; i < int(arglist.size()); ++i) {
-		auto argvalue = eval(arglist[i].get(), e);
-		args.push_back(argvalue.get());
+		args.push_back(eval(arglist[i].get(), e));
 	}
 
 	return eval_call_callable(callee, std::move(args), e);
 };
 
-Value* eval(TypedAST::IndexExpression* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
 	auto callee_value = eval(ast->m_callee.get(), e);
@@ -225,17 +228,17 @@ Value* eval(TypedAST::IndexExpression* ast, Environment& e) {
 };
 
 
-Value* eval(TypedAST::FunctionLiteral* ast, Environment& e) {
-	std::unordered_map<std::string, Value*> captures;
+gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
+	auto result = e.new_function(ast, {});
 
 	for(auto const& identifier : ast->m_captures){
-		captures[identifier] = e.m_scope->access(identifier);
+		result->m_captures[identifier] = e.m_scope->access(identifier);
 	}
 
-	return e.new_function(ast, std::move(captures));
+	return result;
 };
 
-Value* eval(TypedAST::IfStatement* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::IfStatement* ast, Environment& e) {
 	auto condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
@@ -249,7 +252,7 @@ Value* eval(TypedAST::IfStatement* ast, Environment& e) {
 	return e.null();
 };
 
-Value* eval(TypedAST::ForStatement* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.new_nested_scope();
 	
 	// NOTE: this is kinda fishy. why do we assert here?
