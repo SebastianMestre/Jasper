@@ -38,29 +38,44 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 	declare_builtin("array_extend");
 	declare_builtin("array_join");
 
-	// TODO: refactor, figure out a nice way to build types
-	auto var_mono_id = m_typechecker.new_var();
-	auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+	{
+		// TODO: refactor, figure out a nice way to build types
+		auto var_mono_id = m_typechecker.new_var();
+		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
 
-	// TODO: i use the same mono thrice... does this make sense?
-	auto term_mono_id = m_typechecker.m_core.new_term(
-		TypeChecker::BuiltinType::Function,
-		{var_mono_id, var_mono_id, var_mono_id},
-		"[builtin] (a, a) -> a");
+		// TODO: i use the same mono thrice... does this make sense?
+		auto term_mono_id = m_typechecker.m_core.new_term(
+		    TypeChecker::BuiltinType::Function,
+		    { var_mono_id, var_mono_id, var_mono_id },
+		    "[builtin] (a, a) -> a");
 
-	auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, { var_id });
 
-	// TODO: re using the same PolyId... is this ok?
-	// I think this is fine because we always do inst_fresh when we use a poly
-	// , so it can't somehow get mutated
-	declare_builtin("+" , poly_id);
-	declare_builtin("-" , poly_id);
-	declare_builtin("*" , poly_id);
-	declare_builtin("/" , poly_id);
-	declare_builtin("<" , poly_id);
-	declare_builtin("=" , poly_id);
-	declare_builtin("==", poly_id);
-	declare_builtin("." , poly_id);
+		// TODO: re using the same PolyId... is this ok?
+		// I think this is fine because we always do inst_fresh when we use a poly
+		// , so it can't somehow get mutated
+		declare_builtin("+", poly_id);
+		declare_builtin("-", poly_id);
+		declare_builtin("*", poly_id);
+		declare_builtin("/", poly_id);
+		declare_builtin(".", poly_id);
+		declare_builtin("=", poly_id);
+	}
+
+	{
+		auto var_mono_id = m_typechecker.new_var();
+		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+
+		auto term_mono_id = m_typechecker.m_core.new_term(
+		    TypeChecker::BuiltinType::Function,
+		    { var_mono_id, var_mono_id, m_typechecker.mono_boolean() },
+		    "[builtin] (a, a) -> Bool");
+
+		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, { var_id });
+
+		declare_builtin("<", poly_id);
+		declare_builtin("==", poly_id);
+	}
 };
 
 Scope& CompileTimeEnvironment::current_scope() {

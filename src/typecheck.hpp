@@ -10,6 +10,6 @@ struct CompileTimeEnvironment;
 
 namespace TypeChecker {
 
-void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
+void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
 
 }
