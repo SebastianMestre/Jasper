@@ -5,6 +5,7 @@
 #include "../match_identifiers.hpp"
 #include "../parse.hpp"
 #include "../token_array.hpp"
+#include "../typecheck.hpp"
 #include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
@@ -38,6 +39,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	Frontend::CompileTimeEnvironment ct_env;
 
 	TypeChecker::match_identifiers(top_level.get(), ct_env);
+	TypeChecker::typecheck(top_level.get(), ct_env);
 
 	GC gc;
 	Environment env = { &gc };
