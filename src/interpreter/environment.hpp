@@ -41,6 +41,7 @@ struct Environment {
 
 	// Binds a name to a new reference of the given value
 	void declare(const Identifier&, Value*);
+	void declare(const Identifier&, gc_ptr<Value>);
 	// Binds a name to the given reference
 	void direct_declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier&);
@@ -50,13 +51,13 @@ struct Environment {
 	auto new_float(float) -> gc_ptr<Float>;
 	auto new_boolean(bool) -> gc_ptr<Boolean>;
 	auto new_string(std::string) -> gc_ptr<String>;
-	auto new_list(ArrayType) -> Array*;
-	auto new_object(ObjectType) -> Object*;
-	auto new_dictionary(ObjectType) -> Dictionary*;
-	auto new_function(FunctionType, ObjectType) -> Function*;
-	auto new_native_function(NativeFunctionType*) -> NativeFunction*;
-	auto new_error(std::string) -> Error*;
-	auto new_reference(Value*) -> Reference*;
+	auto new_list(ArrayType) -> gc_ptr<Array>;
+	auto new_object(ObjectType) -> gc_ptr<Object>;
+	auto new_dictionary(ObjectType) -> gc_ptr<Dictionary>;
+	auto new_function(FunctionType, ObjectType) -> gc_ptr<Function>;
+	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
+	auto new_error(std::string) -> gc_ptr<Error>;
+	auto new_reference(Value*) -> gc_ptr<Reference>;
 };
 
 } // Interpreter

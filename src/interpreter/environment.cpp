@@ -80,12 +80,16 @@ void Environment::direct_declare(const Identifier& i, Reference* r) {
 	m_scope->declare(i, r);
 }
 
+void Environment::declare(const Identifier& i, gc_ptr<Value> v) {
+	declare(i, v.get());
+}
+
 void Environment::declare(const Identifier& i, Value* v) {
 	if(v->type() == value_type::Reference){
 		assert(0 && "declared a reference!");
 	}
 	auto r = new_reference(v);
-	m_scope->declare(i, r);
+	m_scope->declare(i, r.get());
 }
 
 Reference* Environment::access(const Identifier& i) {
@@ -109,25 +113,25 @@ gc_ptr<Boolean> Environment::new_boolean(bool b)
 gc_ptr<String> Environment::new_string(std::string s)
 { return m_gc->new_string(std::move(s)); }
 
-Array* Environment::new_list(ArrayType elements)
+gc_ptr<Array> Environment::new_list(ArrayType elements)
 { return m_gc->new_list_unsafe(std::move(elements)); }
 
-Object* Environment::new_object(ObjectType declarations)
+gc_ptr<Object> Environment::new_object(ObjectType declarations)
 { return m_gc->new_object_unsafe(std::move(declarations)); }
 
-Dictionary* Environment::new_dictionary(ObjectType declarations)
+gc_ptr<Dictionary> Environment::new_dictionary(ObjectType declarations)
 { return m_gc->new_dictionary_unsafe(std::move(declarations)); }
 
-Function* Environment::new_function(FunctionType def, ObjectType s)
+gc_ptr<Function> Environment::new_function(FunctionType def, ObjectType s)
 { return m_gc->new_function_unsafe(def, std::move(s)); }
 
-NativeFunction* Environment::new_native_function(NativeFunctionType* fptr)
+gc_ptr<NativeFunction> Environment::new_native_function(NativeFunctionType* fptr)
 { return m_gc->new_native_function_unsafe(fptr); }
 
-Error* Environment::new_error(std::string e)
+gc_ptr<Error> Environment::new_error(std::string e)
 { return m_gc->new_error_unsafe(e); }
 
-Reference* Environment::new_reference(Value* v) {
+gc_ptr<Reference> Environment::new_reference(Value* v) {
 	assert(
 	    v->type() != value_type::Reference
 	    && "References to references are not allowed.");
