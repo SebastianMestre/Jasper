@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 template <typename ValueType>
 struct gc_ptr {
 private:
@@ -11,6 +13,13 @@ public:
 	}
 
 	gc_ptr(gc_ptr&& o) : m_ptr { o.m_ptr } {
+		o.m_ptr = nullptr;
+	}
+
+	template <typename T> friend class gc_ptr;
+
+	template <typename T, typename = typename std::enable_if<std::is_convertible<T*, ValueType*>::value>::type>
+	gc_ptr(gc_ptr<T>&& o) : m_ptr { o.m_ptr } {
 		o.m_ptr = nullptr;
 	}
 
