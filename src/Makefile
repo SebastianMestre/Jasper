@@ -28,7 +28,8 @@ ITPR_OBJNAMES := \
 	interpreter/garbage_collector.o \
 	interpreter/gc_ptr.o \
 	interpreter/value.o \
-	interpreter/native.o
+	interpreter/native.o \
+	interpreter/utils.o
 
 TEST_OBJNAMES := \
 	test/tester.o \

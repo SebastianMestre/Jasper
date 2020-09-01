@@ -21,7 +21,6 @@ using FunctionType = TypedAST::FunctionLiteral*;
 using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
 
 // Returns the value pointed to by a reference
-Value* unboxed(Value* value);
 void print(Value* v, int d = 0);
 void gc_visit(Value*);
 
