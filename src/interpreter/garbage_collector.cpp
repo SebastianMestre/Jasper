@@ -25,6 +25,12 @@ void GC::mark_roots() {
 	for (auto* root : m_roots) {
 		gc_visit(root);
 	}
+
+	for (auto* val : m_blocks) {
+		if (val->m_cpp_refcount != 0) {
+			gc_visit(val);
+		}
+	}
 }
 
 void GC::sweep() {
