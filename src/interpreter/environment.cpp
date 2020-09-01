@@ -114,28 +114,28 @@ gc_ptr<String> Environment::new_string(std::string s)
 { return m_gc->new_string(std::move(s)); }
 
 gc_ptr<Array> Environment::new_list(ArrayType elements)
-{ return m_gc->new_list_unsafe(std::move(elements)); }
+{ return m_gc->new_list(std::move(elements)); }
 
 gc_ptr<Object> Environment::new_object(ObjectType declarations)
-{ return m_gc->new_object_unsafe(std::move(declarations)); }
+{ return m_gc->new_object(std::move(declarations)); }
 
 gc_ptr<Dictionary> Environment::new_dictionary(ObjectType declarations)
-{ return m_gc->new_dictionary_unsafe(std::move(declarations)); }
+{ return m_gc->new_dictionary(std::move(declarations)); }
 
 gc_ptr<Function> Environment::new_function(FunctionType def, ObjectType s)
-{ return m_gc->new_function_unsafe(def, std::move(s)); }
+{ return m_gc->new_function(def, std::move(s)); }
 
 gc_ptr<NativeFunction> Environment::new_native_function(NativeFunctionType* fptr)
-{ return m_gc->new_native_function_unsafe(fptr); }
+{ return m_gc->new_native_function(fptr); }
 
 gc_ptr<Error> Environment::new_error(std::string e)
-{ return m_gc->new_error_unsafe(e); }
+{ return m_gc->new_error(e); }
 
 gc_ptr<Reference> Environment::new_reference(Value* v) {
 	assert(
 	    v->type() != value_type::Reference
 	    && "References to references are not allowed.");
-	return m_gc->new_reference_unsafe(v);
+	return m_gc->new_reference(v);
 }
 
 } // Interpreter

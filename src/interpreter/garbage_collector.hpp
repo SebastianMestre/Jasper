@@ -39,18 +39,6 @@ public:
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_reference(Value*) -> gc_ptr<Reference>;
-
-	auto new_object_unsafe(ObjectType) -> Object*;
-	auto new_dictionary_unsafe(ObjectType) -> Dictionary*;
-	auto new_list_unsafe(ArrayType) -> Array*;
-	auto new_integer_unsafe(int) -> Integer*;
-	auto new_float_unsafe(float) -> Float*;
-	auto new_boolean_unsafe(bool) -> Boolean*;
-	auto new_string_unsafe(std::string) -> String*;
-	auto new_function_unsafe(FunctionType, ObjectType) -> Function*;
-	auto new_native_function_unsafe(NativeFunctionType*) -> NativeFunction*;
-	auto new_error_unsafe(std::string) -> Error*;
-	auto new_reference_unsafe(Value*) -> Reference*;
 };
 
 } // namespace Interpreter
