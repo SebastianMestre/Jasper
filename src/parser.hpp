@@ -66,6 +66,7 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_return_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_if_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_for_statement();
+	Writer<std::unique_ptr<AST::AST>> parse_while_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
 
 	Writer<Token const*> require(token_type t);

@@ -184,4 +184,11 @@ struct ForStatement : public TypedAST {
 	ForStatement() : TypedAST { ast_type::ForStatement } {}
 };
 
+struct WhileStatement : public TypedAST {
+	std::unique_ptr<TypedAST> m_condition;
+	std::unique_ptr<TypedAST> m_body;
+
+	WhileStatement() : TypedAST { ast_type::WhileStatement } {}
+};
+
 } // namespace TypedAST

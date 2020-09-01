@@ -381,6 +381,23 @@ void interpreter_tests(Test::Tester& tests) {
 		})
 	);
 
+	tests.add_test(
+		std::make_unique<TestCase>(R"(
+			__invoke := fn() {
+				i := 0; sum := 0;
+
+				while(i < 16) {
+					sum = sum + i;
+					i = i + 1;
+				}
+
+				return sum;
+			};
+		)",
+		+[](Interpreter::Environment& env) -> exit_status_type {
+			return Assert::equals(eval_expression("__invoke()", env), 120);
+		})
+	);
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

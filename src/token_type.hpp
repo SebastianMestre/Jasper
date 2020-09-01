@@ -73,6 +73,7 @@ constexpr const char* token_type_string[] = {
 	"KEYWORD_RETURN",
 	"KEYWORD_IF",
 	"KEYWORD_FOR",
+	"KEYWORD_WHILE",
 
 	"END",
 };
@@ -150,6 +151,7 @@ enum class token_type {
 	KEYWORD_RETURN,
 	KEYWORD_IF,
 	KEYWORD_FOR,
+	KEYWORD_WHILE,
 
 	END,
 };

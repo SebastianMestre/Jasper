@@ -184,6 +184,17 @@ void print(ForStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(WhileStatement* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ WhileStatement\n"
+	          << tab << "Condition:\n";
+	print(ast->m_condition.get(), d + 1);
+	std::cout << tab << "Body:\n";
+	print(ast->m_body.get(), d + 1);
+	std::cout << stab << "]\n";
+}
+
 void print(TypeTerm* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -234,6 +245,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<IfStatement*>(ast), d);
 	case ast_type::ForStatement:
 		return print(static_cast<ForStatement*>(ast), d);
+	case ast_type::WhileStatement:
+		return print(static_cast<WhileStatement*>(ast), d);
 	case ast_type::TypeTerm:
 		return print(static_cast<TypeTerm*>(ast), d);
 	}
