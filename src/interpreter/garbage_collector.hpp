@@ -4,6 +4,7 @@
 
 #include "value.hpp"
 #include "error.hpp"
+#include "gc_ptr.hpp"
 
 namespace Interpreter {
 
@@ -26,17 +27,18 @@ public:
 	void add_root(Value* new_root);
 
 	auto null() -> Null*;
-	auto new_object(ObjectType) -> Object*;
-	auto new_dictionary(ObjectType) -> Dictionary*;
-	auto new_list(ArrayType) -> Array*;
-	auto new_integer(int) -> Integer*;
-	auto new_float(float) -> Float*;
-	auto new_boolean(bool) -> Boolean*;
-	auto new_string(std::string) -> String*;
-	auto new_function(FunctionType, ObjectType) -> Function*;
-	auto new_native_function(NativeFunctionType*) -> NativeFunction*;
-	auto new_error(std::string) -> Error*;
-	auto new_reference(Value*) -> Reference*;
+
+	auto new_object(ObjectType) -> gc_ptr<Object>;
+	auto new_dictionary(ObjectType) -> gc_ptr<Dictionary>;
+	auto new_list(ArrayType) -> gc_ptr<Array>;
+	auto new_integer(int) -> gc_ptr<Integer>;
+	auto new_float(float) -> gc_ptr<Float>;
+	auto new_boolean(bool) -> gc_ptr<Boolean>;
+	auto new_string(std::string) -> gc_ptr<String>;
+	auto new_function(FunctionType, ObjectType) -> gc_ptr<Function>;
+	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
+	auto new_error(std::string) -> gc_ptr<Error>;
+	auto new_reference(Value*) -> gc_ptr<Reference>;
 };
 
 } // namespace Interpreter

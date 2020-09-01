@@ -2,6 +2,7 @@
 
 #include "value_fwd.hpp"
 #include "environment_fwd.hpp"
+#include "gc_ptr.hpp"
 
 namespace TypedAST {
 struct TypedAST;
@@ -9,7 +10,7 @@ struct TypedAST;
 
 namespace Interpreter {
 
-Value* eval(TypedAST::TypedAST*, Environment&);
+gc_ptr<Value> eval(TypedAST::TypedAST*, Environment&);
 
 }
 

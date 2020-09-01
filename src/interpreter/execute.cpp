@@ -10,6 +10,7 @@
 #include "eval.hpp"
 #include "garbage_collector.hpp"
 #include "native.hpp"
+#include "utils.hpp"
 
 namespace Interpreter {
 
@@ -58,7 +59,9 @@ Value* eval_expression(const std::string& expr, Environment& env) {
 	auto top_level_call_ast = parse_expression(expr, ta);
 	auto top_level_call = TypedAST::get_unique(top_level_call_ast.m_result);
 
-	return unboxed(eval(top_level_call.get(), env));
+	// TODO: return a gc_ptr
+	auto value = eval(top_level_call.get(), env);
+	return unboxed(value.get());
 }
 
 } // namespace Interpreter
