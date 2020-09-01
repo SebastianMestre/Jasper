@@ -97,8 +97,8 @@ Reference* Environment::access(const Identifier& i) {
 Null* Environment::null()
 { return m_gc->null(); }
 
-Integer* Environment::new_integer(int i)
-{ return m_gc->new_integer_unsafe(i); }
+gc_ptr<Integer> Environment::new_integer(int i)
+{ return m_gc->new_integer(i); }
 
 Float* Environment::new_float(float f)
 { return m_gc->new_float_unsafe(f); }

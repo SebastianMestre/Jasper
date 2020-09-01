@@ -2,6 +2,7 @@
 
 #include "value.hpp"
 #include "error.hpp"
+#include "gc_ptr.hpp"
 
 namespace Interpreter {
 
@@ -45,7 +46,7 @@ struct Environment {
 	Reference* access(const Identifier&);
 
 	auto null() -> Null*;
-	auto new_integer(int) -> Integer*;
+	auto new_integer(int) -> gc_ptr<Integer>;
 	auto new_float(float) -> Float*;
 	auto new_boolean(bool) -> Boolean*;
 	auto new_string(std::string) -> String*;

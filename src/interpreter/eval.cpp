@@ -34,7 +34,7 @@ Value* eval(TypedAST::NumberLiteral* ast, Environment& e) {
 	return e.new_float(std::stof(ast->text()));
 }
 
-Value* eval(TypedAST::IntegerLiteral* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::IntegerLiteral* ast, Environment& e) {
 	return e.new_integer(std::stoi(ast->text()));
 }
 
@@ -276,7 +276,7 @@ Value* eval(TypedAST::TypedAST* ast, Environment& e) {
 	case ast_type::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
 	case ast_type::IntegerLiteral:
-		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
+		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e).get();
 	case ast_type::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
 	case ast_type::BooleanLiteral:

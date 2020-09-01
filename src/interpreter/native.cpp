@@ -52,7 +52,9 @@ Value* size(ArrayType v, Environment& e) {
     assert(v.size() == 1);
     assert(unboxed(v[0])->type() == value_type::Array);
     Array* array = static_cast<Array*>(unboxed(v[0]));
-    return e.new_integer(array->m_value.size());
+
+	// TODO: don't get()
+    return e.new_integer(array->m_value.size()).get();
 } 
 
 // array_join(array, string) returns a string with
@@ -91,9 +93,10 @@ Value* value_add(ArrayType v, Environment& e) {
 	assert(lhs_val->type() == rhs_val->type());
 	switch (lhs_val->type()) {
 	case value_type::Integer:
+		//TODO: don't get()
 		return e.new_integer(
 		    static_cast<Integer*>(lhs_val)->m_value
-		    + static_cast<Integer*>(rhs_val)->m_value);
+		    + static_cast<Integer*>(rhs_val)->m_value).get();
 	case value_type::Float:
 		return e.new_float(
 		    static_cast<Float*>(lhs_val)->m_value
@@ -118,9 +121,10 @@ Value* value_sub(ArrayType v, Environment& e) {
 	assert(lhs_val->type() == rhs_val->type());
 	switch (lhs_val->type()) {
 	case value_type::Integer:
+		// TODO: don't get()
 		return e.new_integer(
 		    static_cast<Integer*>(lhs_val)->m_value
-		    - static_cast<Integer*>(rhs_val)->m_value);
+		    - static_cast<Integer*>(rhs_val)->m_value).get();
 	case value_type::Float:
 		return e.new_float(
 		    static_cast<Float*>(lhs_val)->m_value
@@ -141,9 +145,10 @@ Value* value_mul(ArrayType v, Environment& e) {
 	assert(lhs_val->type() == rhs_val->type());
 	switch (lhs_val->type()) {
 	case value_type::Integer:
+		// TODO: don't get()
 		return e.new_integer(
 		    static_cast<Integer*>(lhs_val)->m_value
-		    * static_cast<Integer*>(rhs_val)->m_value);
+		    * static_cast<Integer*>(rhs_val)->m_value).get();
 	case value_type::Float:
 		return e.new_float(
 		    static_cast<Float*>(lhs_val)->m_value
@@ -164,9 +169,10 @@ Value* value_div(ArrayType v, Environment& e) {
 	assert(lhs_val->type() == rhs_val->type());
 	switch (lhs_val->type()) {
 	case value_type::Integer:
+		// TODO: don't get()
 		return e.new_integer(
 		    static_cast<Integer*>(lhs_val)->m_value
-		    / static_cast<Integer*>(rhs_val)->m_value);
+		    / static_cast<Integer*>(rhs_val)->m_value).get();
 	case value_type::Float:
 		return e.new_float(
 		    static_cast<Float*>(lhs_val)->m_value
