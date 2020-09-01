@@ -285,6 +285,31 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 	return e.null();
 };
 
+gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
+	e.new_nested_scope();
+	
+	while (1) {
+		auto condition_result = eval(ast->m_condition.get(), e);
+		auto unboxed_condition_result = unboxed(condition_result.get());
+		assert(unboxed_condition_result);
+
+		assert(unboxed_condition_result->type() == value_type::Boolean);
+		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
+
+		if (!condition_result_b->m_value)
+			break;
+		
+		eval(ast->m_body.get(), e);
+
+		if (e.m_return_value)
+			break;
+	}
+
+	e.end_scope();
+
+	return e.null();
+};
+
 gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
@@ -324,6 +349,8 @@ gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 		return eval(static_cast<TypedAST::IfStatement*>(ast), e);
 	case ast_type::ForStatement:
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
+	case ast_type::WhileStatement:
+		return eval(static_cast<TypedAST::WhileStatement*>(ast), e);
 	case ast_type::BinaryExpression:
 		assert(0);
 	}
