@@ -98,40 +98,40 @@ Null* Environment::null()
 { return m_gc->null(); }
 
 Integer* Environment::new_integer(int i)
-{ return m_gc->new_integer(i); }
+{ return m_gc->new_integer_unsafe(i); }
 
 Float* Environment::new_float(float f)
-{ return m_gc->new_float(f); }
+{ return m_gc->new_float_unsafe(f); }
 
 Boolean* Environment::new_boolean(bool b)
-{ return m_gc->new_boolean(b); }
+{ return m_gc->new_boolean_unsafe(b); }
 
 String* Environment::new_string(std::string s)
-{ return m_gc->new_string(s); }
+{ return m_gc->new_string_unsafe(std::move(s)); }
 
 Array* Environment::new_list(ArrayType elements)
-{ return m_gc->new_list(std::move(elements)); }
+{ return m_gc->new_list_unsafe(std::move(elements)); }
 
 Object* Environment::new_object(ObjectType declarations)
-{ return m_gc->new_object(std::move(declarations)); }
+{ return m_gc->new_object_unsafe(std::move(declarations)); }
 
 Dictionary* Environment::new_dictionary(ObjectType declarations)
-{ return m_gc->new_dictionary(std::move(declarations)); }
+{ return m_gc->new_dictionary_unsafe(std::move(declarations)); }
 
 Function* Environment::new_function(FunctionType def, ObjectType s)
-{ return m_gc->new_function(def, std::move(s)); }
+{ return m_gc->new_function_unsafe(def, std::move(s)); }
 
 NativeFunction* Environment::new_native_function(NativeFunctionType* fptr)
-{ return m_gc->new_native_function(fptr); }
+{ return m_gc->new_native_function_unsafe(fptr); }
 
 Error* Environment::new_error(std::string e)
-{ return m_gc->new_error(e); }
+{ return m_gc->new_error_unsafe(e); }
 
 Reference* Environment::new_reference(Value* v) {
 	assert(
 	    v->type() != value_type::Reference
 	    && "References to references are not allowed.");
-	return m_gc->new_reference(v);
+	return m_gc->new_reference_unsafe(v);
 }
 
 } // Interpreter
