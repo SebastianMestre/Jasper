@@ -15,6 +15,7 @@ OBJNAMES := \
 	string_view.o \
 	tarjan_solver.o \
 	token.o \
+	typecheck.o \
 	typechecker.o \
 	typed_ast.o \
 	typesystem.o
