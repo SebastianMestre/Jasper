@@ -183,6 +183,13 @@ void match_identifiers(TypedAST::ForStatement* ast, Frontend::CompileTimeEnviron
 	env.end_scope();
 }
 
+void match_identifiers(TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
+	env.new_nested_scope();
+	match_identifiers(ast->m_condition.get(), env);
+	match_identifiers(ast->m_body.get(), env);
+	env.end_scope();
+}
+
 void match_identifiers(
     TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_value.get(), env);
@@ -247,6 +254,7 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(Identifier);
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
 		DISPATCH(IfStatement);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
