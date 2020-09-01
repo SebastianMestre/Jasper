@@ -157,6 +157,12 @@ struct ForStatement : public AST {
 	ForStatement() : AST{ ast_type::ForStatement } {}
 };
 
+struct WhileStatement : public AST {
+	std::unique_ptr<AST> m_condition;
+	std::unique_ptr<AST> m_body;
+
+	WhileStatement() : AST{ ast_type::WhileStatement } {}
+};
 
 struct TypeTerm : public AST {
 	std::unique_ptr<AST> m_callee;

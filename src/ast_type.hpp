@@ -21,6 +21,7 @@ constexpr const char* ast_type_string[] = {
 	"ReturnStatement",
 	"IfStatement",
 	"ForStatement",
+	"WhileStatement",
 
 	"TypeTerm",
 };
@@ -46,6 +47,7 @@ enum class ast_type {
 	ReturnStatement,
 	IfStatement,
 	ForStatement,
+	WhileStatement,
 
 	TypeTerm,
 };
