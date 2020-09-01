@@ -137,6 +137,17 @@ bool Lexer::consume_keyword() {
 			return true;
 		}
 		break;
+	case 'w':
+		if (peek_char(1) == 'h' &&
+		    peek_char(2) == 'i' &&
+		    peek_char(3) == 'l' &&
+		    peek_char(4) == 'e' &&
+		    not is_identifier_char(peek_char(5))
+		) {
+			push_token(token_type::KEYWORD_WHILE, 5);
+			return true;
+		}
+		break;
 	}
 	return false;
 }
