@@ -171,6 +171,15 @@ TypedAST* convertAST(AST::ForStatement* ast) {
     return typed_for;
 }
 
+TypedAST* convertAST(AST::WhileStatement* ast) {
+    auto typed_while = new WhileStatement;
+
+    typed_while->m_condition = get_unique(ast->m_condition);
+    typed_while->m_body      = get_unique(ast->m_body);
+
+    return typed_while;
+}
+
 TypedAST* convertAST (AST::AST* ast) {
     switch (ast->type()) {
     case ast_type::NumberLiteral:
@@ -209,6 +218,8 @@ TypedAST* convertAST (AST::AST* ast) {
         return convertAST(static_cast<AST::IfStatement*>(ast));
     case ast_type::ForStatement:
         return convertAST(static_cast<AST::ForStatement*>(ast));
+    case ast_type::WhileStatement:
+        return convertAST(static_cast<AST::WhileStatement*>(ast));
     case ast_type::BinaryExpression:
         assert(0);
     }

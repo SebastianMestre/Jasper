@@ -152,6 +152,13 @@ Own<AST> desugar(Own<ForStatement> ast) {
     return ast;
 }
 
+Own<AST> desugar(Own<WhileStatement> ast) {
+    ast->m_condition = desugar(std::move(ast->m_condition));
+    ast->m_body      = desugar(std::move(ast->m_body));
+
+    return ast;
+}
+
 Own<AST> desugar (Own<AST> ast) {
 #define DISPATCH(type)                                                         \
 	case ast_type::type:                                                       \
@@ -181,6 +188,7 @@ Own<AST> desugar (Own<AST> ast) {
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfStatement);
 		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
 		RETURN(TypeTerm);
 	}
 	std::cerr << "Error: AST type not handled in desugar: " << ast_type_string[(int)ast->type()] << std::endl;

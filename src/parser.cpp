@@ -827,6 +827,35 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
+Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
+	Writer<std::unique_ptr<AST::AST>> result
+	    = { { "Parse Error: Failed to parse while statement" } };
+
+	if (handle_error(result, require(token_type::KEYWORD_WHILE)))
+		return result;
+
+	if (handle_error(result, require(token_type::PAREN_OPEN)))
+		return result;
+
+	auto condition = parse_expression();
+	if (handle_error(result, condition))
+		return result;
+
+	if (handle_error(result, require(token_type::PAREN_CLOSE)))
+		return result;
+
+	auto body = parse_statement();
+	if (handle_error(result, body))
+		return result;
+
+	auto e = std::make_unique<AST::WhileStatement>();
+
+	e->m_condition = std::move(condition.m_result);
+	e->m_body = std::move(body.m_result);
+
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+}
+
 /*
  * Looks ahead a few tokens to predict what syntactic structure we are about to
  * parse. This prevents us from backtracking and ensures the parser runs in
@@ -885,6 +914,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 			return result;
 		}
 		return for_statement;
+	} else if (p0->m_type == token_type::KEYWORD_WHILE) {
+		auto while_statement = parse_while_statement();
+		if (handle_error(result, while_statement))
+			return result;
+		return while_statement;
 	} else if (p0->m_type == token_type::BRACE_OPEN) {
 		auto block_statement = parse_block();
 		if (handle_error(result, block_statement)) {
