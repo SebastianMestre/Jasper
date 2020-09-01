@@ -106,8 +106,8 @@ gc_ptr<Float> Environment::new_float(float f)
 gc_ptr<Boolean> Environment::new_boolean(bool b)
 { return m_gc->new_boolean(b); }
 
-String* Environment::new_string(std::string s)
-{ return m_gc->new_string_unsafe(std::move(s)); }
+gc_ptr<String> Environment::new_string(std::string s)
+{ return m_gc->new_string(std::move(s)); }
 
 Array* Environment::new_list(ArrayType elements)
 { return m_gc->new_list_unsafe(std::move(elements)); }

@@ -80,7 +80,7 @@ Value* array_join(ArrayType v, Environment& e) {
         if (i < array->m_value.size()-1)
             result << string->m_value;
     }
-    return e.new_string(result.str());
+    return e.new_string(result.str()).get();
 }
 
 Value* dummy(ArrayType v, Environment& e){
@@ -107,7 +107,7 @@ Value* value_add(ArrayType v, Environment& e) {
 	case value_type::String:
 		return e.new_string(
 		    static_cast<String*>(lhs_val)->m_value
-		    + static_cast<String*>(rhs_val)->m_value);
+		    + static_cast<String*>(rhs_val)->m_value).get();
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_type_string[static_cast<int>(lhs_val->type())];

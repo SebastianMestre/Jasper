@@ -49,7 +49,7 @@ struct Environment {
 	auto new_integer(int) -> gc_ptr<Integer>;
 	auto new_float(float) -> gc_ptr<Float>;
 	auto new_boolean(bool) -> gc_ptr<Boolean>;
-	auto new_string(std::string) -> String*;
+	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_list(ArrayType) -> Array*;
 	auto new_object(ObjectType) -> Object*;
 	auto new_dictionary(ObjectType) -> Dictionary*;

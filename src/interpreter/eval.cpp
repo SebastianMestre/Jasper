@@ -39,7 +39,7 @@ gc_ptr<Value> eval(TypedAST::IntegerLiteral* ast, Environment& e) {
 	return e.new_integer(std::stoi(ast->text()));
 }
 
-Value* eval(TypedAST::StringLiteral* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::StringLiteral* ast, Environment& e) {
 	return e.new_string(ast->text());
 };
 
