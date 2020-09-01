@@ -914,6 +914,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 			return result;
 		}
 		return for_statement;
+	} else if (p0->m_type == token_type::KEYWORD_WHILE) {
+		auto while_statement = parse_while_statement();
+		if (handle_error(result, while_statement))
+			return result;
+		return while_statement;
 	} else if (p0->m_type == token_type::BRACE_OPEN) {
 		auto block_statement = parse_block();
 		if (handle_error(result, block_statement)) {
