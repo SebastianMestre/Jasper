@@ -172,12 +172,12 @@ TypedAST* convertAST(AST::ForStatement* ast) {
 }
 
 TypedAST* convertAST(AST::WhileStatement* ast) {
-    auto typed_for = new WhileStatement;
+    auto typed_while = new WhileStatement;
 
-    typed_for->m_condition = get_unique(ast->m_condition);
-    typed_for->m_body      = get_unique(ast->m_body);
+    typed_while->m_condition = get_unique(ast->m_condition);
+    typed_while->m_body      = get_unique(ast->m_body);
 
-    return typed_for;
+    return typed_while;
 }
 
 TypedAST* convertAST (AST::AST* ast) {
