@@ -9,11 +9,16 @@ private:
 
 public:
 	gc_ptr(gc_ptr const& o) : m_ptr { o.m_ptr } {
-		m_ptr->m_cpp_refcount += 1;
+		if(m_ptr)
+			m_ptr->m_cpp_refcount += 1;
 	}
 
 	gc_ptr(gc_ptr&& o) : m_ptr { o.m_ptr } {
 		o.m_ptr = nullptr;
+	}
+
+	explicit operator bool () const {
+		return m_ptr != nullptr;
 	}
 
 	template <typename T> friend class gc_ptr;
@@ -24,7 +29,8 @@ public:
 	}
 
 	gc_ptr(ValueType* ptr) : m_ptr { ptr } {
-		m_ptr->m_cpp_refcount += 1;
+		if(m_ptr)
+			m_ptr->m_cpp_refcount += 1;
 	}
 
 	~gc_ptr() {
