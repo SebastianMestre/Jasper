@@ -37,10 +37,10 @@ int main() {
 			auto top_level_call_ast = parse_expression("__invoke()", ta);
 			auto top_level_call = TypedAST::convertAST(top_level_call_ast.m_result.get());
 
-			auto* result = eval(top_level_call, env);
+			auto result = eval(top_level_call, env);
 
 			if (result)
-				Interpreter::print(result);
+				Interpreter::print(result.get());
 			else
 				std::cout << "(nullptr)\n";
 

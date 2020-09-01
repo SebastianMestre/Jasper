@@ -6,6 +6,7 @@
 
 #include "../typed_ast.hpp"
 #include "environment.hpp"
+#include "utils.hpp"
 #include "value.hpp"
 
 namespace Interpreter {
@@ -23,8 +24,9 @@ Value* eval(TypedAST::Declaration* ast, Environment& e) {
 	e.declare(ast->identifier_text(), e.null());
 	if (ast->m_value) {
 		auto* ref = e.access(ast->identifier_text());
-		auto val = unboxed(eval(ast->m_value.get(), e));
-		ref->m_value = val;
+		auto value = eval(ast->m_value.get(), e);
+		auto unboxed_val = unboxed(value.get());
+		ref->m_value = unboxed_val;
 	}
 
 	return e.null();
@@ -59,7 +61,8 @@ Value* eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
+			auto value = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = value.get();
 		}
 		else {
 			std::cerr << "ERROR: declaration in object must have a value";
@@ -78,7 +81,8 @@ Value* eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
-			declarations[decl->identifier_text()] = eval(decl->m_value.get(), e);
+			auto value = eval(decl->m_value.get(), e);
+			declarations[decl->identifier_text()] = value.get();
 		}
 		else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
@@ -89,11 +93,13 @@ Value* eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 };
 
 Value* eval(TypedAST::ArrayLiteral* ast, Environment& e) {
-	std::vector<Value*> elements;
-	for(auto& element : ast->m_elements){
-		elements.push_back(unboxed(eval(element.get(), e)));
+	auto result = e.new_list({});
+	result->m_value.reserve(ast->m_elements.size());
+	for (auto& element : ast->m_elements) {
+		auto value = eval(element.get(), e);
+		result->m_value.push_back(unboxed(value.get()));
 	}
-	return e.new_list(std::move(elements));
+	return result;
 };
 
 Value* eval(TypedAST::Identifier* ast, Environment& e) {
@@ -117,7 +123,8 @@ Value* eval(TypedAST::Block* ast, Environment& e) {
 
 Value* eval(TypedAST::ReturnStatement* ast, Environment& e) {
 	// TODO: proper error handling
-	auto* returning = unboxed(eval(ast->m_value.get(), e));
+	auto value = eval(ast->m_value.get(), e);
+	auto returning = unboxed(value.get());
 	assert(returning);
 
 	e.save_return_value(returning);
@@ -184,15 +191,16 @@ Value* eval_call_callable(Value* callee, std::vector<Value*> args, Environment& 
 Value* eval(TypedAST::CallExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
-	auto* callee = unboxed(eval(ast->m_callee.get(), e));
+	auto value = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(value.get());
 	assert(callee);
 
 	auto& arglist = ast->m_args;
 
 	std::vector<Value*> args;
 	for (int i = 0; i < int(arglist.size()); ++i) {
-		auto* argvalue = eval(arglist[i].get(), e);
-		args.push_back(argvalue);
+		auto argvalue = eval(arglist[i].get(), e);
+		args.push_back(argvalue.get());
 	}
 
 	return eval_call_callable(callee, std::move(args), e);
@@ -201,11 +209,13 @@ Value* eval(TypedAST::CallExpression* ast, Environment& e) {
 Value* eval(TypedAST::IndexExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
-	auto* callee = unboxed(eval(ast->m_callee.get(), e));
+	auto callee_value = eval(ast->m_callee.get(), e);
+	auto* callee = unboxed(callee_value.get());
 	assert(callee);
 	assert(callee->type() == value_type::Array);
 
-	auto* index = unboxed(eval(ast->m_index.get(), e));
+	auto index_value = eval(ast->m_index.get(), e);
+	auto* index = unboxed(index_value.get());
 	assert(index);
 	assert(index->type() == value_type::Integer);
 
@@ -227,11 +237,11 @@ Value* eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 };
 
 Value* eval(TypedAST::IfStatement* ast, Environment& e) {
-	auto* condition_result = eval(ast->m_condition.get(), e);
+	auto condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
 	assert(condition_result->type() == value_type::Boolean);
-	auto* condition_result_b = static_cast<Boolean*>(condition_result);
+	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
 	if(condition_result_b->m_value){
 		eval(ast->m_body.get(), e);
@@ -243,15 +253,17 @@ Value* eval(TypedAST::IfStatement* ast, Environment& e) {
 Value* eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.new_nested_scope();
 	
-	auto* declaration = eval(ast->m_declaration.get(), e);
+	// NOTE: this is kinda fishy. why do we assert here?
+	auto declaration = eval(ast->m_declaration.get(), e);
 	assert(declaration);
 
 	while (1) {
-		auto* condition_result = unboxed(eval(ast->m_condition.get(), e));
-		assert(condition_result);
+		auto condition_result = eval(ast->m_condition.get(), e);
+		auto unboxed_condition_result = unboxed(condition_result.get());
+		assert(unboxed_condition_result);
 
-		assert(condition_result->type() == value_type::Boolean);
-		auto* condition_result_b = static_cast<Boolean*>(condition_result);
+		assert(unboxed_condition_result->type() == value_type::Boolean);
+		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)
 			break;
@@ -261,7 +273,8 @@ Value* eval(TypedAST::ForStatement* ast, Environment& e) {
 		if (e.m_return_value)
 			break;
 
-		auto* loop_action = eval(ast->m_action.get(), e);
+		// NOTE: this is kinda fishy. why do we assert here?
+		auto loop_action = eval(ast->m_action.get(), e);
 		assert(loop_action);
 	}
 
@@ -270,7 +283,7 @@ Value* eval(TypedAST::ForStatement* ast, Environment& e) {
 	return e.null();
 };
 
-Value* eval(TypedAST::TypedAST* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
 	case ast_type::NumberLiteral:

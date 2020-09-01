@@ -1,6 +1,7 @@
 #include "value.hpp"
 #include "environment.hpp"
 #include "value_type.hpp"
+#include "utils.hpp"
 
 #include <sstream>
 #include <iostream>
