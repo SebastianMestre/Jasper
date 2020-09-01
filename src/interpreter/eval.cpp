@@ -28,11 +28,10 @@ Value* eval(TypedAST::Declaration* ast, Environment& e) {
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
 	}
-
 	return e.null();
 };
 
-Value* eval(TypedAST::NumberLiteral* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::NumberLiteral* ast, Environment& e) {
 	return e.new_float(std::stof(ast->text()));
 }
 
@@ -44,7 +43,7 @@ Value* eval(TypedAST::StringLiteral* ast, Environment& e) {
 	return e.new_string(ast->text());
 };
 
-Value* eval(TypedAST::BooleanLiteral* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::BooleanLiteral* ast, Environment& e) {
 	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
@@ -289,7 +288,7 @@ gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 	case ast_type::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
 	case ast_type::IntegerLiteral:
-		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e).get();
+		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
 	case ast_type::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
 	case ast_type::BooleanLiteral:

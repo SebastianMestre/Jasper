@@ -47,8 +47,8 @@ struct Environment {
 
 	auto null() -> Null*;
 	auto new_integer(int) -> gc_ptr<Integer>;
-	auto new_float(float) -> Float*;
-	auto new_boolean(bool) -> Boolean*;
+	auto new_float(float) -> gc_ptr<Float>;
+	auto new_boolean(bool) -> gc_ptr<Boolean>;
 	auto new_string(std::string) -> String*;
 	auto new_list(ArrayType) -> Array*;
 	auto new_object(ObjectType) -> Object*;

@@ -100,11 +100,11 @@ Null* Environment::null()
 gc_ptr<Integer> Environment::new_integer(int i)
 { return m_gc->new_integer(i); }
 
-Float* Environment::new_float(float f)
-{ return m_gc->new_float_unsafe(f); }
+gc_ptr<Float> Environment::new_float(float f)
+{ return m_gc->new_float(f); }
 
-Boolean* Environment::new_boolean(bool b)
-{ return m_gc->new_boolean_unsafe(b); }
+gc_ptr<Boolean> Environment::new_boolean(bool b)
+{ return m_gc->new_boolean(b); }
 
 String* Environment::new_string(std::string s)
 { return m_gc->new_string_unsafe(std::move(s)); }
