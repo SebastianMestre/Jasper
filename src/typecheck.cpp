@@ -152,6 +152,9 @@ void typecheck(TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& en
 	env.new_nested_scope();
 	typecheck(ast->m_declaration.get(), env);
 	typecheck(ast->m_condition.get(), env);
+	env.m_typechecker.m_core.unify(
+	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+
 	typecheck(ast->m_action.get(), env);
 	typecheck(ast->m_body.get(), env);
 	env.end_scope();
@@ -171,10 +174,11 @@ void typecheck(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment&
 }
 
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
+	// TODO: SCC decomposition mumbo jumbo
+
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		env.declare(d->identifier_text(), d);
-		d->m_surrounding_function = env.current_function();
 	}
 
 	for (auto& decl : ast->m_declarations) {

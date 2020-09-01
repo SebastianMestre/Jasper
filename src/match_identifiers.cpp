@@ -81,7 +81,7 @@ void match_identifiers(
 
 	int arg_count = ast->m_args.size();
 
-	for (int i = 0; i < arg_count; ++i){
+	for (int i = 0; i < arg_count; ++i) {
 		auto& arg_decl = ast->m_args[i];
 		env.declare_arg(arg_decl.identifier_text(), ast, i);
 	}
