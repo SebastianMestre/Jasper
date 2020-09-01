@@ -59,6 +59,7 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 		declare_builtin("*", poly_id);
 		declare_builtin("/", poly_id);
 		declare_builtin(".", poly_id);
+		declare_builtin("=", poly_id);
 	}
 
 	{
@@ -73,7 +74,6 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, { var_id });
 
 		declare_builtin("<", poly_id);
-		declare_builtin("=", poly_id);
 		declare_builtin("==", poly_id);
 	}
 };
