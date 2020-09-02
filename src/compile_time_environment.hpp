@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "typechecker.hpp"
@@ -42,6 +43,7 @@ struct Binding {
 struct Scope {
 	bool m_nested { false };
 	std::unordered_map<std::string, Binding> m_vars;
+	std::unordered_set<VarId> m_type_vars;
 };
 
 struct CompileTimeEnvironment {
@@ -69,6 +71,9 @@ struct CompileTimeEnvironment {
 	void new_scope();
 	void new_nested_scope();
 	void end_scope();
+
+	MonoId new_type_var();
+	bool has_type_var(VarId);
 };
 
 } // namespace Frontend
