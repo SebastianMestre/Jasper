@@ -149,6 +149,13 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		return;
 
 	if (mono_data[a].type == mono_type::Var) {
+		if (mono_data[b].type == mono_type::Var) {
+			if (mono_data[a].data_id < mono_data[b].data_id) {
+				// make the newer one point to the older one
+				std::swap(a, b);
+			}
+		}
+
 		VarId va = mono_data[a].data_id;
 
 		if (occurs_in(va, b)) {
