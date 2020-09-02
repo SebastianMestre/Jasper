@@ -140,11 +140,13 @@ void interpreter_tests(Test::Tester& tests) {
 		})
 	);
 
-	/*
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
+			// K : forall a b. a -> b -> a
 			K := fn (x) => fn (y) => x;
+			// S : forall a b c. (a->b->c) -> (a->b) -> a -> c
 			S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
+			// I : foral a. a -> a
 			I := S(K)(K);
 			__invoke := fn () => I(42);
 		)",
@@ -152,7 +154,6 @@ void interpreter_tests(Test::Tester& tests) {
 			return Assert::equals(eval_expression("__invoke()", env), 42);
 		})
 	);
-	*/
 
 	/*
 	tests.add_test(

@@ -6,6 +6,10 @@
 
 #include <cassert>
 
+#if DEBUG
+#include <iostream>
+#endif
+
 namespace TypeChecker {
 
 // NOTE: This file duplicates a bit of what match_identifiers does.
@@ -205,13 +209,13 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 #if DEBUG
 		{
-			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
-			env.m_typechecker.m_core.print_type(mono);
-
 			auto poly = d->m_decl_type;
 			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
 
+			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
 			std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+			std::cerr << "@@ It is equal to:\n";
+			env.m_typechecker.m_core.print_type(mono);
 		}
 #endif
 	}
