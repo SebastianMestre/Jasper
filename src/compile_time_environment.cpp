@@ -158,4 +158,27 @@ void CompileTimeEnvironment::exit_function() {
 	m_function_stack.pop_back();
 }
 
+MonoId CompileTimeEnvironment::new_type_var() {
+	MonoId result = m_typechecker.new_var();
+	VarId var = m_typechecker.m_core.mono_data[result].data_id;
+	current_scope().m_type_vars.insert(var);
+	return result;
+}
+
+bool CompileTimeEnvironment::has_type_var(VarId var) {
+	auto scan_scope = [](Scope& scope, VarId var) -> bool {
+		return scope.m_type_vars.count(var) != 0;
+	};
+
+	// scan nested scopes from the inside out
+	for (int i = m_scopes.size(); i--;) {
+		auto found = scan_scope(m_scopes[i], var);
+		if (found) return true;
+		if (!m_scopes[i].m_nested) break;
+	}
+
+	// fall back to global scope lookup
+	return scan_scope(m_global_scope, var);
+}
+
 } // namespace Frontend

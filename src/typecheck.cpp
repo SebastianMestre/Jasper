@@ -6,6 +6,10 @@
 
 #include <cassert>
 
+#if DEBUG
+#include <iostream>
+#endif
+
 namespace TypeChecker {
 
 // NOTE: This file duplicates a bit of what match_identifiers does.
@@ -45,9 +49,9 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 		typecheck(ast->m_value.get(), env);
 
 	MonoId mono = ast->m_value ? ast->m_value->m_value_type
-	                           : env.m_typechecker.new_var();
+	                           : env.new_type_var();
 
-	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
 #if DEBUG
 	{
@@ -114,7 +118,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 
 	{
 		// TODO: do something better, use the type hints
-		ast->m_return_type = env.m_typechecker.new_var();
+		ast->m_return_type = env.new_type_var();
 
 		int arg_count = ast->m_args.size();
 		std::vector<MonoId> arg_types;
@@ -122,7 +126,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 		for (int i = 0; i < arg_count; ++i) {
 			auto& arg_decl = ast->m_args[i];
 
-			int mono = env.m_typechecker.new_var();
+			int mono = env.new_type_var();
 
 			arg_types.push_back(mono);
 			arg_decl.m_value_type = mono;
@@ -199,19 +203,19 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			typecheck(d->m_value.get(), env);
 
 		MonoId mono = d->m_value ? d->m_value->m_value_type
-		                         : env.m_typechecker.new_var();
+		                         : env.new_type_var();
 
-		d->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
 #if DEBUG
 		{
-			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
-			env.m_typechecker.m_core.print_type(mono);
-
 			auto poly = d->m_decl_type;
 			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
 
+			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
 			std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+			std::cerr << "@@ It is equal to:\n";
+			env.m_typechecker.m_core.print_type(mono);
 		}
 #endif
 	}

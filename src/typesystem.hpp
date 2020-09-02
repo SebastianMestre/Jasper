@@ -1,8 +1,14 @@
+#pragma once
+
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "typesystem_types.hpp"
+
+namespace Frontend {
+struct CompileTimeEnvironment;
+}
 
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
@@ -62,10 +68,10 @@ struct TypeSystemCore {
 	MonoId new_var();
 	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args, char const* tag=nullptr);
 	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
-	PolyId generalize(MonoId mono);
 
 	// qualifies all unbound variables in the given monotype
-	// PolyId new_poly (MonoId mono) { } // TODO
+	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);
+
 
 	void gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars);
 
