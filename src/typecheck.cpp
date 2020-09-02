@@ -47,7 +47,7 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	MonoId mono = ast->m_value ? ast->m_value->m_value_type
 	                           : env.new_type_var();
 
-	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
 #if DEBUG
 	{
@@ -201,7 +201,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		MonoId mono = d->m_value ? d->m_value->m_value_type
 		                         : env.new_type_var();
 
-		d->m_decl_type = env.m_typechecker.m_core.generalize(mono);
+		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
 #if DEBUG
 		{

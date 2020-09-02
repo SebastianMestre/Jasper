@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+#include "compile_time_environment.hpp"
+
 void TypeSystemCore::print_type (MonoId mono, int d) {
 	MonoData& data = mono_data[mono];
 	for(int i = d; i--;) std::cerr << ' ';
@@ -75,21 +77,22 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& fr
 }
 
 // qualifies all free variables in the given monotype
-// TODO(Mestre): I dont think this is right, we are supposed to only qualify
-// 'unbound' variables... whatever than means.
-// TODO: only generalize a variable if it is not in the CT environment
-PolyId TypeSystemCore::generalize(MonoId mono) {
+// NOTE(Mestre): I don't like how we take the CTenv as an
+// argument. This calls for some refactoring...
+PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment& env) {
 	std::unordered_set<VarId> free_vars;
 	gather_free_vars(mono, free_vars);
 
 	std::vector<MonoId> new_vars;
-	for(int i = free_vars.size(); i--;)
-		new_vars.push_back(new_var());
-
 	std::unordered_map<VarId, MonoId> mapping;
 	int i = 0;
-	for(VarId var : free_vars)
-		mapping[var] = new_vars[i++];
+	for (VarId var : free_vars) {
+		if (!env.has_type_var(var)) {
+			auto fresh_var = new_var();
+			new_vars.push_back(fresh_var);
+			mapping[var] = fresh_var;
+		}
+	}
 
 	MonoId base = inst_impl(mono, mapping);
 	std::vector<VarId> vars;
