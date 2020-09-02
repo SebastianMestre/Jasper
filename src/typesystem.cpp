@@ -77,6 +77,7 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& fr
 // qualifies all free variables in the given monotype
 // TODO(Mestre): I dont think this is right, we are supposed to only qualify
 // 'unbound' variables... whatever than means.
+// TODO: only generalize a variable if it is not in the CT environment
 PolyId TypeSystemCore::generalize(MonoId mono) {
 	std::unordered_set<VarId> free_vars;
 	gather_free_vars(mono, free_vars);
