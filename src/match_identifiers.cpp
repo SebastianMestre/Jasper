@@ -62,7 +62,7 @@ void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& e
 	env.end_scope();
 }
 
-void match_identifiers(TypedAST::IfStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_condition.get(), env);
 	match_identifiers(ast->m_body.get(), env);
 }
@@ -160,7 +160,7 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
-		DISPATCH(IfStatement);
+		DISPATCH(IfElseStatement);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);

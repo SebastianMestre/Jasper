@@ -151,8 +151,8 @@ TypedAST* convertAST(AST::ReturnStatement* ast) {
     return typed_rs;
 }
 
-TypedAST* convertAST(AST::IfStatement* ast) {
-    auto typed_if = new IfStatement;
+TypedAST* convertAST(AST::IfElseStatement* ast) {
+    auto typed_if = new IfElseStatement;
 
     typed_if->m_condition = get_unique(ast->m_condition);
     typed_if->m_body      = get_unique(ast->m_body);
@@ -214,8 +214,8 @@ TypedAST* convertAST (AST::AST* ast) {
         return convertAST(static_cast<AST::Block*>(ast));
     case ast_type::ReturnStatement:
         return convertAST(static_cast<AST::ReturnStatement*>(ast));
-    case ast_type::IfStatement:
-        return convertAST(static_cast<AST::IfStatement*>(ast));
+    case ast_type::IfElseStatement:
+        return convertAST(static_cast<AST::IfElseStatement*>(ast));
     case ast_type::ForStatement:
         return convertAST(static_cast<AST::ForStatement*>(ast));
     case ast_type::WhileStatement:

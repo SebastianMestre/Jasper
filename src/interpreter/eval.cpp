@@ -238,7 +238,7 @@ gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	return result;
 };
 
-gc_ptr<Value> eval(TypedAST::IfStatement* ast, Environment& e) {
+gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	auto condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
@@ -345,8 +345,8 @@ gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 		return eval(static_cast<TypedAST::Block*>(ast), e);
 	case ast_type::ReturnStatement:
 		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
-	case ast_type::IfStatement:
-		return eval(static_cast<TypedAST::IfStatement*>(ast), e);
+	case ast_type::IfElseStatement:
+		return eval(static_cast<TypedAST::IfElseStatement*>(ast), e);
 	case ast_type::ForStatement:
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
 	case ast_type::WhileStatement:

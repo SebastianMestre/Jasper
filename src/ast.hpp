@@ -141,11 +141,11 @@ struct ReturnStatement : public AST {
 	ReturnStatement() : AST{ ast_type::ReturnStatement } {}
 };
 
-struct IfStatement : public AST {
+struct IfElseStatement : public AST {
 	std::unique_ptr<AST> m_condition;
 	std::unique_ptr<AST> m_body;
 
-	IfStatement() : AST{ ast_type::IfStatement } {}
+	IfElseStatement() : AST{ ast_type::IfElseStatement } {}
 };
 
 struct ForStatement : public AST {

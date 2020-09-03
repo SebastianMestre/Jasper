@@ -769,7 +769,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_statement() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::IfStatement>();
+	auto e = std::make_unique<AST::IfElseStatement>();
 
 	e->m_condition = std::move(condition.m_result);
 	e->m_body = std::move(body.m_result);
