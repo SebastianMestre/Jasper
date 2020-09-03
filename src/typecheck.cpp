@@ -96,6 +96,9 @@ void typecheck(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment&
 	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
 
 	typecheck(ast->m_body.get(), env);
+
+	if (ast->m_else_body)
+		typecheck(ast->m_else_body.get(), env);
 }
 
 void typecheck(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {

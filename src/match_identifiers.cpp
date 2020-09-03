@@ -65,6 +65,9 @@ void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& e
 void match_identifiers(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_condition.get(), env);
 	match_identifiers(ast->m_body.get(), env);
+
+	if (ast->m_else_body)
+		match_identifiers(ast->m_else_body.get(), env);
 }
 
 void match_identifiers(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
