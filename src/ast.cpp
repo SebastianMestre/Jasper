@@ -20,7 +20,7 @@ void print(Declaration* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Declaration\n"
-		<< tab << "Name: " << ast->identifier_text() << '\n';
+	          << tab << "Name: " << ast->identifier_text() << '\n';
 
 	if (ast->m_type) {
 		std::cout << tab << "Type:\n";
@@ -62,8 +62,7 @@ void print(NullLiteral* ast, int d) {
 void print(ObjectLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ ObjectLiteral\n"
-		<< tab << "Declarations:\n";
+	std::cout << stab << "[ ObjectLiteral\n" << tab << "Declarations:\n";
 	for (auto& decl : ast->m_body)
 		print(decl.get(), d + 1);
 	std::cout << stab << "]\n";
@@ -72,8 +71,7 @@ void print(ObjectLiteral* ast, int d) {
 void print(ArrayLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ ArrayLiteral\n"
-		<< tab << "Elements:\n";
+	std::cout << stab << "[ ArrayLiteral\n" << tab << "Elements:\n";
 	for (auto& elem : ast->m_elements)
 		print(elem.get(), d + 1);
 	std::cout << stab << "]\n";
@@ -82,8 +80,7 @@ void print(ArrayLiteral* ast, int d) {
 void print(DictionaryLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ DictionaryLiteral\n"
-		<< tab << "Declarations:\n";
+	std::cout << stab << "[ DictionaryLiteral\n" << tab << "Declarations:\n";
 	for (auto& decl : ast->m_body)
 		print(decl.get(), d + 1);
 	std::cout << stab << "]\n";
@@ -105,10 +102,9 @@ void print(Block* ast, int d) {
 void print(FunctionLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ Function\n"
-		<< tab << "Arguments:\n";
-	for(auto& arg : ast->m_args){
-		print(arg.get(), d+1);
+	std::cout << stab << "[ Function\n" << tab << "Arguments:\n";
+	for (auto& arg : ast->m_args) {
+		print(arg.get(), d + 1);
 	}
 	std::cout << tab << "Body:\n";
 	if (ast->m_body)
@@ -120,7 +116,9 @@ void print(BinaryExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ BinaryExpression\n"
-	          << tab << "Operator: " << token_type_string[int(ast->m_op_token->m_type)] << '\n'
+	          << tab
+	          << "Operator: " << token_type_string[int(ast->m_op_token->m_type)]
+	          << '\n'
 	          << tab << "Left Operand:\n";
 	print(ast->m_lhs.get(), d + 1);
 	std::cout << tab << "Right Operand:\n";
@@ -131,11 +129,10 @@ void print(BinaryExpression* ast, int d) {
 void print(CallExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ CallExpression\n"
-	          << tab << "Callee:\n";
+	std::cout << stab << "[ CallExpression\n" << tab << "Callee:\n";
 	print(ast->m_callee.get(), d + 1);
 	std::cout << tab << "Args:\n";
-	for(auto& arg : ast->m_args)
+	for (auto& arg : ast->m_args)
 		print(arg.get(), d + 1);
 	std::cout << stab << "]\n";
 }
@@ -143,8 +140,7 @@ void print(CallExpression* ast, int d) {
 void print(IndexExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ IndexExpression\n"
-	          << tab << "Callee:\n";
+	std::cout << stab << "[ IndexExpression\n" << tab << "Callee:\n";
 	print(ast->m_callee.get(), d + 1);
 	std::cout << tab << "Index:\n";
 	print(ast->m_index.get(), d + 1);
@@ -154,15 +150,14 @@ void print(IndexExpression* ast, int d) {
 void print(ReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
-	print(ast->m_value.get(), d+1);
+	print(ast->m_value.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
 void print(IfElseStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ IfElseStatement\n"
-	          << tab << "Condition:\n";
+	std::cout << stab << "[ IfElseStatement\n" << tab << "Condition:\n";
 	print(ast->m_condition.get(), d + 1);
 	std::cout << tab << "Body:\n";
 	print(ast->m_body.get(), d + 1);
@@ -175,8 +170,7 @@ void print(IfElseStatement* ast, int d) {
 void print(ForStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ ForStatement\n"
-	          << tab << "Declaration:\n";
+	std::cout << stab << "[ ForStatement\n" << tab << "Declaration:\n";
 	print(ast->m_declaration.get(), d + 1);
 	std::cout << tab << "Condition:\n";
 	print(ast->m_condition.get(), d + 1);
@@ -190,8 +184,7 @@ void print(ForStatement* ast, int d) {
 void print(WhileStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ WhileStatement\n"
-	          << tab << "Condition:\n";
+	std::cout << stab << "[ WhileStatement\n" << tab << "Condition:\n";
 	print(ast->m_condition.get(), d + 1);
 	std::cout << tab << "Body:\n";
 	print(ast->m_body.get(), d + 1);
@@ -202,9 +195,9 @@ void print(TypeTerm* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ TypeTerm\n";
-	print(ast->m_callee.get(), d+1);
+	print(ast->m_callee.get(), d + 1);
 	for (auto& arg : ast->m_args)
-		print(arg.get(), d+1);
+		print(arg.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -255,4 +248,4 @@ void print(AST* ast, int d) {
 	}
 }
 
-}
+} // namespace AST

@@ -1,7 +1,7 @@
 #include "match_identifiers.hpp"
 
-#include <unordered_map>
 #include <iostream>
+#include <unordered_map>
 
 #include "compile_time_environment.hpp"
 #include "typed_ast.hpp"
@@ -64,7 +64,8 @@ void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& e
 	env.end_scope();
 }
 
-void match_identifiers(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_condition.get(), env);
 	match_identifiers(ast->m_body.get(), env);
 
@@ -72,7 +73,8 @@ void match_identifiers(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvi
 		match_identifiers(ast->m_else_body.get(), env);
 }
 
-void match_identifiers(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_callee.get(), env);
 	for (auto& arg : ast->m_args)
 		match_identifiers(arg.get(), env);
@@ -101,7 +103,8 @@ void match_identifiers(
 	env.exit_function();
 }
 
-void match_identifiers(TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 	match_identifiers(ast->m_declaration.get(), env);
 	match_identifiers(ast->m_condition.get(), env);
@@ -110,7 +113,8 @@ void match_identifiers(TypedAST::ForStatement* ast, Frontend::CompileTimeEnviron
 	env.end_scope();
 }
 
-void match_identifiers(TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 	match_identifiers(ast->m_condition.get(), env);
 	match_identifiers(ast->m_body.get(), env);
@@ -122,7 +126,8 @@ void match_identifiers(
 	match_identifiers(ast->m_value.get(), env);
 }
 
-void match_identifiers(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
+void match_identifiers(
+    TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	match_identifiers(ast->m_callee.get(), env);
 	match_identifiers(ast->m_index.get(), env);
 }

@@ -12,6 +12,6 @@ struct Error : Value {
 };
 
 Error make_reference_error(const Identifier&);
-Error make_range_error(int,int);
+Error make_range_error(int, int);
 
 } // namespace Interpreter

@@ -1,5 +1,5 @@
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #include <memory>
 
 #include "../interpreter/environment_fwd.hpp"
@@ -82,52 +82,51 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			int_val := 1 + 2 + 3 + 4;
 			float_val := 1.0 + 1.5 + 1.0;
 			string_val := "test" + "ing" + ".";
 			int_div := 1 / 2;
 			float_div := 1.0 / 2.0;
 		)",
-		Testers{
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("int_val", env), 10);
-			},
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("int_val", env), 10);
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("float_val", env), 3.5);
-			},
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("float_val", env), 3.5);
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("string_val", env), "testing.");
-			},
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(
+		            eval_expression("string_val", env), "testing.");
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("int_div", env), 0);
-			},
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("int_div", env), 0);
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("float_div", env), 0.5);
-			},
-		})
-	);
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("float_div", env), 0.5);
+	        },
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			f := fn() {
 				a := 1;
 				b := 2;
 				return a + b;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("f()", env), 3);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("f()", env), 3);
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			K := fn (x) { return fn (y) { return x; }; };
 			f := fn () {
 				a := 42;
@@ -135,13 +134,12 @@ void interpreter_tests(Test::Tester& tests) {
 				return K(a)(b);
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("f()", env), 42);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("f()", env), 42);
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			// K : forall a b. a -> b -> a
 			K := fn (x) => fn (y) => x;
 			// S : forall a b c. (a->b->c) -> (a->b) -> a -> c
@@ -150,10 +148,9 @@ void interpreter_tests(Test::Tester& tests) {
 			I := S(K)(K);
 			__invoke := fn () => I(42);
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 42);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 42);
+	    }));
 
 	/*
 	tests.add_test( // HEADS UP : this test won't work because it's ill typed
@@ -222,42 +219,39 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			litt := fn () { return true; };
 			litf := fn () { return false; };
 			nullv := fn () { return null; };
 		)",
-		Testers{
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_true(eval_expression("litt()", env));
-			},	
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("litt()", env));
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_false(eval_expression("litf()", env));
-			},
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("litf()", env));
+	        },
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_null(eval_expression("nullv()", env));
-			}
-		})
-	);
-	
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_null(eval_expression("nullv()", env));
+	        }}));
+
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			fib := fn(n){
 				if(n < 2) return n;
 				return fib(n-1) + fib(n-2);
 			};
 			__invoke := fn() => fib(6);
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 8);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 8);
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn () {
 				sum := 0;
 				N := 16;
@@ -267,11 +261,10 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 120);
-		})
-	);
-	
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 120);
+	    }));
+
 	/* // HEADS UP : this test won't work because we don't
 	 * know how to type array literals and because we need
 	 * better type hints on the built-in functions
@@ -375,18 +368,17 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 13);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 13);
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn() {
 				i := 0; sum := 0;
 
@@ -398,13 +390,12 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 120);
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 120);
+	    }));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn(){
 				return even(11);
 			};
@@ -419,24 +410,22 @@ void interpreter_tests(Test::Tester& tests) {
 				return even(x - 1);
 			};
 		)",
-		Testers{
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_false(eval_expression("__invoke()", env));
-			},
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_true(eval_expression("odd(15)", env));
-			},
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_true(eval_expression("even(80)", env));
-			},
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::is_false(eval_expression("odd(18)", env));
-			}
-		})
-	);
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("__invoke()", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("odd(15)", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("even(80)", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("odd(18)", env));
+	        }}));
 
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn() {
 				i := 2;
 				if (i == 1)
@@ -448,52 +437,46 @@ void interpreter_tests(Test::Tester& tests) {
 				return false;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::is_true(eval_expression("__invoke()", env));
-		})
-	);
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::is_true(eval_expression("__invoke()", env));
+	    }));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
-	tester.add_test(std::make_unique<Test::NormalTestSet>(std::vector<Test::NormalTestSet::TestFunction>{
-		+[]() -> TestReport {
-			TarjanSolver solver (3);
-			solver.add_edge(0, 1);
-			solver.add_edge(1, 2);
-			solver.add_edge(2, 0);
-			solver.solve();
+	tester.add_test(std::make_unique<Test::NormalTestSet>(
+	    std::vector<Test::NormalTestSet::TestFunction> {
+	        +[]() -> TestReport {
+		        TarjanSolver solver(3);
+		        solver.add_edge(0, 1);
+		        solver.add_edge(1, 2);
+		        solver.add_edge(2, 0);
+		        solver.solve();
 
-			auto const& cov = solver.component_of_vertices();
+		        auto const& cov = solver.component_of_vertices();
 
-			if (cov[0] != cov[1] || cov[0] != cov[2])
-			    return {
-				    test_status::Fail,
-				    "All vertices in a 3-cycle should be in the same SCC"
-			    };
+		        if (cov[0] != cov[1] || cov[0] != cov[2])
+			        return {
+			            test_status::Fail,
+			            "All vertices in a 3-cycle should be in the same SCC"};
 
-		    return { test_status::Ok };
-		},
-		+[]() -> TestReport {
+		        return {test_status::Ok};
+	        },
+	        +[]() -> TestReport {
+		        TarjanSolver solver(2);
+		        solver.add_edge(0, 1);
+		        solver.solve();
 
-			TarjanSolver solver (2);
-			solver.add_edge(0, 1);
-			solver.solve();
+		        auto const& cov = solver.component_of_vertices();
+		        if (cov[0] == cov[1])
+			        return {test_status::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
 
-			auto const& cov = solver.component_of_vertices();
-		    if (cov[0] == cov[1])
-				return {
-					test_status::Fail,
-					"Vertices that are only weakly connected should not be in the same SCC"
-				};
+		        if (cov[0] < cov[1])
+			        return {
+			            test_status::Fail,
+			            "SCCs should be in reverse topological sort."};
 
-			if (cov[0] < cov[1])
-				return {
-					test_status::Fail,
-					"SCCs should be in reverse topological sort."
-				};
-
-		    return { test_status::Ok };
-		} }));
+		        return {test_status::Ok};
+	        }}));
 }
 
 int main() {

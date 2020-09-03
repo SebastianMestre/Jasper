@@ -1,10 +1,11 @@
 #include "parse.hpp"
 
 #include "ast.hpp"
-#include "parser.hpp"
 #include "lexer.hpp"
+#include "parser.hpp"
 
-Writer<std::unique_ptr<AST::AST>> parse_program(std::string const& source, TokenArray& ta){
+Writer<std::unique_ptr<AST::AST>>
+parse_program(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
@@ -17,7 +18,8 @@ Writer<std::unique_ptr<AST::AST>> parse_program(std::string const& source, Token
 	return p.parse_top_level();
 }
 
-Writer<std::unique_ptr<AST::AST>> parse_expression(std::string const& source, TokenArray& ta) {
+Writer<std::unique_ptr<AST::AST>>
+parse_expression(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);

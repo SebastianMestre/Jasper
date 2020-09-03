@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "typesystem_types.hpp"
 
@@ -66,12 +66,14 @@ struct TypeSystemCore {
 	// TODO: add an environment.
 
 	MonoId new_var();
-	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args, char const* tag=nullptr);
+	MonoId new_term(
+	    TypeFunctionId type_function,
+	    std::vector<MonoId> args,
+	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
 
 	// qualifies all unbound variables in the given monotype
 	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);
-
 
 	void gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars);
 
@@ -84,5 +86,5 @@ struct TypeSystemCore {
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
 
-	void print_type(MonoId, int d=0);
+	void print_type(MonoId, int d = 0);
 };

@@ -2,23 +2,23 @@
 
 #include <vector>
 
-#include "value.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
+#include "value.hpp"
 
 namespace Interpreter {
 
 struct GC {
-private:
+  private:
 	Null* m_null;
 
-public:
+  public:
 	std::vector<Value*> m_blocks;
 	std::vector<Value*> m_roots;
 
 	GC();
 	~GC();
-	
+
 	void unmark_all();
 	void mark_roots();
 	void sweep();

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "value.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
+#include "value.hpp"
 
 namespace Interpreter {
 
@@ -26,7 +26,9 @@ struct Environment {
 	Value* m_return_value {nullptr};
 
 	Environment(GC* gc)
-	    : m_gc { gc }, m_scope { &m_global_scope } {}
+	    : m_gc {gc}
+	    , m_scope {&m_global_scope} {
+	}
 
 	Scope* new_scope();
 	Scope* new_nested_scope();
@@ -60,4 +62,4 @@ struct Environment {
 	auto new_reference(Value*) -> gc_ptr<Reference>;
 };
 
-} // Interpreter
+} // namespace Interpreter

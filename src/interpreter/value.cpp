@@ -9,33 +9,49 @@
 
 namespace Interpreter {
 
+Null::Null()
+    : Value(value_type::Null) {
+}
 
-Null::Null() : Value(value_type::Null) {}
+Integer::Integer()
+    : Value(value_type::Integer) {
+}
+Integer::Integer(int v)
+    : Value(value_type::Integer)
+    , m_value(v) {
+}
 
+Float::Float()
+    : Value(value_type::Float) {
+}
+Float::Float(float v)
+    : Value(value_type::Float)
+    , m_value(v) {
+}
 
+Boolean::Boolean()
+    : Value(value_type::Boolean) {
+}
+Boolean::Boolean(bool b)
+    : Value(value_type::Boolean)
+    , m_value(b) {
+}
 
-Integer::Integer() : Value(value_type::Integer) {}
-Integer::Integer(int v) : Value(value_type::Integer), m_value(v) {}
+String::String()
+    : Value(value_type::String) {
+}
+String::String(std::string s)
+    : Value(value_type::String)
+    , m_value(std::move(s)) {
+}
 
-
-
-Float::Float() : Value(value_type::Float) {}
-Float::Float(float v) : Value(value_type::Float), m_value(v) {}
-
-
-
-Boolean::Boolean() : Value(value_type::Boolean) {}
-Boolean::Boolean(bool b) : Value(value_type::Boolean), m_value(b) {}
-
-
-
-String::String() : Value(value_type::String) {}
-String::String(std::string s) : Value(value_type::String), m_value(std::move(s)) {}
-
-
-
-Array::Array() : Value(value_type::Array) {}
-Array::Array(ArrayType l) : Value(value_type::Array), m_value(std::move(l)) {}
+Array::Array()
+    : Value(value_type::Array) {
+}
+Array::Array(ArrayType l)
+    : Value(value_type::Array)
+    , m_value(std::move(l)) {
+}
 
 void Array::append(Value* v) {
 	m_value.push_back(v);
@@ -50,10 +66,13 @@ Value* Array::at(int position) {
 	}
 }
 
-
-
-Object::Object() : Value(value_type::Object) {}
-Object::Object(ObjectType o) : Value(value_type::Object), m_value(std::move(o)) {}
+Object::Object()
+    : Value(value_type::Object) {
+}
+Object::Object(ObjectType o)
+    : Value(value_type::Object)
+    , m_value(std::move(o)) {
+}
 
 void Object::addMember(Identifier const& id, Value* v) {
 	m_value[id] = v;
@@ -69,10 +88,13 @@ Value* Object::getMember(Identifier const& id) {
 	}
 }
 
-
-
-Dictionary::Dictionary() : Value(value_type::Dictionary) {}
-Dictionary::Dictionary(ObjectType o) : Value(value_type::Dictionary), m_value(std::move(o)) {}
+Dictionary::Dictionary()
+    : Value(value_type::Dictionary) {
+}
+Dictionary::Dictionary(ObjectType o)
+    : Value(value_type::Dictionary)
+    , m_value(std::move(o)) {
+}
 
 void Dictionary::addMember(Identifier const& id, Value* v) {
 	m_value[id] = v;
@@ -92,28 +114,43 @@ void Dictionary::removeMember(Identifier const& id) {
 	m_value.erase(id);
 }
 
-
-
 Function::Function(FunctionType def, ObjectType captures)
-    : Value(value_type::Function), m_def(def), m_captures(std::move(captures)) {}
-
-
+    : Value(value_type::Function)
+    , m_def(def)
+    , m_captures(std::move(captures)) {
+}
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : Value { value_type::NativeFunction }, m_fptr { fptr } {}
-
+    : Value {value_type::NativeFunction}
+    , m_fptr {fptr} {
+}
 
 Reference::Reference(Value* value)
-    : Value { value_type::Reference }, m_value{value} {}
+    : Value {value_type::Reference}
+    , m_value {value} {
+}
 
-
-void gc_visit(Null* v) { v->m_visited = true; }
-void gc_visit(Integer* v) { v->m_visited = true; }
-void gc_visit(Float* v) { v->m_visited = true; }
-void gc_visit(String* v) { v->m_visited = true; }
-void gc_visit(Boolean* v) { v->m_visited = true; }
-void gc_visit(Error* v) { v->m_visited = true; }
-void gc_visit(NativeFunction* v) { v->m_visited = true; }
+void gc_visit(Null* v) {
+	v->m_visited = true;
+}
+void gc_visit(Integer* v) {
+	v->m_visited = true;
+}
+void gc_visit(Float* v) {
+	v->m_visited = true;
+}
+void gc_visit(String* v) {
+	v->m_visited = true;
+}
+void gc_visit(Boolean* v) {
+	v->m_visited = true;
+}
+void gc_visit(Error* v) {
+	v->m_visited = true;
+}
+void gc_visit(NativeFunction* v) {
+	v->m_visited = true;
+}
 
 void gc_visit(Array* l) {
 	if (l->m_visited)
@@ -146,7 +183,7 @@ void gc_visit(Dictionary* d) {
 void gc_visit(Function* f) {
 	if (f->m_visited)
 		return;
-	
+
 	f->m_visited = true;
 	for (auto& dec : f->m_captures)
 		gc_visit(dec.second);
@@ -155,15 +192,14 @@ void gc_visit(Function* f) {
 void gc_visit(Reference* r) {
 	if (r->m_visited)
 		return;
-	
+
 	r->m_visited = true;
 	gc_visit(r->m_value);
 }
 
-
 void gc_visit(Value* v) {
 
-	switch(v->type()) {
+	switch (v->type()) {
 	case value_type::Null:
 		return gc_visit(static_cast<Null*>(v));
 	case value_type::Integer:
@@ -194,7 +230,7 @@ void gc_visit(Value* v) {
 // = === === print === === = //
 
 void print_spaces(int n) {
-	for(int i = 0; i < n; ++i)
+	for (int i = 0; i < n; ++i)
 		std::cout << ' ';
 }
 
@@ -215,7 +251,8 @@ void print(Float* v, int d) {
 
 void print(String* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << '"' << v->m_value << '"' << '\n';
+	std::cout << value_type_string[int(v->type())] << ' ' << '"' << v->m_value
+	          << '"' << '\n';
 }
 
 void print(Boolean* v, int d) {
@@ -257,19 +294,19 @@ void print(Array* l, int d) {
 	print_spaces(d);
 	std::cout << value_type_string[int(l->type())] << '\n';
 	for (auto* child : l->m_value) {
-		print(child, d+1);
+		print(child, d + 1);
 	}
 }
 
 void print(Reference* l, int d) {
 	print_spaces(d);
 	std::cout << value_type_string[int(l->type())] << '\n';
-	print(l->m_value, d+1);
+	print(l->m_value, d + 1);
 }
 
 void print(Value* v, int d) {
 
-	switch(v->type()) {
+	switch (v->type()) {
 	case value_type::Null:
 		return print(static_cast<Null*>(v), d);
 	case value_type::Integer:

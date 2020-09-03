@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "test_status.hpp"
-#include "../interpreter/exit_status_type.hpp"
 #include "../interpreter/environment_fwd.hpp"
+#include "../interpreter/exit_status_type.hpp"
+#include "test_status.hpp"
 
 namespace Test {
 
@@ -41,4 +41,4 @@ struct NormalTestSet : public TestSet {
 	TestReport execute() override;
 };
 
-}
+} // namespace Test

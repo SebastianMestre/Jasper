@@ -5,8 +5,8 @@
 #include "typed_ast.hpp"
 #include "typesystem_types.hpp"
 
-#include <unordered_set>
 #include <cassert>
+#include <unordered_set>
 
 #if DEBUG
 #include <iostream>
@@ -214,7 +214,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		index_to_decl.push_back(d);
-		decl_to_index.insert({ d, i });
+		decl_to_index.insert({d, i});
 		++i;
 	}
 
@@ -222,18 +222,19 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 	TarjanSolver solver(index_to_decl.size());
 	for (auto kv : decl_to_index) {
 		auto decl = kv.first;
-#    if DEBUG
-		std::cerr << "@@ " << decl->identifier_text() << " -- (" << kv.second << ")\n";
-#    endif
+#if DEBUG
+		std::cerr << "@@ " << decl->identifier_text() << " -- (" << kv.second
+		          << ")\n";
+#endif
 		auto u = kv.second;
 		for (auto other : decl->m_references) {
 			auto it = decl_to_index.find(other);
 			if (it != decl_to_index.end()) {
 				int v = it->second;
-#    if DEBUG
+#if DEBUG
 				std::cerr << "@@   " << other->identifier_text()
 				          << " -- add_edge(" << u << ", " << v << ")\n";
-#    endif
+#endif
 				solver.add_edge(u, v);
 			}
 		}
@@ -245,15 +246,15 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 	auto const& comps = solver.vertices_of_components();
 	for (auto const& verts : comps) {
 
-#    if DEBUG
+#if DEBUG
 		std::cerr << "@@@@ TYPECHECKING COMPONENT @@@@\n";
 		std::cerr << "@@@@ MEMBER LIST START @@@@\n";
-		for(int u : verts){
+		for (int u : verts) {
 			auto decl = index_to_decl[u];
 			std::cerr << "  MEMBER: " << decl->identifier_text() << '\n';
 		}
 		std::cerr << "@@@@ MEMBER LIST END @@@@\n";
-#    endif
+#endif
 
 		// set up some dummy types on every decl
 		for (int u : verts) {
@@ -280,10 +281,9 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 			decl->m_is_polymorphic = true;
-			decl->m_decl_type
-			    = env.m_typechecker.m_core.generalize(decl->m_value_type, env);
+			decl->m_decl_type =
+			    env.m_typechecker.m_core.generalize(decl->m_value_type, env);
 		}
-
 	}
 #else
 
@@ -300,12 +300,11 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		if (d->m_value)
 			typecheck(d->m_value.get(), env);
 
-		MonoId mono = d->m_value ? d->m_value->m_value_type
-		                         : env.new_type_var();
+		MonoId mono = d->m_value ? d->m_value->m_value_type : env.new_type_var();
 
 		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
-#    if DEBUG
+#if DEBUG
 		{
 			auto poly = d->m_decl_type;
 			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
@@ -315,7 +314,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			std::cerr << "@@ It is equal to:\n";
 			env.m_typechecker.m_core.print_type(mono);
 		}
-#    endif
+#endif
 	}
 #endif
 }
