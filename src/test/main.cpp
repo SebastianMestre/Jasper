@@ -399,6 +399,22 @@ void interpreter_tests(Test::Tester& tests) {
 			return Assert::equals(eval_expression("__invoke()", env), 120);
 		})
 	);
+
+	tests.add_test(
+		std::make_unique<TestCase>(R"(
+			__invoke := fn() {
+				i := 2;
+				if (i == 1)
+					return false;
+				else
+					return true;
+				return false;
+			};
+		)",
+		+[](Interpreter::Environment& env) -> exit_status_type {
+			return Assert::is_true(eval_expression("__invoke()", env));
+		})
+	);
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
