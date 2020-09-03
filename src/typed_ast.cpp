@@ -156,6 +156,9 @@ TypedAST* convertAST(AST::IfElseStatement* ast) {
 
     typed_if->m_condition = get_unique(ast->m_condition);
     typed_if->m_body      = get_unique(ast->m_body);
+    
+    if (ast->m_else_body)
+	    typed_if->m_else_body = get_unique(ast->m_else_body);
 
     return typed_if;
 }

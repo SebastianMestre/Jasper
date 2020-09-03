@@ -171,6 +171,7 @@ struct ReturnStatement : public TypedAST {
 struct IfElseStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_condition;
 	std::unique_ptr<TypedAST> m_body;
+	std::unique_ptr<TypedAST> m_else_body; // can be nullptr
 
 	IfElseStatement() : TypedAST { ast_type::IfElseStatement } {}
 };
