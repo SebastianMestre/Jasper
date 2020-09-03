@@ -4,32 +4,39 @@
 
 template <typename ValueType>
 struct gc_ptr {
-private:
+  private:
 	ValueType* m_ptr;
 
-public:
-	gc_ptr(gc_ptr const& o) : m_ptr { o.m_ptr } {
-		if(m_ptr)
+  public:
+	gc_ptr(gc_ptr const& o)
+	    : m_ptr {o.m_ptr} {
+		if (m_ptr)
 			m_ptr->m_cpp_refcount += 1;
 	}
 
-	gc_ptr(gc_ptr&& o) : m_ptr { o.m_ptr } {
+	gc_ptr(gc_ptr&& o)
+	    : m_ptr {o.m_ptr} {
 		o.m_ptr = nullptr;
 	}
 
-	explicit operator bool () const {
+	explicit operator bool() const {
 		return m_ptr != nullptr;
 	}
 
-	template <typename T> friend class gc_ptr;
+	template <typename T>
+	friend class gc_ptr;
 
-	template <typename T, typename = typename std::enable_if<std::is_convertible<T*, ValueType*>::value>::type>
-	gc_ptr(gc_ptr<T>&& o) : m_ptr { o.m_ptr } {
+	template <
+	    typename T,
+	    typename = typename std::enable_if<std::is_convertible<T*, ValueType*>::value>::type>
+	gc_ptr(gc_ptr<T>&& o)
+	    : m_ptr {o.m_ptr} {
 		o.m_ptr = nullptr;
 	}
 
-	gc_ptr(ValueType* ptr) : m_ptr { ptr } {
-		if(m_ptr)
+	gc_ptr(ValueType* ptr)
+	    : m_ptr {ptr} {
+		if (m_ptr)
 			m_ptr->m_cpp_refcount += 1;
 	}
 
@@ -42,7 +49,7 @@ public:
 		return m_ptr;
 	}
 
-	ValueType* operator-> () const {
+	ValueType* operator->() const {
 		return get();
 	}
 };

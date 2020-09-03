@@ -1,4 +1,3 @@
-BasedOnStyle: WebKit
 
 UseTab: ForIndentation
 IndentWidth: 4
@@ -11,15 +10,13 @@ PenaltyExcessCharacter: 5
 ReflowComments: false
 PenaltyBreakComment: 50 
 
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 
+BreakConstructorInitializers: BeforeComma
+BreakBeforeTernaryOperators: true
 AlwaysBreakTemplateDeclarations: true
-
-BinPackArguments: false
-BinPackParameters: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
 
 DerivePointerAlignment: false
 PointerAlignment: Left
@@ -28,5 +25,10 @@ SpaceBeforeParens: ControlStatements
 SpacesInSquareBrackets: false
 SpacesInParentheses: false
 
-BreakBeforeTernaryOperators: true
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: true
 AlignAfterOpenBracket: AlwaysBreak
+BinPackParameters: false
+BinPackArguments: false
+
+FixNamespaceComments: true

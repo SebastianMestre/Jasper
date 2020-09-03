@@ -5,4 +5,3 @@ namespace Interpreter {
 struct Environment;
 
 }
-

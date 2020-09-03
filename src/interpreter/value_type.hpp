@@ -1,22 +1,22 @@
 #pragma once
 
 constexpr const char* value_type_string[] = {
-	"Null",
+    "Null",
 
-	"Integer",
-	"Float",
-	"Boolean",
-	"String",
-	"Error",
+    "Integer",
+    "Float",
+    "Boolean",
+    "String",
+    "Error",
 
-	"Array",
-	"Object",
-	"Dictionary",
+    "Array",
+    "Object",
+    "Dictionary",
 
-	"Function",
-	"NativeFunction",
+    "Function",
+    "NativeFunction",
 
-	"Reference",
+    "Reference",
 };
 
 enum class value_type {
@@ -31,10 +31,9 @@ enum class value_type {
 	Array,
 	Object,
 	Dictionary,
-	
+
 	Function,
 	NativeFunction,
 
 	Reference,
 };
-

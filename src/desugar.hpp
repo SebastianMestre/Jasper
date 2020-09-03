@@ -9,4 +9,4 @@ struct AST;
 // This lets us re-use a large amount of the nodes, working a lot faster.
 std::unique_ptr<AST> desugar(std::unique_ptr<AST>);
 
-}
+} // namespace AST
