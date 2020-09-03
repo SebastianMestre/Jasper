@@ -434,6 +434,24 @@ void interpreter_tests(Test::Tester& tests) {
 			}
 		})
 	);
+
+	tests.add_test(
+		std::make_unique<TestCase>(R"(
+			__invoke := fn() {
+				i := 2;
+				if (i == 1)
+					return false;
+				else if (i == 3)
+					return false;
+				else if (i == 2)
+					return true;
+				return false;
+			};
+		)",
+		+[](Interpreter::Environment& env) -> exit_status_type {
+			return Assert::is_true(eval_expression("__invoke()", env));
+		})
+	);
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

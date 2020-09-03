@@ -158,14 +158,17 @@ void print(ReturnStatement* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(IfStatement* ast, int d) {
+void print(IfElseStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
-	std::cout << stab << "[ IfStatement\n"
+	std::cout << stab << "[ IfElseStatement\n"
 	          << tab << "Condition:\n";
 	print(ast->m_condition.get(), d + 1);
 	std::cout << tab << "Body:\n";
 	print(ast->m_body.get(), d + 1);
+	std::cout << tab << "Else:\n";
+	if (ast->m_else_body)
+		print(ast->m_else_body.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -241,8 +244,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<Block*>(ast), d);
 	case ast_type::ReturnStatement:
 		return print(static_cast<ReturnStatement*>(ast), d);
-	case ast_type::IfStatement:
-		return print(static_cast<IfStatement*>(ast), d);
+	case ast_type::IfElseStatement:
+		return print(static_cast<IfElseStatement*>(ast), d);
 	case ast_type::ForStatement:
 		return print(static_cast<ForStatement*>(ast), d);
 	case ast_type::WhileStatement:

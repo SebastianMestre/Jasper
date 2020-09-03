@@ -148,6 +148,16 @@ bool Lexer::consume_keyword() {
 			return true;
 		}
 		break;
+	case 'e':
+		if (peek_char(1) == 'l' &&
+		    peek_char(2) == 's' &&
+		    peek_char(3) == 'e' &&
+		    not is_identifier_char(peek_char(4))
+		) {
+			push_token(token_type::KEYWORD_ELSE, 4);
+			return true;
+		}
+		break;
 	}
 	return false;
 }

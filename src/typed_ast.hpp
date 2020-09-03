@@ -170,11 +170,12 @@ struct ReturnStatement : public TypedAST {
 	ReturnStatement() : TypedAST { ast_type::ReturnStatement } {}
 };
 
-struct IfStatement : public TypedAST {
+struct IfElseStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_condition;
 	std::unique_ptr<TypedAST> m_body;
+	std::unique_ptr<TypedAST> m_else_body; // can be nullptr
 
-	IfStatement() : TypedAST { ast_type::IfStatement } {}
+	IfElseStatement() : TypedAST { ast_type::IfElseStatement } {}
 };
 
 struct ForStatement : public TypedAST {

@@ -46,6 +46,19 @@ Writer<Token const*> Parser::require(token_type expected_type) {
 	return make_writer(current_token);
 }
 
+bool Parser::consume(token_type maybe_token) {
+	Token const* current_token = &m_lexer->current_token();
+
+	if (current_token->m_type != maybe_token) {
+		return false;
+	}
+
+	m_lexer->advance();
+
+	return true;
+}
+
+
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST::AST>> result
@@ -743,9 +756,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_if_statement() {
+Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse if statement" } };
+	    = { { "Parse Error: Failed to parse if-else statement" } };
 
 	if(handle_error(result, require(token_type::KEYWORD_IF))){
 		return result;
@@ -769,10 +782,19 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_statement() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::IfStatement>();
+	auto e = std::make_unique<AST::IfElseStatement>();
 
 	e->m_condition = std::move(condition.m_result);
 	e->m_body = std::move(body.m_result);
+
+	if (consume(token_type::KEYWORD_ELSE)) {
+		auto else_body = parse_statement();
+
+		if (handle_error(result, else_body))
+			return result;
+
+		e->m_else_body = std::move(else_body.m_result);
+	}
 
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
@@ -903,11 +925,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 		}
 		return return_statement;
 	} else if (p0->m_type == token_type::KEYWORD_IF) {
-		auto if_statement = parse_if_statement();
-		if (handle_error(result, if_statement)) {
+		auto if_else_statement = parse_if_else_statement();
+		if (handle_error(result, if_else_statement)) {
 			return result;
 		}
-		return if_statement;
+		return if_else_statement;
 	} else if (p0->m_type == token_type::KEYWORD_FOR) {
 		auto for_statement = parse_for_statement();
 		if (handle_error(result, for_statement)) {

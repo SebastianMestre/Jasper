@@ -19,7 +19,7 @@ constexpr const char* ast_type_string[] = {
 	"IndexExpression",
 	"Block",
 	"ReturnStatement",
-	"IfStatement",
+	"IfElseStatement",
 	"ForStatement",
 	"WhileStatement",
 
@@ -45,7 +45,7 @@ enum class ast_type {
 	IndexExpression,
 	Block,
 	ReturnStatement,
-	IfStatement,
+	IfElseStatement,
 	ForStatement,
 	WhileStatement,
 
