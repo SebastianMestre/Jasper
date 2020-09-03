@@ -247,6 +247,8 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 
 	if(condition_result_b->m_value){
 		eval(ast->m_body.get(), e);
+	} else if (ast->m_else_body) {
+		eval(ast->m_else_body.get(), e);
 	}
 
 	return e.null();
