@@ -152,15 +152,15 @@ TypedAST* convertAST(AST::ReturnStatement* ast) {
 }
 
 TypedAST* convertAST(AST::IfElseStatement* ast) {
-    auto typed_if = new IfElseStatement;
+    auto typed_if_else = new IfElseStatement;
 
-    typed_if->m_condition = get_unique(ast->m_condition);
-    typed_if->m_body      = get_unique(ast->m_body);
+    typed_if_else->m_condition = get_unique(ast->m_condition);
+    typed_if_else->m_body      = get_unique(ast->m_body);
     
     if (ast->m_else_body)
-	    typed_if->m_else_body = get_unique(ast->m_else_body);
+	    typed_if_else->m_else_body = get_unique(ast->m_else_body);
 
-    return typed_if;
+    return typed_if_else;
 }
 
 TypedAST* convertAST(AST::ForStatement* ast) {
