@@ -32,6 +32,8 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 		assert(declaration);
 		ast->m_declaration = declaration;
 
+		env.current_top_level_declaration()->m_references.insert(declaration);
+
 		surrounding_function = declaration->m_surrounding_function;
 	} else {
 		TypedAST::FunctionArgument& arg = binding->get_arg();
@@ -135,9 +137,12 @@ void match_identifiers(
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
+		env.enter_top_level_decl(d);
 
 		if (d->m_value)
 			match_identifiers(d->m_value.get(), env);
+
+		env.exit_top_level_decl();
 	}
 }
 

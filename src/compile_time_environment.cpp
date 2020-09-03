@@ -106,6 +106,7 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId pol
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_decl_type = poly;
+	decl->m_is_polymorphic = true;
 	declare(name, decl);
 }
 
@@ -158,6 +159,11 @@ void CompileTimeEnvironment::exit_function() {
 	m_function_stack.pop_back();
 }
 
+MonoId CompileTimeEnvironment::new_hidden_type_var() {
+	MonoId result = m_typechecker.new_var();
+	return result;
+}
+
 MonoId CompileTimeEnvironment::new_type_var() {
 	MonoId result = m_typechecker.new_var();
 	VarId var = m_typechecker.m_core.mono_data[result].data_id;
@@ -179,6 +185,20 @@ bool CompileTimeEnvironment::has_type_var(VarId var) {
 
 	// fall back to global scope lookup
 	return scan_scope(m_global_scope, var);
+}
+
+TypedAST::Declaration* CompileTimeEnvironment::current_top_level_declaration() {
+	return m_current_decl;
+}
+
+void CompileTimeEnvironment::enter_top_level_decl(TypedAST::Declaration* decl) {
+	assert(!m_current_decl);
+	m_current_decl = decl;
+}
+
+void CompileTimeEnvironment::exit_top_level_decl() {
+	assert(m_current_decl);
+	m_current_decl = nullptr;
 }
 
 } // namespace Frontend

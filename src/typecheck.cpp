@@ -1,9 +1,11 @@
 #include "typecheck.hpp"
 
 #include "compile_time_environment.hpp"
-#include "typesystem_types.hpp"
+#include "tarjan_solver.hpp"
 #include "typed_ast.hpp"
+#include "typesystem_types.hpp"
 
+#include <unordered_set>
 #include <cassert>
 
 #if DEBUG
@@ -41,17 +43,21 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
+	// we use a hidden typevar to get it to generalize if needed
+	ast->m_value_type = env.new_hidden_type_var();
 	env.declare(ast->identifier_text(), ast);
 
-	// this is where we implement let-polymorphism.
+	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
-	if (ast->m_value)
+	if (ast->m_value) {
 		typecheck(ast->m_value.get(), env);
+		ast->m_value_type = ast->m_value->m_value_type;
+	} else {
+		// NOTE: this should be an error...
+	}
 
-	MonoId mono = ast->m_value ? ast->m_value->m_value_type
-	                           : env.new_type_var();
-
-	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
+	ast->m_is_polymorphic = true;
+	ast->m_decl_type = env.m_typechecker.m_core.generalize(ast->m_value_type, env);
 
 #if DEBUG
 	{
@@ -71,9 +77,13 @@ void typecheck(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env)
 	// TODO: refactor
 	MonoId mono = -1;
 	if (binding->m_type == Frontend::BindingType::Declaration) {
-		TypedAST::Declaration* declaration = binding->get_decl();
-		assert(declaration);
-		mono = env.m_typechecker.m_core.inst_fresh(declaration->m_decl_type);
+		TypedAST::Declaration* decl = binding->get_decl();
+		assert(decl);
+		if (decl->m_is_polymorphic) {
+			mono = env.m_typechecker.m_core.inst_fresh(decl->m_decl_type);
+		} else {
+			mono = decl->m_value_type;
+		}
 	} else {
 		TypedAST::FunctionArgument& arg = binding->get_arg();
 		mono = arg.m_value_type;
@@ -190,8 +200,92 @@ void typecheck(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment&
 	typecheck(ast->m_index.get(), env);
 }
 
+#define USE_REC_RULE 1
+
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
-	// TODO: SCC decomposition mumbo jumbo
+
+#if USE_REC_RULE
+	// two way mapping
+	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
+	std::vector<TypedAST::Declaration*> index_to_decl;
+
+	// assign a unique int to every top level declaration
+	int i = 0;
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedAST::Declaration*>(decl.get());
+		index_to_decl.push_back(d);
+		decl_to_index.insert({ d, i });
+		++i;
+	}
+
+	// build up the explicit declaration graph
+	TarjanSolver solver(index_to_decl.size());
+	for (auto kv : decl_to_index) {
+		auto decl = kv.first;
+#    if DEBUG
+		std::cerr << "@@ " << decl->identifier_text() << " -- (" << kv.second << ")\n";
+#    endif
+		auto u = kv.second;
+		for (auto other : decl->m_references) {
+			auto it = decl_to_index.find(other);
+			if (it != decl_to_index.end()) {
+				int v = it->second;
+#    if DEBUG
+				std::cerr << "@@   " << other->identifier_text()
+				          << " -- add_edge(" << u << ", " << v << ")\n";
+#    endif
+				solver.add_edge(u, v);
+			}
+		}
+	}
+
+	// compute strongly connected components
+	solver.solve();
+
+	auto const& comps = solver.vertices_of_components();
+	for (auto const& verts : comps) {
+
+#    if DEBUG
+		std::cerr << "@@@@ TYPECHECKING COMPONENT @@@@\n";
+		std::cerr << "@@@@ MEMBER LIST START @@@@\n";
+		for(int u : verts){
+			auto decl = index_to_decl[u];
+			std::cerr << "  MEMBER: " << decl->identifier_text() << '\n';
+		}
+		std::cerr << "@@@@ MEMBER LIST END @@@@\n";
+#    endif
+
+		// set up some dummy types on every decl
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+			decl->m_value_type = env.new_hidden_type_var();
+		}
+
+		// typecheck all the values and make the type of the
+		// decl equal to the type of their value
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+
+			if (decl->m_value) {
+				typecheck(decl->m_value.get(), env);
+				env.m_typechecker.m_core.unify(
+				    decl->m_value_type, decl->m_value->m_value_type);
+			} else {
+				// this should be an error...
+			}
+		}
+
+		// generalize all the decl types, so that they are
+		// identified as polymorphic in the next rec-block
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+			decl->m_is_polymorphic = true;
+			decl->m_decl_type
+			    = env.m_typechecker.m_core.generalize(decl->m_value_type, env);
+		}
+
+	}
+#else
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
@@ -200,6 +294,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
+		d->m_is_polymorphic = true;
 
 		// this is where we implement let-polymorphism. TODO: refactor (duplication).
 		if (d->m_value)
@@ -210,7 +305,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
-#if DEBUG
+#    if DEBUG
 		{
 			auto poly = d->m_decl_type;
 			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
@@ -220,8 +315,9 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			std::cerr << "@@ It is equal to:\n";
 			env.m_typechecker.m_core.print_type(mono);
 		}
-#endif
+#    endif
 	}
+#endif
 }
 
 void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {

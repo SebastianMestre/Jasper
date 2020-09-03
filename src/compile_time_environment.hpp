@@ -50,6 +50,8 @@ struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
+	TypedAST::Declaration* m_current_decl { nullptr };
+
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 	TypeChecker::TypeChecker m_typechecker;
 
@@ -67,12 +69,17 @@ struct CompileTimeEnvironment {
 	void enter_function(TypedAST::FunctionLiteral*);
 	void exit_function();
 
+	TypedAST::Declaration* current_top_level_declaration();
+	void enter_top_level_decl(TypedAST::Declaration*);
+	void exit_top_level_decl();
+
 	Scope& current_scope();
 	void new_scope();
 	void new_nested_scope();
 	void end_scope();
 
 	MonoId new_type_var();
+	MonoId new_hidden_type_var();
 	bool has_type_var(VarId);
 };
 
