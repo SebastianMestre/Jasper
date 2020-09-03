@@ -16,7 +16,7 @@ protected:
 public:
 	AST() = default;
 	AST(ast_type type)
-	    : m_type {type} {
+	    : m_type { type } {
 	}
 
 	ast_type type() const {
@@ -33,7 +33,7 @@ struct IntegerLiteral : public AST {
 	}
 
 	IntegerLiteral()
-	    : AST {ast_type::IntegerLiteral} {
+	    : AST { ast_type::IntegerLiteral } {
 	}
 };
 
@@ -45,7 +45,7 @@ struct NumberLiteral : public AST {
 	}
 
 	NumberLiteral()
-	    : AST {ast_type::NumberLiteral} {
+	    : AST { ast_type::NumberLiteral } {
 	}
 };
 
@@ -57,7 +57,7 @@ struct StringLiteral : public AST {
 	}
 
 	StringLiteral()
-	    : AST {ast_type::StringLiteral} {
+	    : AST { ast_type::StringLiteral } {
 	}
 };
 
@@ -69,14 +69,14 @@ struct BooleanLiteral : public AST {
 	}
 
 	BooleanLiteral()
-	    : AST {ast_type::BooleanLiteral} {
+	    : AST { ast_type::BooleanLiteral } {
 	}
 };
 
 struct NullLiteral : public AST {
 
 	NullLiteral()
-	    : AST {ast_type::NullLiteral} {
+	    : AST { ast_type::NullLiteral } {
 	}
 };
 
@@ -84,7 +84,7 @@ struct ObjectLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	ObjectLiteral()
-	    : AST {ast_type::ObjectLiteral} {
+	    : AST { ast_type::ObjectLiteral } {
 	}
 };
 
@@ -92,7 +92,7 @@ struct ArrayLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_elements;
 
 	ArrayLiteral()
-	    : AST {ast_type::ArrayLiteral} {
+	    : AST { ast_type::ArrayLiteral } {
 	}
 };
 
@@ -100,7 +100,7 @@ struct DictionaryLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	DictionaryLiteral()
-	    : AST {ast_type::DictionaryLiteral} {
+	    : AST { ast_type::DictionaryLiteral } {
 	}
 };
 
@@ -109,7 +109,7 @@ struct FunctionLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	FunctionLiteral()
-	    : AST {ast_type::FunctionLiteral} {
+	    : AST { ast_type::FunctionLiteral } {
 	}
 };
 
@@ -117,7 +117,7 @@ struct DeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
 
 	DeclarationList()
-	    : AST {ast_type::DeclarationList} {
+	    : AST { ast_type::DeclarationList } {
 	}
 };
 
@@ -131,7 +131,7 @@ struct Declaration : public AST {
 	}
 
 	Declaration()
-	    : AST {ast_type::Declaration} {
+	    : AST { ast_type::Declaration } {
 	}
 };
 
@@ -143,7 +143,7 @@ struct Identifier : public AST {
 	}
 
 	Identifier()
-	    : AST {ast_type::Identifier} {
+	    : AST { ast_type::Identifier } {
 	}
 };
 
@@ -153,7 +153,7 @@ struct BinaryExpression : public AST {
 	std::unique_ptr<AST> m_rhs;
 
 	BinaryExpression()
-	    : AST {ast_type::BinaryExpression} {
+	    : AST { ast_type::BinaryExpression } {
 	}
 };
 
@@ -162,7 +162,7 @@ struct CallExpression : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	CallExpression()
-	    : AST {ast_type::CallExpression} {
+	    : AST { ast_type::CallExpression } {
 	}
 };
 
@@ -171,7 +171,7 @@ struct IndexExpression : public AST {
 	std::unique_ptr<AST> m_index;
 
 	IndexExpression()
-	    : AST {ast_type::IndexExpression} {
+	    : AST { ast_type::IndexExpression } {
 	}
 };
 
@@ -179,7 +179,7 @@ struct Block : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	Block()
-	    : AST {ast_type::Block} {
+	    : AST { ast_type::Block } {
 	}
 };
 
@@ -187,7 +187,7 @@ struct ReturnStatement : public AST {
 	std::unique_ptr<AST> m_value;
 
 	ReturnStatement()
-	    : AST {ast_type::ReturnStatement} {
+	    : AST { ast_type::ReturnStatement } {
 	}
 };
 
@@ -197,7 +197,7 @@ struct IfElseStatement : public AST {
 	std::unique_ptr<AST> m_else_body; // can be nullptr
 
 	IfElseStatement()
-	    : AST {ast_type::IfElseStatement} {
+	    : AST { ast_type::IfElseStatement } {
 	}
 };
 
@@ -208,7 +208,7 @@ struct ForStatement : public AST {
 	std::unique_ptr<AST> m_body;
 
 	ForStatement()
-	    : AST {ast_type::ForStatement} {
+	    : AST { ast_type::ForStatement } {
 	}
 };
 
@@ -217,7 +217,7 @@ struct WhileStatement : public AST {
 	std::unique_ptr<AST> m_body;
 
 	WhileStatement()
-	    : AST {ast_type::WhileStatement} {
+	    : AST { ast_type::WhileStatement } {
 	}
 };
 
@@ -226,7 +226,7 @@ struct TypeTerm : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	TypeTerm()
-	    : AST {ast_type::TypeTerm} {
+	    : AST { ast_type::TypeTerm } {
 	}
 };
 

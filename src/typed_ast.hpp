@@ -22,7 +22,7 @@ protected:
 
 public:
 	TypedAST(ast_type type)
-	    : m_type {type} {
+	    : m_type { type } {
 	}
 
 	// is not set on declarations
@@ -46,7 +46,7 @@ struct NumberLiteral : public TypedAST {
 	}
 
 	NumberLiteral()
-	    : TypedAST {ast_type::NumberLiteral} {
+	    : TypedAST { ast_type::NumberLiteral } {
 	}
 };
 
@@ -58,7 +58,7 @@ struct IntegerLiteral : public TypedAST {
 	}
 
 	IntegerLiteral()
-	    : TypedAST {ast_type::IntegerLiteral} {
+	    : TypedAST { ast_type::IntegerLiteral } {
 	}
 };
 
@@ -70,7 +70,7 @@ struct StringLiteral : public TypedAST {
 	}
 
 	StringLiteral()
-	    : TypedAST {ast_type::StringLiteral} {
+	    : TypedAST { ast_type::StringLiteral } {
 	}
 };
 
@@ -82,14 +82,14 @@ struct BooleanLiteral : public TypedAST {
 	}
 
 	BooleanLiteral()
-	    : TypedAST {ast_type::BooleanLiteral} {
+	    : TypedAST { ast_type::BooleanLiteral } {
 	}
 };
 
 struct NullLiteral : public TypedAST {
 
 	NullLiteral()
-	    : TypedAST {ast_type::NullLiteral} {
+	    : TypedAST { ast_type::NullLiteral } {
 	}
 };
 
@@ -99,7 +99,7 @@ struct ObjectLiteral : public TypedAST {
 	// future feature
 	// the value type for objects must be followeb by a class identifier
 	ObjectLiteral()
-	    : TypedAST {ast_type::ObjectLiteral} {
+	    : TypedAST { ast_type::ObjectLiteral } {
 	}
 };
 
@@ -107,7 +107,7 @@ struct ArrayLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_elements;
 
 	ArrayLiteral()
-	    : TypedAST {ast_type::ArrayLiteral} {
+	    : TypedAST { ast_type::ArrayLiteral } {
 	}
 };
 
@@ -115,7 +115,7 @@ struct DictionaryLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
 	DictionaryLiteral()
-	    : TypedAST {ast_type::DictionaryLiteral} {
+	    : TypedAST { ast_type::DictionaryLiteral } {
 	}
 };
 
@@ -135,7 +135,7 @@ struct FunctionLiteral : public TypedAST {
 	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral()
-	    : TypedAST {ast_type::FunctionLiteral} {
+	    : TypedAST { ast_type::FunctionLiteral } {
 	}
 };
 
@@ -144,7 +144,7 @@ struct DeclarationList : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_declarations;
 
 	DeclarationList()
-	    : TypedAST {ast_type::DeclarationList} {
+	    : TypedAST { ast_type::DeclarationList } {
 	}
 };
 
@@ -152,32 +152,32 @@ struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
 	std::unordered_set<Declaration*> m_references;
-	bool m_is_polymorphic {false};
+	bool m_is_polymorphic { false };
 	PolyId m_decl_type;
 
 	// nullptr means global
-	FunctionLiteral* m_surrounding_function {nullptr};
+	FunctionLiteral* m_surrounding_function { nullptr };
 
 	std::string const& identifier_text() const {
 		return m_identifier_token->m_text;
 	}
 
 	Declaration()
-	    : TypedAST {ast_type::Declaration} {
+	    : TypedAST { ast_type::Declaration } {
 	}
 };
 
 // the ast_vtype must be computed
 struct Identifier : public TypedAST {
 	Token const* m_token;
-	Declaration* m_declaration {nullptr};
+	Declaration* m_declaration { nullptr };
 
 	std::string const& text() {
 		return m_token->m_text;
 	}
 
 	Identifier()
-	    : TypedAST {ast_type::Identifier} {
+	    : TypedAST { ast_type::Identifier } {
 	}
 };
 
@@ -187,7 +187,7 @@ struct CallExpression : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 
 	CallExpression()
-	    : TypedAST {ast_type::CallExpression} {
+	    : TypedAST { ast_type::CallExpression } {
 	}
 };
 
@@ -196,7 +196,7 @@ struct IndexExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_index;
 
 	IndexExpression()
-	    : TypedAST {ast_type::IndexExpression} {
+	    : TypedAST { ast_type::IndexExpression } {
 	}
 };
 
@@ -204,7 +204,7 @@ struct Block : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
 	Block()
-	    : TypedAST {ast_type::Block} {
+	    : TypedAST { ast_type::Block } {
 	}
 };
 
@@ -212,7 +212,7 @@ struct ReturnStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_value;
 
 	ReturnStatement()
-	    : TypedAST {ast_type::ReturnStatement} {
+	    : TypedAST { ast_type::ReturnStatement } {
 	}
 };
 
@@ -222,7 +222,7 @@ struct IfElseStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_else_body; // can be nullptr
 
 	IfElseStatement()
-	    : TypedAST {ast_type::IfElseStatement} {
+	    : TypedAST { ast_type::IfElseStatement } {
 	}
 };
 
@@ -233,7 +233,7 @@ struct ForStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 
 	ForStatement()
-	    : TypedAST {ast_type::ForStatement} {
+	    : TypedAST { ast_type::ForStatement } {
 	}
 };
 
@@ -242,7 +242,7 @@ struct WhileStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 
 	WhileStatement()
-	    : TypedAST {ast_type::WhileStatement} {
+	    : TypedAST { ast_type::WhileStatement } {
 	}
 };
 

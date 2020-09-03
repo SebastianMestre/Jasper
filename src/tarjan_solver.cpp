@@ -7,7 +7,7 @@
 
 TarjanSolver::TarjanSolver(int vertex_count)
     : m_graph(vertex_count)
-    , m_vertex_count {vertex_count}
+    , m_vertex_count { vertex_count }
     , m_discovery_time(vertex_count, 0)
     , m_lowest_visible(vertex_count, std::numeric_limits<int>::max())
     , m_component_of(vertex_count, -1) {
@@ -23,7 +23,7 @@ void TarjanSolver::add_edge(int u, int v) {
 void TarjanSolver::solve() {
 	assert(!m_solved);
 
-	for (int u {0}; u < m_vertex_count; ++u) {
+	for (int u { 0 }; u < m_vertex_count; ++u) {
 		if (!m_discovery_time[u]) {
 			visit(u);
 		}

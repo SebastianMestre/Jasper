@@ -42,7 +42,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	TypeChecker::typecheck(top_level.get(), ct_env);
 
 	GC gc;
-	Environment env = {&gc};
+	Environment env = { &gc };
 	declare_native_functions(env);
 	eval(top_level.get(), env);
 

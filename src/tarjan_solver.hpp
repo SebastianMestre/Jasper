@@ -18,7 +18,7 @@ private:
 	int m_vertex_count;
 
 	// intermediate state
-	int m_current_time {0};
+	int m_current_time { 0 };
 	// 0 means 'not discovered yet'
 	std::vector<int> m_discovery_time;
 	std::vector<int> m_lowest_visible;
@@ -30,5 +30,5 @@ private:
 	std::vector<std::vector<int>> m_scc_vertices;
 	std::vector<int> m_vertex_stack;
 
-	bool m_solved {false};
+	bool m_solved { false };
 };

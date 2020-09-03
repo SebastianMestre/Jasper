@@ -31,15 +31,15 @@ ParseError make_expected_error(string_view expected, Token const* found_token) {
 	   << token_type_string[int(found_token->m_type)] << ' '
 	   << found_token->m_text << " instead";
 
-	return ParseError {ss.str()};
+	return ParseError { ss.str() };
 }
 
 Writer<Token const*> Parser::require(token_type expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 
 	if (current_token->m_type != expected_type) {
-		return {make_expected_error(
-		    token_type_string[int(expected_type)], current_token)};
+		return { make_expected_error(
+			token_type_string[int(expected_type)], current_token) };
 	}
 
 	m_lexer->advance();
@@ -61,7 +61,7 @@ bool Parser::consume(token_type maybe_token) {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse top level program"}};
+	    = { { "Parse Error: Failed to parse top level program" } };
 
 	auto declarations = parse_declaration_list(token_type::END);
 
@@ -79,7 +79,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 Writer<std::vector<std::unique_ptr<AST::AST>>>
 Parser::parse_declaration_list(token_type terminator) {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = {{"Parse Error: Failed to parse declaration list"}};
+	    = { { "Parse Error: Failed to parse declaration list" } };
 
 	std::vector<std::unique_ptr<AST::AST>> declarations;
 
@@ -113,7 +113,7 @@ Parser::parse_declaration_list(token_type terminator) {
 Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
     token_type delimiter, token_type terminator, bool allow_trailing_delimiter) {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = {{"Parse Error: Failed to parse expression list"}};
+	    = { { "Parse Error: Failed to parse expression list" } };
 
 	std::vector<std::unique_ptr<AST::AST>> expressions;
 
@@ -125,7 +125,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 
 			if (p0->m_type == token_type::END) {
 				result.m_error.m_sub_errors.push_back(
-				    {{"Found EOF while parsing an expression list"}});
+				    { { "Found EOF while parsing an expression list" } });
 				return result;
 			}
 
@@ -135,8 +135,8 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 					break;
 				} else {
 					result.m_error.m_sub_errors.push_back(
-					    {{"Found a terminator after a delimiter in an "
-					      "expression list "}});
+					    { { "Found a terminator after a delimiter in an "
+					        "expression list " } });
 					return result;
 				}
 			}
@@ -171,7 +171,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse declaration"}};
+	    = { { "Parse Error: Failed to parse declaration" } };
 
 	Writer<Token const*> name = require(token_type::IDENTIFIER);
 
@@ -252,26 +252,26 @@ binding_power binding_power_of(token_type t) {
 	switch (t) {
 
 	case token_type::ASSIGN:
-		return {10, 11};
+		return { 10, 11 };
 	case token_type::PIZZA:
-		return {20, 21};
+		return { 20, 21 };
 	case token_type::LT:
 	case token_type::GT:
 	case token_type::LTE:
 	case token_type::GTE:
 	case token_type::EQUAL:
 	case token_type::NOT_EQUAL: // fallthrough
-		return {30, 31};
+		return { 30, 31 };
 	case token_type::ADD:
 	case token_type::SUB: // fallthrough
-		return {40, 41};
+		return { 40, 41 };
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
-		return {50, 51};
+		return { 50, 51 };
 	case token_type::PAREN_OPEN: // a bit of a hack
 	case token_type::BRACKET_OPEN: // a bit of a hack
 	case token_type::DOT:
-		return {70, 71};
+		return { 70, 71 };
 	default:
 		assert(false);
 	}
@@ -279,7 +279,7 @@ binding_power binding_power_of(token_type t) {
 
 Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = {{"Parse Error: Failed to argument list"}};
+	    = { { "Parse Error: Failed to argument list" } };
 
 	if (handle_error(result, require(token_type::PAREN_OPEN))) {
 		return result;
@@ -301,7 +301,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse expression"}};
+	    = { { "Parse Error: Failed to parse expression" } };
 
 	Writer<std::unique_ptr<AST::AST>> lhs;
 
@@ -389,7 +389,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse terminal expression"}};
+	    = { { "Parse Error: Failed to parse terminal expression" } };
 
 	auto token = peek();
 
@@ -480,21 +480,21 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 		return array;
 	}
 
-	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(token_type::KEYWORD_FN)], token)});
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::KEYWORD_FN)], token) });
 
-	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(token_type::IDENTIFIER)], token)});
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::IDENTIFIER)], token) });
 
-	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_type_string[int(token_type::NUMBER)], token)});
+	result.m_error.m_sub_errors.push_back({ make_expected_error(
+	    token_type_string[int(token_type::NUMBER)], token) });
 
 	return result;
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse identifier"}};
+	    = { { "Parse Error: Failed to parse identifier" } };
 
 	auto token = require(token_type::IDENTIFIER);
 	if (handle_error(result, token))
@@ -507,7 +507,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Failed to parse array literal"}};
+	    = { { "Failed to parse array literal" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_ARRAY))) {
 		return result;
@@ -532,7 +532,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Failed to parse object literal"}};
+	    = { { "Failed to parse object literal" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_OBJECT))) {
 		return result;
@@ -560,7 +560,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Failed to parse dictionary literal"}};
+	    = { { "Failed to parse dictionary literal" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_DICT))) {
 		return result;
@@ -594,7 +594,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse function"}};
+	    = { { "Parse Error: Failed to parse function" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_FN)))
 		return result;
@@ -691,7 +691,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse block statement"}};
+	    = { { "Parse Error: Failed to parse block statement" } };
 
 	if (handle_error(result, require(token_type::BRACE_OPEN))) {
 		return result;
@@ -705,7 +705,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 
 		if (p0->m_type == token_type::END) {
 			result.m_error.m_sub_errors.push_back(
-			    {{"Found EOF while parsing block statement"}});
+			    { { "Found EOF while parsing block statement" } });
 			return result;
 		}
 
@@ -731,7 +731,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse return statement"}};
+	    = { { "Parse Error: Failed to parse return statement" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_RETURN))) {
 		return result;
@@ -756,7 +756,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse if-else statement"}};
+	    = { { "Parse Error: Failed to parse if-else statement" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_IF))) {
 		return result;
@@ -799,7 +799,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse for statement"}};
+	    = { { "Parse Error: Failed to parse for statement" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_FOR))) {
 		return result;
@@ -849,7 +849,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse while statement"}};
+	    = { { "Parse Error: Failed to parse while statement" } };
 
 	if (handle_error(result, require(token_type::KEYWORD_WHILE)))
 		return result;
@@ -883,7 +883,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse statement"}};
+	    = { { "Parse Error: Failed to parse statement" } };
 
 	// TODO: recognize literals
 	auto* p0 = peek(0);
@@ -959,7 +959,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = {{"Parse Error: Failed to parse type"}};
+	    = { { "Parse Error: Failed to parse type" } };
 
 	auto callee = parse_identifier();
 	if (handle_error(result, callee))

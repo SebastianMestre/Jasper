@@ -38,7 +38,7 @@ struct Binding {
 };
 
 struct Scope {
-	bool m_nested {false};
+	bool m_nested { false };
 	std::unordered_map<std::string, Binding> m_vars;
 	std::unordered_set<VarId> m_type_vars;
 };
@@ -47,7 +47,7 @@ struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
-	TypedAST::Declaration* m_current_decl {nullptr};
+	TypedAST::Declaration* m_current_decl { nullptr };
 
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 	TypeChecker::TypeChecker m_typechecker;

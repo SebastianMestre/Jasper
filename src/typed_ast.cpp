@@ -77,7 +77,7 @@ TypedAST* convertAST(AST::FunctionLiteral* ast) {
 		assert(arg->type() == ast_type::Declaration);
 		auto* decl = static_cast<AST::Declaration*>(arg.get());
 
-		typed_function->m_args.push_back({decl->m_identifier_token});
+		typed_function->m_args.push_back({ decl->m_identifier_token });
 	}
 
 	typed_function->m_body = get_unique(ast->m_body);

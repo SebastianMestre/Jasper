@@ -1,16 +1,13 @@
 #pragma once
 
 constexpr const char* exit_status_type_string[] = {
-    "Ok",
+	"Ok",
 
-    "ParseError",
-    "TopLevelTypeError",
+	"ParseError", "TopLevelTypeError",
 
-    "NullError",
-    "TypeError",
-    "ValueError",
+	"NullError",  "TypeError",         "ValueError",
 
-    "Empty",
+	"Empty",
 };
 
 enum class exit_status_type {

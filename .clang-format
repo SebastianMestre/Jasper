@@ -15,7 +15,7 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 
-Cpp11BracedListStyle: true
+Cpp11BracedListStyle: false
 SpaceBeforeCpp11BracedList: true
 
 AlwaysBreakTemplateDeclarations: true
