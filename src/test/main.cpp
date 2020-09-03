@@ -156,7 +156,7 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 
 	/*
-	tests.add_test(
+	tests.add_test( // HEADS UP : this test won't work because it's ill typed
 		std::make_unique<TestCase>(R"(
 			cons := fn (l,r) {
 				return array { l; r; };
@@ -181,32 +181,26 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
+	/* // HEADS UP : this test won't work because it's ill typed
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			Leaf := fn() => array { "Leaf" };
 			Node := fn(x,l,r) => array { "Node"; x; l; r };
 
 			insert := fn(tree, x) {
-				ins := fn(tree, x, r) {
-					if(tree[0] == "Leaf")
-						return Node(x, Leaf(), Leaf());
-					if(tree[1] == x)
-						return tree;
-					if(tree[1] < x)
-						return Node(tree[1], tree[2], r(tree[3], x, r));
-					if(x < tree[1])
-						return Node(tree[1], r(tree[2], x, r), tree[3]);
-				};
-				return ins(tree, x, ins);
+				if(tree[0] == "Leaf")
+					return Node(x, Leaf(), Leaf());
+				if(tree[1] == x)
+					return tree;
+				if(tree[1] < x)
+					return Node(tree[1], tree[2], insert(tree[3], x));
+				if(x < tree[1])
+					return Node(tree[1], insert(tree[2], x), tree[3]);
 			};
 
 			print_inorder := fn (tree) {
-				pr := fn(t, p) {
-					if(t[0] == "Leaf") return "";
-					return p(t[2],p) + t[1] + p(t[3], p);
-				};
-				return pr(tree, pr);
+				if(t[0] == "Leaf") return "";
+				return print_inorder(t[2],p) + t[1] + print_inorder(t[3], p);
 			};
 
 			__invoke := fn () {
@@ -249,7 +243,6 @@ void interpreter_tests(Test::Tester& tests) {
 		})
 	);
 	
-	/*
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			fib := fn(n){
@@ -262,7 +255,6 @@ void interpreter_tests(Test::Tester& tests) {
 			return Assert::equals(eval_expression("__invoke()", env), 8);
 		})
 	);
-	*/
 
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
@@ -280,7 +272,9 @@ void interpreter_tests(Test::Tester& tests) {
 		})
 	);
 	
-	/*
+	/* // HEADS UP : this test won't work because we don't
+	 * know how to type array literals and because we need
+	 * better type hints on the built-in functions
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
@@ -301,7 +295,9 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
+	/* // HEADS UP : this test won't work because we don't
+	 * know how to type array literals and because we need
+	 * better type hints on the built-in functions
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
@@ -322,7 +318,9 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
+	/* // HEADS UP : this test won't work because we don't
+	 * know how to type array literals and because we need
+	 * better type hints on the built-in functions
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
@@ -336,7 +334,9 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
+	/* // HEADS UP : this test won't work because we don't
+	 * know how to type array literals and because we need
+	 * better type hints on the built-in functions
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			__invoke := fn () {
@@ -350,7 +350,10 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
+	/* // HEADS UP : this test won't work because we don't
+	 * know how to type array literals, because we need better
+	 * type hints on the built-in functions, and because we
+	 * don't know how to take source type hints into account
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			// TODO: fix inability to use keyword 'array' and others in types
