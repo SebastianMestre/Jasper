@@ -399,6 +399,38 @@ void interpreter_tests(Test::Tester& tests) {
 			return Assert::equals(eval_expression("__invoke()", env), 120);
 		})
 	);
+
+	tests.add_test(
+		std::make_unique<TestCase>(R"(
+			__invoke := fn(){
+				return even(11);
+			};
+
+			even := fn(x) {
+				if(x == 0) return true;
+				return odd(x - 1);
+			};
+
+			odd := fn(x) {
+				if(x == 0) return false;
+				return even(x - 1);
+			};
+		)",
+		Testers{
+			+[](Interpreter::Environment& env) -> exit_status_type {
+				return Assert::is_false(eval_expression("__invoke()", env));
+			},
+			+[](Interpreter::Environment& env) -> exit_status_type {
+				return Assert::is_true(eval_expression("odd(15)", env));
+			},
+			+[](Interpreter::Environment& env) -> exit_status_type {
+				return Assert::is_true(eval_expression("even(80)", env));
+			},
+			+[](Interpreter::Environment& env) -> exit_status_type {
+				return Assert::is_false(eval_expression("odd(18)", env));
+			}
+		})
+	);
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
