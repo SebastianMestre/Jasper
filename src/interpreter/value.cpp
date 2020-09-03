@@ -121,13 +121,13 @@ Function::Function(FunctionType def, ObjectType captures)
 }
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : Value { value_type::NativeFunction }
-    , m_fptr { fptr } {
+    : Value {value_type::NativeFunction}
+    , m_fptr {fptr} {
 }
 
 Reference::Reference(Value* value)
-    : Value { value_type::Reference }
-    , m_value { value } {
+    : Value {value_type::Reference}
+    , m_value {value} {
 }
 
 void gc_visit(Null* v) {

@@ -27,12 +27,12 @@ Reference* Scope::access(const Identifier& i) {
 }
 
 Scope* Environment::new_nested_scope() {
-	m_scope = new Scope { m_scope, m_scope };
+	m_scope = new Scope {m_scope, m_scope};
 	return m_scope;
 }
 
 Scope* Environment::new_scope() {
-	m_scope = new Scope { &m_global_scope, m_scope };
+	m_scope = new Scope {&m_global_scope, m_scope};
 	return m_scope;
 }
 

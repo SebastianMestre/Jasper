@@ -225,17 +225,18 @@ void interpreter_tests(Test::Tester& tests) {
 			litf := fn () { return false; };
 			nullv := fn () { return null; };
 		)",
-	    Testers { +[](Interpreter::Environment& env) -> exit_status_type {
-		             return Assert::is_true(eval_expression("litt()", env));
-	             },
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("litt()", env));
+	        },
 
-	              +[](Interpreter::Environment& env) -> exit_status_type {
-		              return Assert::is_false(eval_expression("litf()", env));
-	              },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("litf()", env));
+	        },
 
-	              +[](Interpreter::Environment& env) -> exit_status_type {
-		              return Assert::is_null(eval_expression("nullv()", env));
-	              } }));
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_null(eval_expression("nullv()", env));
+	        }}));
 
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
@@ -409,18 +410,19 @@ void interpreter_tests(Test::Tester& tests) {
 				return even(x - 1);
 			};
 		)",
-	    Testers { +[](Interpreter::Environment& env) -> exit_status_type {
-		             return Assert::is_false(eval_expression("__invoke()", env));
-	             },
-	              +[](Interpreter::Environment& env) -> exit_status_type {
-		              return Assert::is_true(eval_expression("odd(15)", env));
-	              },
-	              +[](Interpreter::Environment& env) -> exit_status_type {
-		              return Assert::is_true(eval_expression("even(80)", env));
-	              },
-	              +[](Interpreter::Environment& env) -> exit_status_type {
-		              return Assert::is_false(eval_expression("odd(18)", env));
-	              } }));
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("__invoke()", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("odd(15)", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_true(eval_expression("even(80)", env));
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::is_false(eval_expression("odd(18)", env));
+	        }}));
 
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
@@ -454,11 +456,10 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        if (cov[0] != cov[1] || cov[0] != cov[2])
 			        return {
-				        test_status::Fail,
-				        "All vertices in a 3-cycle should be in the same SCC"
-			        };
+			            test_status::Fail,
+			            "All vertices in a 3-cycle should be in the same SCC"};
 
-		        return { test_status::Ok };
+		        return {test_status::Ok};
 	        },
 	        +[]() -> TestReport {
 		        TarjanSolver solver(2);
@@ -467,16 +468,15 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        auto const& cov = solver.component_of_vertices();
 		        if (cov[0] == cov[1])
-			        return {
-				        test_status::Fail, "Vertices that are only weakly connected should not be in the same SCC"
-			        };
+			        return {test_status::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
 
 		        if (cov[0] < cov[1])
-			        return { test_status::Fail,
-				             "SCCs should be in reverse topological sort." };
+			        return {
+			            test_status::Fail,
+			            "SCCs should be in reverse topological sort."};
 
-		        return { test_status::Ok };
-	        } }));
+		        return {test_status::Ok};
+	        }}));
 }
 
 int main() {

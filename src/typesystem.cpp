@@ -33,8 +33,8 @@ MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();
 	int mono = mono_data.size();
 
-	var_data.push_back({ mono });
-	mono_data.push_back({ mono_type::Var, var });
+	var_data.push_back({mono});
+	mono_data.push_back({mono_type::Var, var});
 
 	return mono;
 }
@@ -50,8 +50,8 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({ type_function, std::move(args), tag });
-	mono_data.push_back({ mono_type::Term, term });
+	term_data.push_back({type_function, std::move(args), tag});
+	mono_data.push_back({mono_type::Term, term});
 
 	return mono;
 }
@@ -189,7 +189,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TypeFunctionId type_function = term_data[ta].type_function;
 		int argument_count = a_data.arguments.size();
 
-		for (int i { 0 }; i != argument_count; ++i) {
+		for (int i {0}; i != argument_count; ++i) {
 			unify(a_data.arguments[i], b_data.arguments[i]);
 		}
 	}
@@ -227,7 +227,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 	assert(data.vars.size() == vals.size());
 
 	std::unordered_map<VarId, MonoId> old_to_new;
-	for (int i { 0 }; i != data.vars.size(); ++i) {
+	for (int i {0}; i != data.vars.size(); ++i) {
 		old_to_new[data.vars[i]] = vals[i];
 	}
 
@@ -236,7 +236,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
-	for (int i { 0 }; i != poly_data[poly].vars.size(); ++i) {
+	for (int i {0}; i != poly_data[poly].vars.size(); ++i) {
 		vals.push_back(new_var());
 	}
 	return inst_with(poly, vals);

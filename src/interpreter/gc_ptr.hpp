@@ -9,13 +9,13 @@ struct gc_ptr {
 
   public:
 	gc_ptr(gc_ptr const& o)
-	    : m_ptr { o.m_ptr } {
+	    : m_ptr {o.m_ptr} {
 		if (m_ptr)
 			m_ptr->m_cpp_refcount += 1;
 	}
 
 	gc_ptr(gc_ptr&& o)
-	    : m_ptr { o.m_ptr } {
+	    : m_ptr {o.m_ptr} {
 		o.m_ptr = nullptr;
 	}
 
@@ -30,12 +30,12 @@ struct gc_ptr {
 	    typename T,
 	    typename = typename std::enable_if<std::is_convertible<T*, ValueType*>::value>::type>
 	gc_ptr(gc_ptr<T>&& o)
-	    : m_ptr { o.m_ptr } {
+	    : m_ptr {o.m_ptr} {
 		o.m_ptr = nullptr;
 	}
 
 	gc_ptr(ValueType* ptr)
-	    : m_ptr { ptr } {
+	    : m_ptr {ptr} {
 		if (m_ptr)
 			m_ptr->m_cpp_refcount += 1;
 	}

@@ -45,7 +45,7 @@ struct VarData {
 struct TermData {
 	TypeFunctionId type_function;
 	std::vector<MonoId> arguments;
-	char const* debug_data { nullptr };
+	char const* debug_data {nullptr};
 };
 
 // A polytype is a type where some amount of type variables can take

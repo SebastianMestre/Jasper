@@ -14,14 +14,9 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 
-Cpp11BracedListStyle: false
-SpaceBeforeCpp11BracedList: true
-
-AlwaysBreakTemplateDeclarations: true
-
-BinPackParameters: false
-BinPackArguments: false
 BreakConstructorInitializers: BeforeComma
+BreakBeforeTernaryOperators: true
+AlwaysBreakTemplateDeclarations: true
 
 DerivePointerAlignment: false
 PointerAlignment: Left
@@ -30,7 +25,10 @@ SpaceBeforeParens: ControlStatements
 SpacesInSquareBrackets: false
 SpacesInParentheses: false
 
-BreakBeforeTernaryOperators: true
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: true
 AlignAfterOpenBracket: AlwaysBreak
+BinPackParameters: false
+BinPackArguments: false
 
 FixNamespaceComments: true
