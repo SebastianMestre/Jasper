@@ -32,12 +32,10 @@ TestReport InterpreterTestSet::execute() {
 	return {test_status::Ok};
 }
 
-NormalTestSet::NormalTestSet() {
-}
+NormalTestSet::NormalTestSet() {}
 
 NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
-    : m_testers {std::move(testers)} {
-}
+    : m_testers {std::move(testers)} {}
 
 TestReport NormalTestSet::execute() {
 	if (m_testers.empty())

@@ -10,8 +10,7 @@ TarjanSolver::TarjanSolver(int vertex_count)
     , m_vertex_count {vertex_count}
     , m_discovery_time(vertex_count, 0)
     , m_lowest_visible(vertex_count, std::numeric_limits<int>::max())
-    , m_component_of(vertex_count, -1) {
-}
+    , m_component_of(vertex_count, -1) {}
 
 void TarjanSolver::add_edge(int u, int v) {
 	assert(!m_solved);

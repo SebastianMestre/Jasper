@@ -10,7 +10,7 @@ PenaltyExcessCharacter: 5
 ReflowComments: false
 PenaltyBreakComment: 50 
 
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 

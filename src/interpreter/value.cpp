@@ -10,48 +10,37 @@
 namespace Interpreter {
 
 Null::Null()
-    : Value(value_type::Null) {
-}
+    : Value(value_type::Null) {}
 
 Integer::Integer()
-    : Value(value_type::Integer) {
-}
+    : Value(value_type::Integer) {}
 Integer::Integer(int v)
     : Value(value_type::Integer)
-    , m_value(v) {
-}
+    , m_value(v) {}
 
 Float::Float()
-    : Value(value_type::Float) {
-}
+    : Value(value_type::Float) {}
 Float::Float(float v)
     : Value(value_type::Float)
-    , m_value(v) {
-}
+    , m_value(v) {}
 
 Boolean::Boolean()
-    : Value(value_type::Boolean) {
-}
+    : Value(value_type::Boolean) {}
 Boolean::Boolean(bool b)
     : Value(value_type::Boolean)
-    , m_value(b) {
-}
+    , m_value(b) {}
 
 String::String()
-    : Value(value_type::String) {
-}
+    : Value(value_type::String) {}
 String::String(std::string s)
     : Value(value_type::String)
-    , m_value(std::move(s)) {
-}
+    , m_value(std::move(s)) {}
 
 Array::Array()
-    : Value(value_type::Array) {
-}
+    : Value(value_type::Array) {}
 Array::Array(ArrayType l)
     : Value(value_type::Array)
-    , m_value(std::move(l)) {
-}
+    , m_value(std::move(l)) {}
 
 void Array::append(Value* v) {
 	m_value.push_back(v);
@@ -67,12 +56,10 @@ Value* Array::at(int position) {
 }
 
 Object::Object()
-    : Value(value_type::Object) {
-}
+    : Value(value_type::Object) {}
 Object::Object(ObjectType o)
     : Value(value_type::Object)
-    , m_value(std::move(o)) {
-}
+    , m_value(std::move(o)) {}
 
 void Object::addMember(Identifier const& id, Value* v) {
 	m_value[id] = v;
@@ -89,12 +76,10 @@ Value* Object::getMember(Identifier const& id) {
 }
 
 Dictionary::Dictionary()
-    : Value(value_type::Dictionary) {
-}
+    : Value(value_type::Dictionary) {}
 Dictionary::Dictionary(ObjectType o)
     : Value(value_type::Dictionary)
-    , m_value(std::move(o)) {
-}
+    , m_value(std::move(o)) {}
 
 void Dictionary::addMember(Identifier const& id, Value* v) {
 	m_value[id] = v;
@@ -117,18 +102,15 @@ void Dictionary::removeMember(Identifier const& id) {
 Function::Function(FunctionType def, ObjectType captures)
     : Value(value_type::Function)
     , m_def(def)
-    , m_captures(std::move(captures)) {
-}
+    , m_captures(std::move(captures)) {}
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : Value {value_type::NativeFunction}
-    , m_fptr {fptr} {
-}
+    , m_fptr {fptr} {}
 
 Reference::Reference(Value* value)
     : Value {value_type::Reference}
-    , m_value {value} {
-}
+    , m_value {value} {}
 
 void gc_visit(Null* v) {
 	v->m_visited = true;

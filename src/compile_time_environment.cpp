@@ -8,14 +8,12 @@ namespace Frontend {
 
 Binding::Binding(TypedAST::Declaration* decl)
     : m_type {BindingType::Declaration}
-    , m_decl {decl} {
-}
+    , m_decl {decl} {}
 
 Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
     : m_type {BindingType::Argument}
     , m_func {func}
-    , m_arg_index {arg_index} {
-}
+    , m_arg_index {arg_index} {}
 
 TypedAST::Declaration* Binding::get_decl() {
 	assert(m_type == BindingType::Declaration);

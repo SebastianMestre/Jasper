@@ -33,8 +33,7 @@ struct Value {
 	int m_cpp_refcount = 0;
 
 	Value(value_type type)
-	    : m_type(type) {
-	}
+	    : m_type(type) {}
 	value_type type() const {
 		return m_type;
 	}

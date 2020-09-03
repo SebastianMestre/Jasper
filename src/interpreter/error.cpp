@@ -5,12 +5,10 @@
 namespace Interpreter {
 
 Error::Error()
-    : Value(value_type::Error) {
-}
+    : Value(value_type::Error) {}
 Error::Error(std::string message)
     : Value(value_type::Error)
-    , m_error(message) {
-}
+    , m_error(message) {}
 
 Error make_reference_error(const Identifier& i) {
 	std::stringstream ss;

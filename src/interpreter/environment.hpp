@@ -27,8 +27,7 @@ struct Environment {
 
 	Environment(GC* gc)
 	    : m_gc {gc}
-	    , m_scope {&m_global_scope} {
-	}
+	    , m_scope {&m_global_scope} {}
 
 	Scope* new_scope();
 	Scope* new_nested_scope();
