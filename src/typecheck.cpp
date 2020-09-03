@@ -197,8 +197,70 @@ void typecheck(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment&
 	typecheck(ast->m_index.get(), env);
 }
 
+#define USE_REC_RULE 1
+
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
-	// TODO: SCC decomposition mumbo jumbo
+
+#if USE_REC_RULE
+	// two way mapping
+	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
+	std::vector<TypedAST::Declaration*> index_to_decl;
+
+	// assign a unique int to every top level declaration
+	int i = 0;
+	for (auto& decl : ast->m_declarations) {
+		auto d = static_cast<TypedAST::Declaration*>(decl.get());
+		index_to_decl.push_back(d);
+		decl_to_index.insert({ d, i });
+	}
+
+	// build up the explicit declaration graph
+	TarjanSolver solver(index_to_decl.size());
+	for (auto kv : decl_to_index) {
+		auto decl = kv.first;
+		auto u = kv.second;
+		for (auto other : decl->m_references) {
+			auto it = decl_to_index.find(decl);
+			if (it != decl_to_index.end()) {
+				int v = it->second;
+				solver.add_edge(u, v);
+			}
+		}
+	}
+
+	// compute strongly connected components
+	solver.solve();
+
+	auto const& comps = solver.vertices_of_components();
+	for (auto const& verts : comps) {
+
+		// set up some dummy types on every decl
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+			decl->m_value_type = env.new_hidden_type_var();
+		}
+
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+
+			if (decl->m_value) {
+				typecheck(decl->m_value.get(), env);
+				env.m_typechecker.m_core.unify(
+				    decl->m_value_type, decl->m_value->m_value_type);
+			} else {
+				// this should be an error...
+			}
+		}
+
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+			decl->m_is_polymorphic = true;
+			decl->m_decl_type
+			    = env.m_typechecker.m_core.generalize(decl->m_value_type, env);
+		}
+
+	}
+#endif
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
