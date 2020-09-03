@@ -212,6 +212,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		index_to_decl.push_back(d);
 		decl_to_index.insert({ d, i });
+		++i;
 	}
 
 	// build up the explicit declaration graph
@@ -220,7 +221,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		auto decl = kv.first;
 		auto u = kv.second;
 		for (auto other : decl->m_references) {
-			auto it = decl_to_index.find(decl);
+			auto it = decl_to_index.find(other);
 			if (it != decl_to_index.end()) {
 				int v = it->second;
 				solver.add_edge(u, v);
@@ -240,6 +241,8 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			decl->m_value_type = env.new_hidden_type_var();
 		}
 
+		// typecheck all the values and make the type of the
+		// decl equal to the type of their value
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 
@@ -252,6 +255,8 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			}
 		}
 
+		// generalize all the decl types, so that they are
+		// identified as polymorphic in the next rec-block
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 			decl->m_is_polymorphic = true;
@@ -260,7 +265,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		}
 
 	}
-#endif
+#else
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
@@ -280,7 +285,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
-#if DEBUG
+#    if DEBUG
 		{
 			auto poly = d->m_decl_type;
 			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
@@ -290,8 +295,9 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			std::cerr << "@@ It is equal to:\n";
 			env.m_typechecker.m_core.print_type(mono);
 		}
-#endif
+#    endif
 	}
+#endif
 }
 
 void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
