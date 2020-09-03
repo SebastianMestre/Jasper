@@ -219,11 +219,18 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 	TarjanSolver solver(index_to_decl.size());
 	for (auto kv : decl_to_index) {
 		auto decl = kv.first;
+#    if DEBUG
+		std::cerr << "@@ " << decl->identifier_text() << " -- (" << kv.second << ")\n";
+#    endif
 		auto u = kv.second;
 		for (auto other : decl->m_references) {
 			auto it = decl_to_index.find(other);
 			if (it != decl_to_index.end()) {
 				int v = it->second;
+#    if DEBUG
+				std::cerr << "@@   " << other->identifier_text()
+				          << " -- add_edge(" << u << ", " << v << ")\n";
+#    endif
 				solver.add_edge(u, v);
 			}
 		}
@@ -234,6 +241,16 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 	auto const& comps = solver.vertices_of_components();
 	for (auto const& verts : comps) {
+
+#    if DEBUG
+		std::cerr << "@@@@ TYPECHECKING COMPONENT @@@@\n";
+		std::cerr << "@@@@ MEMBER LIST START @@@@\n";
+		for(int u : verts){
+			auto decl = index_to_decl[u];
+			std::cerr << "  MEMBER: " << decl->identifier_text() << '\n';
+		}
+		std::cerr << "@@@@ MEMBER LIST END @@@@\n";
+#    endif
 
 		// set up some dummy types on every decl
 		for (int u : verts) {
