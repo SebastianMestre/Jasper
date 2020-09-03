@@ -1,9 +1,11 @@
 #include "typecheck.hpp"
 
 #include "compile_time_environment.hpp"
-#include "typesystem_types.hpp"
+#include "tarjan_solver.hpp"
 #include "typed_ast.hpp"
+#include "typesystem_types.hpp"
 
+#include <unordered_set>
 #include <cassert>
 
 #if DEBUG
@@ -41,17 +43,21 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
+	// we use a hidden typevar to get it to generalize if needed
+	ast->m_value_type = env.new_hidden_type_var();
 	env.declare(ast->identifier_text(), ast);
 
-	// this is where we implement let-polymorphism.
+	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
-	if (ast->m_value)
+	if (ast->m_value) {
 		typecheck(ast->m_value.get(), env);
+		ast->m_value_type = ast->m_value->m_value_type;
+	} else {
+		// NOTE: this should be an error...
+	}
 
-	MonoId mono = ast->m_value ? ast->m_value->m_value_type
-	                           : env.new_type_var();
-
-	ast->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
+	ast->m_is_polymorphic = true;
+	ast->m_decl_type = env.m_typechecker.m_core.generalize(ast->m_value_type, env);
 
 #if DEBUG
 	{
@@ -71,9 +77,13 @@ void typecheck(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env)
 	// TODO: refactor
 	MonoId mono = -1;
 	if (binding->m_type == Frontend::BindingType::Declaration) {
-		TypedAST::Declaration* declaration = binding->get_decl();
-		assert(declaration);
-		mono = env.m_typechecker.m_core.inst_fresh(declaration->m_decl_type);
+		TypedAST::Declaration* decl = binding->get_decl();
+		assert(decl);
+		if (decl->m_is_polymorphic) {
+			mono = env.m_typechecker.m_core.inst_fresh(decl->m_decl_type);
+		} else {
+			mono = decl->m_value_type;
+		}
 	} else {
 		TypedAST::FunctionArgument& arg = binding->get_arg();
 		mono = arg.m_value_type;
@@ -197,6 +207,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
+		d->m_is_polymorphic = true;
 
 		// this is where we implement let-polymorphism. TODO: refactor (duplication).
 		if (d->m_value)
