@@ -106,6 +106,7 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId pol
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_decl_type = poly;
+	decl->m_is_polymorphic = true;
 	declare(name, decl);
 }
 
@@ -156,6 +157,11 @@ void CompileTimeEnvironment::enter_function(TypedAST::FunctionLiteral* func) {
 
 void CompileTimeEnvironment::exit_function() {
 	m_function_stack.pop_back();
+}
+
+MonoId CompileTimeEnvironment::new_hidden_type_var() {
+	MonoId result = m_typechecker.new_var();
+	return result;
 }
 
 MonoId CompileTimeEnvironment::new_type_var() {

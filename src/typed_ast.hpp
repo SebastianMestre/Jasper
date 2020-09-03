@@ -119,8 +119,9 @@ struct DeclarationList : public TypedAST {
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	std::unique_ptr<TypedAST> m_value; // can be nullptr
-	PolyId m_decl_type;
 	std::unordered_set<Declaration*> m_references;
+	bool m_is_polymorphic { false };
+	PolyId m_decl_type;
 
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function { nullptr };

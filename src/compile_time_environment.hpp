@@ -79,6 +79,7 @@ struct CompileTimeEnvironment {
 	void end_scope();
 
 	MonoId new_type_var();
+	MonoId new_hidden_type_var();
 	bool has_type_var(VarId);
 };
 
