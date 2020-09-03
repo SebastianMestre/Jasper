@@ -144,6 +144,7 @@ struct ReturnStatement : public AST {
 struct IfElseStatement : public AST {
 	std::unique_ptr<AST> m_condition;
 	std::unique_ptr<AST> m_body;
+	std::unique_ptr<AST> m_else_body; // can be nullptr
 
 	IfElseStatement() : AST{ ast_type::IfElseStatement } {}
 };

@@ -166,6 +166,9 @@ void print(IfElseStatement* ast, int d) {
 	print(ast->m_condition.get(), d + 1);
 	std::cout << tab << "Body:\n";
 	print(ast->m_body.get(), d + 1);
+	std::cout << tab << "Else:\n";
+	if (ast->m_else_body)
+		print(ast->m_else_body.get(), d + 1);
 	std::cout << stab << "]\n";
 }
 
