@@ -21,11 +21,14 @@ protected:
 	ast_type m_type;
 
 public:
-	TypedAST(ast_type type) : m_type { type } {}
+	TypedAST(ast_type type) : m_type { type } {
+	}
 
 	// is not set on declarations
 	MonoId m_value_type;
-	ast_type type() const { return m_type; }
+	ast_type type() const {
+		return m_type;
+	}
 	virtual ~TypedAST() = default;
 };
 
@@ -37,38 +40,51 @@ std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>&);
 struct NumberLiteral : public TypedAST {
 	Token const* m_token;
 
-	std::string const& text() { return m_token->m_text; }
+	std::string const& text() {
+		return m_token->m_text;
+	}
 
-	NumberLiteral() : TypedAST { ast_type::NumberLiteral } {}
+	NumberLiteral() : TypedAST { ast_type::NumberLiteral } {
+	}
 };
 
 struct IntegerLiteral : public TypedAST {
 	Token const* m_token;
 
-	std::string const& text() { return m_token->m_text; }
+	std::string const& text() {
+		return m_token->m_text;
+	}
 
-	IntegerLiteral() : TypedAST { ast_type::IntegerLiteral } {}
+	IntegerLiteral() : TypedAST { ast_type::IntegerLiteral } {
+	}
 };
 
 struct StringLiteral : public TypedAST {
 	Token const* m_token;
 
-	std::string const& text() { return m_token->m_text; }
+	std::string const& text() {
+		return m_token->m_text;
+	}
 
-	StringLiteral() : TypedAST { ast_type::StringLiteral } {}
+	StringLiteral() : TypedAST { ast_type::StringLiteral } {
+	}
 };
 
 struct BooleanLiteral : public TypedAST {
 	Token const* m_token;
 
-	std::string const& text() { return m_token->m_text; }
+	std::string const& text() {
+		return m_token->m_text;
+	}
 
-	BooleanLiteral() : TypedAST { ast_type::BooleanLiteral } {}
+	BooleanLiteral() : TypedAST { ast_type::BooleanLiteral } {
+	}
 };
 
 struct NullLiteral : public TypedAST {
 
-	NullLiteral() : TypedAST { ast_type::NullLiteral } {}
+	NullLiteral() : TypedAST { ast_type::NullLiteral } {
+	}
 };
 
 struct ObjectLiteral : public TypedAST {
@@ -76,19 +92,22 @@ struct ObjectLiteral : public TypedAST {
 
 	// future feature
 	// the value type for objects must be followeb by a class identifier
-	ObjectLiteral() : TypedAST { ast_type::ObjectLiteral } {}
+	ObjectLiteral() : TypedAST { ast_type::ObjectLiteral } {
+	}
 };
 
 struct ArrayLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_elements;
 
-	ArrayLiteral() : TypedAST { ast_type::ArrayLiteral } {}
+	ArrayLiteral() : TypedAST { ast_type::ArrayLiteral } {
+	}
 };
 
 struct DictionaryLiteral : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
-	DictionaryLiteral() : TypedAST { ast_type::DictionaryLiteral } {}
+	DictionaryLiteral() : TypedAST { ast_type::DictionaryLiteral } {
+	}
 };
 
 struct FunctionArgument {
@@ -106,14 +125,16 @@ struct FunctionLiteral : public TypedAST {
 	std::vector<FunctionArgument> m_args;
 	std::unordered_set<std::string> m_captures;
 
-	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {}
+	FunctionLiteral() : TypedAST { ast_type::FunctionLiteral } {
+	}
 };
 
 // doesnt have a ast_vtype
 struct DeclarationList : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_declarations;
 
-	DeclarationList() : TypedAST { ast_type::DeclarationList } {}
+	DeclarationList() : TypedAST { ast_type::DeclarationList } {
+	}
 };
 
 struct Declaration : public TypedAST {
@@ -130,7 +151,8 @@ struct Declaration : public TypedAST {
 		return m_identifier_token->m_text;
 	}
 
-	Declaration() : TypedAST { ast_type::Declaration } {}
+	Declaration() : TypedAST { ast_type::Declaration } {
+	}
 };
 
 // the ast_vtype must be computed
@@ -138,9 +160,12 @@ struct Identifier : public TypedAST {
 	Token const* m_token;
 	Declaration* m_declaration { nullptr };
 
-	std::string const& text() { return m_token->m_text; }
+	std::string const& text() {
+		return m_token->m_text;
+	}
 
-	Identifier() : TypedAST { ast_type::Identifier } {}
+	Identifier() : TypedAST { ast_type::Identifier } {
+	}
 };
 
 // the value depends on the return value of callee
@@ -148,26 +173,30 @@ struct CallExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_callee;
 	std::vector<std::unique_ptr<TypedAST>> m_args;
 
-	CallExpression() : TypedAST { ast_type::CallExpression } {}
+	CallExpression() : TypedAST { ast_type::CallExpression } {
+	}
 };
 
 struct IndexExpression : public TypedAST {
 	std::unique_ptr<TypedAST> m_callee;
 	std::unique_ptr<TypedAST> m_index;
 
-	IndexExpression() : TypedAST { ast_type::IndexExpression } {}
+	IndexExpression() : TypedAST { ast_type::IndexExpression } {
+	}
 };
 
 struct Block : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
-	Block() : TypedAST { ast_type::Block } {}
+	Block() : TypedAST { ast_type::Block } {
+	}
 };
 
 struct ReturnStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_value;
 
-	ReturnStatement() : TypedAST { ast_type::ReturnStatement } {}
+	ReturnStatement() : TypedAST { ast_type::ReturnStatement } {
+	}
 };
 
 struct IfElseStatement : public TypedAST {
@@ -175,7 +204,8 @@ struct IfElseStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_body;
 	std::unique_ptr<TypedAST> m_else_body; // can be nullptr
 
-	IfElseStatement() : TypedAST { ast_type::IfElseStatement } {}
+	IfElseStatement() : TypedAST { ast_type::IfElseStatement } {
+	}
 };
 
 struct ForStatement : public TypedAST {
@@ -184,14 +214,16 @@ struct ForStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_action;
 	std::unique_ptr<TypedAST> m_body;
 
-	ForStatement() : TypedAST { ast_type::ForStatement } {}
+	ForStatement() : TypedAST { ast_type::ForStatement } {
+	}
 };
 
 struct WhileStatement : public TypedAST {
 	std::unique_ptr<TypedAST> m_condition;
 	std::unique_ptr<TypedAST> m_body;
 
-	WhileStatement() : TypedAST { ast_type::WhileStatement } {}
+	WhileStatement() : TypedAST { ast_type::WhileStatement } {
+	}
 };
 
 } // namespace TypedAST

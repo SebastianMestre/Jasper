@@ -5,8 +5,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "typechecker.hpp"
 #include "chunked_array.hpp"
+#include "typechecker.hpp"
 
 namespace TypedAST {
 
@@ -18,10 +18,7 @@ struct FunctionArgument;
 
 namespace Frontend {
 
-
-enum class BindingType {
-	Declaration, Argument
-};
+enum class BindingType { Declaration, Argument };
 
 struct Binding {
 	BindingType m_type;

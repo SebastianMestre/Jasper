@@ -7,12 +7,12 @@
 namespace Frontend {
 
 Binding::Binding(TypedAST::Declaration* decl)
-    : m_type { BindingType::Declaration }, m_decl { decl } {}
+    : m_type { BindingType::Declaration }, m_decl { decl } {
+}
 
 Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
-    : m_type { BindingType::Argument }
-    , m_func { func }
-    , m_arg_index { arg_index } {}
+    : m_type { BindingType::Argument }, m_func { func }, m_arg_index { arg_index } {
+}
 
 TypedAST::Declaration* Binding::get_decl() {
 	assert(m_type == BindingType::Declaration);
@@ -82,9 +82,10 @@ Scope& CompileTimeEnvironment::current_scope() {
 	return m_scopes.empty() ? m_global_scope : m_scopes.back();
 }
 
-void CompileTimeEnvironment::declare(std::string const& name, TypedAST::Declaration* decl) {
+void CompileTimeEnvironment::declare(
+    std::string const& name, TypedAST::Declaration* decl) {
 	// current_scope().m_vars[name] = decl;
-	current_scope().m_vars.insert({name, decl});
+	current_scope().m_vars.insert({ name, decl });
 }
 
 void CompileTimeEnvironment::declare_arg(
@@ -92,17 +93,17 @@ void CompileTimeEnvironment::declare_arg(
 	current_scope().m_vars.insert({ name, { func, arg_index } });
 }
 
-void CompileTimeEnvironment::declare_builtin(std::string const& name){
+void CompileTimeEnvironment::declare_builtin(std::string const& name) {
 	// TODO: remove this
 	// totally general type. just for convenience during development.
 	auto mono_id = m_typechecker.new_var();
 	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
-	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
+	auto poly_id = m_typechecker.m_core.new_poly(mono_id, { var_id });
 
 	declare_builtin(name, poly_id);
 }
 
-void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly){
+void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly) {
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_decl_type = poly;
@@ -119,10 +120,12 @@ Binding* CompileTimeEnvironment::access_binding(std::string const& name) {
 	};
 
 	// scan nested scopes from the inside out
-	for(int i = m_scopes.size(); i--;){
+	for (int i = m_scopes.size(); i--;) {
 		auto ptr = scan_scope(m_scopes[i], name);
-		if (ptr) return ptr;
-		if (!m_scopes[i].m_nested) break;
+		if (ptr)
+			return ptr;
+		if (!m_scopes[i].m_nested)
+			break;
 	}
 
 	// fall back to global scope lookup
@@ -145,7 +148,6 @@ void CompileTimeEnvironment::new_nested_scope() {
 void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
 }
-
 
 TypedAST::FunctionLiteral* CompileTimeEnvironment::current_function() {
 	return m_function_stack.empty() ? nullptr : m_function_stack.back();
@@ -179,8 +181,10 @@ bool CompileTimeEnvironment::has_type_var(VarId var) {
 	// scan nested scopes from the inside out
 	for (int i = m_scopes.size(); i--;) {
 		auto found = scan_scope(m_scopes[i], var);
-		if (found) return true;
-		if (!m_scopes[i].m_nested) break;
+		if (found)
+			return true;
+		if (!m_scopes[i].m_nested)
+			break;
 	}
 
 	// fall back to global scope lookup

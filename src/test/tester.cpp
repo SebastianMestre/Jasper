@@ -1,22 +1,23 @@
 #include "tester.hpp"
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "test_status.hpp"
 
 namespace Test {
 
-template<typename T>
+template <typename T>
 using Own = std::unique_ptr<T>;
 
 Tester::Tester(Own<TestSet> ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-Tester::Tester(std::vector<Own<TestSet>> tss) : m_test_sets(std::move(tss)) {}
+Tester::Tester(std::vector<Own<TestSet>> tss) : m_test_sets(std::move(tss)) {
+}
 
 void Tester::add_test(Own<TestSet> ts) {
 	m_test_sets.push_back(std::move(ts));
@@ -32,8 +33,8 @@ void Tester::execute() {
 
 	for (int i = 0; i < m_test_sets.size(); ++i) {
 		TestReport ts_answer = m_test_sets[i]->execute();
-		
-		switch(ts_answer.m_code){
+
+		switch (ts_answer.m_code) {
 		case test_status::Ok:
 			std::cout << '.';
 			break;
@@ -55,7 +56,7 @@ void Tester::execute() {
 	}
 
 	std::cout << std::endl;
-	for(const auto& r : reports)
+	for (const auto& r : reports)
 		std::cout << r << std::endl;
 }
 

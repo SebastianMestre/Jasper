@@ -12,7 +12,7 @@
 namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
-	for(auto& decl : ast->m_declarations){
+	for (auto& decl : ast->m_declarations) {
 		assert(decl->type() == ast_type::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
@@ -75,9 +75,10 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
-	for(auto& declTypeErased : ast->m_body) {
+	for (auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedAST::Declaration* decl = static_cast<TypedAST::Declaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl
+		    = static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
@@ -130,7 +131,7 @@ gc_ptr<Value> eval(TypedAST::ReturnStatement* ast, Environment& e) {
 	return e.null();
 };
 
-auto is_callable_value (Value* v) -> bool {
+auto is_callable_value(Value* v) -> bool {
 	if (!v)
 		return false;
 
@@ -177,7 +178,8 @@ gc_ptr<Value> eval_call_native_function(
 	return callee->m_fptr(std::move(passable_args), e);
 }
 
-gc_ptr<Value> eval_call_callable(gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e){
+gc_ptr<Value> eval_call_callable(
+    gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 	// TODO: proper error handling
 	assert(is_callable_value(callee.get()));
 	if (callee->type() == value_type::Function) {
@@ -227,11 +229,10 @@ gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	return array_callee->at(int_index->m_value);
 };
 
-
 gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
-	for(auto const& identifier : ast->m_captures){
+	for (auto const& identifier : ast->m_captures) {
 		result->m_captures[identifier] = e.m_scope->access(identifier);
 	}
 
@@ -245,7 +246,7 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	assert(condition_result->type() == value_type::Boolean);
 	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
-	if(condition_result_b->m_value){
+	if (condition_result_b->m_value) {
 		eval(ast->m_body.get(), e);
 	} else if (ast->m_else_body) {
 		eval(ast->m_else_body.get(), e);
@@ -256,7 +257,7 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.new_nested_scope();
-	
+
 	// NOTE: this is kinda fishy. why do we assert here?
 	auto declaration = eval(ast->m_declaration.get(), e);
 	assert(declaration);
@@ -271,7 +272,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 
 		if (!condition_result_b->m_value)
 			break;
-		
+
 		eval(ast->m_body.get(), e);
 
 		if (e.m_return_value)
@@ -289,7 +290,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 	e.new_nested_scope();
-	
+
 	while (1) {
 		auto condition_result = eval(ast->m_condition.get(), e);
 		auto unboxed_condition_result = unboxed(condition_result.get());
@@ -300,7 +301,7 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 
 		if (!condition_result_b->m_value)
 			break;
-		
+
 		eval(ast->m_body.get(), e);
 
 		if (e.m_return_value)

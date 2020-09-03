@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "value.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
+#include "value.hpp"
 
 namespace Interpreter {
 
@@ -18,7 +18,7 @@ public:
 
 	GC();
 	~GC();
-	
+
 	void unmark_all();
 	void mark_roots();
 	void sweep();

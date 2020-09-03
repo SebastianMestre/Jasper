@@ -1,14 +1,13 @@
 #pragma once
 
-#include <string>
 #include "environment_fwd.hpp"
 #include "exit_status_type.hpp"
 #include "value.hpp"
-
+#include <string>
 
 namespace Interpreter {
 
-using Runner = auto (Environment&) -> exit_status_type;
+using Runner = auto(Environment&) -> exit_status_type;
 
 // returns an exit status
 exit_status_type execute(std::string const& source, bool dump_ast, Runner* runner);

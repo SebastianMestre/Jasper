@@ -3,12 +3,9 @@
 constexpr const char* exit_status_type_string[] = {
 	"Ok",
 
-	"ParseError",
-	"TopLevelTypeError",
+	"ParseError", "TopLevelTypeError",
 
-	"NullError",
-	"TypeError",
-	"ValueError",
+	"NullError",  "TypeError",         "ValueError",
 
 	"Empty",
 };

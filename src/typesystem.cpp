@@ -6,25 +6,26 @@
 
 #include "compile_time_environment.hpp"
 
-void TypeSystemCore::print_type (MonoId mono, int d) {
+void TypeSystemCore::print_type(MonoId mono, int d) {
 	MonoData& data = mono_data[mono];
-	for(int i = d; i--;) std::cerr << ' ';
+	for (int i = d; i--;)
+		std::cerr << ' ';
 	std::cerr << "[" << mono << "] ";
-	if(data.type == mono_type::Var){
+	if (data.type == mono_type::Var) {
 		VarId var = data.data_id;
 		VarData& data = var_data[var];
-		if (data.equals == mono){
+		if (data.equals == mono) {
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_type(data.equals, d+1);
+			print_type(data.equals, d + 1);
 		}
 	} else {
 		TermId term = data.data_id;
 		TermData& data = term_data[term];
-		std::cerr << "Term ("<<data.type_function<<")\n";
-		for(int i = 0; i < data.arguments.size(); ++i)
-			print_type(data.arguments[i], d+1);
+		std::cerr << "Term (" << data.type_function << ")\n";
+		for (int i = 0; i < data.arguments.size(); ++i)
+			print_type(data.arguments[i], d + 1);
 	}
 }
 
@@ -38,7 +39,8 @@ MonoId TypeSystemCore::new_var() {
 	return mono;
 }
 
-MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args, char const* tag) {
+MonoId TypeSystemCore::new_term(
+    TypeFunctionId type_function, std::vector<int> args, char const* tag) {
 	int argument_count = type_function_data[type_function].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
@@ -96,7 +98,7 @@ PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment&
 
 	MonoId base = inst_impl(mono, mapping);
 	std::vector<VarId> vars;
-	for(MonoId m : new_vars)
+	for (MonoId m : new_vars)
 		vars.push_back(mono_data[m].data_id);
 
 	return new_poly(base, std::move(vars));
@@ -179,7 +181,6 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 			assert(0 && "deduced two different polymorphic types to be equal");
 		}
 
-
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
 			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
@@ -240,4 +241,3 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	}
 	return inst_with(poly, vals);
 }
-

@@ -13,7 +13,9 @@ struct ParseError {
 	std::string m_text;
 	std::vector<ParseError> m_sub_errors;
 
-	bool ok() { return m_sub_errors.empty() && m_text.empty(); }
+	bool ok() {
+		return m_sub_errors.empty() && m_text.empty();
+	}
 
 	void print(int d = 1) {
 		/* indent */
@@ -33,10 +35,12 @@ struct ParseError {
 
 template <typename T>
 struct Writer {
-	ParseError m_error{};
-	T m_result{};
+	ParseError m_error {};
+	T m_result {};
 
-	bool ok() { return m_error.ok(); }
+	bool ok() {
+		return m_error.ok();
+	}
 };
 
 template <typename T>
@@ -49,7 +53,8 @@ struct Parser {
 	Lexer* m_lexer;
 
 	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(token_type);
-	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_expression_list(token_type, token_type, bool);
+	Writer<std::vector<std::unique_ptr<AST::AST>>>
+	parse_expression_list(token_type, token_type, bool);
 
 	Writer<std::unique_ptr<AST::AST>> parse_top_level();
 	Writer<std::unique_ptr<AST::AST>> parse_identifier();
@@ -72,6 +77,7 @@ struct Parser {
 	Writer<Token const*> require(token_type t);
 	bool consume(token_type t);
 
-	Token const* peek(int dt = 0) { return &m_lexer->peek_token(dt); }
+	Token const* peek(int dt = 0) {
+		return &m_lexer->peek_token(dt);
+	}
 };
-

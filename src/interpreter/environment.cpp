@@ -14,7 +14,7 @@ void Scope::declare(const Identifier& i, Reference* v) {
 Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
-	if (v != m_declarations.end()){
+	if (v != m_declarations.end()) {
 		assert(v->second->type() == value_type::Reference);
 		return static_cast<Reference*>(v->second);
 	}
@@ -26,15 +26,13 @@ Reference* Scope::access(const Identifier& i) {
 	return nullptr;
 }
 
-
-
 Scope* Environment::new_nested_scope() {
-	m_scope = new Scope{m_scope, m_scope};
+	m_scope = new Scope { m_scope, m_scope };
 	return m_scope;
 }
 
 Scope* Environment::new_scope() {
-	m_scope = new Scope{&m_global_scope, m_scope};
+	m_scope = new Scope { &m_global_scope, m_scope };
 	return m_scope;
 }
 
@@ -43,8 +41,6 @@ void Environment::end_scope() {
 	delete m_scope;
 	m_scope = prev;
 }
-
-
 
 void Environment::save_return_value(Value* v) {
 	// check if not stepping on another value
@@ -58,8 +54,6 @@ Value* Environment::fetch_return_value() {
 	return rv;
 }
 
-
-
 void Environment::run_gc() {
 	m_gc->unmark_all();
 	m_gc->mark_roots();
@@ -71,10 +65,8 @@ void Environment::run_gc() {
 	m_gc->sweep();
 }
 
-
-
 void Environment::direct_declare(const Identifier& i, Reference* r) {
-	if(r->type() != value_type::Reference){
+	if (r->type() != value_type::Reference) {
 		assert(0 && "directly declared a non-reference!");
 	}
 	m_scope->declare(i, r);
@@ -85,7 +77,7 @@ void Environment::declare(const Identifier& i, gc_ptr<Value> v) {
 }
 
 void Environment::declare(const Identifier& i, Value* v) {
-	if(v->type() == value_type::Reference){
+	if (v->type() == value_type::Reference) {
 		assert(0 && "declared a reference!");
 	}
 	auto r = new_reference(v);
@@ -96,40 +88,49 @@ Reference* Environment::access(const Identifier& i) {
 	return m_scope->access(i);
 }
 
+Null* Environment::null() {
+	return m_gc->null();
+}
 
+gc_ptr<Integer> Environment::new_integer(int i) {
+	return m_gc->new_integer(i);
+}
 
-Null* Environment::null()
-{ return m_gc->null(); }
+gc_ptr<Float> Environment::new_float(float f) {
+	return m_gc->new_float(f);
+}
 
-gc_ptr<Integer> Environment::new_integer(int i)
-{ return m_gc->new_integer(i); }
+gc_ptr<Boolean> Environment::new_boolean(bool b) {
+	return m_gc->new_boolean(b);
+}
 
-gc_ptr<Float> Environment::new_float(float f)
-{ return m_gc->new_float(f); }
+gc_ptr<String> Environment::new_string(std::string s) {
+	return m_gc->new_string(std::move(s));
+}
 
-gc_ptr<Boolean> Environment::new_boolean(bool b)
-{ return m_gc->new_boolean(b); }
+gc_ptr<Array> Environment::new_list(ArrayType elements) {
+	return m_gc->new_list(std::move(elements));
+}
 
-gc_ptr<String> Environment::new_string(std::string s)
-{ return m_gc->new_string(std::move(s)); }
+gc_ptr<Object> Environment::new_object(ObjectType declarations) {
+	return m_gc->new_object(std::move(declarations));
+}
 
-gc_ptr<Array> Environment::new_list(ArrayType elements)
-{ return m_gc->new_list(std::move(elements)); }
+gc_ptr<Dictionary> Environment::new_dictionary(ObjectType declarations) {
+	return m_gc->new_dictionary(std::move(declarations));
+}
 
-gc_ptr<Object> Environment::new_object(ObjectType declarations)
-{ return m_gc->new_object(std::move(declarations)); }
+gc_ptr<Function> Environment::new_function(FunctionType def, ObjectType s) {
+	return m_gc->new_function(def, std::move(s));
+}
 
-gc_ptr<Dictionary> Environment::new_dictionary(ObjectType declarations)
-{ return m_gc->new_dictionary(std::move(declarations)); }
+gc_ptr<NativeFunction> Environment::new_native_function(NativeFunctionType* fptr) {
+	return m_gc->new_native_function(fptr);
+}
 
-gc_ptr<Function> Environment::new_function(FunctionType def, ObjectType s)
-{ return m_gc->new_function(def, std::move(s)); }
-
-gc_ptr<NativeFunction> Environment::new_native_function(NativeFunctionType* fptr)
-{ return m_gc->new_native_function(fptr); }
-
-gc_ptr<Error> Environment::new_error(std::string e)
-{ return m_gc->new_error(e); }
+gc_ptr<Error> Environment::new_error(std::string e) {
+	return m_gc->new_error(e);
+}
 
 gc_ptr<Reference> Environment::new_reference(Value* v) {
 	assert(
