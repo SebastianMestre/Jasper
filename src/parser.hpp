@@ -45,7 +45,7 @@ struct Writer {
 
 template <typename T>
 Writer<T> make_writer(T x) {
-	return { {}, std::move(x) };
+	return {{}, std::move(x)};
 }
 
 struct Parser {

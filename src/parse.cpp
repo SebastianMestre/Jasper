@@ -10,7 +10,7 @@ parse_program(std::string const& source, TokenArray& ta) {
 	for (char c : source)
 		v.push_back(c);
 
-	Lexer l = { std::move(v), ta };
+	Lexer l = {std::move(v), ta};
 
 	Parser p;
 	p.m_lexer = &l;
@@ -24,7 +24,7 @@ parse_expression(std::string const& source, TokenArray& ta) {
 	for (char c : source)
 		v.push_back(c);
 
-	Lexer l = { std::move(v), ta };
+	Lexer l = {std::move(v), ta};
 
 	Parser p;
 	p.m_lexer = &l;

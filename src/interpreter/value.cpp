@@ -9,33 +9,48 @@
 
 namespace Interpreter {
 
-Null::Null() : Value(value_type::Null) {
+Null::Null()
+    : Value(value_type::Null) {
 }
 
-Integer::Integer() : Value(value_type::Integer) {
+Integer::Integer()
+    : Value(value_type::Integer) {
 }
-Integer::Integer(int v) : Value(value_type::Integer), m_value(v) {
-}
-
-Float::Float() : Value(value_type::Float) {
-}
-Float::Float(float v) : Value(value_type::Float), m_value(v) {
+Integer::Integer(int v)
+    : Value(value_type::Integer)
+    , m_value(v) {
 }
 
-Boolean::Boolean() : Value(value_type::Boolean) {
+Float::Float()
+    : Value(value_type::Float) {
 }
-Boolean::Boolean(bool b) : Value(value_type::Boolean), m_value(b) {
+Float::Float(float v)
+    : Value(value_type::Float)
+    , m_value(v) {
 }
 
-String::String() : Value(value_type::String) {
+Boolean::Boolean()
+    : Value(value_type::Boolean) {
+}
+Boolean::Boolean(bool b)
+    : Value(value_type::Boolean)
+    , m_value(b) {
+}
+
+String::String()
+    : Value(value_type::String) {
 }
 String::String(std::string s)
-    : Value(value_type::String), m_value(std::move(s)) {
+    : Value(value_type::String)
+    , m_value(std::move(s)) {
 }
 
-Array::Array() : Value(value_type::Array) {
+Array::Array()
+    : Value(value_type::Array) {
 }
-Array::Array(ArrayType l) : Value(value_type::Array), m_value(std::move(l)) {
+Array::Array(ArrayType l)
+    : Value(value_type::Array)
+    , m_value(std::move(l)) {
 }
 
 void Array::append(Value* v) {
@@ -51,10 +66,12 @@ Value* Array::at(int position) {
 	}
 }
 
-Object::Object() : Value(value_type::Object) {
+Object::Object()
+    : Value(value_type::Object) {
 }
 Object::Object(ObjectType o)
-    : Value(value_type::Object), m_value(std::move(o)) {
+    : Value(value_type::Object)
+    , m_value(std::move(o)) {
 }
 
 void Object::addMember(Identifier const& id, Value* v) {
@@ -71,10 +88,12 @@ Value* Object::getMember(Identifier const& id) {
 	}
 }
 
-Dictionary::Dictionary() : Value(value_type::Dictionary) {
+Dictionary::Dictionary()
+    : Value(value_type::Dictionary) {
 }
 Dictionary::Dictionary(ObjectType o)
-    : Value(value_type::Dictionary), m_value(std::move(o)) {
+    : Value(value_type::Dictionary)
+    , m_value(std::move(o)) {
 }
 
 void Dictionary::addMember(Identifier const& id, Value* v) {
@@ -96,15 +115,19 @@ void Dictionary::removeMember(Identifier const& id) {
 }
 
 Function::Function(FunctionType def, ObjectType captures)
-    : Value(value_type::Function), m_def(def), m_captures(std::move(captures)) {
+    : Value(value_type::Function)
+    , m_def(def)
+    , m_captures(std::move(captures)) {
 }
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : Value { value_type::NativeFunction }, m_fptr { fptr } {
+    : Value {value_type::NativeFunction}
+    , m_fptr {fptr} {
 }
 
 Reference::Reference(Value* value)
-    : Value { value_type::Reference }, m_value { value } {
+    : Value {value_type::Reference}
+    , m_value {value} {
 }
 
 void gc_visit(Null* v) {

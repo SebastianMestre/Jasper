@@ -15,11 +15,14 @@ AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: true
+
 AlwaysBreakTemplateDeclarations: true
 
 BinPackArguments: false
 BinPackParameters: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializers: BeforeComma
 
 DerivePointerAlignment: false
 PointerAlignment: Left
@@ -30,3 +33,5 @@ SpacesInParentheses: false
 
 BreakBeforeTernaryOperators: true
 AlignAfterOpenBracket: AlwaysBreak
+
+

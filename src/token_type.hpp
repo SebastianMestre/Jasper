@@ -1,5 +1,6 @@
 #pragma once
 
+/* clang-format off */
 /* printable representation */
 constexpr const char* token_type_string[] = {
 	"+",

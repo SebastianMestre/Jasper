@@ -214,7 +214,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
 		index_to_decl.push_back(d);
-		decl_to_index.insert({ d, i });
+		decl_to_index.insert({d, i});
 		++i;
 	}
 

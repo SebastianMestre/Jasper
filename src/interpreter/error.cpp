@@ -4,9 +4,12 @@
 
 namespace Interpreter {
 
-Error::Error() : Value(value_type::Error) {
+Error::Error()
+    : Value(value_type::Error) {
 }
-Error::Error(std::string message) : Value(value_type::Error), m_error(message) {
+Error::Error(std::string message)
+    : Value(value_type::Error)
+    , m_error(message) {
 }
 
 Error make_reference_error(const Identifier& i) {

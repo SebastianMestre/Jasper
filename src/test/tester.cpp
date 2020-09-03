@@ -16,7 +16,8 @@ Tester::Tester(Own<TestSet> ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-Tester::Tester(std::vector<Own<TestSet>> tss) : m_test_sets(std::move(tss)) {
+Tester::Tester(std::vector<Own<TestSet>> tss)
+    : m_test_sets(std::move(tss)) {
 }
 
 void Tester::add_test(Own<TestSet> ts) {

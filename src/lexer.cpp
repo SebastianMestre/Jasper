@@ -28,12 +28,12 @@ void Lexer::push_token(token_type tt, int width) {
 	for (int i = 0; i < width; ++i)
 		text[i] = m_source[m_source_index + i];
 
-	Token t = { tt,
-		        std::move(text),
-		        m_current_line,
-		        m_current_column,
-		        m_current_line,
-		        m_current_column + width };
+	Token t = {tt,
+	           std::move(text),
+	           m_current_line,
+	           m_current_column,
+	           m_current_line,
+	           m_current_column + width};
 
 	m_tokens.push_back(t);
 
@@ -357,7 +357,7 @@ void Lexer::consume_token() {
 		}
 
 		m_tokens.push_back(
-		    { token_type::STRING, text, l0, c0, m_current_line, m_current_column });
+		    {token_type::STRING, text, l0, c0, m_current_line, m_current_column});
 
 		m_current_column += 1;
 		m_source_index += 1;
@@ -379,12 +379,12 @@ void Lexer::consume_token() {
 			m_source_index += 1;
 			m_current_column += text.size();
 
-			m_tokens.push_back({ token_type::IDENTIFIER,
-			                     text,
-			                     m_current_line,
-			                     m_current_column - int(text.size()),
-			                     m_current_line,
-			                     m_current_column });
+			m_tokens.push_back({token_type::IDENTIFIER,
+			                    text,
+			                    m_current_line,
+			                    m_current_column - int(text.size()),
+			                    m_current_line,
+			                    m_current_column});
 
 		} else if (consume_number()) {
 			return;
@@ -430,12 +430,12 @@ bool Lexer::consume_number() {
 	token_type type = is_int ? token_type::INTEGER : token_type::NUMBER;
 	m_source_index += 1;
 	m_current_column += 1;
-	m_tokens.push_back({ type,
-	                     text,
-	                     m_current_line,
-	                     m_current_column - int(text.size()),
-	                     m_current_line,
-	                     m_current_column });
+	m_tokens.push_back({type,
+	                    text,
+	                    m_current_line,
+	                    m_current_column - int(text.size()),
+	                    m_current_line,
+	                    m_current_column});
 
 	return true;
 }
@@ -480,7 +480,7 @@ void Lexer::regress() {
 }
 
 Token const& eof() {
-	static Token t = { token_type::END, "(EOF)", -1, -1, -1, -1 };
+	static Token t = {token_type::END, "(EOF)", -1, -1, -1, -1};
 	return t;
 }
 

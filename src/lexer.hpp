@@ -10,11 +10,11 @@ struct Lexer {
 	std::vector<char> m_source;
 	TokenArray& m_tokens;
 
-	int m_source_index { 0 };
-	int m_token_index { 0 };
+	int m_source_index {0};
+	int m_token_index {0};
 
-	int m_current_line { 0 };
-	int m_current_column { 0 };
+	int m_current_line {0};
+	int m_current_column {0};
 
 	char char_at(int index);
 	char current_char() {

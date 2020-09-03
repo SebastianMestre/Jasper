@@ -7,11 +7,14 @@
 namespace Frontend {
 
 Binding::Binding(TypedAST::Declaration* decl)
-    : m_type { BindingType::Declaration }, m_decl { decl } {
+    : m_type {BindingType::Declaration}
+    , m_decl {decl} {
 }
 
 Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
-    : m_type { BindingType::Argument }, m_func { func }, m_arg_index { arg_index } {
+    : m_type {BindingType::Argument}
+    , m_func {func}
+    , m_arg_index {arg_index} {
 }
 
 TypedAST::Declaration* Binding::get_decl() {
@@ -46,10 +49,10 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 		// TODO: i use the same mono thrice... does this make sense?
 		auto term_mono_id = m_typechecker.m_core.new_term(
 		    TypeChecker::BuiltinType::Function,
-		    { var_mono_id, var_mono_id, var_mono_id },
+		    {var_mono_id, var_mono_id, var_mono_id},
 		    "[builtin] (a, a) -> a");
 
-		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, { var_id });
+		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
 
 		// TODO: re using the same PolyId... is this ok?
 		// I think this is fine because we always do inst_fresh when we use a poly
@@ -68,10 +71,10 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 
 		auto term_mono_id = m_typechecker.m_core.new_term(
 		    TypeChecker::BuiltinType::Function,
-		    { var_mono_id, var_mono_id, m_typechecker.mono_boolean() },
+		    {var_mono_id, var_mono_id, m_typechecker.mono_boolean()},
 		    "[builtin] (a, a) -> Bool");
 
-		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, { var_id });
+		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
 
 		declare_builtin("<", poly_id);
 		declare_builtin("==", poly_id);
@@ -85,12 +88,12 @@ Scope& CompileTimeEnvironment::current_scope() {
 void CompileTimeEnvironment::declare(
     std::string const& name, TypedAST::Declaration* decl) {
 	// current_scope().m_vars[name] = decl;
-	current_scope().m_vars.insert({ name, decl });
+	current_scope().m_vars.insert({name, decl});
 }
 
 void CompileTimeEnvironment::declare_arg(
     std::string const& name, TypedAST::FunctionLiteral* func, int arg_index) {
-	current_scope().m_vars.insert({ name, { func, arg_index } });
+	current_scope().m_vars.insert({name, {func, arg_index}});
 }
 
 void CompileTimeEnvironment::declare_builtin(std::string const& name) {
@@ -98,7 +101,7 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name) {
 	// totally general type. just for convenience during development.
 	auto mono_id = m_typechecker.new_var();
 	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
-	auto poly_id = m_typechecker.m_core.new_poly(mono_id, { var_id });
+	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
 
 	declare_builtin(name, poly_id);
 }
@@ -138,11 +141,11 @@ TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
 }
 
 void CompileTimeEnvironment::new_scope() {
-	m_scopes.push_back({ false });
+	m_scopes.push_back({false});
 }
 
 void CompileTimeEnvironment::new_nested_scope() {
-	m_scopes.push_back({ true });
+	m_scopes.push_back({true});
 }
 
 void CompileTimeEnvironment::end_scope() {
