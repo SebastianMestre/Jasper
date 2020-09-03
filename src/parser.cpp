@@ -743,9 +743,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_if_statement() {
+Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse if statement" } };
+	    = { { "Parse Error: Failed to parse if-else statement" } };
 
 	if(handle_error(result, require(token_type::KEYWORD_IF))){
 		return result;
@@ -773,6 +773,16 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_statement() {
 
 	e->m_condition = std::move(condition.m_result);
 	e->m_body = std::move(body.m_result);
+
+	auto* p = peek(0);
+	if (p->m_type == token_type::KEYWORD_ELSE) {
+		auto else_body = parse_statement();
+
+		if (handle_error(result, else_body))
+			return result;
+
+		e->m_else_body = std::move(else_body.m_result);
+	}
 
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
@@ -903,11 +913,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 		}
 		return return_statement;
 	} else if (p0->m_type == token_type::KEYWORD_IF) {
-		auto if_statement = parse_if_statement();
-		if (handle_error(result, if_statement)) {
+		auto if_else_statement = parse_if_else_statement();
+		if (handle_error(result, if_else_statement)) {
 			return result;
 		}
-		return if_statement;
+		return if_else_statement;
 	} else if (p0->m_type == token_type::KEYWORD_FOR) {
 		auto for_statement = parse_for_statement();
 		if (handle_error(result, for_statement)) {
