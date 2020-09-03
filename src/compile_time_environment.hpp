@@ -14,7 +14,7 @@ struct Declaration;
 struct FunctionLiteral;
 struct FunctionArgument;
 
-}
+} // namespace TypedAST
 
 namespace Frontend {
 

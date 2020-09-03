@@ -61,4 +61,4 @@ void Tester::execute() {
 		std::cout << r << std::endl;
 }
 
-}
+} // namespace Test

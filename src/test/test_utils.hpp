@@ -77,4 +77,4 @@ exit_status_type array_of_size(Interpreter::Value* rv, unsigned int size) {
 	return exit_status_type::Ok;
 }
 
-} // Assert
+} // namespace Assert

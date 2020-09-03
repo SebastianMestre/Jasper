@@ -9,10 +9,10 @@
 namespace Interpreter {
 
 struct GC {
-private:
+  private:
 	Null* m_null;
 
-public:
+  public:
 	std::vector<Value*> m_blocks;
 	std::vector<Value*> m_roots;
 

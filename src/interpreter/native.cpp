@@ -97,20 +97,20 @@ Value* value_add(ArrayType v, Environment& e) {
 		//TODO: don't get()
 		return e
 		    .new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        + static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value +
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_float(
-		        static_cast<Float*>(lhs_val)->m_value
-		        + static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value +
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	case value_type::String:
 		return e
 		    .new_string(
-		        static_cast<String*>(lhs_val)->m_value
-		        + static_cast<String*>(rhs_val)->m_value)
+		        static_cast<String*>(lhs_val)->m_value +
+		        static_cast<String*>(rhs_val)->m_value)
 		    .get();
 	default:
 		std::cerr << "ERROR: can't add values of type "
@@ -131,14 +131,14 @@ Value* value_sub(ArrayType v, Environment& e) {
 		// TODO: don't get()
 		return e
 		    .new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        - static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value -
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_float(
-		        static_cast<Float*>(lhs_val)->m_value
-		        - static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value -
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	default:
 		std::cerr << "ERROR: can't add values of type "
@@ -159,14 +159,14 @@ Value* value_mul(ArrayType v, Environment& e) {
 		// TODO: don't get()
 		return e
 		    .new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        * static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value *
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_float(
-		        static_cast<Float*>(lhs_val)->m_value
-		        * static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value *
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
@@ -187,14 +187,14 @@ Value* value_div(ArrayType v, Environment& e) {
 		// TODO: don't get()
 		return e
 		    .new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        / static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value /
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_float(
-		        static_cast<Float*>(lhs_val)->m_value
-		        / static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value /
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	default:
 		std::cerr << "ERROR: can't divide values of type "
@@ -209,12 +209,12 @@ Value* value_logicand(ArrayType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == value_type::Boolean
-	    and rhs_val->type() == value_type::Boolean)
+	if (lhs_val->type() == value_type::Boolean and
+	    rhs_val->type() == value_type::Boolean)
 		return e
 		    .new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value
-		        and static_cast<Boolean*>(rhs_val)->m_value)
+		        static_cast<Boolean*>(lhs_val)->m_value and
+		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: logical and operator not defined for types "
 	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
@@ -228,12 +228,12 @@ Value* value_logicor(ArrayType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == value_type::Boolean
-	    and rhs_val->type() == value_type::Boolean)
+	if (lhs_val->type() == value_type::Boolean and
+	    rhs_val->type() == value_type::Boolean)
 		return e
 		    .new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value
-		        or static_cast<Boolean*>(rhs_val)->m_value)
+		        static_cast<Boolean*>(lhs_val)->m_value or
+		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: logical or operator not defined for types "
 	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
@@ -247,12 +247,12 @@ Value* value_logicxor(ArrayType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == value_type::Boolean
-	    and rhs_val->type() == value_type::Boolean)
+	if (lhs_val->type() == value_type::Boolean and
+	    rhs_val->type() == value_type::Boolean)
 		return e
 		    .new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value
-		        != static_cast<Boolean*>(rhs_val)->m_value)
+		        static_cast<Boolean*>(lhs_val)->m_value !=
+		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: exclusive or operator not defined for types "
 	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
@@ -274,26 +274,26 @@ Value* value_equals(ArrayType v, Environment& e) {
 	case value_type::Integer:
 		return e
 		    .new_boolean(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        == static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value ==
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_boolean(
-		        static_cast<Float*>(lhs_val)->m_value
-		        == static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value ==
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	case value_type::String:
 		return e
 		    .new_boolean(
-		        static_cast<String*>(lhs_val)->m_value
-		        == static_cast<String*>(rhs_val)->m_value)
+		        static_cast<String*>(lhs_val)->m_value ==
+		        static_cast<String*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Boolean:
 		return e
 		    .new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value
-		        == static_cast<Boolean*>(rhs_val)->m_value)
+		        static_cast<Boolean*>(lhs_val)->m_value ==
+		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
@@ -316,20 +316,20 @@ Value* value_less(ArrayType v, Environment& e) {
 	case value_type::Integer:
 		return e
 		    .new_boolean(
-		        static_cast<Integer*>(lhs_val)->m_value
-		        < static_cast<Integer*>(rhs_val)->m_value)
+		        static_cast<Integer*>(lhs_val)->m_value <
+		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case value_type::Float:
 		return e
 		    .new_boolean(
-		        static_cast<Float*>(lhs_val)->m_value
-		        < static_cast<Float*>(rhs_val)->m_value)
+		        static_cast<Float*>(lhs_val)->m_value <
+		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	case value_type::String:
 		return e
 		    .new_boolean(
-		        static_cast<String*>(lhs_val)->m_value
-		        < static_cast<String*>(rhs_val)->m_value)
+		        static_cast<String*>(lhs_val)->m_value <
+		        static_cast<String*>(rhs_val)->m_value)
 		    .get();
 	default:
 		std::cerr << "ERROR: can't compare values of type "

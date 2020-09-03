@@ -57,8 +57,8 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 
 	for (auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedAST::Declaration* decl
-		    = static_cast<TypedAST::Declaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl =
+		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
@@ -77,8 +77,8 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 
 	for (auto& declTypeErased : ast->m_body) {
 		assert(declTypeErased->type() == ast_type::Declaration);
-		TypedAST::Declaration* decl
-		    = static_cast<TypedAST::Declaration*>(declTypeErased.get());
+		TypedAST::Declaration* decl =
+		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);

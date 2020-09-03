@@ -281,8 +281,8 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 			decl->m_is_polymorphic = true;
-			decl->m_decl_type
-			    = env.m_typechecker.m_core.generalize(decl->m_value_type, env);
+			decl->m_decl_type =
+			    env.m_typechecker.m_core.generalize(decl->m_value_type, env);
 		}
 	}
 #else

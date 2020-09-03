@@ -45,13 +45,13 @@ void TarjanSolver::visit(int u) {
 		if (!m_discovery_time[v]) {
 			// v is not yet discovered
 			visit(v);
-			m_lowest_visible[u]
-			    = std::min(m_lowest_visible[u], m_lowest_visible[v]);
+			m_lowest_visible[u] =
+			    std::min(m_lowest_visible[u], m_lowest_visible[v]);
 		} else if (m_component_of[v] == -1) {
 			// v is discovered, but not yet assigned to a
 			// component. (i.e. v is still in the stack)
-			m_lowest_visible[u]
-			    = std::min(m_lowest_visible[u], m_lowest_visible[v]);
+			m_lowest_visible[u] =
+			    std::min(m_lowest_visible[u], m_lowest_visible[v]);
 		}
 	}
 

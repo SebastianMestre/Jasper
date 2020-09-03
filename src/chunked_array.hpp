@@ -28,7 +28,7 @@ struct ChunkedArray {
 
 	int size() {
 		return m_buckets.empty() ? 0
-		                         : (int(m_buckets.size()) - 1) * bucket_size
-		        + int(m_buckets.back().size());
+		                         : (int(m_buckets.size()) - 1) * bucket_size +
+		                               int(m_buckets.back().size());
 	}
 };

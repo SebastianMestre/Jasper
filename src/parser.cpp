@@ -60,8 +60,9 @@ bool Parser::consume(token_type maybe_token) {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse top level program" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse top level program" }
+	};
 
 	auto declarations = parse_declaration_list(token_type::END);
 
@@ -78,8 +79,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 
 Writer<std::vector<std::unique_ptr<AST::AST>>>
 Parser::parse_declaration_list(token_type terminator) {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = { { "Parse Error: Failed to parse declaration list" } };
+	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+		{ "Parse Error: Failed to parse declaration list" }
+	};
 
 	std::vector<std::unique_ptr<AST::AST>> declarations;
 
@@ -112,8 +114,9 @@ Parser::parse_declaration_list(token_type terminator) {
 
 Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
     token_type delimiter, token_type terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = { { "Parse Error: Failed to parse expression list" } };
+	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+		{ "Parse Error: Failed to parse expression list" }
+	};
 
 	std::vector<std::unique_ptr<AST::AST>> expressions;
 
@@ -170,8 +173,9 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse declaration" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse declaration" }
+	};
 
 	Writer<Token const*> name = require(token_type::IDENTIFIER);
 
@@ -225,7 +229,7 @@ struct binding_power {
 bool is_binary_operator(token_type t) {
 	// TODO: fill out this table
 	switch (t) {
-	case token_type::PAREN_OPEN: // a bit of a hack
+	case token_type::PAREN_OPEN:   // a bit of a hack
 	case token_type::BRACKET_OPEN: // a bit of a hack
 
 	case token_type::LT:
@@ -268,7 +272,7 @@ binding_power binding_power_of(token_type t) {
 	case token_type::MUL:
 	case token_type::DIV: // fallthrough
 		return { 50, 51 };
-	case token_type::PAREN_OPEN: // a bit of a hack
+	case token_type::PAREN_OPEN:   // a bit of a hack
 	case token_type::BRACKET_OPEN: // a bit of a hack
 	case token_type::DOT:
 		return { 70, 71 };
@@ -278,15 +282,16 @@ binding_power binding_power_of(token_type t) {
 }
 
 Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result
-	    = { { "Parse Error: Failed to argument list" } };
+	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+		{ "Parse Error: Failed to argument list" }
+	};
 
 	if (handle_error(result, require(token_type::PAREN_OPEN))) {
 		return result;
 	}
 
-	auto args
-	    = parse_expression_list(token_type::COMMA, token_type::PAREN_CLOSE, false);
+	auto args =
+	    parse_expression_list(token_type::COMMA, token_type::PAREN_CLOSE, false);
 
 	if (handle_error(result, args)) {
 		return result;
@@ -300,8 +305,9 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse expression" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse expression" }
+	};
 
 	Writer<std::unique_ptr<AST::AST>> lhs;
 
@@ -313,11 +319,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 	while (1) {
 		auto op = peek();
 
-		if (op->m_type == token_type::SEMICOLON || op->m_type == token_type::END
-		    || op->m_type == token_type::BRACE_CLOSE
-		    || op->m_type == token_type::BRACKET_CLOSE
-		    || op->m_type == token_type::PAREN_CLOSE
-		    || op->m_type == token_type::COMMA) {
+		if (op->m_type == token_type::SEMICOLON || op->m_type == token_type::END ||
+		    op->m_type == token_type::BRACE_CLOSE ||
+		    op->m_type == token_type::BRACKET_CLOSE ||
+		    op->m_type == token_type::PAREN_CLOSE ||
+		    op->m_type == token_type::COMMA) {
 			break;
 		}
 
@@ -388,8 +394,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
  * This is not what the term usually means in the literature.
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse terminal expression" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse terminal expression" }
+	};
 
 	auto token = peek();
 
@@ -493,8 +500,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse identifier" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse identifier" }
+	};
 
 	auto token = require(token_type::IDENTIFIER);
 	if (handle_error(result, token))
@@ -506,8 +514,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Failed to parse array literal" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Failed to parse array literal" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_ARRAY))) {
 		return result;
@@ -531,8 +540,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Failed to parse object literal" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Failed to parse object literal" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_OBJECT))) {
 		return result;
@@ -559,8 +569,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Failed to parse dictionary literal" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Failed to parse dictionary literal" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_DICT))) {
 		return result;
@@ -593,8 +604,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
  * }
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse function" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse function" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_FN)))
 		return result;
@@ -690,8 +702,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse block statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse block statement" }
+	};
 
 	if (handle_error(result, require(token_type::BRACE_OPEN))) {
 		return result;
@@ -730,8 +743,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse return statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse return statement" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_RETURN))) {
 		return result;
@@ -755,8 +769,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse if-else statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse if-else statement" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_IF))) {
 		return result;
@@ -798,8 +813,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse for statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse for statement" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_FOR))) {
 		return result;
@@ -848,8 +864,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse while statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse while statement" }
+	};
 
 	if (handle_error(result, require(token_type::KEYWORD_WHILE)))
 		return result;
@@ -882,16 +899,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
  * linear time.
  */
 Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse statement" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse statement" }
+	};
 
 	// TODO: recognize literals
 	auto* p0 = peek(0);
 	if (p0->m_type == token_type::IDENTIFIER) {
 		auto* p1 = peek(1);
 
-		if (p1->m_type == token_type::DECLARE
-		    || p1->m_type == token_type::DECLARE_ASSIGN) {
+		if (p1->m_type == token_type::DECLARE ||
+		    p1->m_type == token_type::DECLARE_ASSIGN) {
 
 			auto declaration = parse_declaration();
 
@@ -958,8 +976,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
-	Writer<std::unique_ptr<AST::AST>> result
-	    = { { "Parse Error: Failed to parse type" } };
+	Writer<std::unique_ptr<AST::AST>> result = {
+		{ "Parse Error: Failed to parse type" }
+	};
 
 	auto callee = parse_identifier();
 	if (handle_error(result, callee))

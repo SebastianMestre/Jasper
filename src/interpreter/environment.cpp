@@ -134,9 +134,9 @@ gc_ptr<Error> Environment::new_error(std::string e) {
 
 gc_ptr<Reference> Environment::new_reference(Value* v) {
 	assert(
-	    v->type() != value_type::Reference
-	    && "References to references are not allowed.");
+	    v->type() != value_type::Reference &&
+	    "References to references are not allowed.");
 	return m_gc->new_reference(v);
 }
 
-} // Interpreter
+} // namespace Interpreter

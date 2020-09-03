@@ -21,4 +21,4 @@ struct BuiltinType {
 	static constexpr int amount_ { 8 };
 };
 
-}
+} // namespace TypeChecker

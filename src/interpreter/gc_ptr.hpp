@@ -4,10 +4,10 @@
 
 template <typename ValueType>
 struct gc_ptr {
-private:
+  private:
 	ValueType* m_ptr;
 
-public:
+  public:
 	gc_ptr(gc_ptr const& o)
 	    : m_ptr { o.m_ptr } {
 		if (m_ptr)

@@ -25,10 +25,10 @@ void print(Value* v, int d = 0);
 void gc_visit(Value*);
 
 struct Value {
-protected:
+  protected:
 	value_type m_type;
 
-public:
+  public:
 	bool m_visited = false;
 	int m_cpp_refcount = 0;
 

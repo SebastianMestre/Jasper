@@ -1,4 +1,3 @@
-BasedOnStyle: WebKit
 
 UseTab: ForIndentation
 IndentWidth: 4
@@ -20,8 +19,8 @@ SpaceBeforeCpp11BracedList: true
 
 AlwaysBreakTemplateDeclarations: true
 
-BinPackArguments: false
 BinPackParameters: false
+BinPackArguments: false
 BreakConstructorInitializers: BeforeComma
 
 DerivePointerAlignment: false
@@ -34,4 +33,4 @@ SpacesInParentheses: false
 BreakBeforeTernaryOperators: true
 AlignAfterOpenBracket: AlwaysBreak
 
-
+FixNamespaceComments: true

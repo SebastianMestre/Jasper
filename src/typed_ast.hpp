@@ -17,10 +17,10 @@ struct AST;
 namespace TypedAST {
 
 struct TypedAST {
-protected:
+  protected:
 	ast_type m_type;
 
-public:
+  public:
 	TypedAST(ast_type type)
 	    : m_type { type } {
 	}

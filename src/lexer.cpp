@@ -28,12 +28,12 @@ void Lexer::push_token(token_type tt, int width) {
 	for (int i = 0; i < width; ++i)
 		text[i] = m_source[m_source_index + i];
 
-	Token t = { tt,
-		        std::move(text),
-		        m_current_line,
-		        m_current_column,
-		        m_current_line,
-		        m_current_column + width };
+	auto t = Token { tt,
+		             std::move(text),
+		             m_current_line,
+		             m_current_column,
+		             m_current_line,
+		             m_current_column + width };
 
 	m_tokens.push_back(t);
 
@@ -46,8 +46,8 @@ bool Lexer::consume_keyword() {
 	char c0 = peek_char(0);
 	switch (c0) {
 	case 'a': {
-		if (peek_char(1) == 'r' && peek_char(2) == 'r' && peek_char(3) == 'a'
-		    && peek_char(4) == 'y' && not is_identifier_char(peek_char(5))) {
+		if (peek_char(1) == 'r' && peek_char(2) == 'r' && peek_char(3) == 'a' &&
+		    peek_char(4) == 'y' && not is_identifier_char(peek_char(5))) {
 			push_token(token_type::KEYWORD_ARRAY, 5);
 			return true;
 		}
@@ -68,8 +68,8 @@ bool Lexer::consume_keyword() {
 				}
 			}
 		} else if (
-		    peek_char(1) == 'a' && peek_char(2) == 'l' && peek_char(3) == 's'
-		    && peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
+		    peek_char(1) == 'a' && peek_char(2) == 'l' && peek_char(3) == 's' &&
+		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
 			push_token(token_type::KEYWORD_FALSE, 5);
 			return true;
 		}
@@ -84,51 +84,51 @@ bool Lexer::consume_keyword() {
 		}
 	} break;
 	case 'r':
-		if (peek_char(1) == 'e' && peek_char(2) == 't' && peek_char(3) == 'u'
-		    && peek_char(4) == 'r' && peek_char(5) == 'n'
-		    && not is_identifier_char(peek_char(6))) {
+		if (peek_char(1) == 'e' && peek_char(2) == 't' && peek_char(3) == 'u' &&
+		    peek_char(4) == 'r' && peek_char(5) == 'n' &&
+		    not is_identifier_char(peek_char(6))) {
 			push_token(token_type::KEYWORD_RETURN, 6);
 			return true;
 		}
 		break;
 	case 'd':
-		if (peek_char(1) == 'i' && peek_char(2) == 'c' && peek_char(3) == 't'
-		    && not is_identifier_char(peek_char(4))) {
+		if (peek_char(1) == 'i' && peek_char(2) == 'c' && peek_char(3) == 't' &&
+		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_DICT, 4);
 			return true;
 		}
 		break;
 	case 'o':
-		if (peek_char(1) == 'b' && peek_char(2) == 't'
-		    && not is_identifier_char(peek_char(3))) {
+		if (peek_char(1) == 'b' && peek_char(2) == 't' &&
+		    not is_identifier_char(peek_char(3))) {
 			push_token(token_type::KEYWORD_OBJECT, 3);
 			return true;
 		}
 		break;
 	case 't':
-		if (peek_char(1) == 'r' && peek_char(2) == 'u' && peek_char(3) == 'e'
-		    && not is_identifier_char(peek_char(4))) {
+		if (peek_char(1) == 'r' && peek_char(2) == 'u' && peek_char(3) == 'e' &&
+		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_TRUE, 4);
 			return true;
 		}
 		break;
 	case 'n':
-		if (peek_char(1) == 'u' && peek_char(2) == 'l' && peek_char(3) == 'l'
-		    && not is_identifier_char(peek_char(4))) {
+		if (peek_char(1) == 'u' && peek_char(2) == 'l' && peek_char(3) == 'l' &&
+		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_NULL, 4);
 			return true;
 		}
 		break;
 	case 'w':
-		if (peek_char(1) == 'h' && peek_char(2) == 'i' && peek_char(3) == 'l'
-		    && peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
+		if (peek_char(1) == 'h' && peek_char(2) == 'i' && peek_char(3) == 'l' &&
+		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
 			push_token(token_type::KEYWORD_WHILE, 5);
 			return true;
 		}
 		break;
 	case 'e':
-		if (peek_char(1) == 'l' && peek_char(2) == 's' && peek_char(3) == 'e'
-		    && not is_identifier_char(peek_char(4))) {
+		if (peek_char(1) == 'l' && peek_char(2) == 's' && peek_char(3) == 'e' &&
+		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_ELSE, 4);
 			return true;
 		}

@@ -21,4 +21,4 @@ struct Tester {
 	void execute();
 };
 
-}
+} // namespace Test

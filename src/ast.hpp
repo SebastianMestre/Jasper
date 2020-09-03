@@ -10,10 +10,10 @@
 namespace AST {
 
 struct AST {
-protected:
+  protected:
 	ast_type m_type;
 
-public:
+  public:
 	AST() = default;
 	AST(ast_type type)
 	    : m_type { type } {
@@ -123,7 +123,7 @@ struct DeclarationList : public AST {
 
 struct Declaration : public AST {
 	Token const* m_identifier_token;
-	std::unique_ptr<AST> m_type; // can be nullptr
+	std::unique_ptr<AST> m_type;  // can be nullptr
 	std::unique_ptr<AST> m_value; // can be nullptr
 
 	std::string const& identifier_text() const {
@@ -232,4 +232,4 @@ struct TypeTerm : public AST {
 
 void print(AST*, int);
 
-}
+} // namespace AST

@@ -25,4 +25,4 @@ struct TypeChecker {
 	MonoId rule_rec();
 };
 
-}
+} // namespace TypeChecker

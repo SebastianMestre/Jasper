@@ -62,4 +62,4 @@ struct Environment {
 	auto new_reference(Value*) -> gc_ptr<Reference>;
 };
 
-} // Interpreter
+} // namespace Interpreter

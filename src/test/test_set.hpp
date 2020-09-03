@@ -41,4 +41,4 @@ struct NormalTestSet : public TestSet {
 	TestReport execute() override;
 };
 
-}
+} // namespace Test

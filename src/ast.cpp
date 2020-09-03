@@ -248,4 +248,4 @@ void print(AST* ast, int d) {
 	}
 }
 
-}
+} // namespace AST
