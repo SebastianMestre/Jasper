@@ -406,7 +406,9 @@ void interpreter_tests(Test::Tester& tests) {
 				i := 2;
 				if (i == 1)
 					return false;
-				else
+				else if (i == 3)
+					return false;
+				else if (i == 2)
 					return true;
 				return false;
 			};
