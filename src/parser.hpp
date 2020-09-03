@@ -70,6 +70,7 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
 
 	Writer<Token const*> require(token_type t);
+	bool consume(token_type t);
 
 	Token const* peek(int dt = 0) { return &m_lexer->peek_token(dt); }
 };

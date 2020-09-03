@@ -46,6 +46,19 @@ Writer<Token const*> Parser::require(token_type expected_type) {
 	return make_writer(current_token);
 }
 
+bool Parser::consume(token_type maybe_token) {
+	Token const* current_token = &m_lexer->current_token();
+
+	if (current_token->m_type != maybe_token) {
+		return false;
+	}
+
+	m_lexer->advance();
+
+	return true;
+}
+
+
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST::AST>> result
@@ -774,8 +787,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	e->m_condition = std::move(condition.m_result);
 	e->m_body = std::move(body.m_result);
 
-	auto* p = peek(0);
-	if (p->m_type == token_type::KEYWORD_ELSE) {
+	if (consume(token_type::KEYWORD_ELSE)) {
 		auto else_body = parse_statement();
 
 		if (handle_error(result, else_body))
