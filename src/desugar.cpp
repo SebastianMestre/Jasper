@@ -140,6 +140,9 @@ Own<AST> desugar(Own<IfElseStatement> ast) {
     ast->m_condition = desugar(std::move(ast->m_condition));
     ast->m_body      = desugar(std::move(ast->m_body));
 
+    if (ast->m_else_body)
+	    ast->m_else_body = desugar(std::move(ast->m_else_body));
+
     return ast;
 }
 
