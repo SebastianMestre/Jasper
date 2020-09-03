@@ -16,4 +16,4 @@ Value* unboxed(Value* value) {
 	return ref->m_value;
 }
 
-} // namespace Interpreter
+}

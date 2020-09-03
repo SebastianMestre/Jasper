@@ -14,9 +14,7 @@ struct TypeChecker {
 	MonoId mono_boolean();
 	MonoId mono_unit();
 
-	MonoId new_var() {
-		return m_core.new_var();
-	}
+	MonoId new_var() { return m_core.new_var(); }
 
 	MonoId rule_var(PolyId poly);
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
@@ -25,4 +23,4 @@ struct TypeChecker {
 	MonoId rule_rec();
 };
 
-} // namespace TypeChecker
+}

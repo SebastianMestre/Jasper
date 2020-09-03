@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <string>
+#include <iostream>
 
 #include "../interpreter/environment.hpp"
 #include "../interpreter/execute.hpp"
@@ -21,8 +21,7 @@ exit_status_type of_type(Interpreter::Value* rv, value_type v_type) {
 }
 
 template <typename RuntimeValue, typename NativeValue>
-exit_status_type scalar_equals(
-    Interpreter::Value* rv, const value_type v_type, const NativeValue& expected) {
+exit_status_type scalar_equals(Interpreter::Value* rv, const value_type v_type, const NativeValue& expected) {
 	exit_status_type fail = of_type(rv, v_type);
 
 	if (exit_status_type::Ok != fail)
@@ -35,13 +34,11 @@ exit_status_type scalar_equals(
 }
 
 exit_status_type equals(Interpreter::Value* rv, std::string const& expected) {
-	return scalar_equals<Interpreter::String, std::string>(
-	    rv, value_type::String, expected);
+	return scalar_equals<Interpreter::String, std::string>(rv, value_type::String, expected);
 }
 
 exit_status_type equals(Interpreter::Value* rv, int expected) {
-	return scalar_equals<Interpreter::Integer, int>(
-	    rv, value_type::Integer, expected);
+	return scalar_equals<Interpreter::Integer, int>(rv, value_type::Integer, expected);
 }
 
 exit_status_type equals(Interpreter::Value* rv, float expected) {
@@ -77,4 +74,4 @@ exit_status_type array_of_size(Interpreter::Value* rv, unsigned int size) {
 	return exit_status_type::Ok;
 }
 
-} // namespace Assert
+} // Assert

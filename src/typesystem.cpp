@@ -6,26 +6,25 @@
 
 #include "compile_time_environment.hpp"
 
-void TypeSystemCore::print_type(MonoId mono, int d) {
+void TypeSystemCore::print_type (MonoId mono, int d) {
 	MonoData& data = mono_data[mono];
-	for (int i = d; i--;)
-		std::cerr << ' ';
+	for(int i = d; i--;) std::cerr << ' ';
 	std::cerr << "[" << mono << "] ";
-	if (data.type == mono_type::Var) {
+	if(data.type == mono_type::Var){
 		VarId var = data.data_id;
 		VarData& data = var_data[var];
-		if (data.equals == mono) {
+		if (data.equals == mono){
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_type(data.equals, d + 1);
+			print_type(data.equals, d+1);
 		}
 	} else {
 		TermId term = data.data_id;
 		TermData& data = term_data[term];
-		std::cerr << "Term (" << data.type_function << ")\n";
-		for (int i = 0; i < data.arguments.size(); ++i)
-			print_type(data.arguments[i], d + 1);
+		std::cerr << "Term ("<<data.type_function<<")\n";
+		for(int i = 0; i < data.arguments.size(); ++i)
+			print_type(data.arguments[i], d+1);
 	}
 }
 
@@ -33,14 +32,13 @@ MonoId TypeSystemCore::new_var() {
 	int var = var_data.size();
 	int mono = mono_data.size();
 
-	var_data.push_back({mono});
-	mono_data.push_back({mono_type::Var, var});
+	var_data.push_back({ mono });
+	mono_data.push_back({ mono_type::Var, var });
 
 	return mono;
 }
 
-MonoId TypeSystemCore::new_term(
-    TypeFunctionId type_function, std::vector<int> args, char const* tag) {
+MonoId TypeSystemCore::new_term(TypeFunctionId type_function, std::vector<int> args, char const* tag) {
 	int argument_count = type_function_data[type_function].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
@@ -50,8 +48,8 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({type_function, std::move(args), tag});
-	mono_data.push_back({mono_type::Term, term});
+	term_data.push_back({ type_function, std::move(args), tag });
+	mono_data.push_back({ mono_type::Term, term });
 
 	return mono;
 }
@@ -98,7 +96,7 @@ PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment&
 
 	MonoId base = inst_impl(mono, mapping);
 	std::vector<VarId> vars;
-	for (MonoId m : new_vars)
+	for(MonoId m : new_vars)
 		vars.push_back(mono_data[m].data_id);
 
 	return new_poly(base, std::move(vars));
@@ -181,6 +179,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 			assert(0 && "deduced two different polymorphic types to be equal");
 		}
 
+
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
 			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
@@ -189,7 +188,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TypeFunctionId type_function = term_data[ta].type_function;
 		int argument_count = a_data.arguments.size();
 
-		for (int i {0}; i != argument_count; ++i) {
+		for (int i { 0 }; i != argument_count; ++i) {
 			unify(a_data.arguments[i], b_data.arguments[i]);
 		}
 	}
@@ -227,7 +226,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 	assert(data.vars.size() == vals.size());
 
 	std::unordered_map<VarId, MonoId> old_to_new;
-	for (int i {0}; i != data.vars.size(); ++i) {
+	for (int i { 0 }; i != data.vars.size(); ++i) {
 		old_to_new[data.vars[i]] = vals[i];
 	}
 
@@ -236,8 +235,9 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
-	for (int i {0}; i != poly_data[poly].vars.size(); ++i) {
+	for (int i { 0 }; i != poly_data[poly].vars.size(); ++i) {
 		vals.push_back(new_var());
 	}
 	return inst_with(poly, vals);
 }
+

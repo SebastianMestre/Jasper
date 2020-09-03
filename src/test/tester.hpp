@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
-#include <string>
 #include <vector>
+#include <string>
+#include <memory>
 
 #include "test_set.hpp"
 
@@ -21,4 +21,4 @@ struct Tester {
 	void execute();
 };
 
-} // namespace Test
+}

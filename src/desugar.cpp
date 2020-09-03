@@ -2,16 +2,17 @@
 
 #include "ast.hpp"
 
-#include <cassert>
 #include <iostream>
+#include <cassert>
+
 
 namespace AST {
 
-template <typename T>
+template<typename T>
 using Own = std::unique_ptr<T>;
 
 Own<AST> desugar(Own<ObjectLiteral> ast) {
-	// TODO: convert
+	// TODO: convert 
 	// obt { x : t1 = e1; y : t2 = e2; }
 	// into
 	// struct { x : t1; y : t2; } { e1; e2; }
@@ -32,11 +33,11 @@ Own<AST> desugar(Own<DictionaryLiteral> ast) {
 	for (int i = 0; i < ast->m_body.size(); ++i)
 		ast->m_body[i] = desugar(std::move(ast->m_body[i]));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<FunctionLiteral> ast) {
-	for (auto&& arg : ast->m_args)
+    for (auto&& arg : ast->m_args)
 		arg = desugar(std::move(arg));
 
 	ast->m_body = desugar(std::move(ast->m_body));
@@ -45,7 +46,7 @@ Own<AST> desugar(Own<FunctionLiteral> ast) {
 }
 
 Own<AST> desugar(Own<DeclarationList> ast) {
-	for (auto&& declaration : ast->m_declarations)
+    for (auto&& declaration : ast->m_declarations)
 		declaration = desugar(std::move(declaration));
 
 	return ast;
@@ -78,8 +79,7 @@ Own<AST> desugarDot(Own<BinaryExpression> ast) {
 	auto ident = static_cast<Identifier*>(ast->m_rhs.get());
 
 	auto tok = ast->m_op_token;
-	std::cerr << "Error: @" << tok->m_line0 + 1 << ":" << tok->m_col0
-	          << " | Dot (.) operator not implemented yet\n";
+	std::cerr << "Error: @" << tok->m_line0+1 << ":" << tok->m_col0 << " | Dot (.) operator not implemented yet\n";
 
 	return std::make_unique<NullLiteral>();
 }
@@ -106,63 +106,63 @@ Own<AST> desugar(Own<BinaryExpression> ast) {
 }
 
 Own<AST> desugar(Own<CallExpression> ast) {
-	for (auto&& arg : ast->m_args) {
+    for (auto&& arg : ast->m_args) {
 		arg = desugar(std::move(arg));
-	}
+    }
 
-	ast->m_callee = desugar(std::move(ast->m_callee));
+    ast->m_callee = desugar(std::move(ast->m_callee));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<IndexExpression> ast) {
-	ast->m_callee = desugar(std::move(ast->m_callee));
-	ast->m_index = desugar(std::move(ast->m_index));
+    ast->m_callee = desugar(std::move(ast->m_callee));
+    ast->m_index  = desugar(std::move(ast->m_index));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<Block> ast) {
-	for (auto&& element : ast->m_body) {
-		element = desugar(std::move(element));
-	}
+    for (auto&& element : ast->m_body) {
+        element = desugar(std::move(element));
+    }
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<ReturnStatement> ast) {
-	ast->m_value = desugar(std::move(ast->m_value));
+    ast->m_value = desugar(std::move(ast->m_value));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<IfElseStatement> ast) {
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_body = desugar(std::move(ast->m_body));
+    ast->m_condition = desugar(std::move(ast->m_condition));
+    ast->m_body      = desugar(std::move(ast->m_body));
 
-	if (ast->m_else_body)
-		ast->m_else_body = desugar(std::move(ast->m_else_body));
+    if (ast->m_else_body)
+	    ast->m_else_body = desugar(std::move(ast->m_else_body));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<ForStatement> ast) {
-	ast->m_declaration = desugar(std::move(ast->m_declaration));
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_action = desugar(std::move(ast->m_action));
-	ast->m_body = desugar(std::move(ast->m_body));
+    ast->m_declaration = desugar(std::move(ast->m_declaration));
+    ast->m_condition   = desugar(std::move(ast->m_condition));
+    ast->m_action      = desugar(std::move(ast->m_action));
+    ast->m_body        = desugar(std::move(ast->m_body));
 
-	return ast;
+    return ast;
 }
 
 Own<AST> desugar(Own<WhileStatement> ast) {
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_body = desugar(std::move(ast->m_body));
+    ast->m_condition = desugar(std::move(ast->m_condition));
+    ast->m_body      = desugar(std::move(ast->m_body));
 
-	return ast;
+    return ast;
 }
 
-Own<AST> desugar(Own<AST> ast) {
+Own<AST> desugar (Own<AST> ast) {
 #define DISPATCH(type)                                                         \
 	case ast_type::type:                                                       \
 		return desugar(Own<type>(static_cast<type*>(ast.release())));
@@ -194,8 +194,7 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(WhileStatement);
 		RETURN(TypeTerm);
 	}
-	std::cerr << "Error: AST type not handled in desugar: "
-	          << ast_type_string[(int)ast->type()] << std::endl;
+	std::cerr << "Error: AST type not handled in desugar: " << ast_type_string[(int)ast->type()] << std::endl;
 	assert(0);
 
 #undef RETURN

@@ -10,7 +10,7 @@ GC::GC() {
 	m_null = new Null;
 }
 
-GC::~GC() {
+GC::~GC(){
 	sweep_all();
 	delete m_null;
 }
@@ -56,9 +56,17 @@ void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
+
+
 Null* GC::null() {
 	return m_null;
 }
+
+
+
+
+
+
 
 gc_ptr<Object> GC::new_object(ObjectType declarations) {
 	auto result = new Object;

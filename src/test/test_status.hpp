@@ -1,10 +1,10 @@
 #pragma once
 
 constexpr const char* test_status_string[] = {
-    "Ok",
-    "Error",
-    "Fail",
-    "Empty",
+	"Ok",
+	"Error",
+	"Fail",
+	"Empty",
 };
 
 enum class test_status {

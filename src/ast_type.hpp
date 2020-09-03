@@ -1,8 +1,7 @@
 #pragma once
 
-/* clang-format off */
 constexpr const char* ast_type_string[] = {
-	"NumberLiteral", 
+	"NumberLiteral",
 	"IntegerLiteral",
 	"StringLiteral",
 	"BooleanLiteral",
@@ -52,3 +51,4 @@ enum class ast_type {
 
 	TypeTerm,
 };
+
