@@ -32,6 +32,8 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 		assert(declaration);
 		ast->m_declaration = declaration;
 
+		env.current_top_level_declaration()->m_references.insert(declaration);
+
 		surrounding_function = declaration->m_surrounding_function;
 	} else {
 		TypedAST::FunctionArgument& arg = binding->get_arg();
