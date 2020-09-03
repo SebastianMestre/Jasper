@@ -90,12 +90,15 @@ void typecheck(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
 	env.end_scope();
 }
 
-void typecheck(TypedAST::IfStatement* ast, Frontend::CompileTimeEnvironment& env) {
+void typecheck(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	typecheck(ast->m_condition.get(), env);
 	env.m_typechecker.m_core.unify(
 	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
 
 	typecheck(ast->m_body.get(), env);
+
+	if (ast->m_else_body)
+		typecheck(ast->m_else_body.get(), env);
 }
 
 void typecheck(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
@@ -239,7 +242,7 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
-		DISPATCH(IfStatement);
+		DISPATCH(IfElseStatement);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
