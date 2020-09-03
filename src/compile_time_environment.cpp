@@ -181,4 +181,18 @@ bool CompileTimeEnvironment::has_type_var(VarId var) {
 	return scan_scope(m_global_scope, var);
 }
 
+TypedAST::Declaration* CompileTimeEnvironment::current_top_level_declaration() {
+	return m_current_decl;
+}
+
+void CompileTimeEnvironment::enter_top_level_decl(TypedAST::Declaration* decl) {
+	assert(!m_current_decl);
+	m_current_decl = decl;
+}
+
+void CompileTimeEnvironment::exit_top_level_decl() {
+	assert(m_current_decl);
+	m_current_decl = nullptr;
+}
+
 } // namespace Frontend
