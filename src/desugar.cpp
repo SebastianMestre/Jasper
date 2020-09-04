@@ -122,6 +122,14 @@ Own<AST> desugar(Own<IndexExpression> ast) {
 	return ast;
 }
 
+Own<AST> desugar(Own<TernaryExpression> ast) {
+	ast->m_condition = desugar(std::move(ast->m_condition));
+	ast->m_then_expr = desugar(std::move(ast->m_then_expr));
+	ast->m_else_expr = desugar(std::move(ast->m_else_expr));
+
+	return ast;
+}
+
 Own<AST> desugar(Own<Block> ast) {
 	for (auto&& element : ast->m_body) {
 		element = desugar(std::move(element));
@@ -187,6 +195,7 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(BinaryExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
