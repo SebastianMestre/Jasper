@@ -223,6 +223,8 @@ TypedAST* convertAST(AST::AST* ast) {
 		return convertAST(static_cast<AST::CallExpression*>(ast));
 	case ast_type::IndexExpression:
 		return convertAST(static_cast<AST::IndexExpression*>(ast));
+	case ast_type::TernaryExpression:
+		return convertAST(static_cast<AST::TernaryExpression*>(ast));
 	case ast_type::Block:
 		return convertAST(static_cast<AST::Block*>(ast));
 	case ast_type::ReturnStatement:
