@@ -265,88 +265,62 @@ void interpreter_tests(Test::Tester& tests) {
 		    return Assert::equals(eval_expression("__invoke()", env), 120);
 	    }));
 
-	/* // HEADS UP : this test won't work because we don't
-	 * know how to type array literals and because we need
-	 * better type hints on the built-in functions
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn () {
 				A := array {};
 				array_append(A, 10);
 				return A;
 			};
 		)",
-		Testers{
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
-			},
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
+	        }}));
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
-			}
-		})
-	);
-	*/
-
-	/* // HEADS UP : this test won't work because we don't
-	 * know how to type array literals and because we need
-	 * better type hints on the built-in functions
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn () {
 				A := array {};
 				array_extend(A, array{10});
 				return A;
 			};
 		)",
-		Testers{
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::array_of_size(eval_expression("__invoke()", env), 1);
-			},
+	    Testers {
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
+	        },
+	        +[](Interpreter::Environment& env) -> exit_status_type {
+		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
+	        }}));
 
-			+[](Interpreter::Environment& env) -> exit_status_type {
-				return Assert::equals(eval_expression("__invoke()[0]", env), 10);
-			}
-		})
-	);
-	*/
-
-	/* // HEADS UP : this test won't work because we don't
-	 * know how to type array literals and because we need
-	 * better type hints on the built-in functions
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return size(A);
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), 2);
-		})
-	);
-	*/
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 2);
+	    }));
 
-	/* // HEADS UP : this test won't work because we don't
-	 * know how to type array literals and because we need
-	 * better type hints on the built-in functions
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
+	tests.add_test(std::make_unique<TestCase>(
+	    R"(
 			__invoke := fn () {
 				A := array {10;10};
 				return array_join(A, ",");
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
-			return Assert::equals(eval_expression("__invoke()", env), "10,10");
-		})
-	);
-	*/
+	    +[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), "10,10");
+	    }));
 
 	/* // HEADS UP : this test won't work because we don't
-	 * know how to type array literals, because we need better
-	 * type hints on the built-in functions, and because we
-	 * don't know how to take source type hints into account
+	 * know how to take source type hints into account
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			// TODO: fix inability to use keyword 'array' and others in types
