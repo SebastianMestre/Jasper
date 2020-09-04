@@ -7,7 +7,7 @@ constexpr const char* ast_type_string[] = {
 
     "DeclarationList", "Declaration",     "Identifier",     "BinaryExpression",
     "CallExpression",  "IndexExpression", "Block",          "ReturnStatement",
-    "IfElseStatement", "ForStatement",    "WhileStatement",
+    "IfElseStatement", "TernaryExpression", "ForStatement",    "WhileStatement",
 
     "TypeTerm",
 };
@@ -32,6 +32,7 @@ enum class ast_type {
 	Block,
 	ReturnStatement,
 	IfElseStatement,
+	TernaryExpression,
 	ForStatement,
 	WhileStatement,
 

@@ -159,6 +159,15 @@ struct IndexExpression : public AST {
 	    : AST {ast_type::IndexExpression} {}
 };
 
+struct TernaryExpression : public AST {
+	std::unique_ptr<AST> m_condition;
+	std::unique_ptr<AST> m_then_expr;
+	std::unique_ptr<AST> m_else_expr;
+
+	TernaryExpression()
+	    : AST {ast_type::TernaryExpression} {}
+};
+
 struct Block : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
