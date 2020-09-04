@@ -133,6 +133,16 @@ TypedAST* convertAST(AST::IndexExpression* ast) {
 	return typed_index;
 }
 
+TypedAST* convertAST(AST::TernaryExpression* ast) {
+	auto typed_ternary = new TernaryExpression;
+
+	typed_ternary->m_condition = get_unique(ast->m_condition);
+	typed_ternary->m_then_expr = get_unique(ast->m_then_expr);
+	typed_ternary->m_else_expr = get_unique(ast->m_else_expr);
+
+	return typed_ternary;
+}
+
 TypedAST* convertAST(AST::Block* ast) {
 	auto typed_block = new Block;
 
