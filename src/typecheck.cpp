@@ -38,6 +38,19 @@ void typecheck(TypedAST::NullLiteral* ast, Frontend::CompileTimeEnvironment& env
 	ast->m_value_type = env.m_typechecker.mono_unit();
 }
 
+void typecheck(TypedAST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	auto element_type = env.new_type_var();
+	for (auto& element : ast->m_elements) {
+		typecheck(element.get(), env);
+		env.m_typechecker.m_core.unify(element_type, element->m_value_type);
+	}
+
+	auto array_type =
+	    env.m_typechecker.m_core.new_term(BuiltinType::Array, {element_type}, "Array Literal");
+
+	ast->m_value_type = array_type;
+}
+
 void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 #if DEBUG
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
@@ -331,6 +344,7 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(StringLiteral);
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
+		DISPATCH(ArrayLiteral);
 
 		DISPATCH(Declaration);
 		DISPATCH(Identifier);
