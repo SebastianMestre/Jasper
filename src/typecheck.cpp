@@ -210,6 +210,8 @@ void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironmen
 
 	env.m_typechecker.m_core.unify(
 	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
+
+	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
 #define USE_REC_RULE 1
