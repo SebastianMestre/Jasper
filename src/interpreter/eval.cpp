@@ -229,6 +229,19 @@ gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	return array_callee->at(int_index->m_value);
 };
 
+gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
+	// TODO: proper error handling
+
+	auto condition = eval(ast->m_condition.get(), e);
+	auto* condition_value = unboxed(condition.get());
+	assert(condition_value);
+	assert(condition_value->type() == value_type::Boolean);
+
+	return static_cast<Boolean*>(condition_value)->m_value
+	       ? eval(ast->m_then_expr.get(), e)
+	       : eval(ast->m_else_expr.get(), e);
+};
+
 gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
@@ -344,6 +357,8 @@ gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
 	case ast_type::IndexExpression:
 		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
+	case ast_type::TernaryExpression:
+		return eval(static_cast<TypedAST::TernaryExpression*>(ast), e);
 	case ast_type::Block:
 		return eval(static_cast<TypedAST::Block*>(ast), e);
 	case ast_type::ReturnStatement:
