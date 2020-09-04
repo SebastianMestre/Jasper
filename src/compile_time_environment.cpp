@@ -32,15 +32,62 @@ TypedAST::FunctionLiteral* Binding::get_func() {
 
 CompileTimeEnvironment::CompileTimeEnvironment() {
 	// TODO: put this in a better place
+	// TODO: refactor, figure out a nice way to build types
 	// HACK: this is an ugly hack. bear with me...
-	declare_builtin("size");
-	declare_builtin("print");
-	declare_builtin("array_append");
-	declare_builtin("array_extend");
-	declare_builtin("array_join");
 
 	{
-		// TODO: refactor, figure out a nice way to build types
+		auto var_mono_id = m_typechecker.new_var();
+		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+
+		auto array_mono_id = m_typechecker.m_core.new_term(
+		    TypeChecker::BuiltinType::Array, {var_mono_id}, "array");
+
+		{
+			auto term_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Function,
+			    {array_mono_id, var_mono_id, m_typechecker.mono_unit()},
+			    "[builtin] (array(<a>), a) -> unit");
+
+			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+			declare_builtin("array_append", poly_id);
+		}
+		{
+			auto term_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Function,
+			    {array_mono_id, m_typechecker.mono_int()},
+			    "[builtin] (array(<a>)) -> int");
+
+			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+			declare_builtin("size", poly_id);
+		}
+		{
+			auto term_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Function,
+			    {array_mono_id, array_mono_id, array_mono_id},
+			    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
+
+			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+			declare_builtin("array_extend", poly_id);
+		}
+		{
+			auto array_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Array,
+			    {m_typechecker.mono_int()},
+			    "array(<int>)");
+
+			auto term_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Function,
+			    {array_mono_id, m_typechecker.mono_string(), m_typechecker.mono_string()},
+			    "[builtin] (array(<int>), string)) -> string");
+
+			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {});
+			declare_builtin("array_join", poly_id);
+		}
+	}
+
+	declare_builtin("print");
+
+	{
 		auto var_mono_id = m_typechecker.new_var();
 		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
 
