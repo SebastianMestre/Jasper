@@ -445,7 +445,7 @@ void interpreter_tests(Test::Tester& tests) {
 	    R"(
 			__invoke := fn() {
 				i := 0;
-				return (if i == 1 then     0 else i) +
+				return (if i == 1 then     0 else 1) +
 				       (if i == 0 then i + 1 else 0);
 			};
 		)",
