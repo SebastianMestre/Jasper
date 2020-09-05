@@ -147,6 +147,18 @@ void print(IndexExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(TernaryExpression* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ TernaryExpression\n" << tab << "Condition:\n";
+	print(ast->m_condition.get(), d + 1);
+	std::cout << tab << "Then:\n";
+	print(ast->m_then_expr.get(), d + 1);
+	std::cout << tab << "Else:\n";
+	print(ast->m_else_expr.get(), d + 1);
+	std::cout << stab << "]\n";
+}
+
 void print(ReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
@@ -233,6 +245,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<CallExpression*>(ast), d);
 	case ast_type::IndexExpression:
 		return print(static_cast<IndexExpression*>(ast), d);
+	case ast_type::TernaryExpression:
+		return print(static_cast<TernaryExpression*>(ast), d);
 	case ast_type::Block:
 		return print(static_cast<Block*>(ast), d);
 	case ast_type::ReturnStatement:

@@ -213,6 +213,20 @@ void typecheck(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment&
 	typecheck(ast->m_index.get(), env);
 }
 
+void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	typecheck(ast->m_condition.get(), env);
+	env.m_typechecker.m_core.unify(
+	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+
+	typecheck(ast->m_then_expr.get(), env);
+	typecheck(ast->m_else_expr.get(), env);
+
+	env.m_typechecker.m_core.unify(
+	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
+
+	ast->m_value_type = ast->m_then_expr->m_value_type;
+}
+
 #define USE_REC_RULE 1
 
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
@@ -356,6 +370,7 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
 	case ast_type::BinaryExpression:
 		assert(0);

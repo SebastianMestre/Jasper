@@ -111,6 +111,11 @@ bool Lexer::consume_keyword() {
 		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_TRUE, 4);
 			return true;
+		} else if (
+		    peek_char(1) == 'h' && peek_char(2) == 'e' && peek_char(3) == 'n' &&
+		    not is_identifier_char(peek_char(4))) {
+			push_token(token_type::KEYWORD_THEN, 4);
+			return true;
 		}
 		break;
 	case 'n':

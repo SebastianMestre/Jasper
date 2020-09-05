@@ -133,6 +133,13 @@ void match_identifiers(
 }
 
 void match_identifiers(
+    TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	match_identifiers(ast->m_condition.get(), env);
+	match_identifiers(ast->m_then_expr.get(), env);
+	match_identifiers(ast->m_else_expr.get(), env);
+}
+
+void match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
@@ -178,6 +185,7 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
 	case ast_type::BinaryExpression:
 		assert(0);

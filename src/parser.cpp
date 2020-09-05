@@ -317,7 +317,9 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 		    op->m_type == token_type::BRACE_CLOSE ||
 		    op->m_type == token_type::BRACKET_CLOSE ||
 		    op->m_type == token_type::PAREN_CLOSE ||
-		    op->m_type == token_type::COMMA) {
+		    op->m_type == token_type::COMMA ||
+		    op->m_type == token_type::KEYWORD_THEN ||
+		    op->m_type == token_type::KEYWORD_ELSE) {
 			break;
 		}
 
@@ -448,6 +450,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 		return function;
 	}
 
+	if (token->m_type == token_type::PAREN_OPEN and
+	    peek(1)->m_type == token_type::KEYWORD_IF) {
+		m_lexer->advance();
+		auto ternary = parse_ternary_expression();
+		if (handle_error(result, ternary))
+			return result;
+		if (handle_error(result, require(token_type::PAREN_CLOSE)))
+			return result;
+		return ternary;
+	}
+
 	// parse a parenthesized expression.
 	if (token->m_type == token_type::PAREN_OPEN) {
 		m_lexer->advance();
@@ -490,6 +503,40 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	    {make_expected_error(token_type_string[int(token_type::NUMBER)], token)});
 
 	return result;
+}
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
+	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse ternary expression"}};
+
+	if (handle_error(result, require(token_type::KEYWORD_IF)))
+		return result;
+
+	auto condition = parse_expression();
+	if (handle_error(result, condition))
+		return result;
+
+	if (handle_error(result, require(token_type::KEYWORD_THEN)))
+		return result;
+
+	auto then_expr = parse_expression();
+	if (handle_error(result, then_expr))
+		return result;
+
+	if (handle_error(result, require(token_type::KEYWORD_ELSE)))
+		return result;
+
+	auto else_expr = parse_expression();
+	if (handle_error(result, else_expr))
+		return result;
+
+	auto e = std::make_unique<AST::TernaryExpression>();
+
+	e->m_condition = std::move(condition.m_result);
+	e->m_then_expr = std::move(then_expr.m_result);
+	e->m_else_expr = std::move(else_expr.m_result);
+
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {

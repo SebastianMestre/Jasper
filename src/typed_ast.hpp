@@ -185,6 +185,15 @@ struct IndexExpression : public TypedAST {
 	    : TypedAST {ast_type::IndexExpression} {}
 };
 
+struct TernaryExpression : public TypedAST {
+	std::unique_ptr<TypedAST> m_condition;
+	std::unique_ptr<TypedAST> m_then_expr;
+	std::unique_ptr<TypedAST> m_else_expr;
+
+	TernaryExpression()
+	    : TypedAST {ast_type::TernaryExpression} {}
+};
+
 struct Block : public TypedAST {
 	std::vector<std::unique_ptr<TypedAST>> m_body;
 
