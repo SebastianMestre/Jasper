@@ -426,6 +426,21 @@ void interpreter_tests(Test::Tester& tests) {
 	    +[](Interpreter::Environment& env) -> exit_status_type {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }));
+
+	// we really only care that it typechecks, but might as
+	// well throw a whole batch of stuff at it.
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+			__invoke := fn() {
+				fib:= fn(n) => (if n < 2
+					then n
+					else fib(n-1) + fib(n-2));
+				return fib(3);
+			};
+		)",
+	    Testers {+[](Interpreter::Environment& env) -> exit_status_type {
+		    return Assert::equals(eval_expression("__invoke()", env), 2);
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
