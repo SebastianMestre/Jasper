@@ -24,8 +24,8 @@ struct TypedAST {
 	TypedAST(ast_type type)
 	    : m_type {type} {}
 
-	// is not set on declarations
-	MonoId m_value_type;
+	// is not set on polymorphic declarations
+	MonoId m_value_type{-1};
 	ast_type type() const {
 		return m_type;
 	}
