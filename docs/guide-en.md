@@ -8,17 +8,18 @@ The main objectives of the language are:
 We aim to be able to get those through various features:
 
  - Consistent syntax
- - Everything is a value (WIP)
- - Value semantics (TODO)
+ - First class functions
+ - Closures
  - Parametric polymorphism
  - Type deduction
+ - Everything is a value (WIP)
+ - Value semantics (TODO)
 
 Furthermore, we have put some things because they appeared pretty to us.
 
  - Pipeline operator `|>`
- - Function closures
- - inyeccion de scopes (TODO) (?)
- - Decimal type (TODO)
+ - Scope injection (TODO)
+ - Decimal number data type (TODO)
  - Callable objects (TODO)
 
 ## Introduction - The structure of a program

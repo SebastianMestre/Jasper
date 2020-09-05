@@ -8,17 +8,18 @@ Los objetivos principales del lenguaje son:
 Eso pensamos obtenerlo mediante varias features:
 
  - Sintaxis consistente
- - Todo es un valor
- - Semantica de valor (TODO)
+ - Funciones de primera clase
+ - Clausuras
  - Polimorfismo parametrico
  - Deduccion de tipos
+ - Todo es un valor (WIP)
+ - Semantica de valor (TODO)
 
 Aparte, hay cositas que metimos porque nos parecen lindas.
 
  - Operador pipeline `|>`
- - Funciones con clausuras
  - inyeccion de scopes (TODO)
- - Tipo de datos decimal (TODO)
+ - Tipo de datos de numero decimal (TODO)
  - Objetos llamables (TODO)
 
 ## Introduccion - La estructura de un programa
