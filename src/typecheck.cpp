@@ -64,9 +64,10 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	// TODO: refactor (duplication).
 	if (ast->m_value) {
 		typecheck(ast->m_value.get(), env);
-		ast->m_value_type = ast->m_value->m_value_type;
+		// unify instead of assign. This way, we can do recursion.
+		env.m_typechecker.m_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 	} else {
-		// NOTE: this should be an error...
+		// NOTE: this should be an error at an earlier stage...
 	}
 
 	ast->m_is_polymorphic = true;
