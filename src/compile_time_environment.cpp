@@ -83,6 +83,15 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {});
 			declare_builtin("array_join", poly_id);
 		}
+		{
+			auto term_mono_id = m_typechecker.m_core.new_term(
+			    TypeChecker::BuiltinType::Function,
+			    {array_mono_id, m_typechecker.mono_int(), var_mono_id},
+			    "[builtin] (array(<a>), int) -> a");
+
+			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
+			declare_builtin("array_at", poly_id);
+		}
 	}
 
 	declare_builtin("print");
