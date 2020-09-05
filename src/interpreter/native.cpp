@@ -81,6 +81,19 @@ Value* array_join(ArrayType v, Environment& e) {
 	return e.new_string(result.str()).get();
 }
 
+// array_at(array, int i) returns the i-th element of the given array
+Value* array_at(ArrayType v, Environment& e) {
+	// TODO proper error handling
+	assert(v.size() == 2);
+	assert(unboxed(v[0])->type() == value_type::Array);
+	assert(unboxed(v[1])->type() == value_type::Integer);
+	Array* array = static_cast<Array*>(unboxed(v[0]));
+	Integer* index = static_cast<Integer*>(unboxed(v[1]));
+	assert(index->m_value >= 0);
+	assert(index->m_value <  array->m_value.size());
+	return array->m_value[index->m_value];
+}
+
 Value* dummy(ArrayType v, Environment& e) {
 	return e.null();
 }
@@ -370,6 +383,10 @@ void declare_native_functions(Environment& env) {
 	env.declare(
 	    "array_join",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&array_join)));
+
+	env.declare(
+	    "array_at",
+	    env.new_native_function(static_cast<NativeFunctionType*>(&array_at)));
 
 	env.declare(
 	    "+", env.new_native_function(static_cast<NativeFunctionType*>(&value_add)));
