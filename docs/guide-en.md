@@ -7,33 +7,33 @@ The main objectives of the language are:
 
 We aim to be able to get those through various features:
 
- - Consistent syntax (WIP)
+ - Consistent syntax
  - Everything is a value (WIP)
  - Value semantics (TODO)
- - Parametric polymorphism (WIP)
- - Type deduction (WIP)
+ - Parametric polymorphism
+ - Type deduction
 
 Furthermore, we have put some things because they appeared pretty to us.
 
  - Pipeline operator `|>`
+ - Function closures
  - inyeccion de scopes (TODO) (?)
- - Float type (TODO)
+ - Decimal type (TODO)
  - Callable objects (TODO)
- - Function closures (WIP)
 
 ## Introduction - The structure of a program
 
-In JS++, a program is a list of declarations.
+In Jasper, a program is a list of declarations.
 
-> A delaration associates a value with a name.e.
+> A declaration associates a value with a name.
 >
-> Syntaxically, it is an identifier, followed by a type specifier
+> Syntactically, it is an identifier, followed by a type specifier
 > (optional) and an initial value. Examples: `a := 15; b : int = 10;`
 
 Among those declarations, one must be the entry point, a function named
 `__invoke`.
 
-> In JS++, functions are defined with the keyword `fn`, followed by a list of
+> In Jasper, functions are defined with the keyword `fn`, followed by a list of
 > arguments and the body of the function
 
 ```rust
@@ -44,14 +44,15 @@ __invoke : fn() {
 };
 ```
 
-This program returns the inputed number, `10`.
+This program returns the integer `10`.
 
-## Syntaxic sugar
-Since we acknowledge the importance of the syntax, JS++ constains plenty of syntaxic sugar.
+## Syntactic sugar
+Since we acknowledge the importance of the syntax, Jasper contains plenty of syntactic sugar.
 
 ### Short functions
 
-While using short functions, the following declarations are both completely equivalent:
+While using short function syntax, the following declarations are
+completely equivalent:
 
 ```rust
 f := fn (x) => x + 1;
@@ -61,23 +62,29 @@ f := fn (x) {
 };
 ```
 
-### Pipeline operatior or pizza operator
+### Pipeline operator
 
-The pizza operator allow us to write pipelines in our code. This is very useful
-for two things:
+The pipeline operator allows us to write pipelines in our code.
+It is very useful for two things:
  - Extending the functionality of an object without adding dependencies
- - Write the code in a functional style
+ - Write functional code in imperative style
 
-The pizza operator converts an expression like `x |> f(y...)` into `f(x,y,...)`
+The pizza operator converts an expression like `x |> f(y,z)` into `f(x,y,z)`
 
-Here is an example of such use, along with its sugar-free version:
+Here is an example of their use, along with its desugared version:
 
 ```rust
+// original
 squared_primes := fn (arr) => arr
 	|> filter(is_prime)
 	|> map(fn (x) => x * x);
 
+// desugared
 squared_primes := fn (arr) {
-	return map(filter(arr, is_prime), fn (x) => x * x);
+	return map(
+		filter(arr, is_prime),
+		fn (x) {
+			return x * x;
+		});
 };
 ```
