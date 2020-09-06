@@ -63,7 +63,7 @@ Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 	// TODO: error handling
 	assert(ast->m_rhs->type() == ast_type::CallExpression);
 
-	auto rhs = std::move(ast->m_rhs);
+	auto rhs = desugar(std::move(ast->m_rhs));
 	auto call = static_cast<CallExpression*>(rhs.get());
 
 	call->m_args.insert(call->m_args.begin(), desugar(std::move(ast->m_lhs)));
