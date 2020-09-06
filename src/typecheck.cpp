@@ -64,9 +64,10 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	// TODO: refactor (duplication).
 	if (ast->m_value) {
 		typecheck(ast->m_value.get(), env);
-		ast->m_value_type = ast->m_value->m_value_type;
+		// unify instead of assign. This way, we can do recursion.
+		env.m_typechecker.m_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 	} else {
-		// NOTE: this should be an error...
+		// NOTE: this should be an error at an earlier stage...
 	}
 
 	ast->m_is_polymorphic = true;
@@ -227,11 +228,8 @@ void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironmen
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
-#define USE_REC_RULE 1
-
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 
-#if USE_REC_RULE
 	// two way mapping
 	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
 	std::vector<TypedAST::Declaration*> index_to_decl;
@@ -310,40 +308,20 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			decl->m_is_polymorphic = true;
 			decl->m_decl_type =
 			    env.m_typechecker.m_core.generalize(decl->m_value_type, env);
-		}
-	}
-#else
-
-	for (auto& decl : ast->m_declarations) {
-		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		env.declare(d->identifier_text(), d);
-	}
-
-	for (auto& decl : ast->m_declarations) {
-		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		d->m_is_polymorphic = true;
-
-		// this is where we implement let-polymorphism. TODO: refactor (duplication).
-		if (d->m_value)
-			typecheck(d->m_value.get(), env);
-
-		MonoId mono = d->m_value ? d->m_value->m_value_type : env.new_type_var();
-
-		d->m_decl_type = env.m_typechecker.m_core.generalize(mono, env);
 
 #if DEBUG
-		{
-			auto poly = d->m_decl_type;
-			auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
+			{
+				auto poly = decl->m_decl_type;
+				auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
 
-			std::cerr << "@@ Type of " << d->identifier_text() << '\n';
-			std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-			std::cerr << "@@ It is equal to:\n";
-			env.m_typechecker.m_core.print_type(mono);
+				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
+				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+				std::cerr << "@@ It is equal to:\n";
+				env.m_typechecker.m_core.print_type(poly_data.base);
+			}
+#endif
 		}
-#endif
 	}
-#endif
 }
 
 void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
