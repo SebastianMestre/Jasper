@@ -62,20 +62,4 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	return return_type;
 }
 
-// TODO
-MonoId TypeChecker::rule_abs() {
-	assert(0);
-}
-
-// TODO
-MonoId TypeChecker::rule_let(MonoId mono) {
-	assert(0);
-	// return m_core.generalize(mono);
-}
-
-// TODO
-MonoId TypeChecker::rule_rec() {
-	assert(0);
-}
-
 } // namespace TypeChecker
