@@ -1,9 +1,10 @@
 # Jasper
 
-The main objectives of the language are:
+The main objectives of the language are to be:
 
  - Nice to use
  - Easy to refactor
+ - Consistent
 
 We aim to be able to get those through various features:
 
