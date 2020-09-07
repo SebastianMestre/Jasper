@@ -9,20 +9,39 @@ Jasper is a scripting language inspired by Haskell, Javascript, and modern C++. 
 
 The aim of Jasper is to be:
 
- - easy to refactor
- - consistent
- - nice to use
+ - Nice to use
+ - Easy to refactor
+ - Consistent
+
+For this purpose, Jasper has:
+
+ - Type deduction
+ - First class functions
+ - Consistent and context-free syntax
+ - Syntactic sugar
+ - Many others
 
 Here is an example piece of code:
 
 ```c++
-f := fn (name) {
-	greeting := "Hello, ";
-	return greeting + name;
+or_default := fn(str, default) =>
+	(if str == ""
+		then default
+		else str);
+
+make_greeting := fn(prefix, suffix) =>
+	fn(name) =>
+		prefix + name + suffix;
+
+say_hello := fn(name) {
+	greeting := make_greeting("Hello, ", "!");
+	return name
+		|> or_default("Friend")
+		|> greeting();
 };
 
-__invoke := fn () {
-	print(f("Programmer"));
+__invoke := fn() {
+	return say_hello("World");
 };
 ```
 
