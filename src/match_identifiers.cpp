@@ -112,9 +112,8 @@ namespace TypeChecker {
 	// scan body
 	assert(ast->m_body->type() == ast_type::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
-	for (auto& child : body->m_body) {
+	for (auto& child : body->m_body)
 		CHECK_AND_RETURN(match_identifiers(child.get(), env));
-	}
 
 	env.end_scope();
 	env.exit_function();
