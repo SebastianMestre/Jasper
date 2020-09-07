@@ -17,6 +17,7 @@ enum class exit_status_type {
 	Ok = 0,
 
 	ParseError,
+	StaticError,
 	TopLevelTypeError,
 
 	NullError,
