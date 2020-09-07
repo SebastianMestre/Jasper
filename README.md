@@ -1,6 +1,13 @@
+<div align="center">
+	<img width="256" src="img/JasperLogo.png" alt="Jasper Programming Language logo">
+
 # Jasper
 
-We are trying to make a nice programming language which is
+Jasper is a scripting language inspired by Haskell, Javascript, and modern C++. Jasper can be embedded in C++ applications.
+
+</div>
+
+The aim of Jasper is to be:
 
  - Nice to use
  - Easy to refactor
