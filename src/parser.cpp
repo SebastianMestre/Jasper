@@ -648,7 +648,6 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 	if (handle_error(result, require(token_type::PAREN_OPEN)))
 		return result;
 
-	// TODO: refactor
 	std::vector<std::unique_ptr<AST::AST>> args;
 	while (1) {
 		if (consume(token_type::PAREN_CLOSE)) {
@@ -661,32 +660,27 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 			arg->m_identifier_token = peek();
 			m_lexer->advance();
 
-			// now we optionally consume a type hint
-			// NOTE: a type hint is a colon followed by a type name.
-			// Example: ': int'
-
 			if (consume(token_type::DECLARE)) {
-				// consume type separator (:)
-				// must be followed by a type
-
+				// optionally consume a type hint
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-
 				arg->m_type = std::move(type.m_result);
 			}
 
 			args.push_back(std::move(arg));
 
-			// continue parsing:
-			// if we find a comma, we have to parse another argument, so we loop again.
-			// if we find a closing paren, we are done parsing arguments, so we stop.
-			// Anything else is unexpected input, so we report an error.
 			if (consume(token_type::COMMA)) {
+				// If we find a comma, we have to parse
+				// another argument, so we loop again.
 				continue;
 			} else if (consume(token_type::PAREN_CLOSE)) {
+				// If we find a closing paren, we are done
+				// parsing arguments, so we stop.
 				break;
 			} else {
+				// Anything else is unexpected input, so we
+				// report an error.
 				result.m_error.m_sub_errors.push_back(
 				    make_expected_error("',' or ')'", peek()));
 				return result;
@@ -698,32 +692,27 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 		}
 	}
 
-	auto e = std::make_unique<AST::FunctionLiteral>();
 	if (consume(token_type::ARROW)) {
 		auto expression = parse_expression();
-		if (handle_error(result, expression)) {
+		if (handle_error(result, expression))
 			return result;
-		}
 
-		auto returnStmt = std::make_unique<AST::ReturnStatement>();
-		returnStmt->m_value = std::move(expression.m_result);
-
-		auto block = std::make_unique<AST::Block>();
-		block->m_body.push_back(std::move(returnStmt));
-
-		e->m_body = std::move(block);
+		auto e = std::make_unique<AST::ShortFunctionLiteral>();
+		e->m_body = std::move(expression.m_result);
 		e->m_args = std::move(args);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	} else {
 		auto block = parse_block();
-		if (handle_error(result, block)) {
+		if (handle_error(result, block))
 			return result;
-		}
 
+		auto e = std::make_unique<AST::FunctionLiteral>();
 		e->m_body = std::move(block.m_result);
 		e->m_args = std::move(args);
-	}
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	}
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
