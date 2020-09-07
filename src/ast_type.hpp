@@ -10,6 +10,7 @@ constexpr const char* ast_type_string[] = {
 	"ArrayLiteral",
 	"DictionaryLiteral",
 	"FunctionLiteral",
+	"ShortFunctionLiteral",
 
 	"DeclarationList",
 	"Declaration",
@@ -37,6 +38,7 @@ enum class ast_type {
 	ArrayLiteral,
 	DictionaryLiteral,
 	FunctionLiteral,
+	ShortFunctionLiteral,
 
 	DeclarationList,
 	Declaration,
