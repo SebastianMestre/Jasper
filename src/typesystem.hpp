@@ -63,8 +63,6 @@ struct TypeSystemCore {
 	std::vector<TypeFunctionData> type_function_data;
 	std::vector<PolyData> poly_data;
 
-	// TODO: add an environment.
-
 	MonoId new_var();
 	MonoId new_term(
 	    TypeFunctionId type_function,
