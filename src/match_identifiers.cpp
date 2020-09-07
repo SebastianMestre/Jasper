@@ -4,25 +4,37 @@
 #include <unordered_map>
 
 #include "compile_time_environment.hpp"
+#include "error_report.hpp"
 #include "typed_ast.hpp"
 
 #include <cassert>
 
 namespace TypeChecker {
 
-void match_identifiers(
+#define CHECK_AND_RETURN(expr)                                                 \
+	{                                                                          \
+		auto err = expr;                                                       \
+		if (!err.ok())                                                         \
+			return err;                                                        \
+	}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
 
 	if (ast->m_value)
-		match_identifiers(ast->m_value.get(), env);
+		CHECK_AND_RETURN(match_identifiers(ast->m_value.get(), env));
+
+	return {};
 }
 
-void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
 	Frontend::Binding* binding = env.access_binding(ast->text());
-	assert(binding && "accessed an undeclared identifier");
+	if (!binding)
+		return {"accessed an undeclared identifier"};
 
 	// TODO: refactor
 	TypedAST::FunctionLiteral* surrounding_function = nullptr;
@@ -36,8 +48,6 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 
 		surrounding_function = declaration->m_surrounding_function;
 	} else {
-		TypedAST::FunctionArgument& arg = binding->get_arg();
-
 		// This is only used to build the top-level-declaration graph. since this
 		// points to a function argument, it doesn't play a role in the graph, so
 		// it's ok that it is nullptr.
@@ -55,32 +65,38 @@ void match_identifiers(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironme
 			func->m_captures.insert(ast->text());
 		}
 	}
+
+	return {};
 }
 
-void match_identifiers(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 	for (auto& child : ast->m_body)
-		match_identifiers(child.get(), env);
+		CHECK_AND_RETURN(match_identifiers(child.get(), env));
 	env.end_scope();
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	match_identifiers(ast->m_condition.get(), env);
-	match_identifiers(ast->m_body.get(), env);
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
 
 	if (ast->m_else_body)
-		match_identifiers(ast->m_else_body.get(), env);
+		CHECK_AND_RETURN(match_identifiers(ast->m_else_body.get(), env));
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	match_identifiers(ast->m_callee.get(), env);
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
 	for (auto& arg : ast->m_args)
-		match_identifiers(arg.get(), env);
+		CHECK_AND_RETURN(match_identifiers(arg.get(), env));
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 
 	env.enter_function(ast);
@@ -96,50 +112,69 @@ void match_identifiers(
 	// scan body
 	assert(ast->m_body->type() == ast_type::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
-	for (auto& child : body->m_body)
-		match_identifiers(child.get(), env);
+	for (auto& child : body->m_body) {
+		CHECK_AND_RETURN(match_identifiers(child.get(), env));
+	}
 
 	env.end_scope();
 	env.exit_function();
+
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+	for (auto& element : ast->m_elements)
+		CHECK_AND_RETURN(match_identifiers(element.get(), env));
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
-	match_identifiers(ast->m_declaration.get(), env);
-	match_identifiers(ast->m_condition.get(), env);
-	match_identifiers(ast->m_action.get(), env);
-	match_identifiers(ast->m_body.get(), env);
+
+	CHECK_AND_RETURN(match_identifiers(ast->m_declaration.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_action.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
+
 	env.end_scope();
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
-	match_identifiers(ast->m_condition.get(), env);
-	match_identifiers(ast->m_body.get(), env);
+
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
+
 	env.end_scope();
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	match_identifiers(ast->m_value.get(), env);
+	return match_identifiers(ast->m_value.get(), env);
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	match_identifiers(ast->m_callee.get(), env);
-	match_identifiers(ast->m_index.get(), env);
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_index.get(), env));
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	match_identifiers(ast->m_condition.get(), env);
-	match_identifiers(ast->m_then_expr.get(), env);
-	match_identifiers(ast->m_else_expr.get(), env);
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_then_expr.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_else_expr.get(), env));
+	return {};
 }
 
-void match_identifiers(
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
@@ -152,20 +187,23 @@ void match_identifiers(
 		env.enter_top_level_decl(d);
 
 		if (d->m_value)
-			match_identifiers(d->m_value.get(), env);
+			CHECK_AND_RETURN(match_identifiers(d->m_value.get(), env));
 
 		env.exit_top_level_decl();
 	}
+
+	return {};
 }
 
-void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
 	case ast_type::type:                                                       \
 		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
 	case ast_type::type:                                                       \
-		return;
+		return {};
 
 	// TODO: Compound literals
 	switch (ast->type()) {
@@ -174,6 +212,8 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DO_NOTHING(StringLiteral);
 		DO_NOTHING(BooleanLiteral);
 		DO_NOTHING(NullLiteral);
+		DISPATCH(ArrayLiteral);
+		DISPATCH(FunctionLiteral);
 
 		DISPATCH(Declaration);
 		DISPATCH(Identifier);
@@ -181,19 +221,22 @@ void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
-		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
+
 	case ast_type::BinaryExpression:
+	case ast_type::ShortFunctionLiteral:
 		assert(0);
-		return;
 	}
 
 #undef DO_NOTHING
 #undef DISPATCH
+	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
+	          << ": " << ast_type_string[(int)ast->type()] << '\n';
+	assert(0);
 }
 
 } // namespace TypeChecker
