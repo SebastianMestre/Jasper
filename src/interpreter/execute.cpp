@@ -38,7 +38,14 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	auto top_level = TypedAST::get_unique(desugared_ast);
 	Frontend::CompileTimeEnvironment ct_env;
 
-	TypeChecker::match_identifiers(top_level.get(), ct_env);
+	{
+		auto err = TypeChecker::match_identifiers(top_level.get(), ct_env);
+		if (!err.ok()) {
+			err.print();
+			return exit_status_type::StaticError;
+		}
+	}
+
 	TypeChecker::typecheck(top_level.get(), ct_env);
 
 	GC gc;

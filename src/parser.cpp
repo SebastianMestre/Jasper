@@ -24,14 +24,14 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ParseError make_expected_error(string_view expected, Token const* found_token) {
+ErrorReport make_expected_error(string_view expected, Token const* found_token) {
 	std::stringstream ss;
 	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
 	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
 	   << token_type_string[int(found_token->m_type)] << ' '
 	   << found_token->m_text << " instead";
 
-	return ParseError {ss.str()};
+	return ErrorReport {ss.str()};
 }
 
 Writer<Token const*> Parser::require(token_type expected_type) {
@@ -47,15 +47,18 @@ Writer<Token const*> Parser::require(token_type expected_type) {
 	return make_writer(current_token);
 }
 
-bool Parser::consume(token_type maybe_token) {
-	Token const* current_token = &m_lexer->current_token();
-
-	if (current_token->m_type != maybe_token) {
-		return false;
+bool Parser::consume(token_type expected_type) {
+	if (match(expected_type)) {
+		m_lexer->advance();
+		return true;
 	}
+	return false;
+}
 
-	m_lexer->advance();
-
+bool Parser::match(token_type expected_type) {
+	Token const* current_token = &m_lexer->current_token();
+	if (current_token->m_type != expected_type)
+		return false;
 	return true;
 }
 
@@ -180,12 +183,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 
 	Writer<std::unique_ptr<AST::AST>> type;
 
-	auto p0 = peek();
-
-	if (p0->m_type == token_type::DECLARE_ASSIGN) {
-		m_lexer->advance();
-	} else if (p0->m_type == token_type::DECLARE) {
-		m_lexer->advance();
+	if (consume(token_type::DECLARE_ASSIGN)) {
+	} else if (consume(token_type::DECLARE)) {
 
 		type = parse_type_term();
 		if (handle_error(result, type))
@@ -195,7 +194,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 			return result;
 	} else {
 		result.m_error.m_sub_errors.push_back(
-		    make_expected_error("':' or ':='", p0));
+		    make_expected_error("':' or ':='", peek()));
 	}
 
 	auto value = parse_expression();
@@ -295,7 +294,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
 	return args;
 }
 
-/* If I am not mistaken, the algorithm used here is called 'Pratt Parsing'
+/* The algorithm used here is called 'Pratt Parsing'
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
@@ -649,91 +648,71 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 	if (handle_error(result, require(token_type::PAREN_OPEN)))
 		return result;
 
-	// TODO: refactor
 	std::vector<std::unique_ptr<AST::AST>> args;
 	while (1) {
-		auto p0 = peek();
-
-		if (p0->m_type == token_type::PAREN_CLOSE) {
-			m_lexer->advance();
+		if (consume(token_type::PAREN_CLOSE)) {
 			break;
-		} else if (p0->m_type == token_type::IDENTIFIER) {
+		} else if (match(token_type::IDENTIFIER)) {
 			// consume argument name
 
 			auto arg = std::make_unique<AST::Declaration>();
-			arg->m_identifier_token = p0;
 
-			// now we optionally consume a type hint
-			// NOTE: a type hint is a colon followed by a type name.
-			// Example: ': int'
+			arg->m_identifier_token = peek();
 			m_lexer->advance();
-			auto p1 = peek();
-			if (p1->m_type == token_type::DECLARE) {
-				m_lexer->advance();
-				// consume type separator (:)
-				// must be followed by a type
 
+			if (consume(token_type::DECLARE)) {
+				// optionally consume a type hint
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-
 				arg->m_type = std::move(type.m_result);
-
-				p1 = peek();
 			}
 
 			args.push_back(std::move(arg));
 
-			// continue parsing:
-			// if we find a comma, we have to parse another argument, so we loop again.
-			// if we find a closing paren, we are done parsing arguments, so we stop.
-			// Anything else is unexpected input, so we report an error.
-			if (p1->m_type == token_type::COMMA) {
-				m_lexer->advance();
+			if (consume(token_type::COMMA)) {
+				// If we find a comma, we have to parse
+				// another argument, so we loop again.
 				continue;
-			} else if (p1->m_type == token_type::PAREN_CLOSE) {
-				m_lexer->advance();
+			} else if (consume(token_type::PAREN_CLOSE)) {
+				// If we find a closing paren, we are done
+				// parsing arguments, so we stop.
 				break;
 			} else {
+				// Anything else is unexpected input, so we
+				// report an error.
 				result.m_error.m_sub_errors.push_back(
-				    make_expected_error("',' or ')'", p1));
+				    make_expected_error("',' or ')'", peek()));
 				return result;
 			}
 		} else {
 			result.m_error.m_sub_errors.push_back(
-			    make_expected_error("an argument name (IDENTIFIER)", p0));
+			    make_expected_error("an argument name (IDENTIFIER)", peek()));
 			return result;
 		}
 	}
 
-	auto e = std::make_unique<AST::FunctionLiteral>();
-	auto p0 = peek();
-	if (p0->m_type == token_type::ARROW) {
-		m_lexer->advance();
+	if (consume(token_type::ARROW)) {
 		auto expression = parse_expression();
-		if (handle_error(result, expression)) {
+		if (handle_error(result, expression))
 			return result;
-		}
 
-		auto returnStmt = std::make_unique<AST::ReturnStatement>();
-		returnStmt->m_value = std::move(expression.m_result);
-
-		auto block = std::make_unique<AST::Block>();
-		block->m_body.push_back(std::move(returnStmt));
-
-		e->m_body = std::move(block);
+		auto e = std::make_unique<AST::ShortFunctionLiteral>();
+		e->m_body = std::move(expression.m_result);
 		e->m_args = std::move(args);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	} else {
 		auto block = parse_block();
-		if (handle_error(result, block)) {
+		if (handle_error(result, block))
 			return result;
-		}
 
+		auto e = std::make_unique<AST::FunctionLiteral>();
 		e->m_body = std::move(block.m_result);
 		e->m_args = std::move(args);
-	}
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	}
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
@@ -932,7 +911,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse statement"}};
 
-	// TODO: recognize literals
+	// TODO: paren_open, string tokens, integer and numer
+	// tokens, etc should also be recognized as expressions.
 	auto* p0 = peek(0);
 	if (p0->m_type == token_type::IDENTIFIER) {
 		auto* p1 = peek(1);
@@ -993,8 +973,6 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 		}
 		return block_statement;
 	} else {
-		// TODO: parse loops, conditionals, etc.
-
 		auto err = make_expected_error("a statement", p0);
 
 		result.m_error.m_sub_errors.push_back(std::move(err));
@@ -1015,20 +993,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	auto e = std::make_unique<AST::TypeTerm>();
 	e->m_callee = std::move(callee.m_result);
 
-	if (peek()->m_type != token_type::POLY_OPEN)
+	if (!consume(token_type::POLY_OPEN))
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 
-	m_lexer->advance();
-
 	std::vector<std::unique_ptr<AST::AST>> args;
-	while (peek()->m_type != token_type::POLY_CLOSE) {
+	while (!consume(token_type::POLY_CLOSE)) {
 		auto arg = parse_type_term();
 		if (handle_error(result, arg))
 			return result;
 
 		args.push_back(std::move(arg.m_result));
 	}
-	m_lexer->advance();
 
 	e->m_args = std::move(args);
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));

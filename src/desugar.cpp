@@ -44,6 +44,22 @@ Own<AST> desugar(Own<FunctionLiteral> ast) {
 	return ast;
 }
 
+Own<AST> desugar(Own<ShortFunctionLiteral> ast) {
+	auto return_stmt = std::make_unique<ReturnStatement>();
+	return_stmt->m_value = desugar(std::move(ast->m_body));
+
+	auto block = std::make_unique<Block>();
+	block->m_body.push_back(std::move(return_stmt));
+
+	auto func = std::make_unique<FunctionLiteral>();
+	for (auto&& arg : ast->m_args)
+		func->m_args.push_back(desugar(std::move(arg)));
+
+	func->m_body = std::move(block);
+
+	return func;
+}
+
 Own<AST> desugar(Own<DeclarationList> ast) {
 	for (auto&& declaration : ast->m_declarations)
 		declaration = desugar(std::move(declaration));
@@ -189,6 +205,8 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
+		DISPATCH(ShortFunctionLiteral);
+
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
 		RETURN(Identifier);

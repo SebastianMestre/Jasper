@@ -1,5 +1,7 @@
 #pragma once
 
+#include "error_report.hpp"
+
 namespace TypedAST {
 struct TypedAST;
 }
@@ -10,6 +12,10 @@ struct CompileTimeEnvironment;
 
 namespace TypeChecker {
 
-void match_identifiers(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
-
-}
+/*
+ * Matches every identifier in the given ast with a declaration.
+ * This also includes captures in a closure.
+ */
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
+} // namespace TypeChecker

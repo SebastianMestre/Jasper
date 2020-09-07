@@ -1,41 +1,16 @@
 #pragma once
 
-// TODO: do not include iostream here
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "ast.hpp"
+#include "error_report.hpp"
 #include "lexer.hpp"
-
-struct ParseError {
-	std::string m_text;
-	std::vector<ParseError> m_sub_errors;
-
-	bool ok() {
-		return m_sub_errors.empty() && m_text.empty();
-	}
-
-	void print(int d = 1) {
-		/* indent */
-		for (int i = 0; i < d; ++i)
-			std::cerr << '-';
-
-		/* print error */
-		std::cerr << ' ';
-		std::cerr << m_text << '\n';
-
-		/* print suberrors one place further right */
-		for (auto& sub : m_sub_errors) {
-			sub.print(d + 1);
-		}
-	}
-};
 
 template <typename T>
 struct Writer {
-	ParseError m_error {};
+	ErrorReport m_error {};
 	T m_result {};
 
 	bool ok() {
@@ -75,8 +50,9 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_while_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
 
-	Writer<Token const*> require(token_type t);
-	bool consume(token_type t);
+	Writer<Token const*> require(token_type);
+	bool consume(token_type);
+	bool match(token_type);
 
 	Token const* peek(int dt = 0) {
 		return &m_lexer->peek_token(dt);

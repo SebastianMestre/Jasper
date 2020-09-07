@@ -8,6 +8,7 @@ OBJNAMES := \
 	ast.o \
 	compile_time_environment.o \
 	desugar.o \
+	error_report.o \
 	lexer.o \
 	match_identifiers.o \
 	parser.o \

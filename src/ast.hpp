@@ -103,6 +103,14 @@ struct FunctionLiteral : public AST {
 	    : AST {ast_type::FunctionLiteral} {}
 };
 
+struct ShortFunctionLiteral : public AST {
+	std::unique_ptr<AST> m_body;
+	std::vector<std::unique_ptr<AST>> m_args;
+
+	ShortFunctionLiteral()
+	    : AST {ast_type::ShortFunctionLiteral} {}
+};
+
 struct DeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
 
