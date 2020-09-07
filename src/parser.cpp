@@ -24,14 +24,14 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ParseError make_expected_error(string_view expected, Token const* found_token) {
+ErrorReport make_expected_error(string_view expected, Token const* found_token) {
 	std::stringstream ss;
 	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
 	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
 	   << token_type_string[int(found_token->m_type)] << ' '
 	   << found_token->m_text << " instead";
 
-	return ParseError {ss.str()};
+	return ErrorReport {ss.str()};
 }
 
 Writer<Token const*> Parser::require(token_type expected_type) {
