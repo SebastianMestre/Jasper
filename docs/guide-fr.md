@@ -23,7 +23,7 @@ De plus, nous avons ajouté certain éléments pour leur élégance.ty to us.
 
 ## Introduction - La structure d'un programme
 
-In JS++, un programme est une liste de déclarations.
+In Jasper, un programme est une liste de déclarations.
 
 > Une déclaration associe une valeur à un nom.e.
 >
@@ -33,7 +33,7 @@ In JS++, un programme est une liste de déclarations.
 Parmi ces délarations, l'une d'entre elle doit être un point d'entrée, une fonction appelée
 `__invoke`.
 
-> En JS++, les fonctions sont définies avec le mot-clé `fn`, suivi d'une liste
+> En Jasper, les fonctions sont définies avec le mot-clé `fn`, suivi d'une liste
 > d'arguments ansi que le corps de la fonction.
 
 ```rust
@@ -47,7 +47,7 @@ __invoke : fn() {
 Ce programme renvoie la valeur fournie, `10`..
 
 ## Sucre syntaxique
-Puisque nous reconnaissons l'importance de la syntaxe, JS++ contient une certaine quantité de sucre syntaxique.
+Puisque nous reconnaissons l'importance de la syntaxe, Jasper contient une certaine quantité de sucre syntaxique.
 
 ### Fonctions courtes
 

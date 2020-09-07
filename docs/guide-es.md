@@ -7,23 +7,24 @@ Los objetivos principales del lenguaje son:
 
 Eso pensamos obtenerlo mediante varias features:
 
- - Sintaxis consistente (WIP)
+ - Sintaxis consistente
+ - Funciones de primera clase
+ - Clausuras
+ - Polimorfismo parametrico
+ - Deduccion de tipos
  - Todo es un valor (WIP)
  - Semantica de valor (TODO)
- - Polimorfismo parametrico (WIP)
- - Deduccion de tipos (WIP)
 
 Aparte, hay cositas que metimos porque nos parecen lindas.
 
  - Operador pipeline `|>`
  - inyeccion de scopes (TODO)
- - Tipo de datos decimal (TODO)
+ - Tipo de datos de numero decimal (TODO)
  - Objetos llamables (TODO)
- - Funciones con clausuras (WIP)
 
 ## Introduccion - La estructura de un programa
 
-En JS++, un programa es una lista de declaraciones.
+En Jasper, un programa es una lista de declaraciones.
 
 > Una declaracion asocia un valor con un nombre.
 >
@@ -33,7 +34,7 @@ En JS++, un programa es una lista de declaraciones.
 Una de estas declaraciones debe ser el punto de entrada, una funcion llamada
 `__invoke`.
 
-> En JS++ definis funciones con la palabra clave `fn`, seguida de una lista de
+> En Jasper definis funciones con la palabra clave `fn`, seguida de una lista de
 > argumentos y el cuerpo de la funcion.
 
 ```rust
@@ -48,7 +49,7 @@ Este programa devuelve un numero entero, `10`.
 
 ## Azucar sintactico
 
-Como reconocemos que la sintaxis importa, JS++ tiene bastante azucar sintactico.
+Como reconocemos que la sintaxis importa, Jasper tiene bastante azucar sintactico.
 
 ### Funciones cortas
 
@@ -63,12 +64,12 @@ f := fn (x) {
 };
 ```
 
-### Operador pipeline u Operador pizza
+### Operador pipeline
 
-El operador pizza nos permite escribir pipelines en nuestro codigo. Es muy util
-para dos cosas:
+El operador pipeline nos permite escribir pipelines en nuestro codigo.
+es muy util para dos cosas:
  - Extender la funcionalidad de un objeto sin agregarle dependencias
- - Escribir codigo en estilo funcional
+ - Escribir codigo functional en estilo imperativo
 
 El operador pizza transforma una expresion de la forma `x |> f(y...)` a una de
 la forma `f(x,y...)`.
@@ -76,11 +77,17 @@ la forma `f(x,y...)`.
 Aca hay un ejemplo de uso junto a su version des-azucarada:
 
 ```rust
+// original
 primos_al_cuadrado := fn (arr) => arr
 	|> filter(es_primo)
 	|> map(fn (x) => x * x);
 
+// desugared
 primos_al_cuadrado := fn (arr) {
-	return map(filter(arr, es_primo), fn (x) => x * x);
+	return map(
+		filter(arr, es_primo),
+		fn (x) {
+			return x * x;
+		});
 };
 ```
