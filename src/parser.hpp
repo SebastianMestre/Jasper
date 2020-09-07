@@ -50,8 +50,9 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_while_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
 
-	Writer<Token const*> require(token_type t);
-	bool consume(token_type t);
+	Writer<Token const*> require(token_type);
+	bool consume(token_type);
+	bool match(token_type);
 
 	Token const* peek(int dt = 0) {
 		return &m_lexer->peek_token(dt);
