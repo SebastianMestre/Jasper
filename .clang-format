@@ -9,6 +9,7 @@ PenaltyExcessCharacter: 5
 
 ReflowComments: false
 PenaltyBreakComment: 50 
+PenaltyReturnTypeOnItsOwnLine: 1000
 
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: false
