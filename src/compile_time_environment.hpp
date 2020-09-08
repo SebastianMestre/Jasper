@@ -40,7 +40,7 @@ struct Binding {
 struct Scope {
 	bool m_nested {false};
 	std::unordered_map<std::string, Binding> m_vars;
-	std::unordered_set<VarId> m_type_vars;
+	std::unordered_set<MonoId> m_type_vars;
 };
 
 struct CompileTimeEnvironment {
@@ -77,7 +77,7 @@ struct CompileTimeEnvironment {
 
 	MonoId new_type_var();
 	MonoId new_hidden_type_var();
-	bool has_type_var(VarId);
+	bool has_type_var(MonoId);
 };
 
 } // namespace Frontend

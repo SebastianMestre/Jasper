@@ -225,13 +225,14 @@ MonoId CompileTimeEnvironment::new_hidden_type_var() {
 
 MonoId CompileTimeEnvironment::new_type_var() {
 	MonoId result = m_typechecker.new_var();
-	VarId var = m_typechecker.m_core.mono_data[result].data_id;
-	current_scope().m_type_vars.insert(var);
+	current_scope().m_type_vars.insert(result);
 	return result;
 }
 
-bool CompileTimeEnvironment::has_type_var(VarId var) {
-	auto scan_scope = [](Scope& scope, VarId var) -> bool {
+bool CompileTimeEnvironment::has_type_var(MonoId var) {
+	// TODO: check that the given mono is actually a var
+
+	auto scan_scope = [](Scope& scope, MonoId var) -> bool {
 		return scope.m_type_vars.count(var) != 0;
 	};
 
