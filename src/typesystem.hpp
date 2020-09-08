@@ -36,14 +36,6 @@ struct MonoData {
 	int data_id;
 };
 
-// A variable is just a name for a different monotype.
-// VarData stores a MonoID that indicates which monotype it is equal
-// to. It can also indicate that it is equal to itself, meaning that
-// we don't know its concrete type.
-struct VarData {
-	MonoId equals;
-};
-
 // A term is an application of a type function.
 struct TermData {
 	TypeFunctionId type_function;
