@@ -26,6 +26,7 @@ constexpr const char* token_type_string[] = {
 
 	"=",
 	":=",
+	"@=",
 	":",
 
 	"INCREMENT",
@@ -106,6 +107,7 @@ enum class token_type {
 
 	ASSIGN,
 	DECLARE_ASSIGN,
+	DECLARE_TYPE,
 	DECLARE,
 
 	INCREMENT,
