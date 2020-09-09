@@ -23,7 +23,7 @@ enum class mono_type { Var, Term };
 // A monotype is a reference to a concrete type. It can be a
 // variable or a term.
 // We express this variant using an enum, and an index that points
-// to the where the data is in the correct TypeSystemCore vector.
+// to where the data is in the correct TypeSystemCore vector.
 //
 // If type is mono_type::Var, the data_id index points to a
 // different mono in TypeSystemCore::mono_data.
