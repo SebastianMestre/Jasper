@@ -72,7 +72,7 @@ struct TypeSystemCore {
 	std::vector<TypeFunctionData> type_function_data;
 	std::vector<PolyData> poly_data;
 
-	std::vector<TypeVarId> type_vars;
+	std::vector<TypeVarData> type_vars;
 
 	MonoId new_var();
 	MonoId new_term(
@@ -80,6 +80,9 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
+
+	// NOTE: using int here is provisional
+	TypeVarId new_type_var(kind_type, int);
 
 	// qualifies all unbound variables in the given monotype
 	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);

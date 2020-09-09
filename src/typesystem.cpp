@@ -67,6 +67,14 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
 	return poly;
 }
 
+// NOTE: I use int here to make this fail if we change
+// the typesystem types to be type safe
+TypeVarId TypeSystemCore::new_type_var(kind_type kind, int type_id) {
+	TypeVarId type_var = type_vars.size();
+	type_vars.push_back({kind, type_id});
+	return type_var;
+}
+
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
 	MonoId repr = find(mono);
 	MonoData const& data = mono_data[repr];
