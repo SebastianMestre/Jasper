@@ -101,6 +101,12 @@ struct TypeSystemCore {
 
 	// union find for type functions
 	// TODO: type safe ids to overload these functions
-	TypeFunctionId func_find(TypeFunctionId func);
+	TypeVarId func_find(TypeVarId func);
 	void func_unify(TypeFunctionId a, TypeFunctionId b);
+
+	// union find for type variables
+	// TODO: type safe ids to overload these functions.
+	// Maybe even use type vars as the interface for every type-ish thing
+	TypeVarData var_find(TypeVarId type_var);
+	void var_unify(TypeVarId a, TypeVarId b);
 };

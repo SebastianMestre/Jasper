@@ -274,3 +274,41 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	else
 		assert(0 and "unifying two differente known type functions");
 }
+
+TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
+	TypeVarData& var_data = type_vars[type_var];
+
+	switch(var_data.kind) {
+	case kind_type::Mono:
+		return {kind_type::Mono, find(var_data.type_var_id)};
+	case kind_type::Poly:
+		return {kind_type::Poly, var_data.type_var_id};
+	case kind_type::TypeFunction:
+		return {kind_type::TypeFunction, func_find(var_data.type_var_id)};
+	}
+
+	assert(0 and "unknown kind");
+}
+
+void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
+	TypeVarData rep_a = var_find(a);
+	TypeVarData rep_b = var_find(b);
+
+	assert(rep_a.kind == rep_b.kind and "cannot unify different kinds");
+
+	if (rep_a.type_var_id == rep_b.type_var_id)
+		return;
+
+	switch(rep_a.kind) {
+	case kind_type::Mono:
+		unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	case kind_type::Poly:
+		break;
+	case kind_type::TypeFunction:
+		func_unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	}
+
+	assert(0 and "unknown kind");
+}
