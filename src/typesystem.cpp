@@ -246,3 +246,31 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 		vals.push_back(new_var());
 	return inst_with(poly, vals);
 }
+
+TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
+	TypeFunctionData& func_data = type_function_data[func];
+
+	if (func_data.equals == func or
+	    func_data.type == type_function_type::Known)
+		return func;
+
+	return func_data.equals = find(func_data.equals);
+}
+
+void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
+	a = func_find(a);
+	b = func_find(b);
+
+	if (a == b)
+		return;
+
+	TypeFunctionData& rep_a = type_function_data[a];
+	TypeFunctionData& rep_b = type_function_data[b];
+
+	if (rep_a.type == type_function_type::Var)
+		rep_a.equals = b;
+	else if (rep_b.type == type_function_type::Var)
+		rep_b.equals = a;
+	else
+		assert(0 and "unifying two differente known type functions");
+}

@@ -98,4 +98,9 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	void print_type(MonoId, int d = 0);
+
+	// union find for type functions
+	// TODO: type safe ids to overload these functions
+	TypeFunctionId func_find(TypeFunctionId func);
+	void func_unify(TypeFunctionId a, TypeFunctionId b);
 };
