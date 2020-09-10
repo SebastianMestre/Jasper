@@ -55,10 +55,9 @@ struct PolyData {
 	std::vector<VarId> vars;
 };
 
-// RENAME: 'Kind' isn't the exactly the right terminology here
 enum class kind_type { TypeFunction, Mono, Poly };
 
-// Variable that can contain any type, and even type functions
+// variable that can contain types, of any kind
 struct TypeVarData {
 	kind_type kind;
 	TypeVarId type_var_id;
