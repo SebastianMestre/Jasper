@@ -12,13 +12,11 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 		std::cerr << ' ';
 	std::cerr << "[" << mono << "] ";
 	if (data.type == mono_type::Var) {
-		VarId var = data.data_id;
-		VarData& data = var_data[var];
-		if (data.equals == mono) {
+		if (data.data_id == mono) {
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_type(data.equals, d + 1);
+			print_type(data.data_id, d + 1);
 		}
 	} else {
 		TermId term = data.data_id;
@@ -32,12 +30,8 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 }
 
 MonoId TypeSystemCore::new_var() {
-	int var = var_data.size();
 	int mono = mono_data.size();
-
-	var_data.push_back({mono});
-	mono_data.push_back({mono_type::Var, var});
-
+	mono_data.push_back({mono_type::Var, mono});
 	return mono;
 }
 
@@ -58,12 +52,13 @@ MonoId TypeSystemCore::new_term(
 	return mono;
 }
 
-PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
+PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
+	// TODO: check that the given vars are actually vars
 	PolyData data;
 	data.base = mono;
 	data.vars = std::move(vars);
 	PolyId poly = poly_data.size();
-	poly_data.push_back(data);
+	poly_data.push_back(std::move(data));
 	return poly;
 }
 
@@ -82,12 +77,11 @@ TypeVarId TypeSystemCore::new_type_var(kind_type kind, int type_id) {
 	return type_var;
 }
 
-void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
+void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
 	MonoId repr = find(mono);
 	MonoData const& data = mono_data[repr];
 	if (data.type == mono_type::Var) {
-		VarId var = data.data_id;
-		free_vars.insert(var);
+		free_vars.insert(repr);
 	} else {
 		TermId term = data.data_id;
 		for (MonoId arg : term_data[term].arguments)
@@ -99,13 +93,13 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& fr
 // NOTE(Mestre): I don't like how we take the CTenv as an
 // argument. This calls for some refactoring...
 PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment& env) {
-	std::unordered_set<VarId> free_vars;
+	std::unordered_set<MonoId> free_vars;
 	gather_free_vars(mono, free_vars);
 
 	std::vector<MonoId> new_vars;
-	std::unordered_map<VarId, MonoId> mapping;
+	std::unordered_map<MonoId, MonoId> mapping;
 	int i = 0;
-	for (VarId var : free_vars) {
+	for (MonoId var : free_vars) {
 		if (!env.has_type_var(var)) {
 			auto fresh_var = new_var();
 			new_vars.push_back(fresh_var);
@@ -114,33 +108,30 @@ PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment&
 	}
 
 	MonoId base = inst_impl(mono, mapping);
-	std::vector<VarId> vars;
-	for (MonoId m : new_vars)
-		vars.push_back(mono_data[m].data_id);
 
-	return new_poly(base, std::move(vars));
+	return new_poly(base, std::move(new_vars));
 }
 
 MonoId TypeSystemCore::find(MonoId mono) {
-	if (mono_data[mono].type != mono_type::Var)
-		return mono;
+	MonoData& data = mono_data[mono];
 
-	VarId var = mono_data[mono].data_id;
-	VarData& data = var_data[var];
+	if (data.type != mono_type::Var)
+		return mono;
 
 	// pointing to self
-	if (data.equals == mono)
+	if (data.data_id == mono)
 		return mono;
 
-	return data.equals = find(data.equals);
+	return data.data_id = find(data.data_id);
 }
 
-bool TypeSystemCore::occurs_in(VarId var, MonoId mono) {
+bool TypeSystemCore::occurs_in(MonoId var, MonoId mono) {
 
 	{
-		// the variable must point to itself
-		MonoData const& var_mono_data = mono_data[var_data[var].equals];
-		assert(var_mono_data.type == mono_type::Var && var == var_mono_data.data_id);
+		// var must be a variable that points to itself
+		MonoData const& var_mono_data = mono_data[var];
+		assert(var_mono_data.type == mono_type::Var);
+		assert(var == var_mono_data.data_id);
 	}
 
 	mono = find(mono);
@@ -150,6 +141,7 @@ bool TypeSystemCore::occurs_in(VarId var, MonoId mono) {
 	}
 
 	assert(mono_data[mono].type == mono_type::Term);
+
 	TermId term = mono_data[mono].data_id;
 	TermData data = term_data[term];
 
@@ -169,19 +161,17 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 
 	if (mono_data[a].type == mono_type::Var) {
 		if (mono_data[b].type == mono_type::Var) {
-			if (mono_data[a].data_id < mono_data[b].data_id) {
+			if (a < b) {
 				// make the newer one point to the older one
 				std::swap(a, b);
 			}
 		}
 
-		VarId va = mono_data[a].data_id;
-
-		if (occurs_in(va, b)) {
+		if (occurs_in(a, b)) {
 			assert(0 && "recursive unification\n");
 		}
 
-		var_data[va].equals = b;
+		mono_data[a].data_id = b;
 	} else if (mono_data[b].type == mono_type::Var) {
 		return unify(b, a);
 	} else {
@@ -213,7 +203,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 }
 
 MonoId TypeSystemCore::inst_impl(
-    MonoId mono, std::unordered_map<VarId, MonoId> const& mapping) {
+    MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
 	// NOTE(Mestre): Is just calling find good enough? It means we
 	// should only ever qualify variables that are their own
@@ -222,8 +212,7 @@ MonoId TypeSystemCore::inst_impl(
 	MonoData data = mono_data[mono];
 
 	if (data.type == mono_type::Var) {
-		auto it = mapping.find(data.data_id);
-		// TODO: make a new mono with the same var?
+		auto it = mapping.find(mono);
 		return it == mapping.end() ? mono : it->second;
 	}
 
@@ -243,7 +232,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 	assert(data.vars.size() == vals.size());
 
-	std::unordered_map<VarId, MonoId> old_to_new;
+	std::unordered_map<MonoId, MonoId> old_to_new;
 	for (int i {0}; i != data.vars.size(); ++i) {
 		old_to_new[data.vars[i]] = vals[i];
 	}
@@ -253,8 +242,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
-	for (int i {0}; i != poly_data[poly].vars.size(); ++i) {
+	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
 		vals.push_back(new_var());
-	}
 	return inst_with(poly, vals);
 }
