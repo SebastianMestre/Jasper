@@ -67,6 +67,13 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
 	return poly;
 }
 
+// TODO: add regular type function instantiation
+TypeFunctionId TypeSystemCore::new_type_function_var() {
+	TypeFunctionId type_function_var = type_function_data.size();
+	type_function_data.push_back({-1, type_function_type::Var, type_function_var});
+	return type_function_var;
+}
+
 // NOTE: I use int here to make this fail if we change
 // the typesystem types to be type safe
 TypeVarId TypeSystemCore::new_type_var(kind_type kind, int type_id) {

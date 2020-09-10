@@ -10,13 +10,15 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
+enum class type_function_type { Var, Known };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
-// For tyhe purposes of the type system, we only care about the amount
+// For the purposes of the type system, we only care about the amount
 // of argument it takes.
 struct TypeFunctionData {
-	// -1 means variadic.
-	int argument_count;
+	int argument_count; // -1 means variadic.
+	type_function_type type;
+	TypeFunctionId equals; // only for vars
 };
 
 enum class mono_type { Var, Term };
@@ -34,7 +36,7 @@ struct MonoData {
 };
 
 // A variable is just a name for a different monotype.
-// VarData stores a MonoID that indicates which monotype it is equal
+// VarData stores a MonoId that indicates which monotype it is equal
 // to. It can also indicate that it is equal to itself, meaning that
 // we don't know its concrete type.
 struct VarData {
@@ -56,7 +58,6 @@ struct PolyData {
 };
 
 enum class kind_type { TypeFunction, Mono, Poly };
-
 // variable that can contain types, of any kind
 struct TypeVarData {
 	kind_type kind;
@@ -79,7 +80,8 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
-
+	TypeFunctionId new_type_function_var();
+	
 	// NOTE: using int here is provisional
 	TypeVarId new_type_var(kind_type, int);
 

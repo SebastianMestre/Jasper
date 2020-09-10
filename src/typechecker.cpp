@@ -7,14 +7,14 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	m_core.type_function_data.push_back({-1}); // 0 | function
-	m_core.type_function_data.push_back({0});  // 1 | int
-	m_core.type_function_data.push_back({0});  // 2 | float
-	m_core.type_function_data.push_back({0});  // 3 | string
-	m_core.type_function_data.push_back({1});  // 4 | array
-	m_core.type_function_data.push_back({1});  // 5 | dictionary
-	m_core.type_function_data.push_back({0});  // 6 | boolean
-	m_core.type_function_data.push_back({0});  // 7 | unit
+	m_core.type_function_data.push_back({-1, type_function_type::Known}); // 0 | function
+	m_core.type_function_data.push_back({0, type_function_type::Known});  // 1 | int
+	m_core.type_function_data.push_back({0, type_function_type::Known});  // 2 | float
+	m_core.type_function_data.push_back({0, type_function_type::Known});  // 3 | string
+	m_core.type_function_data.push_back({1, type_function_type::Known});  // 4 | array
+	m_core.type_function_data.push_back({1, type_function_type::Known});  // 5 | dictionary
+	m_core.type_function_data.push_back({0, type_function_type::Known});  // 6 | boolean
+	m_core.type_function_data.push_back({0, type_function_type::Known});  // 7 | unit
 
 	m_core.term_data.push_back({1, {}, "builtin int"}); // 0 | int(<>)
 	m_core.term_data.push_back({2, {}, "builtin float"}); // 1 | float(<>)
