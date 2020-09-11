@@ -246,14 +246,6 @@ void Lexer::consume_token() {
 		}
 		break;
 
-	case '@':
-		switch (next_char()) {
-		case '=':
-			push_token(token_type::DECLARE_TYPE, 2);
-			break;
-		}
-		break;
-
 	case '=':
 		switch (next_char()) {
 		case '=':
