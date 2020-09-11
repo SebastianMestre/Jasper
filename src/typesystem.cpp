@@ -62,7 +62,12 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return poly;
 }
 
-// TODO: add regular type function instantiation
+TypeFunctionId TypeSystemCore::new_type_function(int arguments) {
+	TypeFunctionId type_function_var = type_function_data.size();
+	type_function_data.push_back({arguments, type_function_type::Known});
+	return type_function_var;
+}
+
 TypeFunctionId TypeSystemCore::new_type_function_var() {
 	TypeFunctionId type_function_var = type_function_data.size();
 	type_function_data.push_back({-1, type_function_type::Var, type_function_var});
