@@ -184,9 +184,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TermData& a_data = term_data[ta];
 		TermData& b_data = term_data[tb];
 
-		if (term_data[ta].type_function != term_data[tb].type_function) {
-			assert(0 && "deduced two different polymorphic types to be equal");
-		}
+		func_unify(a_data.type_function, b_data.type_function);
 
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
@@ -250,8 +248,8 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 	TypeFunctionData& func_data = type_function_data[func];
 
-	if (func_data.equals == func or
-	    func_data.type == type_function_type::Known)
+	if (func_data.type == type_function_type::Known or
+	    func_data.equals == func)
 		return func;
 
 	return func_data.equals = find(func_data.equals);
@@ -272,7 +270,7 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	else if (rep_b.type == type_function_type::Var)
 		rep_b.equals = a;
 	else
-		assert(0 and "unifying two differente known type functions");
+		assert(0 and "unifying two different known type functions");
 }
 
 TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
