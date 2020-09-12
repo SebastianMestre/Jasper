@@ -62,6 +62,26 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return poly;
 }
 
+TypeFunctionId TypeSystemCore::new_type_function(int arguments) {
+	TypeFunctionId type_function_var = type_function_data.size();
+	type_function_data.push_back({arguments, type_function_type::Known});
+	return type_function_var;
+}
+
+TypeFunctionId TypeSystemCore::new_type_function_var() {
+	TypeFunctionId type_function_var = type_function_data.size();
+	type_function_data.push_back({-1, type_function_type::Var, type_function_var});
+	return type_function_var;
+}
+
+// NOTE: I use int here to make this fail if we change
+// the typesystem types to be type safe
+TypeVarId TypeSystemCore::new_type_var(kind_type kind, int type_id) {
+	TypeVarId type_var = type_vars.size();
+	type_vars.push_back({kind, type_id});
+	return type_var;
+}
+
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
 	MonoId repr = find(mono);
 	MonoData const& data = mono_data[repr];
@@ -169,9 +189,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TermData& a_data = term_data[ta];
 		TermData& b_data = term_data[tb];
 
-		if (term_data[ta].type_function != term_data[tb].type_function) {
-			assert(0 && "deduced two different polymorphic types to be equal");
-		}
+		func_unify(a_data.type_function, b_data.type_function);
 
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
@@ -230,4 +248,70 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
 		vals.push_back(new_var());
 	return inst_with(poly, vals);
+}
+
+TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
+	TypeFunctionData& func_data = type_function_data[func];
+
+	if (func_data.type == type_function_type::Known or
+	    func_data.equals == func)
+		return func;
+
+	return func_data.equals = find(func_data.equals);
+}
+
+void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
+	a = func_find(a);
+	b = func_find(b);
+
+	if (a == b)
+		return;
+
+	TypeFunctionData& rep_a = type_function_data[a];
+	TypeFunctionData& rep_b = type_function_data[b];
+
+	if (rep_a.type == type_function_type::Var)
+		rep_a.equals = b;
+	else if (rep_b.type == type_function_type::Var)
+		rep_b.equals = a;
+	else
+		assert(0 and "unifying two different known type functions");
+}
+
+TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
+	TypeVarData& var_data = type_vars[type_var];
+
+	switch(var_data.kind) {
+	case kind_type::Mono:
+		return {kind_type::Mono, find(var_data.type_var_id)};
+	case kind_type::Poly:
+		return {kind_type::Poly, var_data.type_var_id};
+	case kind_type::TypeFunction:
+		return {kind_type::TypeFunction, func_find(var_data.type_var_id)};
+	}
+
+	assert(0 and "unknown kind");
+}
+
+void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
+	TypeVarData rep_a = var_find(a);
+	TypeVarData rep_b = var_find(b);
+
+	assert(rep_a.kind == rep_b.kind and "cannot unify different kinds");
+
+	if (rep_a.type_var_id == rep_b.type_var_id)
+		return;
+
+	switch(rep_a.kind) {
+	case kind_type::Mono:
+		unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	case kind_type::Poly:
+		break;
+	case kind_type::TypeFunction:
+		func_unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	}
+
+	assert(0 and "unknown kind");
 }

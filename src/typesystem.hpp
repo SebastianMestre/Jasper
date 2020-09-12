@@ -10,13 +10,15 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
+enum class type_function_type { Var, Known };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
-// For tyhe purposes of the type system, we only care about the amount
+// For the purposes of the type system, we only care about the amount
 // of argument it takes.
 struct TypeFunctionData {
-	// -1 means variadic.
-	int argument_count;
+	int argument_count; // -1 means variadic.
+	type_function_type type;
+	TypeFunctionId equals; // only for vars
 };
 
 enum class mono_type { Var, Term };
@@ -50,6 +52,13 @@ struct PolyData {
 	std::vector<MonoId> vars;
 };
 
+enum class kind_type { TypeFunction, Mono, Poly };
+// variable that can contain types, of any kind
+struct TypeVarData {
+	kind_type kind;
+	TypeVarId type_var_id;
+};
+
 struct TypeSystemCore {
 	std::vector<MonoData> mono_data;
 	std::vector<TermData> term_data;
@@ -57,12 +66,19 @@ struct TypeSystemCore {
 	std::vector<TypeFunctionData> type_function_data;
 	std::vector<PolyData> poly_data;
 
+	std::vector<TypeVarData> type_vars;
+
 	MonoId new_var();
 	MonoId new_term(
 	    TypeFunctionId type_function,
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
+	TypeFunctionId new_type_function(int arguments);
+	TypeFunctionId new_type_function_var();
+	
+	// NOTE: using int here is provisional
+	TypeVarId new_type_var(kind_type kind, int type_id);
 
 	// qualifies all unbound variables in the given monotype
 	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);
@@ -83,4 +99,15 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	void print_type(MonoId, int d = 0);
+
+	// union find for type functions
+	// TODO: type safe ids to overload these functions
+	TypeVarId func_find(TypeVarId func);
+	void func_unify(TypeFunctionId a, TypeFunctionId b);
+
+	// union find for type variables
+	// TODO: type safe ids to overload these functions.
+	// Maybe even use type vars as the interface for every type-ish thing
+	TypeVarData var_find(TypeVarId type_var);
+	void var_unify(TypeVarId a, TypeVarId b);
 };

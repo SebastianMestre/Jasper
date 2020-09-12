@@ -7,40 +7,38 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	m_core.type_function_data.push_back({-1}); // 0 | function
-	m_core.type_function_data.push_back({0});  // 1 | int
-	m_core.type_function_data.push_back({0});  // 2 | float
-	m_core.type_function_data.push_back({0});  // 3 | string
-	m_core.type_function_data.push_back({1});  // 4 | array
-	m_core.type_function_data.push_back({1});  // 5 | dictionary
-	m_core.type_function_data.push_back({0});  // 6 | boolean
-	m_core.type_function_data.push_back({0});  // 7 | unit
+	m_core.new_type_function(-1); // 0 | function
+	m_core.new_type_function(0);  // 1 | int
+	m_core.new_type_function(0);  // 2 | float
+	m_core.new_type_function(0);  // 3 | string
+	m_core.new_type_function(1);  // 4 | array
+	m_core.new_type_function(1);  // 5 | dictionary
+	m_core.new_type_function(0);  // 6 | boolean
+	m_core.new_type_function(0);  // 7 | unit
 
-	m_core.term_data.push_back({1, {}, "builtin int"}); // 0 | int(<>)
-	m_core.term_data.push_back({2, {}, "builtin float"}); // 1 | float(<>)
-	m_core.term_data.push_back({3, {}, "builtin string"}); // 2 | string(<>)
-	m_core.term_data.push_back({6, {}, "builtin bool"}); // 3 | boolean(<>)
-	m_core.term_data.push_back({7, {}, "builtin unit"}); // 4 | unit(<>)
-
-	m_core.mono_data.push_back({mono_type::Term, 0}); // 0 | int(<>)
-	m_core.mono_data.push_back({mono_type::Term, 1}); // 1 | float(<>)
-	m_core.mono_data.push_back({mono_type::Term, 2}); // 2 | string(<>)
-	m_core.mono_data.push_back({mono_type::Term, 3}); // 3 | boolean(<>)
-	m_core.mono_data.push_back({mono_type::Term, 4}); // 4 | unit(<>)
+	m_core.new_term(1, {}, "builtin int"); // 0 | int(<>)
+	m_core.new_term(2, {}, "builtin float"); // 1 | float(<>)
+	m_core.new_term(3, {}, "builtin string"); // 2 | string(<>)
+	m_core.new_term(6, {}, "builtin bool"); // 3 | boolean(<>)
+	m_core.new_term(7, {}, "builtin unit"); // 4 | unit(<>)
 }
 
 MonoId TypeChecker::mono_int() {
 	return 0;
 }
+
 MonoId TypeChecker::mono_float() {
 	return 1;
 }
+
 MonoId TypeChecker::mono_string() {
 	return 2;
 }
+
 MonoId TypeChecker::mono_boolean() {
 	return 3;
 }
+
 MonoId TypeChecker::mono_unit() {
 	return 4;
 }
