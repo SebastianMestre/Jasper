@@ -15,9 +15,6 @@ TypeChecker::TypeChecker() {
 	m_core.new_type_function(1);  // 5  | dictionary
 	m_core.new_type_function(0);  // 6  | boolean
 	m_core.new_type_function(0);  // 7  | unit
-	m_core.new_type_function(-1); // 8  | sum
-	m_core.new_type_function(-1); // 9  | product
-	m_core.new_type_function(-1); // 10 | record
 
 	m_core.new_term(1, {}, "builtin int");    // 0 | int(<>)
 	m_core.new_term(2, {}, "builtin float");  // 1 | float(<>)

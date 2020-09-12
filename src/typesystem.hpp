@@ -10,7 +10,7 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
-enum class type_function_type { Var, Known };
+enum class type_function_type { Var, Builtin, Sum, Product, Record };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
 // For the purposes of the type system, we only care about the amount
