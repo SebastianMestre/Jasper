@@ -18,7 +18,10 @@ struct BuiltinType {
 	static constexpr TypeFunctionId Dictionary {5};
 	static constexpr TypeFunctionId Boolean {6};
 	static constexpr TypeFunctionId Unit {7};
-	static constexpr int amount_ {8};
+	static constexpr TypeFunctionId Sum {8};
+	static constexpr TypeFunctionId Product {9};
+	static constexpr TypeFunctionId Record {10};
+	static constexpr int amount_ {11};
 };
 
 } // namespace TypeChecker
