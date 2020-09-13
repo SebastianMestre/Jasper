@@ -118,6 +118,14 @@ struct DeclarationList : public AST {
 	    : AST {ast_type::DeclarationList} {}
 };
 
+// TODO: better name
+struct UnionTypeExpression : public AST {
+	std::vector<std::unique_ptr<AST>> m_declarations;
+
+	UnionTypeExpression()
+	    : AST {ast_type::UnionTypeExpression} {}
+};
+
 struct Declaration : public AST {
 	Token const* m_identifier_token;
 	std::unique_ptr<AST> m_type;  // can be nullptr
