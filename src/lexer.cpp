@@ -125,6 +125,12 @@ bool Lexer::consume_keyword() {
 			return true;
 		}
 		break;
+	case 'u':
+		if (peek_char(1) == 'n' && peek_char(2) == 'i' && peek_char(3) == 'o' &&
+		    peek_char(4) == 'n' && not is_identifier_char(peek_char(5))) {
+			push_token(token_type::KEYWORD_UNION, 4);
+			return true;
+		}
 	case 'n':
 		if (peek_char(1) == 'u' && peek_char(2) == 'l' && peek_char(3) == 'l' &&
 		    not is_identifier_char(peek_char(4))) {
