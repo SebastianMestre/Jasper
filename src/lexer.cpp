@@ -99,6 +99,13 @@ bool Lexer::consume_keyword() {
 			return true;
 		}
 		break;
+	case 'm':
+		if (peek_char(1) == 'a' && peek_char(2) == 't' && peek_char(3) == 'c' &&
+		    peek_char(4) == 'h' && not is_identifier_char(peek_char(5))) {
+			push_token(token_type::KEYWORD_MATCH, 5);
+			return true;
+		}
+		break;
 	case 'o':
 		if (peek_char(1) == 'b' && peek_char(2) == 't' &&
 		    not is_identifier_char(peek_char(3))) {

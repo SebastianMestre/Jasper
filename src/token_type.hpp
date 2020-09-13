@@ -76,6 +76,7 @@ constexpr const char* token_type_string[] = {
 	"KEYWORD_ELSE",
 	"KEYWORD_FOR",
 	"KEYWORD_WHILE",
+	"KEYWORD_MATCH",
 
 	"END",
 };
@@ -156,6 +157,7 @@ enum class token_type {
 	KEYWORD_ELSE,
 	KEYWORD_FOR,
 	KEYWORD_WHILE,
+	KEYWORD_MATCH,
 
 	END,
 };
