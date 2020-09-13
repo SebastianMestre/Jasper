@@ -7,20 +7,20 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	m_core.new_type_function(-1); // 0 | function
-	m_core.new_type_function(0);  // 1 | int
-	m_core.new_type_function(0);  // 2 | float
-	m_core.new_type_function(0);  // 3 | string
-	m_core.new_type_function(1);  // 4 | array
-	m_core.new_type_function(1);  // 5 | dictionary
-	m_core.new_type_function(0);  // 6 | boolean
-	m_core.new_type_function(0);  // 7 | unit
+	m_core.new_type_function(-1); // 0  | function
+	m_core.new_type_function(0);  // 1  | int
+	m_core.new_type_function(0);  // 2  | float
+	m_core.new_type_function(0);  // 3  | string
+	m_core.new_type_function(1);  // 4  | array
+	m_core.new_type_function(1);  // 5  | dictionary
+	m_core.new_type_function(0);  // 6  | boolean
+	m_core.new_type_function(0);  // 7  | unit
 
-	m_core.new_term(1, {}, "builtin int"); // 0 | int(<>)
-	m_core.new_term(2, {}, "builtin float"); // 1 | float(<>)
+	m_core.new_term(1, {}, "builtin int");    // 0 | int(<>)
+	m_core.new_term(2, {}, "builtin float");  // 1 | float(<>)
 	m_core.new_term(3, {}, "builtin string"); // 2 | string(<>)
-	m_core.new_term(6, {}, "builtin bool"); // 3 | boolean(<>)
-	m_core.new_term(7, {}, "builtin unit"); // 4 | unit(<>)
+	m_core.new_term(6, {}, "builtin bool");   // 3 | boolean(<>)
+	m_core.new_term(7, {}, "builtin unit");   // 4 | unit(<>)
 }
 
 MonoId TypeChecker::mono_int() {
