@@ -79,8 +79,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::vector<std::unique_ptr<AST::AST>>>
-Parser::parse_declaration_list(token_type terminator) {
+Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_declaration_list(
+    token_type terminator) {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
@@ -1006,5 +1006,22 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	}
 
 	e->m_args = std::move(args);
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+}
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_union_type_expression() {
+	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse union"}};
+
+	if (handle_error(result, require(token_type::KEYWORD_UNION)))
+		return result;
+
+	if (handle_error(result, require(token_type::BRACE_OPEN)))
+		return result;
+
+	if (handle_error(result, require(token_type::BRACE_CLOSE)))
+		return result;
+
+	auto e = std::make_unique<AST::UnionTypeExpression>();
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
