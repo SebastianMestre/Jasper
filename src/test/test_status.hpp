@@ -1,13 +1,13 @@
 #pragma once
 
 constexpr const char* test_status_string[] = {
-    "Ok",
-    "Error",
-    "Fail",
-    "Empty",
+	"Ok",
+	"Error",
+	"Fail",
+	"Empty",
 };
 
-enum class test_status {
+enum class TestStatusTag {
 	Ok = 0,
 	Error,
 	Fail,
@@ -15,6 +15,6 @@ enum class test_status {
 };
 
 struct TestReport {
-	test_status m_code;
+	TestStatusTag m_code;
 	std::string m_msg;
 };

@@ -457,10 +457,10 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        if (cov[0] != cov[1] || cov[0] != cov[2])
 			        return {
-			            test_status::Fail,
+			            TestStatusTag::Fail,
 			            "All vertices in a 3-cycle should be in the same SCC"};
 
-		        return {test_status::Ok};
+		        return {TestStatusTag::Ok};
 	        },
 	        +[]() -> TestReport {
 		        TarjanSolver solver(2);
@@ -469,14 +469,14 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        auto const& cov = solver.component_of_vertices();
 		        if (cov[0] == cov[1])
-			        return {test_status::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
+			        return {TestStatusTag::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
 
 		        if (cov[0] < cov[1])
 			        return {
-			            test_status::Fail,
+			            TestStatusTag::Fail,
 			            "SCCs should be in reverse topological sort."};
 
-		        return {test_status::Ok};
+		        return {TestStatusTag::Ok};
 	        }}));
 }
 

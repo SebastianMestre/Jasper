@@ -16,20 +16,20 @@ InterpreterTestSet::InterpreterTestSet(std::string s, std::vector<Interpret> tfs
 
 TestReport InterpreterTestSet::execute() {
 	if (m_testers.empty())
-		return {test_status::Empty};
+		return {TestStatusTag::Empty};
 
 	try {
 		for (auto* f : m_testers) {
 			ExitStatusTag answer = Interpreter::execute(m_source, m_dump, f);
 
 			if (ExitStatusTag::Ok != answer)
-				return {test_status::Fail};
+				return {TestStatusTag::Fail};
 		}
 	} catch (const std::exception& e) {
-		return {test_status::Error, e.what()};
+		return {TestStatusTag::Error, e.what()};
 	}
 
-	return {test_status::Ok};
+	return {TestStatusTag::Ok};
 }
 
 NormalTestSet::NormalTestSet() {}
@@ -39,21 +39,21 @@ NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
 
 TestReport NormalTestSet::execute() {
 	if (m_testers.empty())
-		return {test_status::Empty};
+		return {TestStatusTag::Empty};
 
 	try {
 		for (auto* test : m_testers) {
 			auto report = test();
 
 			// FUTURE: Accumulate failed tests
-			if (report.m_code != test_status::Ok)
+			if (report.m_code != TestStatusTag::Ok)
 				return report;
 		}
 	} catch (std::exception const& e) {
-		return {test_status::Error, e.what()};
+		return {TestStatusTag::Error, e.what()};
 	}
 
-	return {test_status::Ok};
+	return {TestStatusTag::Ok};
 }
 
 } // namespace Test
