@@ -38,7 +38,7 @@ namespace TypeChecker {
 
 	// TODO: refactor
 	TypedAST::FunctionLiteral* surrounding_function = nullptr;
-	if (binding->m_type == Frontend::BindingType::Declaration) {
+	if (binding->m_type == Frontend::BindingTag::Declaration) {
 		TypedAST::Declaration* declaration = binding->get_decl();
 
 		assert(declaration);

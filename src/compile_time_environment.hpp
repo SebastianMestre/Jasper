@@ -18,10 +18,10 @@ struct FunctionArgument;
 
 namespace Frontend {
 
-enum class BindingType { Declaration, Argument };
+enum class BindingTag { Declaration, Argument };
 
 struct Binding {
-	BindingType m_type;
+	BindingTag m_type;
 
 	// this acts as an union. maybe use an actual union, eventually?
 	TypedAST::Declaration* m_decl;

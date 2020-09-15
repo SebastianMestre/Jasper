@@ -90,7 +90,7 @@ void typecheck(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env)
 	// here we implement the [var] rule
 	// TODO: refactor
 	MonoId mono = -1;
-	if (binding->m_type == Frontend::BindingType::Declaration) {
+	if (binding->m_type == Frontend::BindingTag::Declaration) {
 		TypedAST::Declaration* decl = binding->get_decl();
 		assert(decl);
 		if (decl->m_is_polymorphic) {
