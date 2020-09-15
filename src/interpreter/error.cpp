@@ -5,9 +5,9 @@
 namespace Interpreter {
 
 Error::Error()
-    : Value(value_type::Error) {}
+    : Value(ValueTag::Error) {}
 Error::Error(std::string message)
-    : Value(value_type::Error)
+    : Value(ValueTag::Error)
     , m_error(message) {}
 
 Error make_reference_error(const Identifier& i) {

@@ -136,7 +136,7 @@ auto is_callable_value(Value* v) -> bool {
 		return false;
 
 	auto type = v->type();
-	return type == value_type::Function || type == value_type::NativeFunction;
+	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
 gc_ptr<Value> eval_call_function(
@@ -154,7 +154,7 @@ gc_ptr<Value> eval_call_function(
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
-		assert(kv.second->type() == value_type::Reference);
+		assert(kv.second->type() == ValueTag::Reference);
 		e.direct_declare(kv.first, static_cast<Reference*>(kv.second));
 	}
 
@@ -182,10 +182,10 @@ gc_ptr<Value> eval_call_callable(
     gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 	// TODO: proper error handling
 	assert(is_callable_value(callee.get()));
-	if (callee->type() == value_type::Function) {
+	if (callee->type() == ValueTag::Function) {
 		return eval_call_function(
 		    static_cast<Function*>(callee.get()), std::move(args), e);
-	} else if (callee->type() == value_type::NativeFunction) {
+	} else if (callee->type() == ValueTag::NativeFunction) {
 		return eval_call_native_function(
 		    static_cast<NativeFunction*>(callee.get()), std::move(args), e);
 	} else {
@@ -216,12 +216,12 @@ gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	auto callee_value = eval(ast->m_callee.get(), e);
 	auto* callee = unboxed(callee_value.get());
 	assert(callee);
-	assert(callee->type() == value_type::Array);
+	assert(callee->type() == ValueTag::Array);
 
 	auto index_value = eval(ast->m_index.get(), e);
 	auto* index = unboxed(index_value.get());
 	assert(index);
-	assert(index->type() == value_type::Integer);
+	assert(index->type() == ValueTag::Integer);
 
 	auto* array_callee = static_cast<Array*>(callee);
 	auto* int_index = static_cast<Integer*>(index);
@@ -235,7 +235,7 @@ gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
 	auto condition = eval(ast->m_condition.get(), e);
 	auto* condition_value = unboxed(condition.get());
 	assert(condition_value);
-	assert(condition_value->type() == value_type::Boolean);
+	assert(condition_value->type() == ValueTag::Boolean);
 
 	return static_cast<Boolean*>(condition_value)->m_value
 	       ? eval(ast->m_then_expr.get(), e)
@@ -256,7 +256,7 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	auto condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
-	assert(condition_result->type() == value_type::Boolean);
+	assert(condition_result->type() == ValueTag::Boolean);
 	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
 	if (condition_result_b->m_value) {
@@ -280,7 +280,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
-		assert(unboxed_condition_result->type() == value_type::Boolean);
+		assert(unboxed_condition_result->type() == ValueTag::Boolean);
 		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)
@@ -309,7 +309,7 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
-		assert(unboxed_condition_result->type() == value_type::Boolean);
+		assert(unboxed_condition_result->type() == ValueTag::Boolean);
 		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)

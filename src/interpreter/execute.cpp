@@ -15,13 +15,13 @@
 
 namespace Interpreter {
 
-exit_status_type execute(std::string const& source, bool dump_ast, Runner* runner) {
+ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) {
 
 	TokenArray ta;
 	auto parse_result = parse_program(source, ta);
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
-		return exit_status_type::ParseError;
+		return ExitStatusTag::ParseError;
 	}
 
 	if (dump_ast)
@@ -32,7 +32,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	// Can this even happen? parse_program should always either return a
 	// DeclarationList or an error
 	if (top_level_ast->type() != ASTTag::DeclarationList)
-		return exit_status_type::TopLevelTypeError;
+		return ExitStatusTag::TopLevelTypeError;
 
 	auto desugared_ast = AST::desugar(std::move(top_level_ast));
 	auto top_level = TypedAST::get_unique(desugared_ast);
@@ -42,7 +42,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 		auto err = TypeChecker::match_identifiers(top_level.get(), ct_env);
 		if (!err.ok()) {
 			err.print();
-			return exit_status_type::StaticError;
+			return ExitStatusTag::StaticError;
 		}
 	}
 
@@ -53,7 +53,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 	declare_native_functions(env);
 	eval(top_level.get(), env);
 
-	exit_status_type runner_exit_code = runner(env);
+	ExitStatusTag runner_exit_code = runner(env);
 
 	return runner_exit_code;
 }

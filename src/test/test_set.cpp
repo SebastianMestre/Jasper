@@ -20,9 +20,9 @@ TestReport InterpreterTestSet::execute() {
 
 	try {
 		for (auto* f : m_testers) {
-			exit_status_type answer = Interpreter::execute(m_source, m_dump, f);
+			ExitStatusTag answer = Interpreter::execute(m_source, m_dump, f);
 
-			if (exit_status_type::Ok != answer)
+			if (ExitStatusTag::Ok != answer)
 				return {test_status::Fail};
 		}
 	} catch (const std::exception& e) {

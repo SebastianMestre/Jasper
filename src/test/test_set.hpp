@@ -15,7 +15,7 @@ struct TestSet {
 	virtual ~TestSet() = default;
 };
 
-using Interpret = exit_status_type (*)(Interpreter::Environment&);
+using Interpret = ExitStatusTag (*)(Interpreter::Environment&);
 
 struct InterpreterTestSet : public TestSet {
 
