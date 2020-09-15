@@ -31,7 +31,7 @@ exit_status_type execute(std::string const& source, bool dump_ast, Runner* runne
 
 	// Can this even happen? parse_program should always either return a
 	// DeclarationList or an error
-	if (top_level_ast->type() != ast_type::DeclarationList)
+	if (top_level_ast->type() != ASTType::DeclarationList)
 		return exit_status_type::TopLevelTypeError;
 
 	auto desugared_ast = AST::desugar(std::move(top_level_ast));

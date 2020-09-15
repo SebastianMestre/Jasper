@@ -77,7 +77,7 @@ Own<AST> desugar(Own<Declaration> ast) {
 
 Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 	// TODO: error handling
-	assert(ast->m_rhs->type() == ast_type::CallExpression);
+	assert(ast->m_rhs->type() == ASTType::CallExpression);
 
 	auto rhs = desugar(std::move(ast->m_rhs));
 	auto call = static_cast<CallExpression*>(rhs.get());
@@ -90,7 +90,7 @@ Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 Own<AST> desugarDot(Own<BinaryExpression> ast) {
 	// TODO: error handling
 	// TODO: move this check to the parser
-	assert(ast->m_rhs->type() == ast_type::Identifier);
+	assert(ast->m_rhs->type() == ASTType::Identifier);
 	auto ident = static_cast<Identifier*>(ast->m_rhs.get());
 
 	auto tok = ast->m_op_token;
@@ -188,11 +188,11 @@ Own<AST> desugar(Own<WhileStatement> ast) {
 
 Own<AST> desugar(Own<AST> ast) {
 #define DISPATCH(type)                                                         \
-	case ast_type::type:                                                       \
+	case ASTType::type:                                                       \
 		return desugar(Own<type>(static_cast<type*>(ast.release())));
 
 #define RETURN(type)                                                           \
-	case ast_type::type:                                                       \
+	case ASTType::type:                                                       \
 		return ast;
 
 	switch (ast->type()) {

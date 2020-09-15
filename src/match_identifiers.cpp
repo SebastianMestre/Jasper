@@ -110,7 +110,7 @@ namespace TypeChecker {
 	}
 
 	// scan body
-	assert(ast->m_body->type() == ast_type::Block);
+	assert(ast->m_body->type() == ASTType::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		CHECK_AND_RETURN(match_identifiers(child.get(), env));
@@ -197,11 +197,11 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case ast_type::type:                                                       \
+	case ASTType::type:                                                       \
 		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
-	case ast_type::type:                                                       \
+	case ASTType::type:                                                       \
 		return {};
 
 	// TODO: Compound literals
@@ -226,8 +226,8 @@ namespace TypeChecker {
 		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
 
-	case ast_type::BinaryExpression:
-	case ast_type::ShortFunctionLiteral:
+	case ASTType::BinaryExpression:
+	case ASTType::ShortFunctionLiteral:
 		assert(0);
 	}
 

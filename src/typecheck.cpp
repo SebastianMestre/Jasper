@@ -170,7 +170,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 	}
 
 	// scan body
-	assert(ast->m_body->type() == ast_type::Block);
+	assert(ast->m_body->type() == ASTType::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		typecheck(child.get(), env);
@@ -326,7 +326,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case ast_type::type:                                                       \
+	case ASTType::type:                                                       \
 		return typecheck(static_cast<TypedAST::type*>(ast), env);
 
 	// TODO: Compound literals
@@ -350,7 +350,7 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
-	case ast_type::BinaryExpression:
+	case ASTType::BinaryExpression:
 		assert(0);
 		return;
 	}

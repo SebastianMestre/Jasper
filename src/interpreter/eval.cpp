@@ -13,7 +13,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		assert(decl->type() == ast_type::Declaration);
+		assert(decl->type() == ASTType::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
 	return e.null();
@@ -56,7 +56,7 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ast_type::Declaration);
+		assert(declTypeErased->type() == ASTType::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -76,7 +76,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ast_type::Declaration);
+		assert(declTypeErased->type() == ASTType::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -329,47 +329,47 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
-	case ast_type::NumberLiteral:
+	case ASTType::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
-	case ast_type::IntegerLiteral:
+	case ASTType::IntegerLiteral:
 		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
-	case ast_type::StringLiteral:
+	case ASTType::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
-	case ast_type::BooleanLiteral:
+	case ASTType::BooleanLiteral:
 		return eval(static_cast<TypedAST::BooleanLiteral*>(ast), e);
-	case ast_type::NullLiteral:
+	case ASTType::NullLiteral:
 		return eval(static_cast<TypedAST::NullLiteral*>(ast), e);
-	case ast_type::ObjectLiteral:
+	case ASTType::ObjectLiteral:
 		return eval(static_cast<TypedAST::ObjectLiteral*>(ast), e);
-	case ast_type::ArrayLiteral:
+	case ASTType::ArrayLiteral:
 		return eval(static_cast<TypedAST::ArrayLiteral*>(ast), e);
-	case ast_type::DictionaryLiteral:
+	case ASTType::DictionaryLiteral:
 		return eval(static_cast<TypedAST::DictionaryLiteral*>(ast), e);
-	case ast_type::FunctionLiteral:
+	case ASTType::FunctionLiteral:
 		return eval(static_cast<TypedAST::FunctionLiteral*>(ast), e);
-	case ast_type::DeclarationList:
+	case ASTType::DeclarationList:
 		return eval(static_cast<TypedAST::DeclarationList*>(ast), e);
-	case ast_type::Declaration:
+	case ASTType::Declaration:
 		return eval(static_cast<TypedAST::Declaration*>(ast), e);
-	case ast_type::Identifier:
+	case ASTType::Identifier:
 		return eval(static_cast<TypedAST::Identifier*>(ast), e);
-	case ast_type::CallExpression:
+	case ASTType::CallExpression:
 		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
-	case ast_type::IndexExpression:
+	case ASTType::IndexExpression:
 		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
-	case ast_type::TernaryExpression:
+	case ASTType::TernaryExpression:
 		return eval(static_cast<TypedAST::TernaryExpression*>(ast), e);
-	case ast_type::Block:
+	case ASTType::Block:
 		return eval(static_cast<TypedAST::Block*>(ast), e);
-	case ast_type::ReturnStatement:
+	case ASTType::ReturnStatement:
 		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
-	case ast_type::IfElseStatement:
+	case ASTType::IfElseStatement:
 		return eval(static_cast<TypedAST::IfElseStatement*>(ast), e);
-	case ast_type::ForStatement:
+	case ASTType::ForStatement:
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
-	case ast_type::WhileStatement:
+	case ASTType::WhileStatement:
 		return eval(static_cast<TypedAST::WhileStatement*>(ast), e);
-	case ast_type::BinaryExpression:
+	case ASTType::BinaryExpression:
 		assert(0);
 	}
 
