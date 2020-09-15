@@ -10,7 +10,7 @@
 #include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
-#include "exit_status_type.hpp"
+#include "exit_status_tag.hpp"
 #include "value.hpp"
 
 int main() {

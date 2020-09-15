@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "test_status.hpp"
+#include "test_status_tag.hpp"
 
 namespace Test {
 

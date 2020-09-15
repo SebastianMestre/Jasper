@@ -6,7 +6,7 @@
 
 #include "environment_fwd.hpp"
 #include "value_fwd.hpp"
-#include "value_type.hpp"
+#include "value_tag.hpp"
 
 namespace TypedAST {
 struct FunctionLiteral;

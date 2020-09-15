@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "ast_type.hpp"
+#include "ast_tag.hpp"
 #include "token.hpp"
 
 namespace AST {

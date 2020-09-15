@@ -4,7 +4,7 @@
 
 #include "token.hpp"
 #include "token_array.hpp"
-#include "token_type.hpp"
+#include "token_tag.hpp"
 
 struct Lexer {
 	std::vector<char> m_source;

@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ast_type.hpp"
+#include "ast_tag.hpp"
 #include "token.hpp"
-#include "token_type.hpp"
+#include "token_tag.hpp"
 #include "typesystem_types.hpp"
 
 namespace AST {

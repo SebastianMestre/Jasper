@@ -1,7 +1,7 @@
 #pragma once
 
 #include "environment_fwd.hpp"
-#include "exit_status_type.hpp"
+#include "exit_status_tag.hpp"
 #include "value.hpp"
 #include <string>
 

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "token_type.hpp"
+#include "token_tag.hpp"
 
 struct Token {
 	/* internal representation of token */

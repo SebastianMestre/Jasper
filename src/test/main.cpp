@@ -5,7 +5,7 @@
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "../tarjan_solver.hpp"
-#include "test_status.hpp"
+#include "test_status_tag.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
 
