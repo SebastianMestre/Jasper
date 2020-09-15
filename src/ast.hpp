@@ -11,14 +11,14 @@ namespace AST {
 
 struct AST {
   protected:
-	ASTType m_type;
+	ASTTag m_type;
 
   public:
 	AST() = default;
-	AST(ASTType type)
+	AST(ASTTag type)
 	    : m_type {type} {}
 
-	ASTType type() const {
+	ASTTag type() const {
 		return m_type;
 	}
 	virtual ~AST() = default;
@@ -32,7 +32,7 @@ struct IntegerLiteral : public AST {
 	}
 
 	IntegerLiteral()
-	    : AST {ASTType::IntegerLiteral} {}
+	    : AST {ASTTag::IntegerLiteral} {}
 };
 
 struct NumberLiteral : public AST {
@@ -43,7 +43,7 @@ struct NumberLiteral : public AST {
 	}
 
 	NumberLiteral()
-	    : AST {ASTType::NumberLiteral} {}
+	    : AST {ASTTag::NumberLiteral} {}
 };
 
 struct StringLiteral : public AST {
@@ -54,7 +54,7 @@ struct StringLiteral : public AST {
 	}
 
 	StringLiteral()
-	    : AST {ASTType::StringLiteral} {}
+	    : AST {ASTTag::StringLiteral} {}
 };
 
 struct BooleanLiteral : public AST {
@@ -65,34 +65,34 @@ struct BooleanLiteral : public AST {
 	}
 
 	BooleanLiteral()
-	    : AST {ASTType::BooleanLiteral} {}
+	    : AST {ASTTag::BooleanLiteral} {}
 };
 
 struct NullLiteral : public AST {
 
 	NullLiteral()
-	    : AST {ASTType::NullLiteral} {}
+	    : AST {ASTTag::NullLiteral} {}
 };
 
 struct ObjectLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	ObjectLiteral()
-	    : AST {ASTType::ObjectLiteral} {}
+	    : AST {ASTTag::ObjectLiteral} {}
 };
 
 struct ArrayLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_elements;
 
 	ArrayLiteral()
-	    : AST {ASTType::ArrayLiteral} {}
+	    : AST {ASTTag::ArrayLiteral} {}
 };
 
 struct DictionaryLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	DictionaryLiteral()
-	    : AST {ASTType::DictionaryLiteral} {}
+	    : AST {ASTTag::DictionaryLiteral} {}
 };
 
 struct FunctionLiteral : public AST {
@@ -100,7 +100,7 @@ struct FunctionLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	FunctionLiteral()
-	    : AST {ASTType::FunctionLiteral} {}
+	    : AST {ASTTag::FunctionLiteral} {}
 };
 
 struct ShortFunctionLiteral : public AST {
@@ -108,14 +108,14 @@ struct ShortFunctionLiteral : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	ShortFunctionLiteral()
-	    : AST {ASTType::ShortFunctionLiteral} {}
+	    : AST {ASTTag::ShortFunctionLiteral} {}
 };
 
 struct DeclarationList : public AST {
 	std::vector<std::unique_ptr<AST>> m_declarations;
 
 	DeclarationList()
-	    : AST {ASTType::DeclarationList} {}
+	    : AST {ASTTag::DeclarationList} {}
 };
 
 struct Declaration : public AST {
@@ -128,7 +128,7 @@ struct Declaration : public AST {
 	}
 
 	Declaration()
-	    : AST {ASTType::Declaration} {}
+	    : AST {ASTTag::Declaration} {}
 };
 
 struct Identifier : public AST {
@@ -139,7 +139,7 @@ struct Identifier : public AST {
 	}
 
 	Identifier()
-	    : AST {ASTType::Identifier} {}
+	    : AST {ASTTag::Identifier} {}
 };
 
 struct BinaryExpression : public AST {
@@ -148,7 +148,7 @@ struct BinaryExpression : public AST {
 	std::unique_ptr<AST> m_rhs;
 
 	BinaryExpression()
-	    : AST {ASTType::BinaryExpression} {}
+	    : AST {ASTTag::BinaryExpression} {}
 };
 
 struct CallExpression : public AST {
@@ -156,7 +156,7 @@ struct CallExpression : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	CallExpression()
-	    : AST {ASTType::CallExpression} {}
+	    : AST {ASTTag::CallExpression} {}
 };
 
 struct IndexExpression : public AST {
@@ -164,7 +164,7 @@ struct IndexExpression : public AST {
 	std::unique_ptr<AST> m_index;
 
 	IndexExpression()
-	    : AST {ASTType::IndexExpression} {}
+	    : AST {ASTTag::IndexExpression} {}
 };
 
 struct TernaryExpression : public AST {
@@ -173,21 +173,21 @@ struct TernaryExpression : public AST {
 	std::unique_ptr<AST> m_else_expr;
 
 	TernaryExpression()
-	    : AST {ASTType::TernaryExpression} {}
+	    : AST {ASTTag::TernaryExpression} {}
 };
 
 struct Block : public AST {
 	std::vector<std::unique_ptr<AST>> m_body;
 
 	Block()
-	    : AST {ASTType::Block} {}
+	    : AST {ASTTag::Block} {}
 };
 
 struct ReturnStatement : public AST {
 	std::unique_ptr<AST> m_value;
 
 	ReturnStatement()
-	    : AST {ASTType::ReturnStatement} {}
+	    : AST {ASTTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public AST {
@@ -196,7 +196,7 @@ struct IfElseStatement : public AST {
 	std::unique_ptr<AST> m_else_body; // can be nullptr
 
 	IfElseStatement()
-	    : AST {ASTType::IfElseStatement} {}
+	    : AST {ASTTag::IfElseStatement} {}
 };
 
 struct ForStatement : public AST {
@@ -206,7 +206,7 @@ struct ForStatement : public AST {
 	std::unique_ptr<AST> m_body;
 
 	ForStatement()
-	    : AST {ASTType::ForStatement} {}
+	    : AST {ASTTag::ForStatement} {}
 };
 
 struct WhileStatement : public AST {
@@ -214,7 +214,7 @@ struct WhileStatement : public AST {
 	std::unique_ptr<AST> m_body;
 
 	WhileStatement()
-	    : AST {ASTType::WhileStatement} {}
+	    : AST {ASTTag::WhileStatement} {}
 };
 
 struct TypeTerm : public AST {
@@ -222,7 +222,7 @@ struct TypeTerm : public AST {
 	std::vector<std::unique_ptr<AST>> m_args;
 
 	TypeTerm()
-	    : AST {ASTType::TypeTerm} {}
+	    : AST {ASTTag::TypeTerm} {}
 };
 
 void print(AST*, int);

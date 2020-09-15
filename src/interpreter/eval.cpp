@@ -13,7 +13,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		assert(decl->type() == ASTType::Declaration);
+		assert(decl->type() == ASTTag::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
 	return e.null();
@@ -44,7 +44,7 @@ gc_ptr<Value> eval(TypedAST::StringLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::BooleanLiteral* ast, Environment& e) {
-	bool b = ast->m_token->m_type == TokenType::KEYWORD_TRUE;
+	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 
@@ -56,7 +56,7 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ASTType::Declaration);
+		assert(declTypeErased->type() == ASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -76,7 +76,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ASTType::Declaration);
+		assert(declTypeErased->type() == ASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -329,47 +329,47 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
-	case ASTType::NumberLiteral:
+	case ASTTag::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
-	case ASTType::IntegerLiteral:
+	case ASTTag::IntegerLiteral:
 		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
-	case ASTType::StringLiteral:
+	case ASTTag::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
-	case ASTType::BooleanLiteral:
+	case ASTTag::BooleanLiteral:
 		return eval(static_cast<TypedAST::BooleanLiteral*>(ast), e);
-	case ASTType::NullLiteral:
+	case ASTTag::NullLiteral:
 		return eval(static_cast<TypedAST::NullLiteral*>(ast), e);
-	case ASTType::ObjectLiteral:
+	case ASTTag::ObjectLiteral:
 		return eval(static_cast<TypedAST::ObjectLiteral*>(ast), e);
-	case ASTType::ArrayLiteral:
+	case ASTTag::ArrayLiteral:
 		return eval(static_cast<TypedAST::ArrayLiteral*>(ast), e);
-	case ASTType::DictionaryLiteral:
+	case ASTTag::DictionaryLiteral:
 		return eval(static_cast<TypedAST::DictionaryLiteral*>(ast), e);
-	case ASTType::FunctionLiteral:
+	case ASTTag::FunctionLiteral:
 		return eval(static_cast<TypedAST::FunctionLiteral*>(ast), e);
-	case ASTType::DeclarationList:
+	case ASTTag::DeclarationList:
 		return eval(static_cast<TypedAST::DeclarationList*>(ast), e);
-	case ASTType::Declaration:
+	case ASTTag::Declaration:
 		return eval(static_cast<TypedAST::Declaration*>(ast), e);
-	case ASTType::Identifier:
+	case ASTTag::Identifier:
 		return eval(static_cast<TypedAST::Identifier*>(ast), e);
-	case ASTType::CallExpression:
+	case ASTTag::CallExpression:
 		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
-	case ASTType::IndexExpression:
+	case ASTTag::IndexExpression:
 		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
-	case ASTType::TernaryExpression:
+	case ASTTag::TernaryExpression:
 		return eval(static_cast<TypedAST::TernaryExpression*>(ast), e);
-	case ASTType::Block:
+	case ASTTag::Block:
 		return eval(static_cast<TypedAST::Block*>(ast), e);
-	case ASTType::ReturnStatement:
+	case ASTTag::ReturnStatement:
 		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
-	case ASTType::IfElseStatement:
+	case ASTTag::IfElseStatement:
 		return eval(static_cast<TypedAST::IfElseStatement*>(ast), e);
-	case ASTType::ForStatement:
+	case ASTTag::ForStatement:
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
-	case ASTType::WhileStatement:
+	case ASTTag::WhileStatement:
 		return eval(static_cast<TypedAST::WhileStatement*>(ast), e);
-	case ASTType::BinaryExpression:
+	case ASTTag::BinaryExpression:
 		assert(0);
 	}
 

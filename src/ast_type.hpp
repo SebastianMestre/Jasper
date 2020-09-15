@@ -28,7 +28,7 @@ constexpr const char* ast_type_string[] = {
 	"TypeTerm",
 };
 
-enum class ASTType {
+enum class ASTTag {
 	NumberLiteral,
 	IntegerLiteral,
 	StringLiteral,

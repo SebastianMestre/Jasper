@@ -81,7 +81,7 @@ constexpr const char* token_type_string[] = {
 };
 
 /* internal representation */
-enum class TokenType {
+enum class TokenTag {
 	ADD,
 	SUB,
 	DIV,
