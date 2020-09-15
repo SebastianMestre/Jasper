@@ -21,7 +21,7 @@ char Lexer::char_at(int index) {
 	return index < int(m_source.size()) ? m_source[index] : '\0';
 }
 
-void Lexer::push_token(token_type tt, int width) {
+void Lexer::push_token(TokenType tt, int width) {
 
 	std::string text;
 	text.resize(width);
@@ -49,7 +49,7 @@ bool Lexer::consume_keyword() {
 	case 'a': {
 		if (peek_char(1) == 'r' && peek_char(2) == 'r' && peek_char(3) == 'a' &&
 		    peek_char(4) == 'y' && not is_identifier_char(peek_char(5))) {
-			push_token(token_type::KEYWORD_ARRAY, 5);
+			push_token(TokenType::KEYWORD_ARRAY, 5);
 			return true;
 		}
 	} break;
@@ -57,21 +57,21 @@ bool Lexer::consume_keyword() {
 		char c1 = peek_char(1);
 		if (c1 == 'n') {
 			if (not is_identifier_char(peek_char(2))) {
-				push_token(token_type::KEYWORD_FN, 2);
+				push_token(TokenType::KEYWORD_FN, 2);
 				return true;
 			}
 		} else if (c1 == 'o') {
 			char c2 = peek_char(2);
 			if (c2 == 'r') {
 				if (not is_identifier_char(peek_char(3))) {
-					push_token(token_type::KEYWORD_FOR, 3);
+					push_token(TokenType::KEYWORD_FOR, 3);
 					return true;
 				}
 			}
 		} else if (
 		    peek_char(1) == 'a' && peek_char(2) == 'l' && peek_char(3) == 's' &&
 		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
-			push_token(token_type::KEYWORD_FALSE, 5);
+			push_token(TokenType::KEYWORD_FALSE, 5);
 			return true;
 		}
 	} break;
@@ -79,7 +79,7 @@ bool Lexer::consume_keyword() {
 		char c1 = peek_char(1);
 		if (c1 == 'f') {
 			if (not is_identifier_char(peek_char(2))) {
-				push_token(token_type::KEYWORD_IF, 2);
+				push_token(TokenType::KEYWORD_IF, 2);
 				return true;
 			}
 		}
@@ -88,54 +88,54 @@ bool Lexer::consume_keyword() {
 		if (peek_char(1) == 'e' && peek_char(2) == 't' && peek_char(3) == 'u' &&
 		    peek_char(4) == 'r' && peek_char(5) == 'n' &&
 		    not is_identifier_char(peek_char(6))) {
-			push_token(token_type::KEYWORD_RETURN, 6);
+			push_token(TokenType::KEYWORD_RETURN, 6);
 			return true;
 		}
 		break;
 	case 'd':
 		if (peek_char(1) == 'i' && peek_char(2) == 'c' && peek_char(3) == 't' &&
 		    not is_identifier_char(peek_char(4))) {
-			push_token(token_type::KEYWORD_DICT, 4);
+			push_token(TokenType::KEYWORD_DICT, 4);
 			return true;
 		}
 		break;
 	case 'o':
 		if (peek_char(1) == 'b' && peek_char(2) == 't' &&
 		    not is_identifier_char(peek_char(3))) {
-			push_token(token_type::KEYWORD_OBJECT, 3);
+			push_token(TokenType::KEYWORD_OBJECT, 3);
 			return true;
 		}
 		break;
 	case 't':
 		if (peek_char(1) == 'r' && peek_char(2) == 'u' && peek_char(3) == 'e' &&
 		    not is_identifier_char(peek_char(4))) {
-			push_token(token_type::KEYWORD_TRUE, 4);
+			push_token(TokenType::KEYWORD_TRUE, 4);
 			return true;
 		} else if (
 		    peek_char(1) == 'h' && peek_char(2) == 'e' && peek_char(3) == 'n' &&
 		    not is_identifier_char(peek_char(4))) {
-			push_token(token_type::KEYWORD_THEN, 4);
+			push_token(TokenType::KEYWORD_THEN, 4);
 			return true;
 		}
 		break;
 	case 'n':
 		if (peek_char(1) == 'u' && peek_char(2) == 'l' && peek_char(3) == 'l' &&
 		    not is_identifier_char(peek_char(4))) {
-			push_token(token_type::KEYWORD_NULL, 4);
+			push_token(TokenType::KEYWORD_NULL, 4);
 			return true;
 		}
 		break;
 	case 'w':
 		if (peek_char(1) == 'h' && peek_char(2) == 'i' && peek_char(3) == 'l' &&
 		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
-			push_token(token_type::KEYWORD_WHILE, 5);
+			push_token(TokenType::KEYWORD_WHILE, 5);
 			return true;
 		}
 		break;
 	case 'e':
 		if (peek_char(1) == 'l' && peek_char(2) == 's' && peek_char(3) == 'e' &&
 		    not is_identifier_char(peek_char(4))) {
-			push_token(token_type::KEYWORD_ELSE, 4);
+			push_token(TokenType::KEYWORD_ELSE, 4);
 			return true;
 		}
 		break;
@@ -150,36 +150,36 @@ void Lexer::consume_token() {
 	case '+':
 		switch (next_char()) {
 		case '+':
-			push_token(token_type::INCREMENT, 2);
+			push_token(TokenType::INCREMENT, 2);
 			break;
 		case '=':
-			push_token(token_type::ADD_TO, 2);
+			push_token(TokenType::ADD_TO, 2);
 			break;
 		default:
-			push_token(token_type::ADD, 1);
+			push_token(TokenType::ADD, 1);
 		}
 		break;
 
 	case '-':
 		switch (next_char()) {
 		case '-':
-			push_token(token_type::DECREMENT, 2);
+			push_token(TokenType::DECREMENT, 2);
 			break;
 		case '=':
-			push_token(token_type::SUB_TO, 2);
+			push_token(TokenType::SUB_TO, 2);
 			break;
 		default:
-			push_token(token_type::SUB, 1);
+			push_token(TokenType::SUB, 1);
 		}
 		break;
 
 	case '*':
 		switch (next_char()) {
 		case '=':
-			push_token(token_type::MUL_TO, 2);
+			push_token(TokenType::MUL_TO, 2);
 			break;
 		default:
-			push_token(token_type::MUL, 1);
+			push_token(TokenType::MUL, 1);
 		}
 		break;
 
@@ -189,145 +189,145 @@ void Lexer::consume_token() {
 			assert(consume_comment());
 			break;
 		case '=':
-			push_token(token_type::DIV_TO, 2);
+			push_token(TokenType::DIV_TO, 2);
 			break;
 		default:
-			push_token(token_type::DIV, 1);
+			push_token(TokenType::DIV, 1);
 		}
 		break;
 
 	case '&':
 		switch (next_char()) {
 		case '&':
-			push_token(token_type::LOGIC_AND, 2);
+			push_token(TokenType::LOGIC_AND, 2);
 			break;
 		case '=':
-			push_token(token_type::AND_TO, 2);
+			push_token(TokenType::AND_TO, 2);
 			break;
 		default:
-			push_token(token_type::AND, 1);
+			push_token(TokenType::AND, 1);
 		}
 		break;
 
 	case '|':
 		switch (next_char()) {
 		case '|':
-			push_token(token_type::LOGIC_IOR, 2);
+			push_token(TokenType::LOGIC_IOR, 2);
 			break;
 		case '>':
-			push_token(token_type::PIZZA, 2);
+			push_token(TokenType::PIZZA, 2);
 			break;
 		case '=':
-			push_token(token_type::IOR_TO, 2);
+			push_token(TokenType::IOR_TO, 2);
 			break;
 		default:
-			push_token(token_type::IOR, 1);
+			push_token(TokenType::IOR, 1);
 		}
 		break;
 
 	case '^':
 		switch (next_char()) {
-		/* case '^': push_token(token_type::LOGIC_XOR, 2); break; */
+		/* case '^': push_token(TokenType::LOGIC_XOR, 2); break; */
 		case '=':
-			push_token(token_type::XOR_TO, 2);
+			push_token(TokenType::XOR_TO, 2);
 			break;
 		default:
-			push_token(token_type::XOR, 1);
+			push_token(TokenType::XOR, 1);
 		}
 		break;
 
 	case ':':
 		switch (next_char()) {
 		case '=':
-			push_token(token_type::DECLARE_ASSIGN, 2);
+			push_token(TokenType::DECLARE_ASSIGN, 2);
 			break;
 		default:
-			push_token(token_type::DECLARE, 1);
+			push_token(TokenType::DECLARE, 1);
 		}
 		break;
 
 	case '=':
 		switch (next_char()) {
 		case '=':
-			push_token(token_type::EQUAL, 2);
+			push_token(TokenType::EQUAL, 2);
 			break;
 		case '>':
-			push_token(token_type::ARROW, 2);
+			push_token(TokenType::ARROW, 2);
 			break;
 		default:
-			push_token(token_type::ASSIGN, 1);
+			push_token(TokenType::ASSIGN, 1);
 		}
 		break;
 
 	case '<':
 		switch (next_char()) {
 		case '=':
-			push_token(token_type::LTE, 2);
+			push_token(TokenType::LTE, 2);
 			break;
 		default:
-			push_token(token_type::LT, 1);
+			push_token(TokenType::LT, 1);
 		}
 		break;
 
 	case '>':
 		switch (next_char()) {
 		case ')':
-			push_token(token_type::POLY_CLOSE, 2);
+			push_token(TokenType::POLY_CLOSE, 2);
 			break;
 		case '=':
-			push_token(token_type::GTE, 2);
+			push_token(TokenType::GTE, 2);
 			break;
 		default:
-			push_token(token_type::GT, 1);
+			push_token(TokenType::GT, 1);
 		}
 		break;
 
 	case '!':
 		switch (next_char()) {
 		case '=':
-			push_token(token_type::NOT_EQUAL, 2);
+			push_token(TokenType::NOT_EQUAL, 2);
 			break;
 		default:
-			push_token(token_type::LOGIC_COMPL, 1);
+			push_token(TokenType::LOGIC_COMPL, 1);
 		}
 		break;
 
 	case '(':
 		switch (next_char()) {
 		case '<':
-			push_token(token_type::POLY_OPEN, 2);
+			push_token(TokenType::POLY_OPEN, 2);
 			break;
 		default:
-			push_token(token_type::PAREN_OPEN, 1);
+			push_token(TokenType::PAREN_OPEN, 1);
 		}
 		break;
 
 	case ')':
-		push_token(token_type::PAREN_CLOSE, 1);
+		push_token(TokenType::PAREN_CLOSE, 1);
 		break;
 	case '{':
-		push_token(token_type::BRACE_OPEN, 1);
+		push_token(TokenType::BRACE_OPEN, 1);
 		break;
 	case '}':
-		push_token(token_type::BRACE_CLOSE, 1);
+		push_token(TokenType::BRACE_CLOSE, 1);
 		break;
 	case '[':
-		push_token(token_type::BRACKET_OPEN, 1);
+		push_token(TokenType::BRACKET_OPEN, 1);
 		break;
 	case ']':
-		push_token(token_type::BRACKET_CLOSE, 1);
+		push_token(TokenType::BRACKET_CLOSE, 1);
 		break;
 	case '~':
-		push_token(token_type::COMPL, 1);
+		push_token(TokenType::COMPL, 1);
 		break;
 	case ';':
-		push_token(token_type::SEMICOLON, 1);
+		push_token(TokenType::SEMICOLON, 1);
 		break;
 	case '.':
-		push_token(token_type::DOT, 1);
+		push_token(TokenType::DOT, 1);
 		break;
 	case ',':
-		push_token(token_type::COMMA, 1);
+		push_token(TokenType::COMMA, 1);
 		break;
 	case '"': {
 		m_source_index += 1;
@@ -363,7 +363,7 @@ void Lexer::consume_token() {
 		}
 
 		m_tokens.push_back(
-		    {token_type::STRING, text, l0, c0, m_current_line, m_current_column});
+		    {TokenType::STRING, text, l0, c0, m_current_line, m_current_column});
 
 		m_current_column += 1;
 		m_source_index += 1;
@@ -386,7 +386,7 @@ void Lexer::consume_token() {
 			m_current_column += text.size();
 
 			m_tokens.push_back(
-			    {token_type::IDENTIFIER,
+			    {TokenType::IDENTIFIER,
 			     text,
 			     m_current_line,
 			     m_current_column - int(text.size()),
@@ -434,7 +434,7 @@ bool Lexer::consume_number() {
 		}
 	}
 
-	token_type type = is_int ? token_type::INTEGER : token_type::NUMBER;
+	TokenType type = is_int ? TokenType::INTEGER : TokenType::NUMBER;
 	m_source_index += 1;
 	m_current_column += 1;
 	m_tokens.push_back(
@@ -488,7 +488,7 @@ void Lexer::regress() {
 }
 
 Token const& eof() {
-	static Token t = {token_type::END, "(EOF)", -1, -1, -1, -1};
+	static Token t = {TokenType::END, "(EOF)", -1, -1, -1, -1};
 	return t;
 }
 

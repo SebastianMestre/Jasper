@@ -103,10 +103,10 @@ Own<AST> desugarDot(Own<BinaryExpression> ast) {
 // This function desugars binary operators into function calls
 Own<AST> desugar(Own<BinaryExpression> ast) {
 
-	if (ast->m_op_token->m_type == token_type::PIZZA)
+	if (ast->m_op_token->m_type == TokenType::PIZZA)
 		return desugarPizza(std::move(ast));
 
-	if (ast->m_op_token->m_type == token_type::DOT)
+	if (ast->m_op_token->m_type == TokenType::DOT)
 		return desugarDot(std::move(ast));
 
 	auto identifier = std::make_unique<Identifier>();

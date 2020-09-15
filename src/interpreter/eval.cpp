@@ -44,7 +44,7 @@ gc_ptr<Value> eval(TypedAST::StringLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::BooleanLiteral* ast, Environment& e) {
-	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
+	bool b = ast->m_token->m_type == TokenType::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 

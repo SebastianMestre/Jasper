@@ -6,7 +6,7 @@
 
 struct Token {
 	/* internal representation of token */
-	token_type m_type;
+	TokenType m_type;
 	/* source code representation of token */
 	std::string m_text;
 

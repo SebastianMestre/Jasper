@@ -34,7 +34,7 @@ ErrorReport make_expected_error(string_view expected, Token const* found_token) 
 	return ErrorReport {ss.str()};
 }
 
-Writer<Token const*> Parser::require(token_type expected_type) {
+Writer<Token const*> Parser::require(TokenType expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 
 	if (current_token->m_type != expected_type) {
@@ -47,7 +47,7 @@ Writer<Token const*> Parser::require(token_type expected_type) {
 	return make_writer(current_token);
 }
 
-bool Parser::consume(token_type expected_type) {
+bool Parser::consume(TokenType expected_type) {
 	if (match(expected_type)) {
 		m_lexer->advance();
 		return true;
@@ -55,7 +55,7 @@ bool Parser::consume(token_type expected_type) {
 	return false;
 }
 
-bool Parser::match(token_type expected_type) {
+bool Parser::match(TokenType expected_type) {
 	Token const* current_token = &m_lexer->current_token();
 	if (current_token->m_type != expected_type)
 		return false;
@@ -66,7 +66,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse top level program"}};
 
-	auto declarations = parse_declaration_list(token_type::END);
+	auto declarations = parse_declaration_list(TokenType::END);
 
 	if (handle_error(result, declarations)) {
 		return result;
@@ -80,7 +80,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 }
 
 Writer<std::vector<std::unique_ptr<AST::AST>>>
-Parser::parse_declaration_list(token_type terminator) {
+Parser::parse_declaration_list(TokenType terminator) {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
@@ -92,7 +92,7 @@ Parser::parse_declaration_list(token_type terminator) {
 		if (p0->m_type == terminator)
 			break;
 
-		if (p0->m_type == token_type::END) {
+		if (p0->m_type == TokenType::END) {
 			result.m_error.m_sub_errors.push_back(
 			    make_expected_error("a declaration", p0));
 
@@ -114,7 +114,7 @@ Parser::parse_declaration_list(token_type terminator) {
 }
 
 Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
-    token_type delimiter, token_type terminator, bool allow_trailing_delimiter) {
+    TokenType delimiter, TokenType terminator, bool allow_trailing_delimiter) {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
 	    {"Parse Error: Failed to parse expression list"}};
 
@@ -126,7 +126,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 		while (1) {
 			auto p0 = peek();
 
-			if (p0->m_type == token_type::END) {
+			if (p0->m_type == TokenType::END) {
 				result.m_error.m_sub_errors.push_back(
 				    {{"Found EOF while parsing an expression list"}});
 				return result;
@@ -176,21 +176,21 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
-	Writer<Token const*> name = require(token_type::IDENTIFIER);
+	Writer<Token const*> name = require(TokenType::IDENTIFIER);
 
 	if (handle_error(result, name))
 		return result;
 
 	Writer<std::unique_ptr<AST::AST>> type;
 
-	if (consume(token_type::DECLARE_ASSIGN)) {
-	} else if (consume(token_type::DECLARE)) {
+	if (consume(TokenType::DECLARE_ASSIGN)) {
+	} else if (consume(TokenType::DECLARE)) {
 
 		type = parse_type_term();
 		if (handle_error(result, type))
 			return result;
 
-		if (handle_error(result, require(token_type::ASSIGN)))
+		if (handle_error(result, require(TokenType::ASSIGN)))
 			return result;
 	} else {
 		result.m_error.m_sub_errors.push_back(
@@ -202,7 +202,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	if (handle_error(result, value))
 		return result;
 
-	if (handle_error(result, require(token_type::SEMICOLON)))
+	if (handle_error(result, require(TokenType::SEMICOLON)))
 		return result;
 
 	auto p = std::make_unique<AST::Declaration>();
@@ -221,55 +221,55 @@ struct binding_power {
 	int left, right;
 };
 
-bool is_binary_operator(token_type t) {
+bool is_binary_operator(TokenType t) {
 	// TODO: fill out this table
 	switch (t) {
-	case token_type::PAREN_OPEN:   // a bit of a hack
-	case token_type::BRACKET_OPEN: // a bit of a hack
+	case TokenType::PAREN_OPEN:   // a bit of a hack
+	case TokenType::BRACKET_OPEN: // a bit of a hack
 
-	case token_type::LT:
-	case token_type::GT:
-	case token_type::LTE:
-	case token_type::GTE:
-	case token_type::EQUAL:
-	case token_type::NOT_EQUAL:
-	case token_type::ASSIGN:
-	case token_type::DOT:
-	case token_type::PIZZA:
-	case token_type::ADD:
-	case token_type::SUB:
-	case token_type::MUL:
-	case token_type::DIV: // fallthrough
+	case TokenType::LT:
+	case TokenType::GT:
+	case TokenType::LTE:
+	case TokenType::GTE:
+	case TokenType::EQUAL:
+	case TokenType::NOT_EQUAL:
+	case TokenType::ASSIGN:
+	case TokenType::DOT:
+	case TokenType::PIZZA:
+	case TokenType::ADD:
+	case TokenType::SUB:
+	case TokenType::MUL:
+	case TokenType::DIV: // fallthrough
 		return true;
 	default:
 		return false;
 	}
 }
 
-binding_power binding_power_of(token_type t) {
+binding_power binding_power_of(TokenType t) {
 	// TODO: fill out this table
 	switch (t) {
 
-	case token_type::ASSIGN:
+	case TokenType::ASSIGN:
 		return {10, 11};
-	case token_type::PIZZA:
+	case TokenType::PIZZA:
 		return {20, 21};
-	case token_type::LT:
-	case token_type::GT:
-	case token_type::LTE:
-	case token_type::GTE:
-	case token_type::EQUAL:
-	case token_type::NOT_EQUAL: // fallthrough
+	case TokenType::LT:
+	case TokenType::GT:
+	case TokenType::LTE:
+	case TokenType::GTE:
+	case TokenType::EQUAL:
+	case TokenType::NOT_EQUAL: // fallthrough
 		return {30, 31};
-	case token_type::ADD:
-	case token_type::SUB: // fallthrough
+	case TokenType::ADD:
+	case TokenType::SUB: // fallthrough
 		return {40, 41};
-	case token_type::MUL:
-	case token_type::DIV: // fallthrough
+	case TokenType::MUL:
+	case TokenType::DIV: // fallthrough
 		return {50, 51};
-	case token_type::PAREN_OPEN:   // a bit of a hack
-	case token_type::BRACKET_OPEN: // a bit of a hack
-	case token_type::DOT:
+	case TokenType::PAREN_OPEN:   // a bit of a hack
+	case TokenType::BRACKET_OPEN: // a bit of a hack
+	case TokenType::DOT:
 		return {70, 71};
 	default:
 		assert(false);
@@ -280,12 +280,12 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
 	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
 	    {"Parse Error: Failed to argument list"}};
 
-	if (handle_error(result, require(token_type::PAREN_OPEN))) {
+	if (handle_error(result, require(TokenType::PAREN_OPEN))) {
 		return result;
 	}
 
 	auto args =
-	    parse_expression_list(token_type::COMMA, token_type::PAREN_CLOSE, false);
+	    parse_expression_list(TokenType::COMMA, TokenType::PAREN_CLOSE, false);
 
 	if (handle_error(result, args)) {
 		return result;
@@ -312,13 +312,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 	while (1) {
 		auto op = peek();
 
-		if (op->m_type == token_type::SEMICOLON || op->m_type == token_type::END ||
-		    op->m_type == token_type::BRACE_CLOSE ||
-		    op->m_type == token_type::BRACKET_CLOSE ||
-		    op->m_type == token_type::PAREN_CLOSE ||
-		    op->m_type == token_type::COMMA ||
-		    op->m_type == token_type::KEYWORD_THEN ||
-		    op->m_type == token_type::KEYWORD_ELSE) {
+		if (op->m_type == TokenType::SEMICOLON ||
+		    op->m_type == TokenType::END ||
+		    op->m_type == TokenType::BRACE_CLOSE ||
+		    op->m_type == TokenType::BRACKET_CLOSE ||
+		    op->m_type == TokenType::PAREN_CLOSE ||
+		    op->m_type == TokenType::COMMA ||
+		    op->m_type == TokenType::KEYWORD_THEN ||
+		    op->m_type == TokenType::KEYWORD_ELSE) {
 			break;
 		}
 
@@ -335,7 +336,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 		if (lp < bp)
 			break;
 
-		if (op->m_type == token_type::PAREN_OPEN) {
+		if (op->m_type == TokenType::PAREN_OPEN) {
 			auto args = parse_argument_list();
 			if (handle_error(result, args)) {
 				return result;
@@ -350,7 +351,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			continue;
 		}
 
-		if (op->m_type == token_type::BRACKET_OPEN) {
+		if (op->m_type == TokenType::BRACKET_OPEN) {
 			m_lexer->advance();
 
 			auto index = parse_expression();
@@ -358,7 +359,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 				return result;
 			}
 
-			if (handle_error(result, require(token_type::BRACKET_CLOSE))) {
+			if (handle_error(result, require(TokenType::BRACKET_CLOSE))) {
 				return result;
 			}
 
@@ -394,98 +395,98 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 
 	auto token = peek();
 
-	if (token->m_type == token_type::KEYWORD_NULL) {
+	if (token->m_type == TokenType::KEYWORD_NULL) {
 		auto e = std::make_unique<AST::NullLiteral>();
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::KEYWORD_TRUE) {
+	if (token->m_type == TokenType::KEYWORD_TRUE) {
 		auto e = std::make_unique<AST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::KEYWORD_FALSE) {
+	if (token->m_type == TokenType::KEYWORD_FALSE) {
 		auto e = std::make_unique<AST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::INTEGER) {
+	if (token->m_type == TokenType::INTEGER) {
 		auto e = std::make_unique<AST::IntegerLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::NUMBER) {
+	if (token->m_type == TokenType::NUMBER) {
 		auto e = std::make_unique<AST::NumberLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::IDENTIFIER) {
+	if (token->m_type == TokenType::IDENTIFIER) {
 		auto e = std::make_unique<AST::Identifier>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::STRING) {
+	if (token->m_type == TokenType::STRING) {
 		auto e = std::make_unique<AST::StringLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 	}
 
-	if (token->m_type == token_type::KEYWORD_FN) {
+	if (token->m_type == TokenType::KEYWORD_FN) {
 		auto function = parse_function();
 		if (handle_error(result, function))
 			return result;
 		return function;
 	}
 
-	if (token->m_type == token_type::PAREN_OPEN and
-	    peek(1)->m_type == token_type::KEYWORD_IF) {
+	if (token->m_type == TokenType::PAREN_OPEN and
+	    peek(1)->m_type == TokenType::KEYWORD_IF) {
 		m_lexer->advance();
 		auto ternary = parse_ternary_expression();
 		if (handle_error(result, ternary))
 			return result;
-		if (handle_error(result, require(token_type::PAREN_CLOSE)))
+		if (handle_error(result, require(TokenType::PAREN_CLOSE)))
 			return result;
 		return ternary;
 	}
 
 	// parse a parenthesized expression.
-	if (token->m_type == token_type::PAREN_OPEN) {
+	if (token->m_type == TokenType::PAREN_OPEN) {
 		m_lexer->advance();
 		auto expr = parse_expression();
 		if (handle_error(result, expr))
 			return result;
-		if (handle_error(result, require(token_type::PAREN_CLOSE)))
+		if (handle_error(result, require(TokenType::PAREN_CLOSE)))
 			return result;
 		return expr;
 	}
 
-	if (token->m_type == token_type::KEYWORD_OBJECT) {
+	if (token->m_type == TokenType::KEYWORD_OBJECT) {
 		auto object = parse_object_literal();
 		if (handle_error(result, object))
 			return result;
 		return object;
 	}
 
-	if (token->m_type == token_type::KEYWORD_DICT) {
+	if (token->m_type == TokenType::KEYWORD_DICT) {
 		auto dictionary = parse_dictionary_literal();
 		if (handle_error(result, dictionary))
 			return result;
 		return dictionary;
 	}
 
-	if (token->m_type == token_type::KEYWORD_ARRAY) {
+	if (token->m_type == TokenType::KEYWORD_ARRAY) {
 		auto array = parse_array_literal();
 		if (handle_error(result, array))
 			return result;
@@ -493,13 +494,13 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	}
 
 	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(token_type::KEYWORD_FN)], token)});
+	    token_type_string[int(TokenType::KEYWORD_FN)], token)});
 
 	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(token_type::IDENTIFIER)], token)});
+	    token_type_string[int(TokenType::IDENTIFIER)], token)});
 
 	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_type_string[int(token_type::NUMBER)], token)});
+	    {make_expected_error(token_type_string[int(TokenType::NUMBER)], token)});
 
 	return result;
 }
@@ -508,21 +509,21 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_IF)))
+	if (handle_error(result, require(TokenType::KEYWORD_IF)))
 		return result;
 
 	auto condition = parse_expression();
 	if (handle_error(result, condition))
 		return result;
 
-	if (handle_error(result, require(token_type::KEYWORD_THEN)))
+	if (handle_error(result, require(TokenType::KEYWORD_THEN)))
 		return result;
 
 	auto then_expr = parse_expression();
 	if (handle_error(result, then_expr))
 		return result;
 
-	if (handle_error(result, require(token_type::KEYWORD_ELSE)))
+	if (handle_error(result, require(TokenType::KEYWORD_ELSE)))
 		return result;
 
 	auto else_expr = parse_expression();
@@ -542,7 +543,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
-	auto token = require(token_type::IDENTIFIER);
+	auto token = require(TokenType::IDENTIFIER);
 	if (handle_error(result, token))
 		return result;
 
@@ -555,16 +556,16 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Failed to parse array literal"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_ARRAY))) {
+	if (handle_error(result, require(TokenType::KEYWORD_ARRAY))) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+	if (handle_error(result, require(TokenType::BRACE_OPEN))) {
 		return result;
 	}
 
 	auto elements = parse_expression_list(
-	    token_type::SEMICOLON, token_type::BRACE_CLOSE, true);
+	    TokenType::SEMICOLON, TokenType::BRACE_CLOSE, true);
 
 	if (handle_error(result, elements)) {
 		return result;
@@ -580,21 +581,21 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Failed to parse object literal"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_OBJECT))) {
+	if (handle_error(result, require(TokenType::KEYWORD_OBJECT))) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+	if (handle_error(result, require(TokenType::BRACE_OPEN))) {
 		return result;
 	}
 
-	auto declarations = parse_declaration_list(token_type::BRACE_CLOSE);
+	auto declarations = parse_declaration_list(TokenType::BRACE_CLOSE);
 
 	if (handle_error(result, declarations)) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_CLOSE))) {
+	if (handle_error(result, require(TokenType::BRACE_CLOSE))) {
 		return result;
 	}
 
@@ -608,21 +609,21 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Failed to parse dictionary literal"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_DICT))) {
+	if (handle_error(result, require(TokenType::KEYWORD_DICT))) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+	if (handle_error(result, require(TokenType::BRACE_OPEN))) {
 		return result;
 	}
 
-	auto declarations = parse_declaration_list(token_type::BRACE_CLOSE);
+	auto declarations = parse_declaration_list(TokenType::BRACE_CLOSE);
 
 	if (handle_error(result, declarations)) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::BRACE_CLOSE))) {
+	if (handle_error(result, require(TokenType::BRACE_CLOSE))) {
 		return result;
 	}
 
@@ -642,17 +643,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse function"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_FN)))
+	if (handle_error(result, require(TokenType::KEYWORD_FN)))
 		return result;
 
-	if (handle_error(result, require(token_type::PAREN_OPEN)))
+	if (handle_error(result, require(TokenType::PAREN_OPEN)))
 		return result;
 
 	std::vector<std::unique_ptr<AST::AST>> args;
 	while (1) {
-		if (consume(token_type::PAREN_CLOSE)) {
+		if (consume(TokenType::PAREN_CLOSE)) {
 			break;
-		} else if (match(token_type::IDENTIFIER)) {
+		} else if (match(TokenType::IDENTIFIER)) {
 			// consume argument name
 
 			auto arg = std::make_unique<AST::Declaration>();
@@ -660,7 +661,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 			arg->m_identifier_token = peek();
 			m_lexer->advance();
 
-			if (consume(token_type::DECLARE)) {
+			if (consume(TokenType::DECLARE)) {
 				// optionally consume a type hint
 				auto type = parse_type_term();
 				if (handle_error(result, type))
@@ -670,11 +671,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 
 			args.push_back(std::move(arg));
 
-			if (consume(token_type::COMMA)) {
+			if (consume(TokenType::COMMA)) {
 				// If we find a comma, we have to parse
 				// another argument, so we loop again.
 				continue;
-			} else if (consume(token_type::PAREN_CLOSE)) {
+			} else if (consume(TokenType::PAREN_CLOSE)) {
 				// If we find a closing paren, we are done
 				// parsing arguments, so we stop.
 				break;
@@ -692,7 +693,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 		}
 	}
 
-	if (consume(token_type::ARROW)) {
+	if (consume(TokenType::ARROW)) {
 		auto expression = parse_expression();
 		if (handle_error(result, expression))
 			return result;
@@ -719,7 +720,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse block statement"}};
 
-	if (handle_error(result, require(token_type::BRACE_OPEN))) {
+	if (handle_error(result, require(TokenType::BRACE_OPEN))) {
 		return result;
 	}
 
@@ -729,13 +730,13 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 	while (1) {
 		auto p0 = peek();
 
-		if (p0->m_type == token_type::END) {
+		if (p0->m_type == TokenType::END) {
 			result.m_error.m_sub_errors.push_back(
 			    {{"Found EOF while parsing block statement"}});
 			return result;
 		}
 
-		if (p0->m_type == token_type::BRACE_CLOSE) {
+		if (p0->m_type == TokenType::BRACE_CLOSE) {
 			m_lexer->advance();
 			break;
 		}
@@ -759,7 +760,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse return statement"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_RETURN))) {
+	if (handle_error(result, require(TokenType::KEYWORD_RETURN))) {
 		return result;
 	}
 
@@ -769,7 +770,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::SEMICOLON))) {
+	if (handle_error(result, require(TokenType::SEMICOLON))) {
 		return result;
 	}
 
@@ -784,11 +785,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse if-else statement"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_IF))) {
+	if (handle_error(result, require(TokenType::KEYWORD_IF))) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::PAREN_OPEN))) {
+	if (handle_error(result, require(TokenType::PAREN_OPEN))) {
 		return result;
 	}
 
@@ -797,7 +798,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::PAREN_CLOSE))) {
+	if (handle_error(result, require(TokenType::PAREN_CLOSE))) {
 		return result;
 	}
 
@@ -811,7 +812,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 	e->m_condition = std::move(condition.m_result);
 	e->m_body = std::move(body.m_result);
 
-	if (consume(token_type::KEYWORD_ELSE)) {
+	if (consume(TokenType::KEYWORD_ELSE)) {
 		auto else_body = parse_statement();
 
 		if (handle_error(result, else_body))
@@ -827,11 +828,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse for statement"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_FOR))) {
+	if (handle_error(result, require(TokenType::KEYWORD_FOR))) {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::PAREN_OPEN))) {
+	if (handle_error(result, require(TokenType::PAREN_OPEN))) {
 		return result;
 	}
 
@@ -845,7 +846,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 	if (handle_error(result, condition)) {
 		return result;
 	}
-	if (handle_error(result, require(token_type::SEMICOLON))) {
+	if (handle_error(result, require(TokenType::SEMICOLON))) {
 		return result;
 	}
 
@@ -854,7 +855,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 		return result;
 	}
 
-	if (handle_error(result, require(token_type::PAREN_CLOSE))) {
+	if (handle_error(result, require(TokenType::PAREN_CLOSE))) {
 		return result;
 	}
 
@@ -877,17 +878,17 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse while statement"}};
 
-	if (handle_error(result, require(token_type::KEYWORD_WHILE)))
+	if (handle_error(result, require(TokenType::KEYWORD_WHILE)))
 		return result;
 
-	if (handle_error(result, require(token_type::PAREN_OPEN)))
+	if (handle_error(result, require(TokenType::PAREN_OPEN)))
 		return result;
 
 	auto condition = parse_expression();
 	if (handle_error(result, condition))
 		return result;
 
-	if (handle_error(result, require(token_type::PAREN_CLOSE)))
+	if (handle_error(result, require(TokenType::PAREN_CLOSE)))
 		return result;
 
 	auto body = parse_statement();
@@ -914,11 +915,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	// TODO: paren_open, string tokens, integer and numer
 	// tokens, etc should also be recognized as expressions.
 	auto* p0 = peek(0);
-	if (p0->m_type == token_type::IDENTIFIER) {
+	if (p0->m_type == TokenType::IDENTIFIER) {
 		auto* p1 = peek(1);
 
-		if (p1->m_type == token_type::DECLARE ||
-		    p1->m_type == token_type::DECLARE_ASSIGN) {
+		if (p1->m_type == TokenType::DECLARE ||
+		    p1->m_type == TokenType::DECLARE_ASSIGN) {
 
 			auto declaration = parse_declaration();
 
@@ -937,36 +938,36 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 				return result;
 			}
 
-			if (handle_error(result, require(token_type::SEMICOLON))) {
+			if (handle_error(result, require(TokenType::SEMICOLON))) {
 				return result;
 			}
 
 			return expression;
 		}
-	} else if (p0->m_type == token_type::KEYWORD_RETURN) {
+	} else if (p0->m_type == TokenType::KEYWORD_RETURN) {
 		auto return_statement = parse_return_statement();
 		if (handle_error(result, return_statement)) {
 			return result;
 		}
 		return return_statement;
-	} else if (p0->m_type == token_type::KEYWORD_IF) {
+	} else if (p0->m_type == TokenType::KEYWORD_IF) {
 		auto if_else_statement = parse_if_else_statement();
 		if (handle_error(result, if_else_statement)) {
 			return result;
 		}
 		return if_else_statement;
-	} else if (p0->m_type == token_type::KEYWORD_FOR) {
+	} else if (p0->m_type == TokenType::KEYWORD_FOR) {
 		auto for_statement = parse_for_statement();
 		if (handle_error(result, for_statement)) {
 			return result;
 		}
 		return for_statement;
-	} else if (p0->m_type == token_type::KEYWORD_WHILE) {
+	} else if (p0->m_type == TokenType::KEYWORD_WHILE) {
 		auto while_statement = parse_while_statement();
 		if (handle_error(result, while_statement))
 			return result;
 		return while_statement;
-	} else if (p0->m_type == token_type::BRACE_OPEN) {
+	} else if (p0->m_type == TokenType::BRACE_OPEN) {
 		auto block_statement = parse_block();
 		if (handle_error(result, block_statement)) {
 			return result;
@@ -993,11 +994,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	auto e = std::make_unique<AST::TypeTerm>();
 	e->m_callee = std::move(callee.m_result);
 
-	if (!consume(token_type::POLY_OPEN))
+	if (!consume(TokenType::POLY_OPEN))
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 
 	std::vector<std::unique_ptr<AST::AST>> args;
-	while (!consume(token_type::POLY_CLOSE)) {
+	while (!consume(TokenType::POLY_CLOSE)) {
 		auto arg = parse_type_term();
 		if (handle_error(result, arg))
 			return result;
