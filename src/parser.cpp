@@ -1011,6 +1011,23 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
 	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse type var"}};
+
+	if (handle_error(result, require(token_type::AT)))
+		return result;
+
+	auto token = require(token_type::IDENTIFIER);
+	if (handle_error(result, token))
+		return result;
+
+	auto t = std::make_unique<AST::TypeVar>();
+	t->m_token = token.m_result;
+
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+}
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
+	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse type function"}};
 
 	if (consume(token_type::KEYWORD_UNION)) {
