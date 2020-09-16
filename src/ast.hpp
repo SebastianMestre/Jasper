@@ -225,6 +225,31 @@ struct TypeTerm : public AST {
 	    : AST {ast_type::TypeTerm} {}
 };
 
+struct Union : public AST {
+	// TODO: better storage
+	std::vector<std::unique_ptr<AST>> m_constructors;
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	Union()
+	    : AST {ast_type::Union} {}
+};
+
+struct Tuple : public AST {
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	Tuple()
+	    : AST {ast_type::Tuple} {}
+};
+
+struct Struct : public AST {
+	// TODO: better storage
+	std::vector<std::unique_ptr<AST>> m_fields;
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	Struct()
+	    : AST {ast_type::Struct} {}
+};
+
 void print(AST*, int);
 
 } // namespace AST

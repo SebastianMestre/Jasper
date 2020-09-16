@@ -26,6 +26,9 @@ constexpr const char* ast_type_string[] = {
 	"WhileStatement",
 
 	"TypeTerm",
+	"Union",
+	"Tuple",
+	"Struct",
 };
 
 enum class ast_type {
@@ -54,4 +57,7 @@ enum class ast_type {
 	WhileStatement,
 
 	TypeTerm,
+	Union,
+	Tuple,
+	Struct,
 };
