@@ -239,7 +239,7 @@ TypedAST* convertAST(AST::AST* ast) {
 		assert(0);
 	}
 	std::cerr << "Error: AST type not handled in convertAST: "
-	          << ast_type_string[(int)ast->type()] << std::endl;
+	          << ast_string[(int)ast->type()] << std::endl;
 	assert(0);
 }
 

@@ -1,57 +1,42 @@
 #pragma once
 
-constexpr const char* ast_type_string[] = {
-	"NumberLiteral",
-	"IntegerLiteral",
-	"StringLiteral",
-	"BooleanLiteral",
-	"NullLiteral",
-	"ObjectLiteral",
-	"ArrayLiteral",
-	"DictionaryLiteral",
-	"FunctionLiteral",
-	"ShortFunctionLiteral",
+#define AST_TAGS \
+	X(NumberLiteral) \
+	X(IntegerLiteral) \
+	X(StringLiteral) \
+	X(BooleanLiteral) \
+	X(NullLiteral) \
+	X(ObjectLiteral) \
+	X(ArrayLiteral) \
+	X(DictionaryLiteral) \
+	X(FunctionLiteral) \
+	X(ShortFunctionLiteral) \
+ \
+	X(DeclarationList) \
+	X(Declaration) \
+	X(Identifier) \
+	X(BinaryExpression) \
+	X(CallExpression) \
+	X(IndexExpression) \
+	X(Block) \
+	X(ReturnStatement) \
+	X(IfElseStatement) \
+	X(TernaryExpression) \
+	X(ForStatement) \
+	X(WhileStatement) \
+\
+	X(TypeTerm)
 
-	"DeclarationList",
-	"Declaration",
-	"Identifier",
-	"BinaryExpression",
-	"CallExpression",
-	"IndexExpression",
-	"Block",
-	"ReturnStatement",
-	"IfElseStatement",
-	"TernaryExpression",
-	"ForStatement",
-	"WhileStatement",
-
-	"TypeTerm",
+#define X(name) "name",
+constexpr const char* ast_string[] = {
+	AST_TAGS
 };
+#undef X
 
+#define X(name) name,
 enum class ASTTag {
-	NumberLiteral,
-	IntegerLiteral,
-	StringLiteral,
-	BooleanLiteral,
-	NullLiteral,
-	ObjectLiteral,
-	ArrayLiteral,
-	DictionaryLiteral,
-	FunctionLiteral,
-	ShortFunctionLiteral,
-
-	DeclarationList,
-	Declaration,
-	Identifier,
-	BinaryExpression,
-	CallExpression,
-	IndexExpression,
-	Block,
-	ReturnStatement,
-	IfElseStatement,
-	TernaryExpression,
-	ForStatement,
-	WhileStatement,
-
-	TypeTerm,
+	AST_TAGS
 };
+#undef X
+
+#undef AST_TAGS

@@ -234,7 +234,7 @@ namespace TypeChecker {
 #undef DO_NOTHING
 #undef DISPATCH
 	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
-	          << ": " << ast_type_string[(int)ast->type()] << '\n';
+	          << ": " << ast_string[(int)ast->type()] << '\n';
 	assert(0);
 }
 

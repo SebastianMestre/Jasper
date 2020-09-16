@@ -374,7 +374,7 @@ gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 	}
 
 	std::cerr << "@ Internal Error: unhandled case in eval:\n";
-	std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
+	std::cerr << "@   - AST type is: " << ast_string[(int)ast->type()] << '\n';
 
 	return nullptr;
 }
