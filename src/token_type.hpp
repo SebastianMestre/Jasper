@@ -39,6 +39,7 @@ constexpr const char* token_type_string[] = {
 	"IOR_TO",
 	"XOR_TO",
 
+	"AT",
 	"DOT",
 	"COMMA",
 	"PIZZA",
@@ -123,6 +124,7 @@ enum class token_type {
 	IOR_TO,
 	XOR_TO,
 
+	AT,
 	DOT,
 	COMMA,
 	PIZZA,

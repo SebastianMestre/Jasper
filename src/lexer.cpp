@@ -349,6 +349,9 @@ void Lexer::consume_token() {
 	case ',':
 		push_token(token_type::COMMA, 1);
 		break;
+	case '@':
+		push_token(token_type::AT, 1);
+		break;
 	case '"': {
 		m_source_index += 1;
 		m_current_column += 1;
