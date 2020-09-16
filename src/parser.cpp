@@ -28,7 +28,7 @@ ErrorReport make_expected_error(string_view expected, Token const* found_token) 
 	std::stringstream ss;
 	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
 	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
-	   << token_type_string[int(found_token->m_type)] << ' '
+	   << token_string[int(found_token->m_type)] << ' '
 	   << found_token->m_text << " instead";
 
 	return ErrorReport {ss.str()};
@@ -39,7 +39,7 @@ Writer<Token const*> Parser::require(TokenTag expected_type) {
 
 	if (current_token->m_type != expected_type) {
 		return {make_expected_error(
-		    token_type_string[int(expected_type)], current_token)};
+		    token_string[int(expected_type)], current_token)};
 	}
 
 	m_lexer->advance();
@@ -97,7 +97,7 @@ Parser::parse_declaration_list(TokenTag terminator) {
 			    make_expected_error("a declaration", p0));
 
 			result.m_error.m_sub_errors.push_back(
-			    make_expected_error(token_type_string[int(terminator)], p0));
+			    make_expected_error(token_string[int(terminator)], p0));
 
 			return result;
 		}
@@ -161,9 +161,9 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 				break;
 			} else {
 				result.m_error.m_sub_errors.push_back(
-				    make_expected_error(token_type_string[(int)delimiter], p1));
+				    make_expected_error(token_string[(int)delimiter], p1));
 				result.m_error.m_sub_errors.push_back(
-				    make_expected_error(token_type_string[(int)terminator], p1));
+				    make_expected_error(token_string[(int)terminator], p1));
 				return result;
 			}
 		}
@@ -494,13 +494,13 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	}
 
 	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(TokenTag::KEYWORD_FN)], token)});
+	    token_string[int(TokenTag::KEYWORD_FN)], token)});
 
 	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_type_string[int(TokenTag::IDENTIFIER)], token)});
+	    token_string[int(TokenTag::IDENTIFIER)], token)});
 
 	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_type_string[int(TokenTag::NUMBER)], token)});
+	    {make_expected_error(token_string[int(TokenTag::NUMBER)], token)});
 
 	return result;
 }
