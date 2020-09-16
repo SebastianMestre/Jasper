@@ -1,39 +1,33 @@
 #pragma once
 
-constexpr const char* value_type_string[] = {
-	"Null",
+#define VALUE_TAGS \
+	X(Null) \
+\
+	X(Integer) \
+	X(Float) \
+	X(Boolean) \
+	X(String) \
+	X(Error) \
+\
+	X(Array) \
+	X(Object) \
+	X(Dictionary) \
+\
+	X(Function) \
+	X(NativeFunction) \
+\
+	X(Reference)
 
-	"Integer",
-	"Float",
-	"Boolean",
-	"String",
-	"Error",
-
-	"Array",
-	"Object",
-	"Dictionary",
-
-	"Function",
-	"NativeFunction",
-
-	"Reference",
+#define X(name) "name",
+constexpr const char* value_string[] = {
+	VALUE_TAGS
 };
+#undef X
 
+#define X(name) name,
 enum class ValueTag {
-	Null,
-
-	Integer,
-	Float,
-	Boolean,
-	String,
-	Error,
-
-	Array,
-	Object,
-	Dictionary,
-
-	Function,
-	NativeFunction,
-
-	Reference,
+	VALUE_TAGS
 };
+#undef X
+
+#undef VALUE_TAGS

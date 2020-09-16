@@ -127,7 +127,7 @@ Value* value_add(ArrayType v, Environment& e) {
 		    .get();
 	default:
 		std::cerr << "ERROR: can't add values of type "
-		          << value_type_string[static_cast<int>(lhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())];
 		assert(0);
 	}
 }
@@ -155,7 +155,7 @@ Value* value_sub(ArrayType v, Environment& e) {
 		    .get();
 	default:
 		std::cerr << "ERROR: can't add values of type "
-		          << value_type_string[static_cast<int>(lhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())];
 		assert(0);
 	}
 }
@@ -183,7 +183,7 @@ Value* value_mul(ArrayType v, Environment& e) {
 		    .get();
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
-		          << value_type_string[static_cast<int>(lhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())];
 		assert(0);
 	}
 }
@@ -211,7 +211,7 @@ Value* value_div(ArrayType v, Environment& e) {
 		    .get();
 	default:
 		std::cerr << "ERROR: can't divide values of type "
-		          << value_type_string[static_cast<int>(lhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())];
 		assert(0);
 	}
 }
@@ -230,8 +230,8 @@ Value* value_logicand(ArrayType v, Environment& e) {
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: logical and operator not defined for types "
-	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
-	          << value_type_string[static_cast<int>(rhs_val->type())];
+	          << value_string[static_cast<int>(lhs_val->type())] << " and "
+	          << value_string[static_cast<int>(rhs_val->type())];
 	assert(0);
 }
 
@@ -249,8 +249,8 @@ Value* value_logicor(ArrayType v, Environment& e) {
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: logical or operator not defined for types "
-	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
-	          << value_type_string[static_cast<int>(rhs_val->type())];
+	          << value_string[static_cast<int>(lhs_val->type())] << " and "
+	          << value_string[static_cast<int>(rhs_val->type())];
 	assert(0);
 }
 
@@ -268,8 +268,8 @@ Value* value_logicxor(ArrayType v, Environment& e) {
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
 	std::cerr << "ERROR: exclusive or operator not defined for types "
-	          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
-	          << value_type_string[static_cast<int>(rhs_val->type())];
+	          << value_string[static_cast<int>(lhs_val->type())] << " and "
+	          << value_string[static_cast<int>(rhs_val->type())];
 	assert(0);
 }
 
@@ -310,8 +310,8 @@ Value* value_equals(ArrayType v, Environment& e) {
 		    .get();
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
-		          << value_type_string[static_cast<int>(lhs_val->type())] << " and "
-		          << value_type_string[static_cast<int>(rhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())] << " and "
+		          << value_string[static_cast<int>(rhs_val->type())];
 		assert(0);
 	}
 	}
@@ -346,7 +346,7 @@ Value* value_less(ArrayType v, Environment& e) {
 		    .get();
 	default:
 		std::cerr << "ERROR: can't compare values of type "
-		          << value_type_string[static_cast<int>(lhs_val->type())];
+		          << value_string[static_cast<int>(lhs_val->type())];
 		assert(0);
 	}
 }

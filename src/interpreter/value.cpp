@@ -218,63 +218,63 @@ void print_spaces(int n) {
 
 void print(Integer const* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(Null* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << '\n';
+	std::cout << value_string[int(v->type())] << '\n';
 }
 
 void print(Float* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(String* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << '"' << v->m_value
+	std::cout << value_string[int(v->type())] << ' ' << '"' << v->m_value
 	          << '"' << '\n';
 }
 
 void print(Boolean* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(Error* v, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << '\n';
+	std::cout << value_string[int(v->type())] << '\n';
 }
 
 void print(Object* o, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(o->type())] << '\n';
+	std::cout << value_string[int(o->type())] << '\n';
 }
 
 void print(Dictionary* m, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(m->type())] << '\n';
+	std::cout << value_string[int(m->type())] << '\n';
 }
 
 void print(Function* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(f->type())] << '\n';
+	std::cout << value_string[int(f->type())] << '\n';
 }
 
 void print(NativeFunction* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(f->type())] << '\n';
+	std::cout << value_string[int(f->type())] << '\n';
 }
 
 void print(Array* l, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(l->type())] << '\n';
+	std::cout << value_string[int(l->type())] << '\n';
 	for (auto* child : l->m_value) {
 		print(child, d + 1);
 	}
@@ -282,7 +282,7 @@ void print(Array* l, int d) {
 
 void print(Reference* l, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(l->type())] << '\n';
+	std::cout << value_string[int(l->type())] << '\n';
 	print(l->m_value, d + 1);
 }
 
