@@ -1,28 +1,28 @@
 #pragma once
 
-constexpr const char* exit_status_type_string[] = {
-	"Ok",
+#define EXIT_STATUS_TAGS \
+	X(Ok) \
+\
+	X(ParseError) \
+	X(StaticError) \
+	X(TopLevelTypeError) \
+\
+	X(NullError) \
+	X(TypeError) \
+\
+	X(ValueError) \
+	X(Empty)
 
-	"ParseError",
-	"TopLevelTypeError",
-
-	"NullError",
-	"TypeError",
-	"ValueError",
-
-	"Empty",
+#define X(name) "name",
+constexpr const char* exit_status_string[] = {
+	EXIT_STATUS_TAGS
 };
+#undef X
 
+#define X(name) name,
 enum class ExitStatusTag {
-	Ok = 0,
-
-	ParseError,
-	StaticError,
-	TopLevelTypeError,
-
-	NullError,
-	TypeError,
-	ValueError,
-
-	Empty,
+	EXIT_STATUS_TAGS
 };
+#undef X
+
+#undef EXIT_STATUS_TAGS
