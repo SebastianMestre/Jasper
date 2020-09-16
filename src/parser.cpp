@@ -1008,3 +1008,93 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	e->m_args = std::move(args);
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
+	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse type function"}};
+
+	if (consume(token_type::KEYWORD_UNION)) {
+		if (handle_error(result, require(token_type::BRACE_OPEN)))
+			return result;
+
+		std::vector<std::unique_ptr<AST::AST>> constructors;
+		std::vector<std::unique_ptr<AST::AST>> types;
+		while(!consume(token_type::BRACE_CLOSE)) {
+			auto cons = parse_identifier();
+			if (handle_error(result, cons))
+				return result;
+			
+			if (handle_error(result, require(token_type::COLON)))
+				return result;
+
+			auto type = parse_type_term();
+			if (handle_error(result, type))
+				return result;
+
+			if (handle_error(result, require(token_type::SEMICOLON)))
+				return result;
+
+			constructors.push_back(std::move(cons.m_result));
+			types.push_back(std::move(type.m_result));
+		}
+
+		auto u = std::make_unique<AST::Union>();
+		u->m_constructors = std::move(constructors);
+		u->m_types = std::move(types);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(u));
+	} else if (consume(token_type::KEYWORD_TUPLE)) {
+		if (handle_error(result, require(token_type::BRACE_OPEN)))
+			return result;
+
+		std::vector<std::unique_ptr<AST::AST>> types;
+		while(!consume(token_type::BRACE_CLOSE)) {
+
+			auto type = parse_type_term();
+			if (handle_error(result, type))
+				return result;
+
+			if (handle_error(result, require(token_type::SEMICOLON)))
+				return result;
+
+			types.push_back(std::move(type.m_result));
+		}
+
+		auto t = std::make_unique<AST::Tuple>();
+		t->m_types = std::move(types);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+	} else if (consume(token_type::KEYWORD_STRUCT)) {
+		if (handle_error(result, require(token_type::BRACE_OPEN)))
+			return result;
+
+		std::vector<std::unique_ptr<AST::AST>> fields;
+		std::vector<std::unique_ptr<AST::AST>> types;
+		while(!consume(token_type::BRACE_CLOSE)) {
+			auto field = parse_identifier();
+			if (handle_error(result, field))
+				return result;
+			
+			if (handle_error(result, require(token_type::COLON)))
+				return result;
+
+			auto type = parse_type_term();
+			if (handle_error(result, type))
+				return result;
+
+			if (handle_error(result, require(token_type::SEMICOLON)))
+				return result;
+
+			fields.push_back(std::move(field.m_result));
+			types.push_back(std::move(type.m_result));
+		}
+
+		auto s = std::make_unique<AST::Struct>();
+		s->m_fields = std::move(fields);
+		s->m_types = std::move(types);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(s));
+	}
+
+	return result;
+}
