@@ -116,6 +116,11 @@ bool Lexer::consume_keyword() {
 		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_THEN, 4);
 			return true;
+		} else if (
+		    peek_char(1) == 'u' && peek_char(2) == 'p' && peek_char(3) == 'l' &&
+		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
+			push_token(token_type::KEYWORD_TUPLE, 5);
+			return true;
 		}
 		break;
 	case 'n':
@@ -136,6 +141,21 @@ bool Lexer::consume_keyword() {
 		if (peek_char(1) == 'l' && peek_char(2) == 's' && peek_char(3) == 'e' &&
 		    not is_identifier_char(peek_char(4))) {
 			push_token(token_type::KEYWORD_ELSE, 4);
+			return true;
+		}
+		break;
+	case 'u':
+		if (peek_char(1) == 'n' && peek_char(2) == 'i' && peek_char(3) == 'o' &&
+		    peek_char(4) == 'n' && not is_identifier_char(peek_char(5))) {
+			push_token(token_type::KEYWORD_UNION, 5);
+			return true;
+		}
+		break;
+	case 's':
+		if (peek_char(1) == 't' && peek_char(2) == 'r' && peek_char(3) == 'u' &&
+		    peek_char(4) == 'c' && peek_char(5) == 't' &&
+		    not is_identifier_char(peek_char(6))) {
+			push_token(token_type::KEYWORD_STRUCT, 6);
 			return true;
 		}
 		break;
