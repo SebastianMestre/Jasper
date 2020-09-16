@@ -57,6 +57,7 @@ enum class ast_type {
 	WhileStatement,
 
 	TypeTerm,
+	TypeVar,
 	Union,
 	Tuple,
 	Struct,

@@ -225,6 +225,17 @@ struct TypeTerm : public AST {
 	    : AST {ast_type::TypeTerm} {}
 };
 
+struct TypeVar : public AST {
+	Token const* m_token;
+
+	std::string const& text() {
+		return m_token->m_text;
+	}
+
+	TypeVar()
+	    : AST {ast_type::TypeVar} {}
+};
+
 struct Union : public AST {
 	// TODO: better storage
 	std::vector<std::unique_ptr<AST>> m_constructors;
