@@ -13,7 +13,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		assert(decl->type() == ast_type::Declaration);
+		assert(decl->type() == ASTTag::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
 	return e.null();
@@ -44,7 +44,7 @@ gc_ptr<Value> eval(TypedAST::StringLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::BooleanLiteral* ast, Environment& e) {
-	bool b = ast->m_token->m_type == token_type::KEYWORD_TRUE;
+	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	return e.new_boolean(b);
 };
 
@@ -56,7 +56,7 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ast_type::Declaration);
+		assert(declTypeErased->type() == ASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -76,7 +76,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ast_type::Declaration);
+		assert(declTypeErased->type() == ASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -136,7 +136,7 @@ auto is_callable_value(Value* v) -> bool {
 		return false;
 
 	auto type = v->type();
-	return type == value_type::Function || type == value_type::NativeFunction;
+	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
 gc_ptr<Value> eval_call_function(
@@ -154,7 +154,7 @@ gc_ptr<Value> eval_call_function(
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
-		assert(kv.second->type() == value_type::Reference);
+		assert(kv.second->type() == ValueTag::Reference);
 		e.direct_declare(kv.first, static_cast<Reference*>(kv.second));
 	}
 
@@ -182,10 +182,10 @@ gc_ptr<Value> eval_call_callable(
     gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 	// TODO: proper error handling
 	assert(is_callable_value(callee.get()));
-	if (callee->type() == value_type::Function) {
+	if (callee->type() == ValueTag::Function) {
 		return eval_call_function(
 		    static_cast<Function*>(callee.get()), std::move(args), e);
-	} else if (callee->type() == value_type::NativeFunction) {
+	} else if (callee->type() == ValueTag::NativeFunction) {
 		return eval_call_native_function(
 		    static_cast<NativeFunction*>(callee.get()), std::move(args), e);
 	} else {
@@ -216,12 +216,12 @@ gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	auto callee_value = eval(ast->m_callee.get(), e);
 	auto* callee = unboxed(callee_value.get());
 	assert(callee);
-	assert(callee->type() == value_type::Array);
+	assert(callee->type() == ValueTag::Array);
 
 	auto index_value = eval(ast->m_index.get(), e);
 	auto* index = unboxed(index_value.get());
 	assert(index);
-	assert(index->type() == value_type::Integer);
+	assert(index->type() == ValueTag::Integer);
 
 	auto* array_callee = static_cast<Array*>(callee);
 	auto* int_index = static_cast<Integer*>(index);
@@ -235,7 +235,7 @@ gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
 	auto condition = eval(ast->m_condition.get(), e);
 	auto* condition_value = unboxed(condition.get());
 	assert(condition_value);
-	assert(condition_value->type() == value_type::Boolean);
+	assert(condition_value->type() == ValueTag::Boolean);
 
 	return static_cast<Boolean*>(condition_value)->m_value
 	       ? eval(ast->m_then_expr.get(), e)
@@ -256,7 +256,7 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	auto condition_result = eval(ast->m_condition.get(), e);
 	assert(condition_result);
 
-	assert(condition_result->type() == value_type::Boolean);
+	assert(condition_result->type() == ValueTag::Boolean);
 	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
 	if (condition_result_b->m_value) {
@@ -280,7 +280,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
-		assert(unboxed_condition_result->type() == value_type::Boolean);
+		assert(unboxed_condition_result->type() == ValueTag::Boolean);
 		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)
@@ -309,7 +309,7 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
-		assert(unboxed_condition_result->type() == value_type::Boolean);
+		assert(unboxed_condition_result->type() == ValueTag::Boolean);
 		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)
@@ -329,52 +329,52 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
 	switch (ast->type()) {
-	case ast_type::NumberLiteral:
+	case ASTTag::NumberLiteral:
 		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
-	case ast_type::IntegerLiteral:
+	case ASTTag::IntegerLiteral:
 		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
-	case ast_type::StringLiteral:
+	case ASTTag::StringLiteral:
 		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
-	case ast_type::BooleanLiteral:
+	case ASTTag::BooleanLiteral:
 		return eval(static_cast<TypedAST::BooleanLiteral*>(ast), e);
-	case ast_type::NullLiteral:
+	case ASTTag::NullLiteral:
 		return eval(static_cast<TypedAST::NullLiteral*>(ast), e);
-	case ast_type::ObjectLiteral:
+	case ASTTag::ObjectLiteral:
 		return eval(static_cast<TypedAST::ObjectLiteral*>(ast), e);
-	case ast_type::ArrayLiteral:
+	case ASTTag::ArrayLiteral:
 		return eval(static_cast<TypedAST::ArrayLiteral*>(ast), e);
-	case ast_type::DictionaryLiteral:
+	case ASTTag::DictionaryLiteral:
 		return eval(static_cast<TypedAST::DictionaryLiteral*>(ast), e);
-	case ast_type::FunctionLiteral:
+	case ASTTag::FunctionLiteral:
 		return eval(static_cast<TypedAST::FunctionLiteral*>(ast), e);
-	case ast_type::DeclarationList:
+	case ASTTag::DeclarationList:
 		return eval(static_cast<TypedAST::DeclarationList*>(ast), e);
-	case ast_type::Declaration:
+	case ASTTag::Declaration:
 		return eval(static_cast<TypedAST::Declaration*>(ast), e);
-	case ast_type::Identifier:
+	case ASTTag::Identifier:
 		return eval(static_cast<TypedAST::Identifier*>(ast), e);
-	case ast_type::CallExpression:
+	case ASTTag::CallExpression:
 		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
-	case ast_type::IndexExpression:
+	case ASTTag::IndexExpression:
 		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
-	case ast_type::TernaryExpression:
+	case ASTTag::TernaryExpression:
 		return eval(static_cast<TypedAST::TernaryExpression*>(ast), e);
-	case ast_type::Block:
+	case ASTTag::Block:
 		return eval(static_cast<TypedAST::Block*>(ast), e);
-	case ast_type::ReturnStatement:
+	case ASTTag::ReturnStatement:
 		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
-	case ast_type::IfElseStatement:
+	case ASTTag::IfElseStatement:
 		return eval(static_cast<TypedAST::IfElseStatement*>(ast), e);
-	case ast_type::ForStatement:
+	case ASTTag::ForStatement:
 		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
-	case ast_type::WhileStatement:
+	case ASTTag::WhileStatement:
 		return eval(static_cast<TypedAST::WhileStatement*>(ast), e);
-	case ast_type::BinaryExpression:
+	case ASTTag::BinaryExpression:
 		assert(0);
 	}
 
 	std::cerr << "@ Internal Error: unhandled case in eval:\n";
-	std::cerr << "@   - AST type is: " << ast_type_string[(int)ast->type()] << '\n';
+	std::cerr << "@   - AST type is: " << ast_string[(int)ast->type()] << '\n';
 
 	return nullptr;
 }

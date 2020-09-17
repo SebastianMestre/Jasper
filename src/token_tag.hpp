@@ -1,7 +1,7 @@
 #pragma once
 
 /* printable representation */
-constexpr const char* token_type_string[] = {
+constexpr const char* token_string[] = {
 	"+",
 	"-",
 	"/",
@@ -81,7 +81,7 @@ constexpr const char* token_type_string[] = {
 };
 
 /* internal representation */
-enum class token_type {
+enum class TokenTag {
 	ADD,
 	SUB,
 	DIV,

@@ -10,31 +10,31 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
-enum class type_function_type { Var, Known, Sum, Product, Record };
+enum class TypeFunctionTag { Var, Known, Sum, Product, Record };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
 // For the purposes of the type system, we only care about the amount
 // of argument it takes.
 struct TypeFunctionData {
 	int argument_count; // -1 means variadic.
-	type_function_type type;
+	TypeFunctionTag type;
 	TypeFunctionId equals; // only for vars
 };
 
-enum class mono_type { Var, Term };
+enum class MonoTag { Var, Term };
 // A monotype is a reference to a concrete type. It can be a
 // variable or a term.
 // We express this variant using an enum, and an index that points
 // to where the data is in the correct TypeSystemCore vector.
 //
-// If type is mono_type::Var, the data_id index points to a
+// If type is MonoTag::Var, the data_id index points to a
 // different mono in TypeSystemCore::mono_data.
 // It may point to itself, meaning that the type is not known.
 //
-// If the type is mono_type::Term, the index points to a term,
+// If the type is MonoTag::Term, the index points to a term,
 // that is stored in TypeSystemCore::term_data
 struct MonoData {
-	mono_type type;
+	MonoTag type;
 	int data_id;
 };
 
@@ -52,10 +52,10 @@ struct PolyData {
 	std::vector<MonoId> vars;
 };
 
-enum class kind_type { TypeFunction, Mono, Poly };
+enum class KindTag { TypeFunction, Mono, Poly };
 // variable that can contain types, of any kind
 struct TypeVarData {
-	kind_type kind;
+	KindTag kind;
 	TypeVarId type_var_id;
 };
 
@@ -78,7 +78,7 @@ struct TypeSystemCore {
 	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional
-	TypeVarId new_type_var(kind_type kind, int type_id);
+	TypeVarId new_type_var(KindTag kind, int type_id);
 
 	// qualifies all unbound variables in the given monotype
 	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);

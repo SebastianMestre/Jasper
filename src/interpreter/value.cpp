@@ -10,36 +10,36 @@
 namespace Interpreter {
 
 Null::Null()
-    : Value(value_type::Null) {}
+    : Value(ValueTag::Null) {}
 
 Integer::Integer()
-    : Value(value_type::Integer) {}
+    : Value(ValueTag::Integer) {}
 Integer::Integer(int v)
-    : Value(value_type::Integer)
+    : Value(ValueTag::Integer)
     , m_value(v) {}
 
 Float::Float()
-    : Value(value_type::Float) {}
+    : Value(ValueTag::Float) {}
 Float::Float(float v)
-    : Value(value_type::Float)
+    : Value(ValueTag::Float)
     , m_value(v) {}
 
 Boolean::Boolean()
-    : Value(value_type::Boolean) {}
+    : Value(ValueTag::Boolean) {}
 Boolean::Boolean(bool b)
-    : Value(value_type::Boolean)
+    : Value(ValueTag::Boolean)
     , m_value(b) {}
 
 String::String()
-    : Value(value_type::String) {}
+    : Value(ValueTag::String) {}
 String::String(std::string s)
-    : Value(value_type::String)
+    : Value(ValueTag::String)
     , m_value(std::move(s)) {}
 
 Array::Array()
-    : Value(value_type::Array) {}
+    : Value(ValueTag::Array) {}
 Array::Array(ArrayType l)
-    : Value(value_type::Array)
+    : Value(ValueTag::Array)
     , m_value(std::move(l)) {}
 
 void Array::append(Value* v) {
@@ -56,9 +56,9 @@ Value* Array::at(int position) {
 }
 
 Object::Object()
-    : Value(value_type::Object) {}
+    : Value(ValueTag::Object) {}
 Object::Object(ObjectType o)
-    : Value(value_type::Object)
+    : Value(ValueTag::Object)
     , m_value(std::move(o)) {}
 
 void Object::addMember(Identifier const& id, Value* v) {
@@ -76,9 +76,9 @@ Value* Object::getMember(Identifier const& id) {
 }
 
 Dictionary::Dictionary()
-    : Value(value_type::Dictionary) {}
+    : Value(ValueTag::Dictionary) {}
 Dictionary::Dictionary(ObjectType o)
-    : Value(value_type::Dictionary)
+    : Value(ValueTag::Dictionary)
     , m_value(std::move(o)) {}
 
 void Dictionary::addMember(Identifier const& id, Value* v) {
@@ -100,16 +100,16 @@ void Dictionary::removeMember(Identifier const& id) {
 }
 
 Function::Function(FunctionType def, ObjectType captures)
-    : Value(value_type::Function)
+    : Value(ValueTag::Function)
     , m_def(def)
     , m_captures(std::move(captures)) {}
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : Value {value_type::NativeFunction}
+    : Value {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
 
 Reference::Reference(Value* value)
-    : Value {value_type::Reference}
+    : Value {ValueTag::Reference}
     , m_value {value} {}
 
 void gc_visit(Null* v) {
@@ -182,29 +182,29 @@ void gc_visit(Reference* r) {
 void gc_visit(Value* v) {
 
 	switch (v->type()) {
-	case value_type::Null:
+	case ValueTag::Null:
 		return gc_visit(static_cast<Null*>(v));
-	case value_type::Integer:
+	case ValueTag::Integer:
 		return gc_visit(static_cast<Integer*>(v));
-	case value_type::Float:
+	case ValueTag::Float:
 		return gc_visit(static_cast<Float*>(v));
-	case value_type::String:
+	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
-	case value_type::Boolean:
+	case ValueTag::Boolean:
 		return gc_visit(static_cast<Boolean*>(v));
-	case value_type::Error:
+	case ValueTag::Error:
 		return gc_visit(static_cast<Error*>(v));
-	case value_type::Array:
+	case ValueTag::Array:
 		return gc_visit(static_cast<Array*>(v));
-	case value_type::Object:
+	case ValueTag::Object:
 		return gc_visit(static_cast<Object*>(v));
-	case value_type::Dictionary:
+	case ValueTag::Dictionary:
 		return gc_visit(static_cast<Dictionary*>(v));
-	case value_type::Function:
+	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
-	case value_type::NativeFunction:
+	case ValueTag::NativeFunction:
 		return gc_visit(static_cast<NativeFunction*>(v));
-	case value_type::Reference:
+	case ValueTag::Reference:
 		return gc_visit(static_cast<Reference*>(v));
 	}
 }
@@ -218,63 +218,63 @@ void print_spaces(int n) {
 
 void print(Integer const* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(Null* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << '\n';
+	std::cout << value_string[int(v->type())] << '\n';
 }
 
 void print(Float* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(String* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << '"' << v->m_value
+	std::cout << value_string[int(v->type())] << ' ' << '"' << v->m_value
 	          << '"' << '\n';
 }
 
 void print(Boolean* v, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
 void print(Error* v, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(v->type())] << '\n';
+	std::cout << value_string[int(v->type())] << '\n';
 }
 
 void print(Object* o, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(o->type())] << '\n';
+	std::cout << value_string[int(o->type())] << '\n';
 }
 
 void print(Dictionary* m, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(m->type())] << '\n';
+	std::cout << value_string[int(m->type())] << '\n';
 }
 
 void print(Function* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(f->type())] << '\n';
+	std::cout << value_string[int(f->type())] << '\n';
 }
 
 void print(NativeFunction* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_type_string[int(f->type())] << '\n';
+	std::cout << value_string[int(f->type())] << '\n';
 }
 
 void print(Array* l, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(l->type())] << '\n';
+	std::cout << value_string[int(l->type())] << '\n';
 	for (auto* child : l->m_value) {
 		print(child, d + 1);
 	}
@@ -282,36 +282,36 @@ void print(Array* l, int d) {
 
 void print(Reference* l, int d) {
 	print_spaces(d);
-	std::cout << value_type_string[int(l->type())] << '\n';
+	std::cout << value_string[int(l->type())] << '\n';
 	print(l->m_value, d + 1);
 }
 
 void print(Value* v, int d) {
 
 	switch (v->type()) {
-	case value_type::Null:
+	case ValueTag::Null:
 		return print(static_cast<Null*>(v), d);
-	case value_type::Integer:
+	case ValueTag::Integer:
 		return print(static_cast<Integer*>(v), d);
-	case value_type::Float:
+	case ValueTag::Float:
 		return print(static_cast<Float*>(v), d);
-	case value_type::String:
+	case ValueTag::String:
 		return print(static_cast<String*>(v), d);
-	case value_type::Boolean:
+	case ValueTag::Boolean:
 		return print(static_cast<Boolean*>(v), d);
-	case value_type::Error:
+	case ValueTag::Error:
 		return print(static_cast<Error*>(v), d);
-	case value_type::Array:
+	case ValueTag::Array:
 		return print(static_cast<Array*>(v), d);
-	case value_type::Object:
+	case ValueTag::Object:
 		return print(static_cast<Object*>(v), d);
-	case value_type::Dictionary:
+	case ValueTag::Dictionary:
 		return print(static_cast<Dictionary*>(v), d);
-	case value_type::Function:
+	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
-	case value_type::NativeFunction:
+	case ValueTag::NativeFunction:
 		return print(static_cast<NativeFunction*>(v), d);
-	case value_type::Reference:
+	case ValueTag::Reference:
 		return print(static_cast<Reference*>(v), d);
 	}
 }

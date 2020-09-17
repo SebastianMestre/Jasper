@@ -6,7 +6,7 @@
 
 #include "environment_fwd.hpp"
 #include "value_fwd.hpp"
-#include "value_type.hpp"
+#include "value_tag.hpp"
 
 namespace TypedAST {
 struct FunctionLiteral;
@@ -26,15 +26,15 @@ void gc_visit(Value*);
 
 struct Value {
   protected:
-	value_type m_type;
+	ValueTag m_type;
 
   public:
 	bool m_visited = false;
 	int m_cpp_refcount = 0;
 
-	Value(value_type type)
+	Value(ValueTag type)
 	    : m_type(type) {}
-	value_type type() const {
+	ValueTag type() const {
 		return m_type;
 	}
 

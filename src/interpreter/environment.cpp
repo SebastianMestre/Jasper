@@ -15,7 +15,7 @@ Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
 	if (v != m_declarations.end()) {
-		assert(v->second->type() == value_type::Reference);
+		assert(v->second->type() == ValueTag::Reference);
 		return static_cast<Reference*>(v->second);
 	}
 
@@ -66,7 +66,7 @@ void Environment::run_gc() {
 }
 
 void Environment::direct_declare(const Identifier& i, Reference* r) {
-	if (r->type() != value_type::Reference) {
+	if (r->type() != ValueTag::Reference) {
 		assert(0 && "directly declared a non-reference!");
 	}
 	m_scope->declare(i, r);
@@ -77,7 +77,7 @@ void Environment::declare(const Identifier& i, gc_ptr<Value> v) {
 }
 
 void Environment::declare(const Identifier& i, Value* v) {
-	if (v->type() == value_type::Reference) {
+	if (v->type() == ValueTag::Reference) {
 		assert(0 && "declared a reference!");
 	}
 	auto r = new_reference(v);
@@ -134,7 +134,7 @@ gc_ptr<Error> Environment::new_error(std::string e) {
 
 gc_ptr<Reference> Environment::new_reference(Value* v) {
 	assert(
-	    v->type() != value_type::Reference &&
+	    v->type() != ValueTag::Reference &&
 	    "References to references are not allowed.");
 	return m_gc->new_reference(v);
 }

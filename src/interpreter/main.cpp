@@ -10,7 +10,7 @@
 #include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
-#include "exit_status_type.hpp"
+#include "exit_status_tag.hpp"
 #include "value.hpp"
 
 int main() {
@@ -26,8 +26,8 @@ int main() {
 
 	std::string source = file_content.str();
 
-	exit_status_type exit_code = execute(
-	    source, false, +[](Interpreter::Environment& env) -> exit_status_type {
+	ExitStatusTag exit_code = execute(
+	    source, false, +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		    // this means we need to create a call expression node to run the program.
 		    // TODO: We need to clean this up
@@ -48,7 +48,7 @@ int main() {
 			    delete top_level_call;
 		    }
 
-		    return exit_status_type::Ok;
+		    return ExitStatusTag::Ok;
 	    });
 
 	return static_cast<int>(exit_code);

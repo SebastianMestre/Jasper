@@ -4,7 +4,7 @@
 
 #include "token.hpp"
 #include "token_array.hpp"
-#include "token_type.hpp"
+#include "token_tag.hpp"
 
 struct Lexer {
 	std::vector<char> m_source;
@@ -35,7 +35,7 @@ struct Lexer {
 	void consume_token();
 	bool consume_keyword();
 	bool consume_number();
-	void push_token(token_type, int);
+	void push_token(TokenTag, int);
 
 	void advance();
 	void regress();
