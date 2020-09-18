@@ -10,15 +10,30 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
+namespace TypedAST {
+struct TypedAST;
+}
+
 enum class TypeFunctionTag { Var, Known, Sum, Product, Record };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
 // For the purposes of the type system, we only care about the amount
 // of argument it takes.
+
+// If it's a var, equals points to another TypeFunctionData.
+// Else it points to a TypeFunction.
 struct TypeFunctionData {
 	int argument_count; // -1 means variadic.
 	TypeFunctionTag type;
-	TypeFunctionId equals; // only for vars
+	int equals;
+};
+
+// Concrete type function. If it's a built-in, we use argument_count
+// to tell how many arguments it takes. Else, for sum, product and record,
+// we store their structure.
+struct TypeFunction {
+	int argument_count; // -1 means variadic
+	TypedAST::TypedAST* structure; // can be nullptr
 };
 
 enum class MonoTag { Var, Term };
@@ -64,6 +79,8 @@ struct TypeSystemCore {
 	std::vector<TermData> term_data;
 
 	std::vector<TypeFunctionData> type_function_data;
+	std::vector<TypeFunction> type_functions;
+
 	std::vector<PolyData> poly_data;
 
 	std::vector<TypeVarData> type_vars;
