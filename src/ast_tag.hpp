@@ -27,6 +27,7 @@
 \
 	X(TypeTerm) \
 	X(TypeVar) \
+	X(TypeList) \
 	X(UnionExpression) \
 	X(TupleExpression) \
 	X(StructExpression)

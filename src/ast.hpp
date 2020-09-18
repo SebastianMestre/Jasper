@@ -236,26 +236,31 @@ struct TypeVar : public AST {
 	    : AST {ASTTag::TypeVar} {}
 };
 
-struct UnionExpression : public AST {
-	// TODO: better storage
-	std::vector<std::unique_ptr<AST>> m_constructors;
+struct TypeList : public AST {
+	// TODO: better storage?
+	std::vector<std::unique_ptr<AST>> m_identifiers; // can be nullptr
 	std::vector<std::unique_ptr<AST>> m_types;
+
+	TypeList()
+	    : AST {ASTTag::TypeList} {}
+};
+
+struct UnionExpression : public AST {
+	std::unique_ptr<AST> m_type_list;
 
 	UnionExpression()
 	    : AST {ASTTag::UnionExpression} {}
 };
 
 struct TupleExpression : public AST {
-	std::vector<std::unique_ptr<AST>> m_types;
+	std::unique_ptr<AST> m_type_list;
 
 	TupleExpression()
 	    : AST {ASTTag::TupleExpression} {}
 };
 
 struct StructExpression : public AST {
-	// TODO: better storage
-	std::vector<std::unique_ptr<AST>> m_fields;
-	std::vector<std::unique_ptr<AST>> m_types;
+	std::unique_ptr<AST> m_type_list;
 
 	StructExpression()
 	    : AST {ASTTag::StructExpression} {}
