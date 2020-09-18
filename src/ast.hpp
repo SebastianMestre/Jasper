@@ -226,7 +226,7 @@ struct TypeTerm : public AST {
 };
 
 struct TypeVar : public AST {
-	Token const* m_token;
+	Token const* m_token; // identifier of the type variable
 
 	std::string const& text() {
 		return m_token->m_text;
