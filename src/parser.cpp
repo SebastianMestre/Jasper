@@ -1056,7 +1056,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
 			types.push_back(std::move(type.m_result));
 		}
 
-		auto u = std::make_unique<AST::Union>();
+		auto u = std::make_unique<AST::UnionExpression>();
 		u->m_constructors = std::move(constructors);
 		u->m_types = std::move(types);
 
@@ -1078,7 +1078,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
 			types.push_back(std::move(type.m_result));
 		}
 
-		auto t = std::make_unique<AST::Tuple>();
+		auto t = std::make_unique<AST::TupleExpression>();
 		t->m_types = std::move(types);
 
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
@@ -1107,7 +1107,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
 			types.push_back(std::move(type.m_result));
 		}
 
-		auto s = std::make_unique<AST::Struct>();
+		auto s = std::make_unique<AST::StructExpression>();
 		s->m_fields = std::move(fields);
 		s->m_types = std::move(types);
 

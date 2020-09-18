@@ -27,9 +27,9 @@
 \
 	X(TypeTerm) \
 	X(TypeVar) \
-	X(Union) \
-	X(Tuple) \
-	X(Struct)
+	X(UnionExpression) \
+	X(TupleExpression) \
+	X(StructExpression)
 
 #define X(name) "name",
 constexpr const char* ast_string[] = {
