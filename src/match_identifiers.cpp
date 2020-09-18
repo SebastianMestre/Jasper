@@ -38,7 +38,7 @@ namespace TypeChecker {
 
 	// TODO: refactor
 	TypedAST::FunctionLiteral* surrounding_function = nullptr;
-	if (binding->m_type == Frontend::BindingType::Declaration) {
+	if (binding->m_type == Frontend::BindingTag::Declaration) {
 		TypedAST::Declaration* declaration = binding->get_decl();
 
 		assert(declaration);
@@ -110,7 +110,7 @@ namespace TypeChecker {
 	}
 
 	// scan body
-	assert(ast->m_body->type() == ast_type::Block);
+	assert(ast->m_body->type() == ASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		CHECK_AND_RETURN(match_identifiers(child.get(), env));
@@ -197,11 +197,11 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case ast_type::type:                                                       \
+	case ASTTag::type:                                                       \
 		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
-	case ast_type::type:                                                       \
+	case ASTTag::type:                                                       \
 		return {};
 
 	// TODO: Compound literals
@@ -226,15 +226,15 @@ namespace TypeChecker {
 		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
 
-	case ast_type::BinaryExpression:
-	case ast_type::ShortFunctionLiteral:
+	case ASTTag::BinaryExpression:
+	case ASTTag::ShortFunctionLiteral:
 		assert(0);
 	}
 
 #undef DO_NOTHING
 #undef DISPATCH
 	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
-	          << ": " << ast_type_string[(int)ast->type()] << '\n';
+	          << ": " << ast_string[(int)ast->type()] << '\n';
 	assert(0);
 }
 

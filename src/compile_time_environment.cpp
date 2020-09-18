@@ -7,26 +7,26 @@
 namespace Frontend {
 
 Binding::Binding(TypedAST::Declaration* decl)
-    : m_type {BindingType::Declaration}
+    : m_type {BindingTag::Declaration}
     , m_decl {decl} {}
 
 Binding::Binding(TypedAST::FunctionLiteral* func, int arg_index)
-    : m_type {BindingType::Argument}
+    : m_type {BindingTag::Argument}
     , m_func {func}
     , m_arg_index {arg_index} {}
 
 TypedAST::Declaration* Binding::get_decl() {
-	assert(m_type == BindingType::Declaration);
+	assert(m_type == BindingTag::Declaration);
 	return m_decl;
 }
 
 TypedAST::FunctionArgument& Binding::get_arg() {
-	assert(m_type == BindingType::Argument);
+	assert(m_type == BindingTag::Argument);
 	return m_func->m_args[m_arg_index];
 }
 
 TypedAST::FunctionLiteral* Binding::get_func() {
-	assert(m_type == BindingType::Argument);
+	assert(m_type == BindingTag::Argument);
 	return m_func;
 }
 

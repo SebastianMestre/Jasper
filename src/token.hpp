@@ -2,11 +2,11 @@
 
 #include <string>
 
-#include "token_type.hpp"
+#include "token_tag.hpp"
 
 struct Token {
 	/* internal representation of token */
-	token_type m_type;
+	TokenTag m_type;
 	/* source code representation of token */
 	std::string m_text;
 

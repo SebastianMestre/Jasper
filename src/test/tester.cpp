@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "test_status.hpp"
+#include "test_status_tag.hpp"
 
 namespace Test {
 
@@ -35,16 +35,16 @@ void Tester::execute() {
 		TestReport ts_answer = m_test_sets[i]->execute();
 
 		switch (ts_answer.m_code) {
-		case test_status::Ok:
+		case TestStatusTag::Ok:
 			std::cout << '.';
 			break;
-		case test_status::Error:
+		case TestStatusTag::Error:
 			std::cout << 'E';
 			break;
-		case test_status::Fail:
+		case TestStatusTag::Fail:
 			std::cout << 'F';
 			break;
-		case test_status::Empty:
+		case TestStatusTag::Empty:
 			std::cout << 'R';
 			break;
 		default:

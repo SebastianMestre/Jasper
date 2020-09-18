@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "../interpreter/environment_fwd.hpp"
-#include "../interpreter/exit_status_type.hpp"
-#include "test_status.hpp"
+#include "../interpreter/exit_status_tag.hpp"
+#include "test_status_tag.hpp"
 
 namespace Test {
 
@@ -15,7 +15,7 @@ struct TestSet {
 	virtual ~TestSet() = default;
 };
 
-using Interpret = exit_status_type (*)(Interpreter::Environment&);
+using Interpret = ExitStatusTag (*)(Interpreter::Environment&);
 
 struct InterpreterTestSet : public TestSet {
 

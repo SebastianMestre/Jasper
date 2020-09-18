@@ -27,9 +27,9 @@ struct Parser {
 	/* token handler */
 	Lexer* m_lexer;
 
-	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(token_type);
+	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(TokenTag);
 	Writer<std::vector<std::unique_ptr<AST::AST>>>
-	parse_expression_list(token_type, token_type, bool);
+	parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<std::unique_ptr<AST::AST>> parse_top_level();
 	Writer<std::unique_ptr<AST::AST>> parse_identifier();
@@ -52,9 +52,9 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_type_var();
 	Writer<std::unique_ptr<AST::AST>> parse_type_function();
 
-	Writer<Token const*> require(token_type);
-	bool consume(token_type);
-	bool match(token_type);
+	Writer<Token const*> require(TokenTag);
+	bool consume(TokenTag);
+	bool match(TokenTag);
 
 	Token const* peek(int dt = 0) {
 		return &m_lexer->peek_token(dt);

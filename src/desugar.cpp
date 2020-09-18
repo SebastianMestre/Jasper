@@ -77,7 +77,7 @@ Own<AST> desugar(Own<Declaration> ast) {
 
 Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 	// TODO: error handling
-	assert(ast->m_rhs->type() == ast_type::CallExpression);
+	assert(ast->m_rhs->type() == ASTTag::CallExpression);
 
 	auto rhs = desugar(std::move(ast->m_rhs));
 	auto call = static_cast<CallExpression*>(rhs.get());
@@ -90,7 +90,7 @@ Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 Own<AST> desugarDot(Own<BinaryExpression> ast) {
 	// TODO: error handling
 	// TODO: move this check to the parser
-	assert(ast->m_rhs->type() == ast_type::Identifier);
+	assert(ast->m_rhs->type() == ASTTag::Identifier);
 	auto ident = static_cast<Identifier*>(ast->m_rhs.get());
 
 	auto tok = ast->m_op_token;
@@ -103,10 +103,10 @@ Own<AST> desugarDot(Own<BinaryExpression> ast) {
 // This function desugars binary operators into function calls
 Own<AST> desugar(Own<BinaryExpression> ast) {
 
-	if (ast->m_op_token->m_type == token_type::PIZZA)
+	if (ast->m_op_token->m_type == TokenTag::PIZZA)
 		return desugarPizza(std::move(ast));
 
-	if (ast->m_op_token->m_type == token_type::DOT)
+	if (ast->m_op_token->m_type == TokenTag::DOT)
 		return desugarDot(std::move(ast));
 
 	auto identifier = std::make_unique<Identifier>();
@@ -188,11 +188,11 @@ Own<AST> desugar(Own<WhileStatement> ast) {
 
 Own<AST> desugar(Own<AST> ast) {
 #define DISPATCH(type)                                                         \
-	case ast_type::type:                                                       \
+	case ASTTag::type:                                                       \
 		return desugar(Own<type>(static_cast<type*>(ast.release())));
 
 #define RETURN(type)                                                           \
-	case ast_type::type:                                                       \
+	case ASTTag::type:                                                       \
 		return ast;
 
 	switch (ast->type()) {
@@ -222,7 +222,7 @@ Own<AST> desugar(Own<AST> ast) {
 		RETURN(TypeTerm);
 	}
 	std::cerr << "Error: AST type not handled in desugar: "
-	          << ast_type_string[(int)ast->type()] << std::endl;
+	          << ast_string[(int)ast->type()] << std::endl;
 	assert(0);
 
 #undef RETURN

@@ -5,7 +5,7 @@
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "../tarjan_solver.hpp"
-#include "test_status.hpp"
+#include "test_status_tag.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
 
@@ -75,9 +75,9 @@ void interpreter_tests(Test::Tester& tests) {
 				user2 := "anne";
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
+		+[](Interpreter::Environment& env) -> ExitStatusTag {
 			eval_expression("__invoke()", env);
-			return exit_status_type::Ok;
+			return ExitStatusTag::Ok;
 		})
 	);
 	*/
@@ -91,24 +91,24 @@ void interpreter_tests(Test::Tester& tests) {
 			float_div := 1.0 / 2.0;
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_val", env), 10);
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_val", env), 3.5);
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(
 		            eval_expression("string_val", env), "testing.");
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_div", env), 0);
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_div", env), 0.5);
 	        },
 	    }));
@@ -121,7 +121,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return a + b;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("f()", env), 3);
 	    }));
 
@@ -134,7 +134,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return K(a)(b);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("f()", env), 42);
 	    }));
 
@@ -148,7 +148,7 @@ void interpreter_tests(Test::Tester& tests) {
 			I := S(K)(K);
 			__invoke := fn () => I(42);
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }));
 
@@ -172,7 +172,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return car(cdr(cdr(a)));
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
+		+[](Interpreter::Environment& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		})
 	);
@@ -213,7 +213,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return print_inorder(t7);
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
+		+[](Interpreter::Environment& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
 		})
 	);
@@ -226,15 +226,15 @@ void interpreter_tests(Test::Tester& tests) {
 			nullv := fn () { return null; };
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("litt()", env));
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("litf()", env));
 	        },
 
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_null(eval_expression("nullv()", env));
 	        }}));
 
@@ -246,7 +246,7 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 			__invoke := fn() => fib(6);
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 8);
 	    }));
 
@@ -261,7 +261,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 120);
 	    }));
 
@@ -274,10 +274,10 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 	        },
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 	        }}));
 
@@ -290,10 +290,10 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 	        },
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 	        }}));
 
@@ -304,7 +304,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return size(A);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }));
 
@@ -315,7 +315,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return array_join(A, ",");
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), "10,10");
 	    }));
 
@@ -336,7 +336,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return val;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> exit_status_type {
+		+[](Interpreter::Environment& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), 4);
 		})
 	);
@@ -347,7 +347,7 @@ void interpreter_tests(Test::Tester& tests) {
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 13);
 	    }));
 
@@ -364,7 +364,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 120);
 	    }));
 
@@ -385,16 +385,16 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("__invoke()", env));
 	        },
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("odd(15)", env));
 	        },
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("even(80)", env));
 	        },
-	        +[](Interpreter::Environment& env) -> exit_status_type {
+	        +[](Interpreter::Environment& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("odd(18)", env));
 	        }}));
 
@@ -411,7 +411,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return false;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::is_true(eval_expression("__invoke()", env));
 	    }));
 
@@ -423,7 +423,7 @@ void interpreter_tests(Test::Tester& tests) {
 				       (if i == 0 then i + 1 else 0);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> exit_status_type {
+	    +[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }));
 
@@ -438,7 +438,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return fib(3);
 			};
 		)",
-	    Testers {+[](Interpreter::Environment& env) -> exit_status_type {
+	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }}));
 }
@@ -457,10 +457,10 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        if (cov[0] != cov[1] || cov[0] != cov[2])
 			        return {
-			            test_status::Fail,
+			            TestStatusTag::Fail,
 			            "All vertices in a 3-cycle should be in the same SCC"};
 
-		        return {test_status::Ok};
+		        return {TestStatusTag::Ok};
 	        },
 	        +[]() -> TestReport {
 		        TarjanSolver solver(2);
@@ -469,14 +469,14 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        auto const& cov = solver.component_of_vertices();
 		        if (cov[0] == cov[1])
-			        return {test_status::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
+			        return {TestStatusTag::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
 
 		        if (cov[0] < cov[1])
 			        return {
-			            test_status::Fail,
+			            TestStatusTag::Fail,
 			            "SCCs should be in reverse topological sort."};
 
-		        return {test_status::Ok};
+		        return {TestStatusTag::Ok};
 	        }}));
 }
 

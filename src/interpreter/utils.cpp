@@ -8,7 +8,7 @@ Value* unboxed(Value* value) {
 	if (!value)
 		return value;
 
-	if (value->type() != value_type::Reference)
+	if (value->type() != ValueTag::Reference)
 		return value;
 
 	// try unboxing recursively?

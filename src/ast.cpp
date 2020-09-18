@@ -117,7 +117,7 @@ void print(BinaryExpression* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ BinaryExpression\n"
 	          << tab
-	          << "Operator: " << token_type_string[int(ast->m_op_token->m_type)]
+	          << "Operator: " << token_string[int(ast->m_op_token->m_type)]
 	          << '\n'
 	          << tab << "Left Operand:\n";
 	print(ast->m_lhs.get(), d + 1);
@@ -215,49 +215,49 @@ void print(TypeTerm* ast, int d) {
 
 void print(AST* ast, int d) {
 	switch (ast->type()) {
-	case ast_type::NumberLiteral:
+	case ASTTag::NumberLiteral:
 		return print(static_cast<NumberLiteral*>(ast), d);
-	case ast_type::IntegerLiteral:
+	case ASTTag::IntegerLiteral:
 		return print(static_cast<IntegerLiteral*>(ast), d);
-	case ast_type::StringLiteral:
+	case ASTTag::StringLiteral:
 		return print(static_cast<StringLiteral*>(ast), d);
-	case ast_type::BooleanLiteral:
+	case ASTTag::BooleanLiteral:
 		return print(static_cast<BooleanLiteral*>(ast), d);
-	case ast_type::NullLiteral:
+	case ASTTag::NullLiteral:
 		return print(static_cast<NullLiteral*>(ast), d);
-	case ast_type::ObjectLiteral:
+	case ASTTag::ObjectLiteral:
 		return print(static_cast<ObjectLiteral*>(ast), d);
-	case ast_type::ArrayLiteral:
+	case ASTTag::ArrayLiteral:
 		return print(static_cast<ArrayLiteral*>(ast), d);
-	case ast_type::DictionaryLiteral:
+	case ASTTag::DictionaryLiteral:
 		return print(static_cast<DictionaryLiteral*>(ast), d);
-	case ast_type::FunctionLiteral:
+	case ASTTag::FunctionLiteral:
 		return print(static_cast<FunctionLiteral*>(ast), d);
-	case ast_type::DeclarationList:
+	case ASTTag::DeclarationList:
 		return print(static_cast<DeclarationList*>(ast), d);
-	case ast_type::Declaration:
+	case ASTTag::Declaration:
 		return print(static_cast<Declaration*>(ast), d);
-	case ast_type::Identifier:
+	case ASTTag::Identifier:
 		return print(static_cast<Identifier*>(ast), d);
-	case ast_type::BinaryExpression:
+	case ASTTag::BinaryExpression:
 		return print(static_cast<BinaryExpression*>(ast), d);
-	case ast_type::CallExpression:
+	case ASTTag::CallExpression:
 		return print(static_cast<CallExpression*>(ast), d);
-	case ast_type::IndexExpression:
+	case ASTTag::IndexExpression:
 		return print(static_cast<IndexExpression*>(ast), d);
-	case ast_type::TernaryExpression:
+	case ASTTag::TernaryExpression:
 		return print(static_cast<TernaryExpression*>(ast), d);
-	case ast_type::Block:
+	case ASTTag::Block:
 		return print(static_cast<Block*>(ast), d);
-	case ast_type::ReturnStatement:
+	case ASTTag::ReturnStatement:
 		return print(static_cast<ReturnStatement*>(ast), d);
-	case ast_type::IfElseStatement:
+	case ASTTag::IfElseStatement:
 		return print(static_cast<IfElseStatement*>(ast), d);
-	case ast_type::ForStatement:
+	case ASTTag::ForStatement:
 		return print(static_cast<ForStatement*>(ast), d);
-	case ast_type::WhileStatement:
+	case ASTTag::WhileStatement:
 		return print(static_cast<WhileStatement*>(ast), d);
-	case ast_type::TypeTerm:
+	case ASTTag::TypeTerm:
 		return print(static_cast<TypeTerm*>(ast), d);
 	}
 }
