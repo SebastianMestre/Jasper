@@ -26,7 +26,7 @@ struct TypeFunctionData {
 
 // Concrete type function. If it's a built-in, we use argument_count
 // to tell how many arguments it takes. Else, for sum, product and record,
-// we store their structure as a .
+// we store their structure as a hash from names to monotypes.
 struct TypeFunction {
 	int argument_count; // -1 means variadic
 	std::unordered_map<std::string, MonoId> structure; // can be nullptr
