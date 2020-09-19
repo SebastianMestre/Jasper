@@ -225,6 +225,44 @@ struct TypeTerm : public AST {
 	    : AST {ASTTag::TypeTerm} {}
 };
 
+// A TypeVar is a name, bound to a type variable of any kind.
+// e.g. a type function, a polytype or a monotype
+struct TypeVar : public AST {
+	Token const* m_token;
+
+	std::string const& text() {
+		return m_token->m_text;
+	}
+
+	TypeVar()
+	    : AST {ASTTag::TypeVar} {}
+};
+
+struct UnionExpression : public AST {
+	// TODO: better storage?
+	std::vector<std::unique_ptr<AST>> m_constructors;
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	UnionExpression()
+	    : AST {ASTTag::UnionExpression} {}
+};
+
+struct TupleExpression : public AST {
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	TupleExpression()
+	    : AST {ASTTag::TupleExpression} {}
+};
+
+struct StructExpression : public AST {
+	// TODO: better storage?
+	std::vector<std::unique_ptr<AST>> m_fields;
+	std::vector<std::unique_ptr<AST>> m_types;
+
+	StructExpression()
+	    : AST {ASTTag::StructExpression} {}
+};
+
 void print(AST*, int);
 
 } // namespace AST

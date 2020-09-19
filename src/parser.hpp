@@ -49,6 +49,10 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_for_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_while_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
+	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	    parse_type_list(bool);
+	Writer<std::unique_ptr<AST::AST>> parse_type_var();
+	Writer<std::unique_ptr<AST::AST>> parse_type_function();
 
 	Writer<Token const*> require(TokenTag);
 	bool consume(TokenTag);

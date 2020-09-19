@@ -39,6 +39,7 @@ constexpr const char* token_string[] = {
 	"IOR_TO",
 	"XOR_TO",
 
+	"AT",
 	"DOT",
 	"COMMA",
 	"PIZZA",
@@ -76,6 +77,10 @@ constexpr const char* token_string[] = {
 	"KEYWORD_ELSE",
 	"KEYWORD_FOR",
 	"KEYWORD_WHILE",
+
+	"KEYWORD_UNION",
+	"KEYWORD_TUPLE",
+	"KEYWORD_STRUCT",
 
 	"END",
 };
@@ -119,6 +124,7 @@ enum class TokenTag {
 	IOR_TO,
 	XOR_TO,
 
+	AT,
 	DOT,
 	COMMA,
 	PIZZA,
@@ -156,6 +162,10 @@ enum class TokenTag {
 	KEYWORD_ELSE,
 	KEYWORD_FOR,
 	KEYWORD_WHILE,
+
+	KEYWORD_UNION,
+	KEYWORD_TUPLE,
+	KEYWORD_STRUCT,
 
 	END,
 };

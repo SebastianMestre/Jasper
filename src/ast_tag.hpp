@@ -25,7 +25,12 @@
 	X(ForStatement) \
 	X(WhileStatement) \
 \
-	X(TypeTerm)
+	X(TypeTerm) \
+	X(TypeVar) \
+	X(TypeList) \
+	X(UnionExpression) \
+	X(TupleExpression) \
+	X(StructExpression)
 
 #define X(name) "name",
 constexpr const char* ast_string[] = {

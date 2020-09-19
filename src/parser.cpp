@@ -2,6 +2,7 @@
 
 #include "string_view.hpp"
 #include <sstream>
+#include <utility>
 
 #include <cassert>
 
@@ -1008,4 +1009,96 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 
 	e->m_args = std::move(args);
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+}
+
+Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+    Parser::parse_type_list(bool with_identifiers = false) {
+	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	    result = {{"Parse Error: Failed to parse type list"}};
+
+	std::vector<std::unique_ptr<AST::AST>> identifiers;
+	std::vector<std::unique_ptr<AST::AST>> types;
+
+	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
+		return result;
+
+	while(!consume(TokenTag::BRACE_CLOSE)) {
+		if (with_identifiers) {
+			auto cons = parse_identifier();
+			if (handle_error(result, cons))
+				return result;
+
+			if (handle_error(result, require(TokenTag::COLON)))
+				return result;
+			
+			identifiers.push_back(std::move(cons.m_result));
+		}
+
+		auto type = parse_type_term();
+		if (handle_error(result, type))
+			return result;
+
+		if (handle_error(result, require(TokenTag::SEMICOLON)))
+			return result;
+
+		types.push_back(std::move(type.m_result));
+	}
+
+	return make_writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	    (make_pair(std::move(identifiers), std::move(types)));
+}
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
+	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse type var"}};
+
+	if (handle_error(result, require(TokenTag::AT)))
+		return result;
+
+	auto token = require(TokenTag::IDENTIFIER);
+	if (handle_error(result, token))
+		return result;
+
+	auto t = std::make_unique<AST::TypeVar>();
+	t->m_token = token.m_result;
+
+	return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+}
+
+Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
+	Writer<std::unique_ptr<AST::AST>> result = {
+	    {"Parse Error: Failed to parse type function"}};
+
+	if (consume(TokenTag::KEYWORD_UNION)) {
+		auto tl = parse_type_list(true);
+		if (handle_error(result, tl))
+			return result;
+
+		auto u = std::make_unique<AST::UnionExpression>();
+		u->m_constructors = std::move(tl.m_result.first);
+		u->m_types = std::move(tl.m_result.second);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(u));
+	} else if (consume(TokenTag::KEYWORD_TUPLE)) {
+		auto tl = parse_type_list(false);
+		if (handle_error(result, tl))
+			return result;
+
+		auto t = std::make_unique<AST::TupleExpression>();
+		t->m_types = std::move(tl.m_result.second);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
+		auto tl = parse_type_list(true);
+		if (handle_error(result, tl))
+			return result;
+
+		auto s = std::make_unique<AST::StructExpression>();
+		s->m_fields = std::move(tl.m_result.first);
+		s->m_types = std::move(tl.m_result.second);
+
+		return make_writer<std::unique_ptr<AST::AST>>(std::move(s));
+	}
+
+	return result;
 }
