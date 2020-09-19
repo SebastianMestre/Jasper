@@ -2,6 +2,7 @@
 
 #include "string_view.hpp"
 #include <sstream>
+#include <utility>
 
 #include <cassert>
 
@@ -1010,9 +1011,10 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_type_list(bool with_identifiers = false) {
-	Writer<std::unique_ptr<AST::AST>> result = {
-	    {"Parse Error: Failed to parse type list"}};
+Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+    Parser::parse_type_list(bool with_identifiers = false) {
+	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	    result = {{"Parse Error: Failed to parse type list"}};
 
 	std::vector<std::unique_ptr<AST::AST>> identifiers;
 	std::vector<std::unique_ptr<AST::AST>> types;
@@ -1042,12 +1044,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_list(bool with_identifiers 
 		types.push_back(std::move(type.m_result));
 	}
 
-	auto tl = std::make_unique<AST::TypeList>();
-	if (with_identifiers)
-		tl->m_identifiers = std::move(identifiers);
-	tl->m_types = std::move(types);
-
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(tl));
+	return make_writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	    (make_pair(std::move(identifiers), std::move(types)));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
@@ -1077,7 +1075,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
 			return result;
 
 		auto u = std::make_unique<AST::UnionExpression>();
-		u->m_type_list = std::move(tl.m_result);
+		u->m_constructors = std::move(tl.m_result.first);
+		u->m_types = std::move(tl.m_result.second);
 
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(u));
 	} else if (consume(TokenTag::KEYWORD_TUPLE)) {
@@ -1086,7 +1085,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
 			return result;
 
 		auto t = std::make_unique<AST::TupleExpression>();
-		t->m_type_list = std::move(tl.m_result);
+		t->m_types = std::move(tl.m_result.second);
 
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
 	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
@@ -1095,7 +1094,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
 			return result;
 
 		auto s = std::make_unique<AST::StructExpression>();
-		s->m_type_list = std::move(tl.m_result);
+		s->m_fields = std::move(tl.m_result.first);
+		s->m_types = std::move(tl.m_result.second);
 
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(s));
 	}
