@@ -1,14 +1,12 @@
 #include "desugar.hpp"
 
 #include "ast.hpp"
+#include "typedefs.hpp"
 
 #include <cassert>
 #include <iostream>
 
 namespace AST {
-
-template <typename T>
-using Own = std::unique_ptr<T>;
 
 Own<AST> desugar(Own<ObjectLiteral> ast) {
 	// TODO: convert
