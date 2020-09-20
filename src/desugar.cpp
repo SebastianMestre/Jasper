@@ -89,13 +89,14 @@ Own<AST> desugarDot(Own<BinaryExpression> ast) {
 	// TODO: error handling
 	// TODO: move this check to the parser
 	assert(ast->m_rhs->type() == ASTTag::Identifier);
-	auto ident = static_cast<Identifier*>(ast->m_rhs.get());
+	auto identifier_ptr = static_cast<Identifier*>(ast->m_rhs.release());
+	auto identifier = Own<Identifier>(identifier_ptr);
 
-	auto tok = ast->m_op_token;
-	std::cerr << "Error: @" << tok->m_line0 + 1 << ":" << tok->m_col0
-	          << " | Dot (.) operator not implemented yet\n";
+	auto result = std::make_unique<RecordAccessExpression>();
+	result->m_member = std::move(identifier);
+	result->m_record = desugar(std::move(ast->m_lhs));
 
-	return std::make_unique<NullLiteral>();
+	return result;
 }
 
 // This function desugars binary operators into function calls
