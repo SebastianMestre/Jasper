@@ -194,53 +194,45 @@ TypedAST* convertAST(AST::WhileStatement* ast) {
 }
 
 TypedAST* convertAST(AST::AST* ast) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                         \
+		return convertAST(static_cast<AST::type*>(ast))
+
+#define REJECT(type)                                                           \
+	case ASTTag::type:                                                         \
+		assert(0 && "use of " #type " is forbidden in convert")
+
 	switch (ast->type()) {
-	case ASTTag::NumberLiteral:
-		return convertAST(static_cast<AST::NumberLiteral*>(ast));
-	case ASTTag::IntegerLiteral:
-		return convertAST(static_cast<AST::IntegerLiteral*>(ast));
-	case ASTTag::StringLiteral:
-		return convertAST(static_cast<AST::StringLiteral*>(ast));
-	case ASTTag::BooleanLiteral:
-		return convertAST(static_cast<AST::BooleanLiteral*>(ast));
-	case ASTTag::NullLiteral:
-		return convertAST(static_cast<AST::NullLiteral*>(ast));
-	case ASTTag::ObjectLiteral:
-		return convertAST(static_cast<AST::ObjectLiteral*>(ast));
-	case ASTTag::ArrayLiteral:
-		return convertAST(static_cast<AST::ArrayLiteral*>(ast));
-	case ASTTag::DictionaryLiteral:
-		return convertAST(static_cast<AST::DictionaryLiteral*>(ast));
-	case ASTTag::FunctionLiteral:
-		return convertAST(static_cast<AST::FunctionLiteral*>(ast));
-	case ASTTag::DeclarationList:
-		return convertAST(static_cast<AST::DeclarationList*>(ast));
-	case ASTTag::Declaration:
-		return convertAST(static_cast<AST::Declaration*>(ast));
-	case ASTTag::Identifier:
-		return convertAST(static_cast<AST::Identifier*>(ast));
-	case ASTTag::CallExpression:
-		return convertAST(static_cast<AST::CallExpression*>(ast));
-	case ASTTag::IndexExpression:
-		return convertAST(static_cast<AST::IndexExpression*>(ast));
-	case ASTTag::TernaryExpression:
-		return convertAST(static_cast<AST::TernaryExpression*>(ast));
-	case ASTTag::Block:
-		return convertAST(static_cast<AST::Block*>(ast));
-	case ASTTag::ReturnStatement:
-		return convertAST(static_cast<AST::ReturnStatement*>(ast));
-	case ASTTag::IfElseStatement:
-		return convertAST(static_cast<AST::IfElseStatement*>(ast));
-	case ASTTag::ForStatement:
-		return convertAST(static_cast<AST::ForStatement*>(ast));
-	case ASTTag::WhileStatement:
-		return convertAST(static_cast<AST::WhileStatement*>(ast));
-	case ASTTag::BinaryExpression:
-		assert(0);
+		DISPATCH(NumberLiteral);
+		DISPATCH(IntegerLiteral);
+		DISPATCH(StringLiteral);
+		DISPATCH(BooleanLiteral);
+		DISPATCH(NullLiteral);
+		DISPATCH(ArrayLiteral);
+		DISPATCH(DictionaryLiteral);
+		DISPATCH(FunctionLiteral);
+
+		DISPATCH(Identifier);
+		DISPATCH(CallExpression);
+		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
+		REJECT(BinaryExpression);
+
+		DISPATCH(Block);
+		DISPATCH(ReturnStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
+
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
 	}
 	std::cerr << "Error: AST type not handled in convertAST: "
 	          << ast_string[(int)ast->type()] << std::endl;
 	assert(0);
+
+#undef REJECT
+#undef DISPATCH
 }
 
 } // namespace TypedAST
