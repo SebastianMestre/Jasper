@@ -3,6 +3,7 @@
 
 #include "ast.hpp"
 #include "typed_ast.hpp"
+#include "typedefs.hpp"
 
 namespace TypedAST {
 
@@ -143,6 +144,16 @@ TypedAST* convertAST(AST::TernaryExpression* ast) {
 	return typed_ternary;
 }
 
+TypedAST* convertAST(AST::RecordAccessExpression* ast) {
+	auto typed_ast = new RecordAccessExpression;
+
+	// TODO: this line is extremely disgusting
+	typed_ast->m_member = Own<Identifier>(static_cast<Identifier*>(convertAST(ast->m_member.get())));
+	typed_ast->m_record = Own<TypedAST>(convertAST(ast->m_record.get()));
+
+	return typed_ast;
+}
+
 TypedAST* convertAST(AST::Block* ast) {
 	auto typed_block = new Block;
 
@@ -216,6 +227,7 @@ TypedAST* convertAST(AST::AST* ast) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
+		DISPATCH(RecordAccessExpression);
 		REJECT(BinaryExpression);
 
 		DISPATCH(Block);
