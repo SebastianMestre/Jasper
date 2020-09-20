@@ -6,7 +6,7 @@
 	X(Fail) \
 	X(Empty)
 
-#define X(name) "name",
+#define X(name) #name,
 constexpr const char* test_status_string[] = {
 	TEST_STATUS_TAGS
 };

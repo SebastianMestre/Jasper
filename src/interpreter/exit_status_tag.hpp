@@ -13,7 +13,7 @@
 	X(ValueError) \
 	X(Empty)
 
-#define X(name) "name",
+#define X(name) #name,
 constexpr const char* exit_status_string[] = {
 	EXIT_STATUS_TAGS
 };
