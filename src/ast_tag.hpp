@@ -32,7 +32,7 @@
 	X(TupleExpression) \
 	X(StructExpression)
 
-#define X(name) "name",
+#define X(name) #name,
 constexpr const char* ast_string[] = {
 	AST_TAGS
 };
