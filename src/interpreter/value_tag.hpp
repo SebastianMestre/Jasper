@@ -18,7 +18,7 @@
 \
 	X(Reference)
 
-#define X(name) "name",
+#define X(name) #name,
 constexpr const char* value_string[] = {
 	VALUE_TAGS
 };
