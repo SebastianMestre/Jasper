@@ -6,7 +6,15 @@
 
 namespace AST {
 
+namespace {
+
 constexpr char tabc = ' ';
+void print_indentation (int d) {
+	for(int i = d; i-- > 0;)
+		std::cout << tabc;
+}
+
+}
 
 void print(DeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
@@ -147,6 +155,22 @@ void print(IndexExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(RecordAccessExpression* ast, int d) {
+	print_indentation(d - 1);
+	std::cout << "[ RecordAccessExpression\n";
+
+	print_indentation(d);
+	std::cout << "Record:\n";
+	print(ast->m_record.get(), d + 1);
+
+	print_indentation(d);
+	std::cout << "Member:\n";
+	print(ast->m_member.get(), d + 1);
+
+	print_indentation(d - 1);
+	std::cout << "]\n";
+}
+
 void print(TernaryExpression* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -233,10 +257,7 @@ void print(AST* ast, int d) {
 		return print(static_cast<DictionaryLiteral*>(ast), d);
 	case ASTTag::FunctionLiteral:
 		return print(static_cast<FunctionLiteral*>(ast), d);
-	case ASTTag::DeclarationList:
-		return print(static_cast<DeclarationList*>(ast), d);
-	case ASTTag::Declaration:
-		return print(static_cast<Declaration*>(ast), d);
+
 	case ASTTag::Identifier:
 		return print(static_cast<Identifier*>(ast), d);
 	case ASTTag::BinaryExpression:
@@ -247,6 +268,14 @@ void print(AST* ast, int d) {
 		return print(static_cast<IndexExpression*>(ast), d);
 	case ASTTag::TernaryExpression:
 		return print(static_cast<TernaryExpression*>(ast), d);
+	case ASTTag::RecordAccessExpression:
+		return print(static_cast<RecordAccessExpression*>(ast), d);
+
+	case ASTTag::DeclarationList:
+		return print(static_cast<DeclarationList*>(ast), d);
+	case ASTTag::Declaration:
+		return print(static_cast<Declaration*>(ast), d);
+
 	case ASTTag::Block:
 		return print(static_cast<Block*>(ast), d);
 	case ASTTag::ReturnStatement:
@@ -257,6 +286,7 @@ void print(AST* ast, int d) {
 		return print(static_cast<ForStatement*>(ast), d);
 	case ASTTag::WhileStatement:
 		return print(static_cast<WhileStatement*>(ast), d);
+
 	case ASTTag::TypeTerm:
 		return print(static_cast<TypeTerm*>(ast), d);
 	}
