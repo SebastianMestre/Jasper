@@ -186,6 +186,14 @@ struct IndexExpression : public TypedAST {
 	    : TypedAST {ASTTag::IndexExpression} {}
 };
 
+struct RecordAccessExpression : public TypedAST {
+	Own<TypedAST> m_record;
+	Own<Identifier> m_member;
+
+	RecordAccessExpression()
+	    : TypedAST {ASTTag::RecordAccessExpression} {}
+};
+
 struct TernaryExpression : public TypedAST {
 	Own<TypedAST> m_condition;
 	Own<TypedAST> m_then_expr;
