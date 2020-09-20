@@ -187,12 +187,16 @@ Own<AST> desugar(Own<WhileStatement> ast) {
 
 Own<AST> desugar(Own<AST> ast) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                       \
+	case ASTTag::type:                                                         \
 		return desugar(Own<type>(static_cast<type*>(ast.release())));
 
 #define RETURN(type)                                                           \
-	case ASTTag::type:                                                       \
+	case ASTTag::type:                                                         \
 		return ast;
+
+#define REJECT(type)                                                           \
+	case ASTTag::type:                                                         \
+		assert(0)
 
 	switch (ast->type()) {
 		RETURN(NumberLiteral);
@@ -206,19 +210,27 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(FunctionLiteral);
 		DISPATCH(ShortFunctionLiteral);
 
-		DISPATCH(DeclarationList);
-		DISPATCH(Declaration);
 		RETURN(Identifier);
 		DISPATCH(BinaryExpression);
+		DISPATCH(TernaryExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		REJECT(RecordAccessExpression);
+
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
+
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+
 		RETURN(TypeTerm);
+		RETURN(TypeVar);
+		RETURN(UnionExpression);
+		RETURN(StructExpression);
+		RETURN(TupleExpression);
 	}
 	std::cerr << "Error: AST type not handled in desugar: "
 	          << ast_string[(int)ast->type()] << std::endl;
