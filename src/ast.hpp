@@ -168,6 +168,14 @@ struct IndexExpression : public AST {
 	    : AST {ASTTag::IndexExpression} {}
 };
 
+struct RecordAccessExpression : public AST {
+	Own<AST> m_record;
+	Own<Identifier> m_member;
+
+	RecordAccessExpression()
+	    : AST {ASTTag::RecordAccessExpression} {}
+};
+
 struct TernaryExpression : public AST {
 	Own<AST> m_condition;
 	Own<AST> m_then_expr;
