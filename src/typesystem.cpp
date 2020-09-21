@@ -40,6 +40,7 @@ MonoId TypeSystemCore::new_term(
 	TypeFunctionId tf_id = func_find(type_function);
 	TypeFunctionData& tf_data = type_function_data[tf_id];
 
+	// TODO: fail on dummy type function?
 	if (tf_data.type == TypeFunctionTag::Var)
 		assert(0 && "instantiating type function that could not be deduced");
 
