@@ -40,10 +40,6 @@ MonoId TypeSystemCore::new_term(
 	TypeFunctionId tf_id = func_find(type_function);
 	TypeFunctionData& tf_data = type_function_data[tf_id];
 
-	// TODO: fail on dummy type function?
-	if (tf_data.type == TypeFunctionTag::Var)
-		assert(0 && "instantiating type function that could not be deduced");
-
 	int argument_count = type_functions[tf_data.equals].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
@@ -79,7 +75,7 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 }
 
 TypeFunctionId TypeSystemCore::new_dummy_type_function
-    (TypeFunctionTag type, TypeFunctionStructure structure) {
+    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
 	TypeFunctionId type_function_var = type_function_data.size();
 
 	type_function_data.push_back({type, type_functions.size()});
