@@ -10,27 +10,21 @@
 	X(ArrayLiteral)                                                            \
 	X(DictionaryLiteral)                                                       \
 	X(FunctionLiteral)                                                         \
-	X(ShortFunctionLiteral)                                                    \
                                                                                \
-	X(DeclarationList)                                                         \
-	X(Declaration)                                                             \
 	X(Identifier)                                                              \
-	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \
 	X(IndexExpression)                                                         \
 	X(RecordAccessExpression)                                                  \
+	X(TernaryExpression)                                                       \
+                                                                               \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
-	X(TernaryExpression)                                                       \
 	X(ForStatement)                                                            \
 	X(WhileStatement)                                                          \
                                                                                \
-	X(TypeTerm)                                                                \
-	X(TypeVar)                                                                 \
-	X(UnionExpression)                                                         \
-	X(TupleExpression)                                                         \
-	X(StructExpression)
+	X(DeclarationList)                                                         \
+	X(Declaration)
 
 #define X(name) #name,
 constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};
