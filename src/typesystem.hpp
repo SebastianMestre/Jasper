@@ -36,7 +36,7 @@ using TypeFunctionStructure = std::unordered_map<std::string, MonoId>;
 struct TypeFunction {
 	int argument_count; // -1 means variadic
 	TypeFunctionStructure structure; // can be nullptr
-	bool is_dummy;
+	bool is_dummy = false;
 };
 
 enum class MonoTag { Var, Term };
