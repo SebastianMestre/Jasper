@@ -13,7 +13,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		assert(decl->type() == ASTTag::Declaration);
+		assert(decl->type() == TypedASTTag::Declaration);
 		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
 	}
 	return e.null();
@@ -56,7 +56,7 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ASTTag::Declaration);
+		assert(declTypeErased->type() == TypedASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -76,7 +76,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == ASTTag::Declaration);
+		assert(declTypeErased->type() == TypedASTTag::Declaration);
 		TypedAST::Declaration* decl =
 		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
 
@@ -328,53 +328,35 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::TypedAST* ast, Environment& e) {
 
+#define DISPATCH(type)                                                         \
+	case TypedASTTag::type:                                                    \
+		return eval(static_cast<TypedAST::type*>(ast), e)
+
 	switch (ast->type()) {
-	case ASTTag::NumberLiteral:
-		return eval(static_cast<TypedAST::NumberLiteral*>(ast), e);
-	case ASTTag::IntegerLiteral:
-		return eval(static_cast<TypedAST::IntegerLiteral*>(ast), e);
-	case ASTTag::StringLiteral:
-		return eval(static_cast<TypedAST::StringLiteral*>(ast), e);
-	case ASTTag::BooleanLiteral:
-		return eval(static_cast<TypedAST::BooleanLiteral*>(ast), e);
-	case ASTTag::NullLiteral:
-		return eval(static_cast<TypedAST::NullLiteral*>(ast), e);
-	case ASTTag::ObjectLiteral:
-		return eval(static_cast<TypedAST::ObjectLiteral*>(ast), e);
-	case ASTTag::ArrayLiteral:
-		return eval(static_cast<TypedAST::ArrayLiteral*>(ast), e);
-	case ASTTag::DictionaryLiteral:
-		return eval(static_cast<TypedAST::DictionaryLiteral*>(ast), e);
-	case ASTTag::FunctionLiteral:
-		return eval(static_cast<TypedAST::FunctionLiteral*>(ast), e);
-	case ASTTag::DeclarationList:
-		return eval(static_cast<TypedAST::DeclarationList*>(ast), e);
-	case ASTTag::Declaration:
-		return eval(static_cast<TypedAST::Declaration*>(ast), e);
-	case ASTTag::Identifier:
-		return eval(static_cast<TypedAST::Identifier*>(ast), e);
-	case ASTTag::CallExpression:
-		return eval(static_cast<TypedAST::CallExpression*>(ast), e);
-	case ASTTag::IndexExpression:
-		return eval(static_cast<TypedAST::IndexExpression*>(ast), e);
-	case ASTTag::TernaryExpression:
-		return eval(static_cast<TypedAST::TernaryExpression*>(ast), e);
-	case ASTTag::Block:
-		return eval(static_cast<TypedAST::Block*>(ast), e);
-	case ASTTag::ReturnStatement:
-		return eval(static_cast<TypedAST::ReturnStatement*>(ast), e);
-	case ASTTag::IfElseStatement:
-		return eval(static_cast<TypedAST::IfElseStatement*>(ast), e);
-	case ASTTag::ForStatement:
-		return eval(static_cast<TypedAST::ForStatement*>(ast), e);
-	case ASTTag::WhileStatement:
-		return eval(static_cast<TypedAST::WhileStatement*>(ast), e);
-	case ASTTag::BinaryExpression:
-		assert(0);
+		DISPATCH(NumberLiteral);
+		DISPATCH(IntegerLiteral);
+		DISPATCH(StringLiteral);
+		DISPATCH(BooleanLiteral);
+		DISPATCH(NullLiteral);
+		DISPATCH(ObjectLiteral);
+		DISPATCH(ArrayLiteral);
+		DISPATCH(DictionaryLiteral);
+		DISPATCH(FunctionLiteral);
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
+		DISPATCH(Identifier);
+		DISPATCH(CallExpression);
+		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
+		DISPATCH(Block);
+		DISPATCH(ReturnStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
 	}
 
 	std::cerr << "@ Internal Error: unhandled case in eval:\n";
-	std::cerr << "@   - AST type is: " << ast_string[(int)ast->type()] << '\n';
+	std::cerr << "@   - AST type is: " << typed_ast_string[(int)ast->type()] << '\n';
 
 	return nullptr;
 }

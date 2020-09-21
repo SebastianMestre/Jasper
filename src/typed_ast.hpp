@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ast_tag.hpp"
 #include "token.hpp"
 #include "token_tag.hpp"
+#include "typed_ast_tag.hpp"
 #include "typedefs.hpp"
 #include "typesystem_types.hpp"
 
@@ -19,15 +19,15 @@ namespace TypedAST {
 
 struct TypedAST {
   protected:
-	ASTTag m_type;
+	TypedASTTag m_type;
 
   public:
-	TypedAST(ASTTag type)
+	TypedAST(TypedASTTag type)
 	    : m_type {type} {}
 
 	// is not set on polymorphic declarations
 	MonoId m_value_type{-1};
-	ASTTag type() const {
+	TypedASTTag type() const {
 		return m_type;
 	}
 	virtual ~TypedAST() = default;
@@ -46,7 +46,7 @@ struct NumberLiteral : public TypedAST {
 	}
 
 	NumberLiteral()
-	    : TypedAST {ASTTag::NumberLiteral} {}
+	    : TypedAST {TypedASTTag::NumberLiteral} {}
 };
 
 struct IntegerLiteral : public TypedAST {
@@ -57,7 +57,7 @@ struct IntegerLiteral : public TypedAST {
 	}
 
 	IntegerLiteral()
-	    : TypedAST {ASTTag::IntegerLiteral} {}
+	    : TypedAST {TypedASTTag::IntegerLiteral} {}
 };
 
 struct StringLiteral : public TypedAST {
@@ -68,7 +68,7 @@ struct StringLiteral : public TypedAST {
 	}
 
 	StringLiteral()
-	    : TypedAST {ASTTag::StringLiteral} {}
+	    : TypedAST {TypedASTTag::StringLiteral} {}
 };
 
 struct BooleanLiteral : public TypedAST {
@@ -79,13 +79,13 @@ struct BooleanLiteral : public TypedAST {
 	}
 
 	BooleanLiteral()
-	    : TypedAST {ASTTag::BooleanLiteral} {}
+	    : TypedAST {TypedASTTag::BooleanLiteral} {}
 };
 
 struct NullLiteral : public TypedAST {
 
 	NullLiteral()
-	    : TypedAST {ASTTag::NullLiteral} {}
+	    : TypedAST {TypedASTTag::NullLiteral} {}
 };
 
 struct ObjectLiteral : public TypedAST {
@@ -94,21 +94,21 @@ struct ObjectLiteral : public TypedAST {
 	// future feature
 	// the value type for objects must be followeb by a class identifier
 	ObjectLiteral()
-	    : TypedAST {ASTTag::ObjectLiteral} {}
+	    : TypedAST {TypedASTTag::ObjectLiteral} {}
 };
 
 struct ArrayLiteral : public TypedAST {
 	std::vector<Own<TypedAST>> m_elements;
 
 	ArrayLiteral()
-	    : TypedAST {ASTTag::ArrayLiteral} {}
+	    : TypedAST {TypedASTTag::ArrayLiteral} {}
 };
 
 struct DictionaryLiteral : public TypedAST {
 	std::vector<Own<TypedAST>> m_body;
 
 	DictionaryLiteral()
-	    : TypedAST {ASTTag::DictionaryLiteral} {}
+	    : TypedAST {TypedASTTag::DictionaryLiteral} {}
 };
 
 struct FunctionArgument {
@@ -127,7 +127,7 @@ struct FunctionLiteral : public TypedAST {
 	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral()
-	    : TypedAST {ASTTag::FunctionLiteral} {}
+	    : TypedAST {TypedASTTag::FunctionLiteral} {}
 };
 
 // doesnt have a ast_vtype
@@ -135,7 +135,7 @@ struct DeclarationList : public TypedAST {
 	std::vector<Own<TypedAST>> m_declarations;
 
 	DeclarationList()
-	    : TypedAST {ASTTag::DeclarationList} {}
+	    : TypedAST {TypedASTTag::DeclarationList} {}
 };
 
 struct Declaration : public TypedAST {
@@ -153,7 +153,7 @@ struct Declaration : public TypedAST {
 	}
 
 	Declaration()
-	    : TypedAST {ASTTag::Declaration} {}
+	    : TypedAST {TypedASTTag::Declaration} {}
 };
 
 // the ast_vtype must be computed
@@ -166,7 +166,7 @@ struct Identifier : public TypedAST {
 	}
 
 	Identifier()
-	    : TypedAST {ASTTag::Identifier} {}
+	    : TypedAST {TypedASTTag::Identifier} {}
 };
 
 // the value depends on the return value of callee
@@ -175,7 +175,7 @@ struct CallExpression : public TypedAST {
 	std::vector<Own<TypedAST>> m_args;
 
 	CallExpression()
-	    : TypedAST {ASTTag::CallExpression} {}
+	    : TypedAST {TypedASTTag::CallExpression} {}
 };
 
 struct IndexExpression : public TypedAST {
@@ -183,7 +183,7 @@ struct IndexExpression : public TypedAST {
 	Own<TypedAST> m_index;
 
 	IndexExpression()
-	    : TypedAST {ASTTag::IndexExpression} {}
+	    : TypedAST {TypedASTTag::IndexExpression} {}
 };
 
 struct RecordAccessExpression : public TypedAST {
@@ -191,7 +191,7 @@ struct RecordAccessExpression : public TypedAST {
 	Own<Identifier> m_member;
 
 	RecordAccessExpression()
-	    : TypedAST {ASTTag::RecordAccessExpression} {}
+	    : TypedAST {TypedASTTag::RecordAccessExpression} {}
 };
 
 struct TernaryExpression : public TypedAST {
@@ -200,21 +200,21 @@ struct TernaryExpression : public TypedAST {
 	Own<TypedAST> m_else_expr;
 
 	TernaryExpression()
-	    : TypedAST {ASTTag::TernaryExpression} {}
+	    : TypedAST {TypedASTTag::TernaryExpression} {}
 };
 
 struct Block : public TypedAST {
 	std::vector<Own<TypedAST>> m_body;
 
 	Block()
-	    : TypedAST {ASTTag::Block} {}
+	    : TypedAST {TypedASTTag::Block} {}
 };
 
 struct ReturnStatement : public TypedAST {
 	Own<TypedAST> m_value;
 
 	ReturnStatement()
-	    : TypedAST {ASTTag::ReturnStatement} {}
+	    : TypedAST {TypedASTTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public TypedAST {
@@ -223,7 +223,7 @@ struct IfElseStatement : public TypedAST {
 	Own<TypedAST> m_else_body; // can be nullptr
 
 	IfElseStatement()
-	    : TypedAST {ASTTag::IfElseStatement} {}
+	    : TypedAST {TypedASTTag::IfElseStatement} {}
 };
 
 struct ForStatement : public TypedAST {
@@ -233,7 +233,7 @@ struct ForStatement : public TypedAST {
 	Own<TypedAST> m_body;
 
 	ForStatement()
-	    : TypedAST {ASTTag::ForStatement} {}
+	    : TypedAST {TypedASTTag::ForStatement} {}
 };
 
 struct WhileStatement : public TypedAST {
@@ -241,7 +241,7 @@ struct WhileStatement : public TypedAST {
 	Own<TypedAST> m_body;
 
 	WhileStatement()
-	    : TypedAST {ASTTag::WhileStatement} {}
+	    : TypedAST {TypedASTTag::WhileStatement} {}
 };
 
 } // namespace TypedAST

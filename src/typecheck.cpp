@@ -167,7 +167,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 	}
 
 	// scan body
-	assert(ast->m_body->type() == ASTTag::Block);
+	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		typecheck(child.get(), env);
@@ -323,7 +323,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 
 void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                       \
+	case TypedASTTag::type:                                                    \
 		return typecheck(static_cast<TypedAST::type*>(ast), env);
 
 	// TODO: Compound literals
@@ -347,13 +347,10 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(DeclarationList);
-	case ASTTag::BinaryExpression:
-		assert(0);
-		return;
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "
-	          << ast_string[(int)ast->type()] << std::endl;
+	          << typed_ast_string[(int)ast->type()] << std::endl;
 	assert(0);
 
 #undef DISPATCH
