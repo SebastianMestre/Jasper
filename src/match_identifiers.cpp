@@ -174,6 +174,11 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	return match_identifiers(ast->m_record.get(), env);
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		auto d = static_cast<TypedAST::Declaration*>(decl.get());
@@ -214,16 +219,19 @@ namespace TypeChecker {
 		DISPATCH(ArrayLiteral);
 		DISPATCH(FunctionLiteral);
 
-		DISPATCH(Declaration);
 		DISPATCH(Identifier);
+		DISPATCH(IndexExpression);
+		DISPATCH(CallExpression);
+		DISPATCH(TernaryExpression);
+		DISPATCH(RecordAccessExpression);
+
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
-		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
-		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+
+		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
 
 	case ASTTag::BinaryExpression:

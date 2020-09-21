@@ -6,11 +6,9 @@
 #include <vector>
 
 #include "test_status_tag.hpp"
+#include "../typedefs.hpp"
 
 namespace Test {
-
-template <typename T>
-using Own = std::unique_ptr<T>;
 
 Tester::Tester(Own<TestSet> ts) {
 	m_test_sets.push_back(std::move(ts));

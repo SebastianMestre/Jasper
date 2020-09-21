@@ -6,11 +6,8 @@
 #include "typesystem_types.hpp"
 
 #include <cassert>
-#include <unordered_set>
-
-#if DEBUG
 #include <iostream>
-#endif
+#include <unordered_set>
 
 namespace TypeChecker {
 
@@ -354,6 +351,10 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		assert(0);
 		return;
 	}
+
+	std::cerr << "Error: AST type not handled in typecheck: "
+	          << ast_string[(int)ast->type()] << std::endl;
+	assert(0);
 
 #undef DISPATCH
 }

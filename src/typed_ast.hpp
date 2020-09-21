@@ -8,6 +8,7 @@
 #include "ast_tag.hpp"
 #include "token.hpp"
 #include "token_tag.hpp"
+#include "typedefs.hpp"
 #include "typesystem_types.hpp"
 
 namespace AST {
@@ -33,7 +34,7 @@ struct TypedAST {
 };
 
 TypedAST* convertAST(AST::AST*);
-std::unique_ptr<TypedAST> get_unique(std::unique_ptr<AST::AST>&);
+Own<TypedAST> get_unique(Own<AST::AST>&);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
@@ -88,7 +89,7 @@ struct NullLiteral : public TypedAST {
 };
 
 struct ObjectLiteral : public TypedAST {
-	std::vector<std::unique_ptr<TypedAST>> m_body;
+	std::vector<Own<TypedAST>> m_body;
 
 	// future feature
 	// the value type for objects must be followeb by a class identifier
@@ -97,14 +98,14 @@ struct ObjectLiteral : public TypedAST {
 };
 
 struct ArrayLiteral : public TypedAST {
-	std::vector<std::unique_ptr<TypedAST>> m_elements;
+	std::vector<Own<TypedAST>> m_elements;
 
 	ArrayLiteral()
 	    : TypedAST {ASTTag::ArrayLiteral} {}
 };
 
 struct DictionaryLiteral : public TypedAST {
-	std::vector<std::unique_ptr<TypedAST>> m_body;
+	std::vector<Own<TypedAST>> m_body;
 
 	DictionaryLiteral()
 	    : TypedAST {ASTTag::DictionaryLiteral} {}
@@ -121,7 +122,7 @@ struct FunctionArgument {
 
 struct FunctionLiteral : public TypedAST {
 	MonoId m_return_type;
-	std::unique_ptr<TypedAST> m_body;
+	Own<TypedAST> m_body;
 	std::vector<FunctionArgument> m_args;
 	std::unordered_set<std::string> m_captures;
 
@@ -131,7 +132,7 @@ struct FunctionLiteral : public TypedAST {
 
 // doesnt have a ast_vtype
 struct DeclarationList : public TypedAST {
-	std::vector<std::unique_ptr<TypedAST>> m_declarations;
+	std::vector<Own<TypedAST>> m_declarations;
 
 	DeclarationList()
 	    : TypedAST {ASTTag::DeclarationList} {}
@@ -139,7 +140,7 @@ struct DeclarationList : public TypedAST {
 
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
-	std::unique_ptr<TypedAST> m_value; // can be nullptr
+	Own<TypedAST> m_value; // can be nullptr
 	std::unordered_set<Declaration*> m_references;
 	bool m_is_polymorphic {false};
 	PolyId m_decl_type;
@@ -170,66 +171,74 @@ struct Identifier : public TypedAST {
 
 // the value depends on the return value of callee
 struct CallExpression : public TypedAST {
-	std::unique_ptr<TypedAST> m_callee;
-	std::vector<std::unique_ptr<TypedAST>> m_args;
+	Own<TypedAST> m_callee;
+	std::vector<Own<TypedAST>> m_args;
 
 	CallExpression()
 	    : TypedAST {ASTTag::CallExpression} {}
 };
 
 struct IndexExpression : public TypedAST {
-	std::unique_ptr<TypedAST> m_callee;
-	std::unique_ptr<TypedAST> m_index;
+	Own<TypedAST> m_callee;
+	Own<TypedAST> m_index;
 
 	IndexExpression()
 	    : TypedAST {ASTTag::IndexExpression} {}
 };
 
+struct RecordAccessExpression : public TypedAST {
+	Own<TypedAST> m_record;
+	Own<Identifier> m_member;
+
+	RecordAccessExpression()
+	    : TypedAST {ASTTag::RecordAccessExpression} {}
+};
+
 struct TernaryExpression : public TypedAST {
-	std::unique_ptr<TypedAST> m_condition;
-	std::unique_ptr<TypedAST> m_then_expr;
-	std::unique_ptr<TypedAST> m_else_expr;
+	Own<TypedAST> m_condition;
+	Own<TypedAST> m_then_expr;
+	Own<TypedAST> m_else_expr;
 
 	TernaryExpression()
 	    : TypedAST {ASTTag::TernaryExpression} {}
 };
 
 struct Block : public TypedAST {
-	std::vector<std::unique_ptr<TypedAST>> m_body;
+	std::vector<Own<TypedAST>> m_body;
 
 	Block()
 	    : TypedAST {ASTTag::Block} {}
 };
 
 struct ReturnStatement : public TypedAST {
-	std::unique_ptr<TypedAST> m_value;
+	Own<TypedAST> m_value;
 
 	ReturnStatement()
 	    : TypedAST {ASTTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public TypedAST {
-	std::unique_ptr<TypedAST> m_condition;
-	std::unique_ptr<TypedAST> m_body;
-	std::unique_ptr<TypedAST> m_else_body; // can be nullptr
+	Own<TypedAST> m_condition;
+	Own<TypedAST> m_body;
+	Own<TypedAST> m_else_body; // can be nullptr
 
 	IfElseStatement()
 	    : TypedAST {ASTTag::IfElseStatement} {}
 };
 
 struct ForStatement : public TypedAST {
-	std::unique_ptr<TypedAST> m_declaration;
-	std::unique_ptr<TypedAST> m_condition;
-	std::unique_ptr<TypedAST> m_action;
-	std::unique_ptr<TypedAST> m_body;
+	Own<TypedAST> m_declaration;
+	Own<TypedAST> m_condition;
+	Own<TypedAST> m_action;
+	Own<TypedAST> m_body;
 
 	ForStatement()
 	    : TypedAST {ASTTag::ForStatement} {}
 };
 
 struct WhileStatement : public TypedAST {
-	std::unique_ptr<TypedAST> m_condition;
-	std::unique_ptr<TypedAST> m_body;
+	Own<TypedAST> m_condition;
+	Own<TypedAST> m_body;
 
 	WhileStatement()
 	    : TypedAST {ASTTag::WhileStatement} {}

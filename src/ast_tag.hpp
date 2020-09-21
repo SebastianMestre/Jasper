@@ -18,6 +18,7 @@
 	X(BinaryExpression) \
 	X(CallExpression) \
 	X(IndexExpression) \
+	X(RecordAccessExpression) \
 	X(Block) \
 	X(ReturnStatement) \
 	X(IfElseStatement) \
@@ -27,7 +28,6 @@
 \
 	X(TypeTerm) \
 	X(TypeVar) \
-	X(TypeList) \
 	X(UnionExpression) \
 	X(TupleExpression) \
 	X(StructExpression)

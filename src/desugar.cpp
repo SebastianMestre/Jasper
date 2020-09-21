@@ -1,14 +1,12 @@
 #include "desugar.hpp"
 
 #include "ast.hpp"
+#include "typedefs.hpp"
 
 #include <cassert>
 #include <iostream>
 
 namespace AST {
-
-template <typename T>
-using Own = std::unique_ptr<T>;
 
 Own<AST> desugar(Own<ObjectLiteral> ast) {
 	// TODO: convert
@@ -91,13 +89,14 @@ Own<AST> desugarDot(Own<BinaryExpression> ast) {
 	// TODO: error handling
 	// TODO: move this check to the parser
 	assert(ast->m_rhs->type() == ASTTag::Identifier);
-	auto ident = static_cast<Identifier*>(ast->m_rhs.get());
+	auto identifier_ptr = static_cast<Identifier*>(ast->m_rhs.release());
+	auto identifier = Own<Identifier>(identifier_ptr);
 
-	auto tok = ast->m_op_token;
-	std::cerr << "Error: @" << tok->m_line0 + 1 << ":" << tok->m_col0
-	          << " | Dot (.) operator not implemented yet\n";
+	auto result = std::make_unique<RecordAccessExpression>();
+	result->m_member = std::move(identifier);
+	result->m_record = desugar(std::move(ast->m_lhs));
 
-	return std::make_unique<NullLiteral>();
+	return result;
 }
 
 // This function desugars binary operators into function calls
@@ -188,12 +187,16 @@ Own<AST> desugar(Own<WhileStatement> ast) {
 
 Own<AST> desugar(Own<AST> ast) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                       \
+	case ASTTag::type:                                                         \
 		return desugar(Own<type>(static_cast<type*>(ast.release())));
 
 #define RETURN(type)                                                           \
-	case ASTTag::type:                                                       \
+	case ASTTag::type:                                                         \
 		return ast;
+
+#define REJECT(type)                                                           \
+	case ASTTag::type:                                                         \
+		assert(0)
 
 	switch (ast->type()) {
 		RETURN(NumberLiteral);
@@ -207,19 +210,27 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(FunctionLiteral);
 		DISPATCH(ShortFunctionLiteral);
 
-		DISPATCH(DeclarationList);
-		DISPATCH(Declaration);
 		RETURN(Identifier);
 		DISPATCH(BinaryExpression);
+		DISPATCH(TernaryExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		REJECT(RecordAccessExpression);
+
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
+
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+
 		RETURN(TypeTerm);
+		RETURN(TypeVar);
+		RETURN(UnionExpression);
+		RETURN(StructExpression);
+		RETURN(TupleExpression);
 	}
 	std::cerr << "Error: AST type not handled in desugar: "
 	          << ast_string[(int)ast->type()] << std::endl;
