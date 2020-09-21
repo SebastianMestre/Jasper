@@ -37,7 +37,13 @@ MonoId TypeSystemCore::new_var() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId type_function, std::vector<int> args, char const* tag) {
-	int argument_count = type_function_data[type_function].argument_count;
+	TypeFunctionId tf_id = func_find(type_function);
+	TypeFunctionData& tf_data = type_function_data[tf_id];
+
+	if (tf_data.type == TypeFunctionTag::Var)
+		assert(0 && "instantiating type function that could not be deduced");
+
+	int argument_count = type_functions[tf_data.equals].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
 		assert(0 && "instanciating polymorphic type with wrong argument count");
@@ -46,7 +52,7 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({type_function, std::move(args), tag});
+	term_data.push_back({tf_id, std::move(args), tag});
 	mono_data.push_back({MonoTag::Term, term});
 
 	return mono;
@@ -64,13 +70,16 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({arguments, TypeFunctionTag::Builtin});
+
+	type_function_data.push_back({TypeFunctionTag::Builtin, type_functions.size()});
+	type_functions.push_back({arguments});
+
 	return type_function_var;
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
 	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({-1, TypeFunctionTag::Var, type_function_var});
+	type_function_data.push_back({TypeFunctionTag::Var, type_function_var});
 	return type_function_var;
 }
 

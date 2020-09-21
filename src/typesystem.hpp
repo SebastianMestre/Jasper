@@ -20,7 +20,6 @@ enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // If it's a var, equals points to another TypeFunctionData.
 // Else it points to a TypeFunction.
 struct TypeFunctionData {
-	int argument_count; // -1 means variadic.
 	TypeFunctionTag type;
 	int equals;
 };
