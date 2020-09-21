@@ -262,7 +262,7 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 	TypeFunctionData& func_data = type_function_data[func];
 
-	if (func_data.type == TypeFunctionTag::Builtin or
+	if (func_data.type != TypeFunctionTag::Var or
 	    func_data.equals == func)
 		return func;
 
