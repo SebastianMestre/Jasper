@@ -11,7 +11,7 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
-enum class TypeFunctionTag { Var, Known, Sum, Product, Record };
+enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
 // For the purposes of the type system, we only care about the amount
@@ -88,7 +88,8 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
-	TypeFunctionId new_type_function(int arguments);
+
+	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional

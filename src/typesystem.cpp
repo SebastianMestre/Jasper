@@ -62,9 +62,9 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return poly;
 }
 
-TypeFunctionId TypeSystemCore::new_type_function(int arguments) {
+TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({arguments, TypeFunctionTag::Known});
+	type_function_data.push_back({arguments, TypeFunctionTag::Builtin});
 	return type_function_var;
 }
 
@@ -253,7 +253,7 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 	TypeFunctionData& func_data = type_function_data[func];
 
-	if (func_data.type == TypeFunctionTag::Known or
+	if (func_data.type == TypeFunctionTag::Builtin or
 	    func_data.equals == func)
 		return func;
 
