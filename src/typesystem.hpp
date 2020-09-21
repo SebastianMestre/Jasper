@@ -30,9 +30,12 @@ struct TypeFunctionData {
 //
 // Dummy type functions are for unifying purposes only, but do not count
 // as 'deduced', because they were not created by the user
+
+using TypeFunctionStructure = std::unordered_map<std::string, MonoId>;
+
 struct TypeFunction {
 	int argument_count; // -1 means variadic
-	std::unordered_map<std::string, MonoId> structure; // can be nullptr
+	TypeFunctionStructure structure; // can be nullptr
 	bool is_dummy;
 };
 
@@ -93,6 +96,7 @@ struct TypeSystemCore {
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
+	TypeFunctionId new_dummy_type_function(TypeFunctionTag type, TypeFunctionStructure structure);
 	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional

@@ -78,6 +78,16 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	return type_function_var;
 }
 
+TypeFunctionId TypeSystemCore::new_dummy_type_function
+    (TypeFunctionTag type, TypeFunctionStructure structure) {
+	TypeFunctionId type_function_var = type_function_data.size();
+
+	type_function_data.push_back({type, type_functions.size()});
+	type_functions.push_back({-1, structure, true});
+
+	return type_function_var;
+}
+
 TypeFunctionId TypeSystemCore::new_type_function_var() {
 	TypeFunctionId type_function_var = type_function_data.size();
 	type_function_data.push_back({TypeFunctionTag::Var, type_function_var});
