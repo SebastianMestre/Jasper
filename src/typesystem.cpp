@@ -202,8 +202,6 @@ TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	// TODO: handle recursive unification
 
-	std::cerr << "func_unify" << " " << a << ' ' << b << '\n';
-
 	a = func_find(a);
 	b = func_find(b);
 
