@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <string>
 
 #include "typesystem_types.hpp"
 
@@ -10,15 +11,30 @@ namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
-enum class TypeFunctionTag { Var, Known, Sum, Product, Record };
+enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // A type function gives the 'real value' of a type.
 // This can refer to a sum type, a product type, a built-in type, etc.
 // For the purposes of the type system, we only care about the amount
 // of argument it takes.
+
+// If it's a var, equals points to another TypeFunctionData.
+// Else it points to a TypeFunction.
 struct TypeFunctionData {
-	int argument_count; // -1 means variadic.
 	TypeFunctionTag type;
-	TypeFunctionId equals; // only for vars
+	int equals;
+};
+
+// Concrete type function. If it's a built-in, we use argument_count
+// to tell how many arguments it takes. Else, for sum, product and record,
+// we store their structure as a hash from names to monotypes.
+//
+// Dummy type functions are for unifying purposes only, but do not count
+// as 'deduced', because they were not created by the user
+
+struct TypeFunction {
+	int argument_count; // -1 means variadic
+	std::unordered_map<std::string, MonoId> structure; // can be nullptr
+	bool is_dummy {false};
 };
 
 enum class MonoTag { Var, Term };
@@ -64,6 +80,8 @@ struct TypeSystemCore {
 	std::vector<TermData> term_data;
 
 	std::vector<TypeFunctionData> type_function_data;
+	std::vector<TypeFunction> type_functions;
+
 	std::vector<PolyData> poly_data;
 
 	std::vector<TypeVarData> type_vars;
@@ -74,7 +92,10 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
-	TypeFunctionId new_type_function(int arguments);
+
+	TypeFunctionId new_builtin_type_function(int arguments);
+	TypeFunctionId new_dummy_type_function(
+	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
 	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional

@@ -37,7 +37,10 @@ MonoId TypeSystemCore::new_var() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId type_function, std::vector<int> args, char const* tag) {
-	int argument_count = type_function_data[type_function].argument_count;
+	TypeFunctionId tf_id = func_find(type_function);
+	TypeFunctionData& tf_data = type_function_data[tf_id];
+
+	int argument_count = type_functions[tf_data.equals].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
 		assert(0 && "instanciating polymorphic type with wrong argument count");
@@ -46,7 +49,7 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({type_function, std::move(args), tag});
+	term_data.push_back({tf_id, std::move(args), tag});
 	mono_data.push_back({MonoTag::Term, term});
 
 	return mono;
@@ -62,15 +65,28 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return poly;
 }
 
-TypeFunctionId TypeSystemCore::new_type_function(int arguments) {
+TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({arguments, TypeFunctionTag::Known});
+
+	type_function_data.push_back({TypeFunctionTag::Builtin, type_functions.size()});
+	type_functions.push_back({arguments});
+
+	return type_function_var;
+}
+
+TypeFunctionId TypeSystemCore::new_dummy_type_function
+    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
+	TypeFunctionId type_function_var = type_function_data.size();
+
+	type_function_data.push_back({type, type_functions.size()});
+	type_functions.push_back({-1, structure, true});
+
 	return type_function_var;
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
 	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({-1, TypeFunctionTag::Var, type_function_var});
+	type_function_data.push_back({TypeFunctionTag::Var, type_function_var});
 	return type_function_var;
 }
 
@@ -253,7 +269,7 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 	TypeFunctionData& func_data = type_function_data[func];
 
-	if (func_data.type == TypeFunctionTag::Known or
+	if (func_data.type != TypeFunctionTag::Var or
 	    func_data.equals == func)
 		return func;
 
