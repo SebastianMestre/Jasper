@@ -226,14 +226,18 @@ void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironmen
 }
 
 void typecheck(TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	typecheck(ast->m_record.get(), env);
 
 	// should this be a hidden type var?
 	MonoId member_type = env.new_type_var();
+	ast->m_value_type = member_type;
+
 	TypeFunctionId dummy_tf = env.m_typechecker.m_core.new_dummy_type_function(
 	    TypeFunctionTag::Record, {{ast->m_member->text(), member_type}});
 	MonoId term_type = env.m_typechecker.m_core.new_term(dummy_tf, {});
 
-	ast->m_value_type = term_type;
+	env.m_typechecker.m_core.unify(ast->m_record->m_value_type, term_type);
+
 }
 
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
