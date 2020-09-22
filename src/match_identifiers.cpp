@@ -33,8 +33,13 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
 	Frontend::Binding* binding = env.access_binding(ast->text());
-	if (!binding)
-		return {"accessed an undeclared identifier"};
+
+	if (!binding) {
+		// TODO: clean up how we build error reports
+		return {
+		    "ERROR @ line " + std::to_string(ast->m_token->m_line0 + 1) +
+		    " : accessed undeclared identifier '" + ast->text() + "'"};
+	}
 
 	// TODO: refactor
 	TypedAST::FunctionLiteral* surrounding_function = nullptr;
