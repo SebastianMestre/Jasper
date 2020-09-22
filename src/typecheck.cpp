@@ -53,8 +53,7 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
-	// we use a hidden typevar to get it to generalize if needed
-	ast->m_value_type = env.new_hidden_type_var();
+	ast->m_value_type = env.new_type_var();
 	env.declare(ast->identifier_text(), ast);
 
 	// this is where we implement rec-polymorphism.
