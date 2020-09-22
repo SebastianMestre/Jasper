@@ -110,7 +110,7 @@ namespace TypeChecker {
 	}
 
 	// scan body
-	assert(ast->m_body->type() == ASTTag::Block);
+	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
 		CHECK_AND_RETURN(match_identifiers(child.get(), env));
@@ -202,11 +202,11 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                       \
+	case TypedASTTag::type:                                                       \
 		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
-	case ASTTag::type:                                                       \
+	case TypedASTTag::type:                                                       \
 		return {};
 
 	// TODO: Compound literals
@@ -233,16 +233,12 @@ namespace TypeChecker {
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
-
-	case ASTTag::BinaryExpression:
-	case ASTTag::ShortFunctionLiteral:
-		assert(0);
 	}
 
 #undef DO_NOTHING
 #undef DISPATCH
 	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
-	          << ": " << ast_string[(int)ast->type()] << '\n';
+	          << ": " << typed_ast_string[(int)ast->type()] << '\n';
 	assert(0);
 }
 
