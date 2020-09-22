@@ -52,13 +52,13 @@ enum class MonoTag { Var, Term };
 struct MonoData {
 	MonoTag type;
 	int data_id;
+	char const* debug_data {nullptr};
 };
 
 // A term is an application of a type function.
 struct TermData {
 	TypeFunctionId type_function;
 	std::vector<MonoId> arguments;
-	char const* debug_data {nullptr};
 };
 
 // A polytype is a type where some amount of type variables can take

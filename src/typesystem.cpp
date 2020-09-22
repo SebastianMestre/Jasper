@@ -10,7 +10,9 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 	MonoData& data = mono_data[mono];
 	for (int i = d; i--;)
 		std::cerr << ' ';
-	std::cerr << "[" << mono << "] ";
+	std::cerr << "[" << mono;
+	if(data.debug_data) std::cerr << " | " << data.debug_data;
+	std::cerr << "] ";
 	if (data.type == MonoTag::Var) {
 		if (data.data_id == mono) {
 			std::cerr << "Free Var\n";
@@ -21,9 +23,7 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 	} else {
 		TermId term = data.data_id;
 		TermData& data = term_data[term];
-		std::cerr << "Term " << term << " (tf " << data.type_function << ")";
-		if(data.debug_data) std::cerr << " [ " << data.debug_data << " ]";
-		std::cerr << "!\n";
+		std::cerr << "Term " << term << " (tf " << data.type_function << ")\n";
 		for (int i = 0; i < data.arguments.size(); ++i)
 			print_type(data.arguments[i], d + 1);
 	}
@@ -50,8 +50,8 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({tf, std::move(args), tag});
-	mono_data.push_back({MonoTag::Term, term});
+	term_data.push_back({tf, std::move(args)});
+	mono_data.push_back({MonoTag::Term, term, tag});
 
 	return mono;
 }
@@ -201,6 +201,8 @@ TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
 
 void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	// TODO: handle recursive unification
+
+	std::cerr << "func_unify" << " " << a << ' ' << b << '\n';
 
 	a = func_find(a);
 	b = func_find(b);
