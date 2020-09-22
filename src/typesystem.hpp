@@ -17,9 +17,9 @@ enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // For the purposes of the type system, we only care about the amount
 // of argument it takes.
 
-// If it's a var, equals points to another TypeFunctionData.
-// Else it points to a TypeFunction.
-struct TypeFunctionData {
+// If it's a var, equals points to another TypeFunctionHeader.
+// Else it points to a TypeFunctionData.
+struct TypeFunctionHeader {
 	TypeFunctionTag type;
 	int equals;
 };
@@ -31,7 +31,7 @@ struct TypeFunctionData {
 // Dummy type functions are for unifying purposes only, but do not count
 // as 'deduced', because they were not created by the user
 
-struct TypeFunction {
+struct TypeFunctionData {
 	int argument_count; // -1 means variadic
 	std::unordered_map<std::string, MonoId> structure; // can be nullptr
 	bool is_dummy {false};
@@ -52,13 +52,13 @@ enum class MonoTag { Var, Term };
 struct MonoData {
 	MonoTag type;
 	int data_id;
+	char const* debug_data {nullptr};
 };
 
 // A term is an application of a type function.
 struct TermData {
 	TypeFunctionId type_function;
 	std::vector<MonoId> arguments;
-	char const* debug_data {nullptr};
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -79,8 +79,8 @@ struct TypeSystemCore {
 	std::vector<MonoData> mono_data;
 	std::vector<TermData> term_data;
 
+	std::vector<TypeFunctionHeader> type_function_header;
 	std::vector<TypeFunctionData> type_function_data;
-	std::vector<TypeFunction> type_functions;
 
 	std::vector<PolyData> poly_data;
 

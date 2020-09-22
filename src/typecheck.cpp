@@ -53,8 +53,7 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
-	// we use a hidden typevar to get it to generalize if needed
-	ast->m_value_type = env.new_hidden_type_var();
+	ast->m_value_type = env.new_type_var();
 	env.declare(ast->identifier_text(), ast);
 
 	// this is where we implement rec-polymorphism.
@@ -72,10 +71,13 @@ void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env
 
 #if DEBUG
 	{
-		std::cerr << "Type of " << ast->identifier_text() << " is:\n";
 		auto poly = ast->m_decl_type;
-		auto mono = env.m_typechecker.m_core.poly_data[poly].base;
-		env.m_typechecker.m_core.print_type(mono);
+		auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
+		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
+		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+		std::cerr << "@@ It is equal to:\n";
+		env.m_typechecker.m_core.print_type(poly_data.base);
+
 	}
 #endif
 }
@@ -225,6 +227,20 @@ void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironmen
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
+void typecheck(TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	typecheck(ast->m_record.get(), env);
+
+	// should this be a hidden type var?
+	MonoId member_type = env.new_type_var();
+	ast->m_value_type = member_type;
+
+	TypeFunctionId dummy_tf = env.m_typechecker.m_core.new_dummy_type_function(
+	    TypeFunctionTag::Record, {{ast->m_member->text(), member_type}});
+	MonoId term_type = env.m_typechecker.m_core.new_term(dummy_tf, {}, "record instance");
+
+	env.m_typechecker.m_core.unify(ast->m_record->m_value_type, term_type);
+}
+
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 
 	// two way mapping
@@ -334,19 +350,22 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
 		DISPATCH(ArrayLiteral);
+		DISPATCH(FunctionLiteral);
+
+		DISPATCH(Identifier);
+		DISPATCH(CallExpression);
+		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
+		DISPATCH(RecordAccessExpression);
 
 		DISPATCH(Declaration);
-		DISPATCH(Identifier);
+		DISPATCH(DeclarationList);
+
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
-		DISPATCH(FunctionLiteral);
-		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
-		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
-		DISPATCH(DeclarationList);
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "
