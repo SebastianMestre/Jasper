@@ -208,6 +208,8 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	if (a == b)
 		return;
 
+	assert(type_function_header[a].type == type_function_header[b].type);
+
 	// ensure a is a var if at least one of them is a var
 	if (type_function_header[b].type == TypeFunctionTag::Var)
 		std::swap(a, b);
@@ -271,6 +273,7 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 		}
 	}
 }
+
 
 TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
 	TypeVarData& var_data = type_vars[type_var];
