@@ -36,11 +36,11 @@ MonoId TypeSystemCore::new_var() {
 }
 
 MonoId TypeSystemCore::new_term(
-    TypeFunctionId type_function, std::vector<int> args, char const* tag) {
-	TypeFunctionId tf_id = func_find(type_function);
-	TypeFunctionHeader& tf_data = type_function_header[tf_id];
+    TypeFunctionId tf, std::vector<int> args, char const* tag) {
+	tf = func_find(tf);
+	TypeFunctionHeader& tf_header = type_function_header[tf];
 
-	int argument_count = type_function_data[tf_data.equals].argument_count;
+	int argument_count = type_function_data[tf_header.equals].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
 		assert(0 && "instanciating polymorphic type with wrong argument count");
@@ -49,7 +49,7 @@ MonoId TypeSystemCore::new_term(
 	int term = term_data.size();
 	int mono = mono_data.size();
 
-	term_data.push_back({tf_id, std::move(args), tag});
+	term_data.push_back({tf, std::move(args), tag});
 	mono_data.push_back({MonoTag::Term, term});
 
 	return mono;
@@ -283,13 +283,13 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	if (a == b)
 		return;
 
-	TypeFunctionHeader& rep_a = type_function_header[a];
-	TypeFunctionHeader& rep_b = type_function_header[b];
+	TypeFunctionHeader& a_header = type_function_header[a];
+	TypeFunctionHeader& b_header = type_function_header[b];
 
-	if (rep_a.type == TypeFunctionTag::Var)
-		rep_a.equals = b;
-	else if (rep_b.type == TypeFunctionTag::Var)
-		rep_b.equals = a;
+	if (a_header.type == TypeFunctionTag::Var)
+		a_header.equals = b;
+	else if (b_header.type == TypeFunctionTag::Var)
+		b_header.equals = a;
 	else
 		assert(0 and "unifying two different known type functions");
 }
