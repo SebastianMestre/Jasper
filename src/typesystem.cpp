@@ -29,6 +29,7 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 	}
 }
 
+
 MonoId TypeSystemCore::new_var() {
 	int mono = mono_data.size();
 	mono_data.push_back({MonoTag::Var, mono});
@@ -98,40 +99,6 @@ TypeVarId TypeSystemCore::new_type_var(KindTag kind, int type_id) {
 	return type_var;
 }
 
-void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
-	MonoId repr = find(mono);
-	MonoData const& data = mono_data[repr];
-	if (data.type == MonoTag::Var) {
-		free_vars.insert(repr);
-	} else {
-		TermId term = data.data_id;
-		for (MonoId arg : term_data[term].arguments)
-			gather_free_vars(arg, free_vars);
-	}
-}
-
-// qualifies all free variables in the given monotype
-// NOTE(Mestre): I don't like how we take the CTenv as an
-// argument. This calls for some refactoring...
-PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment& env) {
-	std::unordered_set<MonoId> free_vars;
-	gather_free_vars(mono, free_vars);
-
-	std::vector<MonoId> new_vars;
-	std::unordered_map<MonoId, MonoId> mapping;
-	int i = 0;
-	for (MonoId var : free_vars) {
-		if (!env.has_type_var(var)) {
-			auto fresh_var = new_var();
-			new_vars.push_back(fresh_var);
-			mapping[var] = fresh_var;
-		}
-	}
-
-	MonoId base = inst_impl(mono, mapping);
-
-	return new_poly(base, std::move(new_vars));
-}
 
 MonoId TypeSystemCore::find(MonoId mono) {
 	MonoData& data = mono_data[mono];
@@ -221,6 +188,77 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 	}
 }
 
+
+TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
+	TypeFunctionHeader& func_data = type_function_header[func];
+
+	if (func_data.type != TypeFunctionTag::Var or
+	    func_data.equals == func)
+		return func;
+
+	return func_data.equals = find(func_data.equals);
+}
+
+void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
+	// TODO: handle recursive unification
+
+	a = func_find(a);
+	b = func_find(b);
+
+	if (a == b)
+		return;
+
+	TypeFunctionHeader& a_header = type_function_header[a];
+	TypeFunctionHeader& b_header = type_function_header[b];
+
+	if (a_header.type == TypeFunctionTag::Var)
+		a_header.equals = b;
+	else if (b_header.type == TypeFunctionTag::Var)
+		b_header.equals = a;
+	else
+		assert(0 and "unifying two different known type functions");
+}
+
+
+TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
+	TypeVarData& var_data = type_vars[type_var];
+
+	switch(var_data.kind) {
+	case KindTag::Mono:
+		return {KindTag::Mono, find(var_data.type_var_id)};
+	case KindTag::Poly:
+		return {KindTag::Poly, var_data.type_var_id};
+	case KindTag::TypeFunction:
+		return {KindTag::TypeFunction, func_find(var_data.type_var_id)};
+	}
+
+	assert(0 and "unknown kind");
+}
+
+void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
+	TypeVarData rep_a = var_find(a);
+	TypeVarData rep_b = var_find(b);
+
+	assert(rep_a.kind == rep_b.kind and "cannot unify different kinds");
+
+	if (rep_a.type_var_id == rep_b.type_var_id)
+		return;
+
+	switch(rep_a.kind) {
+	case KindTag::Mono:
+		unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	case KindTag::Poly:
+		break;
+	case KindTag::TypeFunction:
+		func_unify(rep_a.type_var_id, rep_b.type_var_id);
+		break;
+	}
+
+	assert(0 and "unknown kind");
+}
+
+
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
@@ -266,68 +304,38 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	return inst_with(poly, vals);
 }
 
-TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
-	TypeFunctionHeader& func_data = type_function_header[func];
 
-	if (func_data.type != TypeFunctionTag::Var or
-	    func_data.equals == func)
-		return func;
-
-	return func_data.equals = find(func_data.equals);
+void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
+	MonoId repr = find(mono);
+	MonoData const& data = mono_data[repr];
+	if (data.type == MonoTag::Var) {
+		free_vars.insert(repr);
+	} else {
+		TermId term = data.data_id;
+		for (MonoId arg : term_data[term].arguments)
+			gather_free_vars(arg, free_vars);
+	}
 }
 
-void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
-	a = func_find(a);
-	b = func_find(b);
+// qualifies all free variables in the given monotype
+// NOTE(Mestre): I don't like how we take the CTenv as an
+// argument. This calls for some refactoring...
+PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment& env) {
+	std::unordered_set<MonoId> free_vars;
+	gather_free_vars(mono, free_vars);
 
-	if (a == b)
-		return;
-
-	TypeFunctionHeader& a_header = type_function_header[a];
-	TypeFunctionHeader& b_header = type_function_header[b];
-
-	if (a_header.type == TypeFunctionTag::Var)
-		a_header.equals = b;
-	else if (b_header.type == TypeFunctionTag::Var)
-		b_header.equals = a;
-	else
-		assert(0 and "unifying two different known type functions");
-}
-
-TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
-	TypeVarData& var_data = type_vars[type_var];
-
-	switch(var_data.kind) {
-	case KindTag::Mono:
-		return {KindTag::Mono, find(var_data.type_var_id)};
-	case KindTag::Poly:
-		return {KindTag::Poly, var_data.type_var_id};
-	case KindTag::TypeFunction:
-		return {KindTag::TypeFunction, func_find(var_data.type_var_id)};
+	std::vector<MonoId> new_vars;
+	std::unordered_map<MonoId, MonoId> mapping;
+	int i = 0;
+	for (MonoId var : free_vars) {
+		if (!env.has_type_var(var)) {
+			auto fresh_var = new_var();
+			new_vars.push_back(fresh_var);
+			mapping[var] = fresh_var;
+		}
 	}
 
-	assert(0 and "unknown kind");
-}
+	MonoId base = inst_impl(mono, mapping);
 
-void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
-	TypeVarData rep_a = var_find(a);
-	TypeVarData rep_b = var_find(b);
-
-	assert(rep_a.kind == rep_b.kind and "cannot unify different kinds");
-
-	if (rep_a.type_var_id == rep_b.type_var_id)
-		return;
-
-	switch(rep_a.kind) {
-	case KindTag::Mono:
-		unify(rep_a.type_var_id, rep_b.type_var_id);
-		break;
-	case KindTag::Poly:
-		break;
-	case KindTag::TypeFunction:
-		func_unify(rep_a.type_var_id, rep_b.type_var_id);
-		break;
-	}
-
-	assert(0 and "unknown kind");
+	return new_poly(base, std::move(new_vars));
 }
