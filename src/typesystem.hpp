@@ -18,7 +18,7 @@ enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // of argument it takes.
 
 // If it's a var, equals points to another TypeFunctionHeader.
-// Else it points to a TypeFunction.
+// Else it points to a TypeFunctionData.
 struct TypeFunctionHeader {
 	TypeFunctionTag type;
 	int equals;
@@ -31,7 +31,7 @@ struct TypeFunctionHeader {
 // Dummy type functions are for unifying purposes only, but do not count
 // as 'deduced', because they were not created by the user
 
-struct TypeFunction {
+struct TypeFunctionData {
 	int argument_count; // -1 means variadic
 	std::unordered_map<std::string, MonoId> structure; // can be nullptr
 	bool is_dummy {false};
@@ -80,7 +80,7 @@ struct TypeSystemCore {
 	std::vector<TermData> term_data;
 
 	std::vector<TypeFunctionHeader> type_function_header;
-	std::vector<TypeFunction> type_functions;
+	std::vector<TypeFunctionData> type_function_data;
 
 	std::vector<PolyData> poly_data;
 
