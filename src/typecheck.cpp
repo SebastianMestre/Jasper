@@ -225,6 +225,17 @@ void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironmen
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
+void typecheck(TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+
+	// should this be a hidden type var?
+	MonoId member_type = env.new_type_var();
+	TypeFunctionId dummy_tf = env.m_typechecker.m_core.new_dummy_type_function(
+	    TypeFunctionTag::Record, {{ast->m_member->text(), member_type}});
+	MonoId term_type = env.m_typechecker.m_core.new_term(dummy_tf, {});
+
+	ast->m_value_type = term_type;
+}
+
 void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 
 	// two way mapping
@@ -334,19 +345,22 @@ void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
 		DISPATCH(ArrayLiteral);
+		DISPATCH(FunctionLiteral);
+
+		DISPATCH(Identifier);
+		DISPATCH(CallExpression);
+		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
+		DISPATCH(RecordAccessExpression);
 
 		DISPATCH(Declaration);
-		DISPATCH(Identifier);
+		DISPATCH(DeclarationList);
+
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
-		DISPATCH(FunctionLiteral);
-		DISPATCH(CallExpression);
 		DISPATCH(ReturnStatement);
-		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
-		DISPATCH(DeclarationList);
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "
