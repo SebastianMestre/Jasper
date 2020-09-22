@@ -38,7 +38,7 @@ MonoId TypeSystemCore::new_var() {
 MonoId TypeSystemCore::new_term(
     TypeFunctionId type_function, std::vector<int> args, char const* tag) {
 	TypeFunctionId tf_id = func_find(type_function);
-	TypeFunctionData& tf_data = type_function_data[tf_id];
+	TypeFunctionHeader& tf_data = type_function_header[tf_id];
 
 	int argument_count = type_functions[tf_data.equals].argument_count;
 
@@ -66,9 +66,9 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 }
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId type_function_var = type_function_data.size();
+	TypeFunctionId type_function_var = type_function_header.size();
 
-	type_function_data.push_back({TypeFunctionTag::Builtin, type_functions.size()});
+	type_function_header.push_back({TypeFunctionTag::Builtin, type_functions.size()});
 	type_functions.push_back({arguments});
 
 	return type_function_var;
@@ -76,17 +76,17 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 
 TypeFunctionId TypeSystemCore::new_dummy_type_function
     (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
-	TypeFunctionId type_function_var = type_function_data.size();
+	TypeFunctionId type_function_var = type_function_header.size();
 
-	type_function_data.push_back({type, type_functions.size()});
+	type_function_header.push_back({type, type_functions.size()});
 	type_functions.push_back({-1, structure, true});
 
 	return type_function_var;
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
-	TypeFunctionId type_function_var = type_function_data.size();
-	type_function_data.push_back({TypeFunctionTag::Var, type_function_var});
+	TypeFunctionId type_function_var = type_function_header.size();
+	type_function_header.push_back({TypeFunctionTag::Var, type_function_var});
 	return type_function_var;
 }
 
@@ -267,7 +267,7 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 }
 
 TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
-	TypeFunctionData& func_data = type_function_data[func];
+	TypeFunctionHeader& func_data = type_function_header[func];
 
 	if (func_data.type != TypeFunctionTag::Var or
 	    func_data.equals == func)
@@ -283,8 +283,8 @@ void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
 	if (a == b)
 		return;
 
-	TypeFunctionData& rep_a = type_function_data[a];
-	TypeFunctionData& rep_b = type_function_data[b];
+	TypeFunctionHeader& rep_a = type_function_header[a];
+	TypeFunctionHeader& rep_b = type_function_header[b];
 
 	if (rep_a.type == TypeFunctionTag::Var)
 		rep_a.equals = b;

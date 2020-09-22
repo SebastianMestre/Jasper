@@ -17,9 +17,9 @@ enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
 // For the purposes of the type system, we only care about the amount
 // of argument it takes.
 
-// If it's a var, equals points to another TypeFunctionData.
+// If it's a var, equals points to another TypeFunctionHeader.
 // Else it points to a TypeFunction.
-struct TypeFunctionData {
+struct TypeFunctionHeader {
 	TypeFunctionTag type;
 	int equals;
 };
@@ -79,7 +79,7 @@ struct TypeSystemCore {
 	std::vector<MonoData> mono_data;
 	std::vector<TermData> term_data;
 
-	std::vector<TypeFunctionData> type_function_data;
+	std::vector<TypeFunctionHeader> type_function_header;
 	std::vector<TypeFunction> type_functions;
 
 	std::vector<PolyData> poly_data;
