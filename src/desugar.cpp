@@ -85,18 +85,9 @@ Own<AST> desugarPizza(Own<BinaryExpression> ast) {
 	return rhs;
 }
 
-Own<AST> desugarDot(Own<BinaryExpression> ast) {
-	// TODO: error handling
-	// TODO: move this check to the parser
-	assert(ast->m_rhs->type() == ASTTag::Identifier);
-	auto identifier_ptr = static_cast<Identifier*>(ast->m_rhs.release());
-	auto identifier = Own<Identifier>(identifier_ptr);
-
-	auto result = std::make_unique<RecordAccessExpression>();
-	result->m_member = std::move(identifier);
-	result->m_record = desugar(std::move(ast->m_lhs));
-
-	return result;
+Own<AST> desugar(Own<RecordAccessExpression> ast) {
+	ast->m_record = desugar(std::move(ast->m_record));
+	return ast;
 }
 
 // This function desugars binary operators into function calls
@@ -106,7 +97,7 @@ Own<AST> desugar(Own<BinaryExpression> ast) {
 		return desugarPizza(std::move(ast));
 
 	if (ast->m_op_token->m_type == TokenTag::DOT)
-		return desugarDot(std::move(ast));
+		assert(0);
 
 	auto identifier = std::make_unique<Identifier>();
 	identifier->m_token = ast->m_op_token;
@@ -215,7 +206,7 @@ Own<AST> desugar(Own<AST> ast) {
 		DISPATCH(TernaryExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		REJECT(RecordAccessExpression);
+		DISPATCH(RecordAccessExpression);
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);

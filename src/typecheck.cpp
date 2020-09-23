@@ -235,7 +235,7 @@ void typecheck(TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvir
 	ast->m_value_type = member_type;
 
 	TypeFunctionId dummy_tf = env.m_typechecker.m_core.new_dummy_type_function(
-	    TypeFunctionTag::Record, {{ast->m_member->text(), member_type}});
+	    TypeFunctionTag::Record, {{ast->m_member->m_text, member_type}});
 	MonoId term_type = env.m_typechecker.m_core.new_term(dummy_tf, {}, "record instance");
 
 	env.m_typechecker.m_core.unify(ast->m_record->m_value_type, term_type);

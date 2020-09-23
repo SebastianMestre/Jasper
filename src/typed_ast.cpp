@@ -147,8 +147,7 @@ TypedAST* convertAST(AST::TernaryExpression* ast) {
 TypedAST* convertAST(AST::RecordAccessExpression* ast) {
 	auto typed_ast = new RecordAccessExpression;
 
-	// TODO: this line is extremely disgusting
-	typed_ast->m_member = Own<Identifier>(static_cast<Identifier*>(convertAST(ast->m_member.get())));
+	typed_ast->m_member = ast->m_member;
 	typed_ast->m_record = Own<TypedAST>(convertAST(ast->m_record.get()));
 
 	return typed_ast;
