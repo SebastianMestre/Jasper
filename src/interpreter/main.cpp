@@ -36,16 +36,14 @@ int main() {
 			    TokenArray ta;
 			    auto top_level_call_ast = parse_expression("__invoke()", ta);
 			    auto top_level_call =
-			        TypedAST::convertAST(top_level_call_ast.m_result.get());
+			        TypedAST::convert_ast(top_level_call_ast.m_result.get());
 
-			    auto result = eval(top_level_call, env);
+			    auto result = eval(top_level_call.get(), env);
 
 			    if (result)
 				    Interpreter::print(result.get());
 			    else
 				    std::cout << "(nullptr)\n";
-
-			    delete top_level_call;
 		    }
 
 		    return ExitStatusTag::Ok;

@@ -33,16 +33,15 @@ TypeChecker::TypeChecker() {
 	}
 
 	{
-		auto var_mono_id = new_var();
-		auto var_id = m_core.mono_data[var_mono_id].data_id;
+		auto var_id = new_hidden_var();
 
 		auto array_mono_id = m_core.new_term(
-		    BuiltinType::Array, {var_mono_id}, "array");
+		    BuiltinType::Array, {var_id}, "array");
 
 		{
 			auto term_mono_id = m_core.new_term(
 			    BuiltinType::Function,
-			    {array_mono_id, var_mono_id, mono_unit()},
+			    {array_mono_id, var_id, mono_unit()},
 			    "[builtin] (array(<a>), a) -> unit");
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
@@ -85,7 +84,7 @@ TypeChecker::TypeChecker() {
 		{
 			auto term_mono_id = m_core.new_term(
 			    BuiltinType::Function,
-			    {array_mono_id, mono_int(), var_mono_id},
+			    {array_mono_id, mono_int(), var_id},
 			    "[builtin] (array(<a>), int) -> a");
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
@@ -94,13 +93,12 @@ TypeChecker::TypeChecker() {
 	}
 
 	{
-		auto var_mono_id = new_var();
-		auto var_id = m_core.mono_data[var_mono_id].data_id;
+		auto var_id = new_hidden_var();
 
 		// TODO: i use the same mono thrice... does this make sense?
 		auto term_mono_id = m_core.new_term(
 		    BuiltinType::Function,
-		    {var_mono_id, var_mono_id, var_mono_id},
+		    {var_id, var_id, var_id},
 		    "[builtin] (a, a) -> a");
 
 		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
@@ -117,12 +115,11 @@ TypeChecker::TypeChecker() {
 	}
 
 	{
-		auto var_mono_id = new_var();
-		auto var_id = m_core.mono_data[var_mono_id].data_id;
+		auto var_id = new_hidden_var();
 
 		auto term_mono_id = m_core.new_term(
 		    BuiltinType::Function,
-		    {var_mono_id, var_mono_id, mono_boolean()},
+		    {var_id, var_id, mono_boolean()},
 		    "[builtin] (a, a) -> Bool");
 
 		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
