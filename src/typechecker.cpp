@@ -129,6 +129,16 @@ TypeChecker::TypeChecker() {
 	}
 }
 
+MonoId TypeChecker::new_hidden_var() {
+	return m_core.new_var();
+}
+
+MonoId TypeChecker::new_var() {
+	MonoId result = m_core.new_var();
+	m_env.current_scope().m_type_vars.insert(result);
+	return result;
+}
+
 // qualifies all free variables in the given monotype
 PolyId TypeChecker::generalize(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
@@ -147,10 +157,6 @@ PolyId TypeChecker::generalize(MonoId mono) {
 	MonoId base = m_core.inst_impl(mono, mapping);
 
 	return m_core.new_poly(base, std::move(new_vars));
-}
-
-MonoId TypeChecker::rule_var(PolyId poly) {
-	return m_core.inst_fresh(poly);
 }
 
 // Hindley-Milner [App], modified for multiple argument functions.
