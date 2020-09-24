@@ -372,6 +372,20 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			continue;
 		}
 
+		if (consume(TokenTag::DOT)) {
+			auto member = require(TokenTag::IDENTIFIER);
+
+			if (handle_error(result, member))
+				return result;
+
+			auto e = std::make_unique<AST::RecordAccessExpression>();
+			e->m_record = std::move(lhs.m_result);
+			e->m_member = std::move(member.m_result);
+			lhs.m_result = std::move(e);
+
+			continue;
+		}
+
 		m_lexer->advance();
 		auto rhs = parse_expression(rp);
 

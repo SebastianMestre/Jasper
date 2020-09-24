@@ -187,7 +187,7 @@ struct IndexExpression : public TypedAST {
 
 struct RecordAccessExpression : public TypedAST {
 	Own<TypedAST> m_record;
-	Own<Identifier> m_member;
+	Token const* m_member;
 
 	RecordAccessExpression()
 	    : TypedAST {TypedASTTag::RecordAccessExpression} {}

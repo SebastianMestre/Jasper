@@ -131,9 +131,7 @@ Own<TypedAST> convert_ast(AST::TernaryExpression* ast) {
 Own<TypedAST> convert_ast(AST::RecordAccessExpression* ast) {
 	auto typed_ast = std::make_unique<RecordAccessExpression>();
 
-	// TODO: this line is extremely disgusting
-	typed_ast->m_member = Own<Identifier>(
-	    static_cast<Identifier*>(convert_ast(ast->m_member.get()).release()));
+	typed_ast->m_member = ast->m_member;
 	typed_ast->m_record = convert_ast(ast->m_record.get());
 
 	return typed_ast;

@@ -164,8 +164,7 @@ void print(RecordAccessExpression* ast, int d) {
 	print(ast->m_record.get(), d + 1);
 
 	print_indentation(d);
-	std::cout << "Member:\n";
-	print(ast->m_member.get(), d + 1);
+	std::cout << "Member: " << ast->m_member->m_text << "\n";
 
 	print_indentation(d - 1);
 	std::cout << "]\n";
