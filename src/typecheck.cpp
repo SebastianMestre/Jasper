@@ -68,7 +68,7 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	}
 
 	ast->m_is_polymorphic = true;
-	ast->m_decl_type = tc.m_core.generalize(ast->m_value_type, tc.m_env);
+	ast->m_decl_type = tc.generalize(ast->m_value_type);
 
 #if DEBUG
 	{
@@ -321,7 +321,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 			auto decl = index_to_decl[u];
 			decl->m_is_polymorphic = true;
 			decl->m_decl_type =
-			    tc.m_core.generalize(decl->m_value_type, tc.m_env);
+			    tc.generalize(decl->m_value_type);
 
 #if DEBUG
 			{

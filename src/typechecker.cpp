@@ -132,6 +132,43 @@ TypeChecker::TypeChecker() {
 	}
 }
 
+// qualifies all free variables in the given monotype
+PolyId TypeChecker::generalize(MonoId mono) {
+	std::unordered_set<MonoId> free_vars;
+	m_core.gather_free_vars(mono, free_vars);
+
+	std::vector<MonoId> new_vars;
+	std::unordered_map<MonoId, MonoId> mapping;
+	for (MonoId var : free_vars) {
+		if (!m_env.has_type_var(var)) {
+			auto fresh_var = new_hidden_var();
+			new_vars.push_back(fresh_var);
+			mapping[var] = fresh_var;
+		}
+	}
+
+	MonoId base = m_core.inst_impl(mono, mapping);
+
+	return m_core.new_poly(base, std::move(new_vars));
+}
+
+MonoId TypeChecker::rule_var(PolyId poly) {
+	return m_core.inst_fresh(poly);
+}
+
+// Hindley-Milner [App], modified for multiple argument functions.
+MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
+	MonoId return_type = m_core.new_var();
+	args_types.push_back(return_type);
+
+	MonoId deduced_func_type =
+	    m_core.new_term(BuiltinType::Function, std::move(args_types));
+
+	m_core.unify(func_type, deduced_func_type);
+
+	return return_type;
+}
+
 MonoId TypeChecker::mono_int() {
 	return 0;
 }
@@ -150,23 +187,6 @@ MonoId TypeChecker::mono_boolean() {
 
 MonoId TypeChecker::mono_unit() {
 	return 4;
-}
-
-MonoId TypeChecker::rule_var(PolyId poly) {
-	return m_core.inst_fresh(poly);
-}
-
-// Hindley-Milner [App], modified for multiple argument functions.
-MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-	MonoId return_type = m_core.new_var();
-	args_types.push_back(return_type);
-
-	MonoId deduced_func_type =
-	    m_core.new_term(BuiltinType::Function, std::move(args_types));
-
-	m_core.unify(func_type, deduced_func_type);
-
-	return return_type;
 }
 
 } // namespace TypeChecker

@@ -12,11 +12,7 @@ struct TypeChecker {
 
 	TypeChecker();
 
-	MonoId mono_int();
-	MonoId mono_float();
-	MonoId mono_string();
-	MonoId mono_boolean();
-	MonoId mono_unit();
+	PolyId generalize(MonoId mono);
 
 	MonoId new_hidden_var() {
 		return m_core.new_var();
@@ -33,6 +29,13 @@ struct TypeChecker {
 	MonoId rule_abs();
 	MonoId rule_let(MonoId mono);
 	MonoId rule_rec();
+
+	MonoId mono_int();
+	MonoId mono_float();
+	MonoId mono_string();
+	MonoId mono_boolean();
+	MonoId mono_unit();
+
 };
 
 } // namespace TypeChecker
