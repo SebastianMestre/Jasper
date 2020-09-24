@@ -49,7 +49,7 @@ enum class MonoTag { Var, Term };
 //
 // If the type is MonoTag::Term, the index points to a term,
 // that is stored in TypeSystemCore::term_data
-struct MonoData {
+struct MonoHeader {
 	MonoTag type;
 	int data_id;
 	char const* debug_data {nullptr};
@@ -76,7 +76,7 @@ struct TypeVarData {
 };
 
 struct TypeSystemCore {
-	std::vector<MonoData> mono_data;
+	std::vector<MonoHeader> mono_header;
 	std::vector<TermData> term_data;
 
 	std::vector<TypeFunctionHeader> type_function_header;

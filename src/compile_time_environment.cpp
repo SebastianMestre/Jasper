@@ -37,7 +37,7 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 
 	{
 		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+		auto var_id = m_typechecker.m_core.mono_header[var_mono_id].data_id;
 
 		auto array_mono_id = m_typechecker.m_core.new_term(
 		    TypeChecker::BuiltinType::Array, {var_mono_id}, "array");
@@ -98,7 +98,7 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 
 	{
 		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+		auto var_id = m_typechecker.m_core.mono_header[var_mono_id].data_id;
 
 		// TODO: i use the same mono thrice... does this make sense?
 		auto term_mono_id = m_typechecker.m_core.new_term(
@@ -121,7 +121,7 @@ CompileTimeEnvironment::CompileTimeEnvironment() {
 
 	{
 		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
+		auto var_id = m_typechecker.m_core.mono_header[var_mono_id].data_id;
 
 		auto term_mono_id = m_typechecker.m_core.new_term(
 		    TypeChecker::BuiltinType::Function,
@@ -154,7 +154,7 @@ void CompileTimeEnvironment::declare_builtin(std::string const& name) {
 	// TODO: remove this
 	// totally general type. just for convenience during development.
 	auto mono_id = m_typechecker.new_var();
-	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
+	auto var_id = m_typechecker.m_core.mono_header[mono_id].data_id;
 	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
 
 	declare_builtin(name, poly_id);

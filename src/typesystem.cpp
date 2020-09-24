@@ -7,21 +7,21 @@
 #include "compile_time_environment.hpp"
 
 void TypeSystemCore::print_type(MonoId mono, int d) {
-	MonoData& data = mono_data[mono];
+	MonoHeader& header = mono_header[mono];
 	for (int i = d; i--;)
 		std::cerr << ' ';
 	std::cerr << "[" << mono;
-	if(data.debug_data) std::cerr << " | " << data.debug_data;
+	if (header.debug_data) std::cerr << " | " << header.debug_data;
 	std::cerr << "] ";
-	if (data.type == MonoTag::Var) {
-		if (data.data_id == mono) {
+	if (header.type == MonoTag::Var) {
+		if (header.data_id == mono) {
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_type(data.data_id, d + 1);
+			print_type(header.data_id, d + 1);
 		}
 	} else {
-		TermId term = data.data_id;
+		TermId term = header.data_id;
 		TermData& data = term_data[term];
 		std::cerr << "Term " << term << " (tf " << data.type_function << ")\n";
 		for (int i = 0; i < data.arguments.size(); ++i)
@@ -31,8 +31,8 @@ void TypeSystemCore::print_type(MonoId mono, int d) {
 
 
 MonoId TypeSystemCore::new_var() {
-	int mono = mono_data.size();
-	mono_data.push_back({MonoTag::Var, mono});
+	int mono = mono_header.size();
+	mono_header.push_back({MonoTag::Var, mono});
 	return mono;
 }
 
@@ -48,10 +48,10 @@ MonoId TypeSystemCore::new_term(
 	}
 
 	int term = term_data.size();
-	int mono = mono_data.size();
+	int mono = mono_header.size();
 
 	term_data.push_back({tf, std::move(args)});
-	mono_data.push_back({MonoTag::Term, term, tag});
+	mono_header.push_back({MonoTag::Term, term, tag});
 
 	return mono;
 }
@@ -101,36 +101,36 @@ TypeVarId TypeSystemCore::new_type_var(KindTag kind, int type_id) {
 
 
 MonoId TypeSystemCore::find(MonoId mono) {
-	MonoData& data = mono_data[mono];
+	MonoHeader& header = mono_header[mono];
 
-	if (data.type != MonoTag::Var)
+	if (header.type != MonoTag::Var)
 		return mono;
 
 	// pointing to self
-	if (data.data_id == mono)
+	if (header.data_id == mono)
 		return mono;
 
-	return data.data_id = find(data.data_id);
+	return header.data_id = find(header.data_id);
 }
 
 bool TypeSystemCore::occurs_in(MonoId var, MonoId mono) {
 
 	{
 		// var must be a variable that points to itself
-		MonoData const& var_mono_data = mono_data[var];
-		assert(var_mono_data.type == MonoTag::Var);
-		assert(var == var_mono_data.data_id);
+		MonoHeader const& var_mono_header = mono_header[var];
+		assert(var_mono_header.type == MonoTag::Var);
+		assert(var == var_mono_header.data_id);
 	}
 
 	mono = find(mono);
 
-	if (mono_data[mono].type == MonoTag::Var) {
-		return mono_data[mono].data_id == var;
+	if (mono_header[mono].type == MonoTag::Var) {
+		return mono_header[mono].data_id == var;
 	}
 
-	assert(mono_data[mono].type == MonoTag::Term);
+	assert(mono_header[mono].type == MonoTag::Term);
 
-	TermId term = mono_data[mono].data_id;
+	TermId term = mono_header[mono].data_id;
 	TermData data = term_data[term];
 
 	for (MonoId c : data.arguments)
@@ -147,8 +147,8 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 	if (a == b)
 		return;
 
-	if (mono_data[a].type == MonoTag::Var) {
-		if (mono_data[b].type == MonoTag::Var) {
+	if (mono_header[a].type == MonoTag::Var) {
+		if (mono_header[b].type == MonoTag::Var) {
 			if (a < b) {
 				// make the newer one point to the older one
 				std::swap(a, b);
@@ -159,15 +159,15 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 			assert(0 && "recursive unification\n");
 		}
 
-		mono_data[a].data_id = b;
-	} else if (mono_data[b].type == MonoTag::Var) {
+		mono_header[a].data_id = b;
+	} else if (mono_header[b].type == MonoTag::Var) {
 		return unify(b, a);
 	} else {
-		assert(mono_data[a].type == MonoTag::Term);
-		assert(mono_data[b].type == MonoTag::Term);
+		assert(mono_header[a].type == MonoTag::Term);
+		assert(mono_header[b].type == MonoTag::Term);
 
-		TermId ta = mono_data[a].data_id;
-		TermId tb = mono_data[b].data_id;
+		TermId ta = mono_header[a].data_id;
+		TermId tb = mono_header[b].data_id;
 
 		TermData& a_data = term_data[ta];
 		TermData& b_data = term_data[tb];
@@ -321,15 +321,15 @@ MonoId TypeSystemCore::inst_impl(
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
 	mono = find(mono);
-	MonoData data = mono_data[mono];
+	MonoHeader header = mono_header[mono];
 
-	if (data.type == MonoTag::Var) {
+	if (header.type == MonoTag::Var) {
 		auto it = mapping.find(mono);
 		return it == mapping.end() ? mono : it->second;
 	}
 
-	if (data.type == MonoTag::Term) {
-		TermId term = data.data_id;
+	if (header.type == MonoTag::Term) {
+		TermId term = header.data_id;
 		std::vector<MonoId> new_args;
 		for (MonoId argument : term_data[term].arguments)
 			new_args.push_back(inst_impl(argument, mapping));
@@ -362,11 +362,11 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
 	MonoId repr = find(mono);
-	MonoData const& data = mono_data[repr];
-	if (data.type == MonoTag::Var) {
+	MonoHeader const& header = mono_header[repr];
+	if (header.type == MonoTag::Var) {
 		free_vars.insert(repr);
 	} else {
-		TermId term = data.data_id;
+		TermId term = header.data_id;
 		for (MonoId arg : term_data[term].arguments)
 			gather_free_vars(arg, free_vars);
 	}
