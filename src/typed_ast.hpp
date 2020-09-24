@@ -33,7 +33,7 @@ struct TypedAST {
 	virtual ~TypedAST() = default;
 };
 
-Own<TypedAST> convertAST(AST::AST*);
+Own<TypedAST> convert_ast(AST::AST*);
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
