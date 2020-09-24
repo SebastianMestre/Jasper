@@ -35,7 +35,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 		return ExitStatusTag::TopLevelTypeError;
 
 	auto desugared_ast = AST::desugar(std::move(top_level_ast));
-	auto top_level = TypedAST::get_unique(desugared_ast);
+	auto top_level = TypedAST::convertAST(desugared_ast.get());
 	Frontend::CompileTimeEnvironment ct_env;
 
 	{
@@ -66,7 +66,7 @@ Value* eval_expression(const std::string& expr, Environment& env) {
 	TokenArray ta;
 
 	auto top_level_call_ast = parse_expression(expr, ta);
-	auto top_level_call = TypedAST::get_unique(top_level_call_ast.m_result);
+	auto top_level_call = TypedAST::convertAST(top_level_call_ast.m_result.get());
 
 	// TODO: return a gc_ptr
 	auto value = eval(top_level_call.get(), env);
