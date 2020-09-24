@@ -84,26 +84,19 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
-	Frontend::Binding* binding = tc.m_env.access_binding(ast->text());
-	assert(binding && "accessed an undeclared identifier");
+	TypedAST::Declaration* declaration = ast->m_declaration;
+	assert(declaration && "accessed an unmatched identifier");
 
 	// here we implement the [var] rule
 	// TODO: refactor
 	MonoId mono = -1;
-	if (binding->m_type == Frontend::BindingTag::Declaration) {
-		TypedAST::Declaration* decl = binding->get_decl();
-		assert(decl);
-		if (decl->m_is_polymorphic) {
-			mono = tc.m_core.inst_fresh(decl->m_decl_type);
-		} else {
-			mono = decl->m_value_type;
-		}
+	if (declaration->m_is_polymorphic) {
+		mono = tc.m_core.inst_fresh(declaration->m_decl_type);
 	} else {
-		TypedAST::FunctionArgument& arg = binding->get_arg();
-		mono = arg.m_value_type;
+		mono = declaration->m_value_type;
 	}
-
 	assert(mono != -1);
+
 	ast->m_value_type = mono;
 }
 
@@ -158,7 +151,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 			arg_types.push_back(mono);
 			arg_decl.m_value_type = mono;
 
-			tc.m_env.declare_arg(arg_decl.identifier_text(), ast, i);
+			tc.m_env.declare(arg_decl.identifier_text(), &arg_decl);
 		}
 
 		// return type

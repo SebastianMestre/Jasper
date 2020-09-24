@@ -62,7 +62,10 @@ Own<TypedAST> convert_ast(AST::FunctionLiteral* ast) {
 		assert(arg->type() == ASTTag::Declaration);
 		auto* decl = static_cast<AST::Declaration*>(arg.get());
 
-		typed_function->m_args.push_back({decl->m_identifier_token});
+		Declaration typed_decl;
+		typed_decl.m_identifier_token = decl->m_identifier_token;
+		typed_decl.m_surrounding_function = typed_function.get();
+		typed_function->m_args.push_back(std::move(typed_decl));
 	}
 
 	typed_function->m_body = convert_ast(ast->m_body.get());
