@@ -170,7 +170,7 @@ struct IndexExpression : public AST {
 
 struct RecordAccessExpression : public AST {
 	Own<AST> m_record;
-	Own<Identifier> m_member;
+	Token const* m_member;
 
 	RecordAccessExpression()
 	    : AST {ASTTag::RecordAccessExpression} {}
