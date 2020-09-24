@@ -1,3 +1,6 @@
+#pragma once
+
+#include "compile_time_environment.hpp"
 #include "typesystem.hpp"
 
 namespace TypeChecker {
@@ -5,6 +8,7 @@ namespace TypeChecker {
 struct TypeChecker {
 
 	TypeSystemCore m_core;
+	Frontend::CompileTimeEnvironment m_env;
 
 	TypeChecker();
 
@@ -14,8 +18,14 @@ struct TypeChecker {
 	MonoId mono_boolean();
 	MonoId mono_unit();
 
-	MonoId new_var() {
+	MonoId new_hidden_var() {
 		return m_core.new_var();
+	}
+
+	MonoId new_var() {
+		MonoId result = m_core.new_var();
+		m_env.current_scope().m_type_vars.insert(result);
+		return result;
 	}
 
 	MonoId rule_var(PolyId poly);

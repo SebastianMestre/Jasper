@@ -1,11 +1,11 @@
 #include "execute.hpp"
 
-#include "../compile_time_environment.hpp"
 #include "../desugar.hpp"
 #include "../match_identifiers.hpp"
 #include "../parse.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
+#include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
@@ -36,17 +36,17 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 
 	auto desugared_ast = AST::desugar(std::move(top_level_ast));
 	auto top_level = TypedAST::get_unique(desugared_ast);
-	Frontend::CompileTimeEnvironment ct_env;
+	TypeChecker::TypeChecker tc;
 
 	{
-		auto err = TypeChecker::match_identifiers(top_level.get(), ct_env);
+		auto err = TypeChecker::match_identifiers(top_level.get(), tc.m_env);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;
 		}
 	}
 
-	TypeChecker::typecheck(top_level.get(), ct_env);
+	TypeChecker::typecheck(top_level.get(), tc);
 
 	GC gc;
 	Environment env = {&gc};

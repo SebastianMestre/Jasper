@@ -21,6 +21,115 @@ TypeChecker::TypeChecker() {
 	m_core.new_term(3, {}, "builtin string"); // 2 | string(<>)
 	m_core.new_term(6, {}, "builtin bool");   // 3 | boolean(<>)
 	m_core.new_term(7, {}, "builtin unit");   // 4 | unit(<>)
+
+	// TODO: put this in a better place
+	// TODO: refactor, figure out a nice way to build types
+	// HACK: this is an ugly hack. bear with me...
+
+	{
+		auto var = new_var();
+		auto poly = m_core.new_poly(var, {var});
+		m_env.declare_builtin("print", poly);
+	}
+
+	{
+		auto var_mono_id = new_var();
+		auto var_id = m_core.mono_data[var_mono_id].data_id;
+
+		auto array_mono_id = m_core.new_term(
+		    BuiltinType::Array, {var_mono_id}, "array");
+
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {array_mono_id, var_mono_id, mono_unit()},
+			    "[builtin] (array(<a>), a) -> unit");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+			m_env.declare_builtin("array_append", poly_id);
+		}
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {array_mono_id, mono_int()},
+			    "[builtin] (array(<a>)) -> int");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+			m_env.declare_builtin("size", poly_id);
+		}
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {array_mono_id, array_mono_id, array_mono_id},
+			    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+			m_env.declare_builtin("array_extend", poly_id);
+		}
+		{
+			auto array_mono_id = m_core.new_term(
+			    BuiltinType::Array,
+			    {mono_int()},
+			    "array(<int>)");
+
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {array_mono_id,
+			     mono_string(),
+			     mono_string()},
+			    "[builtin] (array(<int>), string)) -> string");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {});
+			m_env.declare_builtin("array_join", poly_id);
+		}
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {array_mono_id, mono_int(), var_mono_id},
+			    "[builtin] (array(<a>), int) -> a");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+			m_env.declare_builtin("array_at", poly_id);
+		}
+	}
+
+	{
+		auto var_mono_id = new_var();
+		auto var_id = m_core.mono_data[var_mono_id].data_id;
+
+		// TODO: i use the same mono thrice... does this make sense?
+		auto term_mono_id = m_core.new_term(
+		    BuiltinType::Function,
+		    {var_mono_id, var_mono_id, var_mono_id},
+		    "[builtin] (a, a) -> a");
+
+		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+
+		// TODO: re using the same PolyId... is this ok?
+		// I think this is fine because we always do inst_fresh when we use a poly
+		// , so it can't somehow get mutated
+		m_env.declare_builtin("+", poly_id);
+		m_env.declare_builtin("-", poly_id);
+		m_env.declare_builtin("*", poly_id);
+		m_env.declare_builtin("/", poly_id);
+		m_env.declare_builtin(".", poly_id);
+		m_env.declare_builtin("=", poly_id);
+	}
+
+	{
+		auto var_mono_id = new_var();
+		auto var_id = m_core.mono_data[var_mono_id].data_id;
+
+		auto term_mono_id = m_core.new_term(
+		    BuiltinType::Function,
+		    {var_mono_id, var_mono_id, mono_boolean()},
+		    "[builtin] (a, a) -> Bool");
+
+		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+
+		m_env.declare_builtin("<", poly_id);
+		m_env.declare_builtin("==", poly_id);
+	}
 }
 
 MonoId TypeChecker::mono_int() {

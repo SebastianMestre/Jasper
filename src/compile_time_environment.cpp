@@ -30,110 +30,7 @@ TypedAST::FunctionLiteral* Binding::get_func() {
 	return m_func;
 }
 
-CompileTimeEnvironment::CompileTimeEnvironment() {
-	// TODO: put this in a better place
-	// TODO: refactor, figure out a nice way to build types
-	// HACK: this is an ugly hack. bear with me...
-
-	{
-		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
-
-		auto array_mono_id = m_typechecker.m_core.new_term(
-		    TypeChecker::BuiltinType::Array, {var_mono_id}, "array");
-
-		{
-			auto term_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Function,
-			    {array_mono_id, var_mono_id, m_typechecker.mono_unit()},
-			    "[builtin] (array(<a>), a) -> unit");
-
-			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-			declare_builtin("array_append", poly_id);
-		}
-		{
-			auto term_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Function,
-			    {array_mono_id, m_typechecker.mono_int()},
-			    "[builtin] (array(<a>)) -> int");
-
-			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-			declare_builtin("size", poly_id);
-		}
-		{
-			auto term_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Function,
-			    {array_mono_id, array_mono_id, array_mono_id},
-			    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
-
-			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-			declare_builtin("array_extend", poly_id);
-		}
-		{
-			auto array_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Array,
-			    {m_typechecker.mono_int()},
-			    "array(<int>)");
-
-			auto term_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Function,
-			    {array_mono_id, m_typechecker.mono_string(), m_typechecker.mono_string()},
-			    "[builtin] (array(<int>), string)) -> string");
-
-			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {});
-			declare_builtin("array_join", poly_id);
-		}
-		{
-			auto term_mono_id = m_typechecker.m_core.new_term(
-			    TypeChecker::BuiltinType::Function,
-			    {array_mono_id, m_typechecker.mono_int(), var_mono_id},
-			    "[builtin] (array(<a>), int) -> a");
-
-			auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-			declare_builtin("array_at", poly_id);
-		}
-	}
-
-	declare_builtin("print");
-
-	{
-		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
-
-		// TODO: i use the same mono thrice... does this make sense?
-		auto term_mono_id = m_typechecker.m_core.new_term(
-		    TypeChecker::BuiltinType::Function,
-		    {var_mono_id, var_mono_id, var_mono_id},
-		    "[builtin] (a, a) -> a");
-
-		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-
-		// TODO: re using the same PolyId... is this ok?
-		// I think this is fine because we always do inst_fresh when we use a poly
-		// , so it can't somehow get mutated
-		declare_builtin("+", poly_id);
-		declare_builtin("-", poly_id);
-		declare_builtin("*", poly_id);
-		declare_builtin("/", poly_id);
-		declare_builtin(".", poly_id);
-		declare_builtin("=", poly_id);
-	}
-
-	{
-		auto var_mono_id = m_typechecker.new_var();
-		auto var_id = m_typechecker.m_core.mono_data[var_mono_id].data_id;
-
-		auto term_mono_id = m_typechecker.m_core.new_term(
-		    TypeChecker::BuiltinType::Function,
-		    {var_mono_id, var_mono_id, m_typechecker.mono_boolean()},
-		    "[builtin] (a, a) -> Bool");
-
-		auto poly_id = m_typechecker.m_core.new_poly(term_mono_id, {var_id});
-
-		declare_builtin("<", poly_id);
-		declare_builtin("==", poly_id);
-	}
-};
+CompileTimeEnvironment::CompileTimeEnvironment() {}
 
 Scope& CompileTimeEnvironment::current_scope() {
 	return m_scopes.empty() ? m_global_scope : m_scopes.back();
@@ -148,16 +45,6 @@ void CompileTimeEnvironment::declare(
 void CompileTimeEnvironment::declare_arg(
     std::string const& name, TypedAST::FunctionLiteral* func, int arg_index) {
 	current_scope().m_vars.insert({name, {func, arg_index}});
-}
-
-void CompileTimeEnvironment::declare_builtin(std::string const& name) {
-	// TODO: remove this
-	// totally general type. just for convenience during development.
-	auto mono_id = m_typechecker.new_var();
-	auto var_id = m_typechecker.m_core.mono_data[mono_id].data_id;
-	auto poly_id = m_typechecker.m_core.new_poly(mono_id, {var_id});
-
-	declare_builtin(name, poly_id);
 }
 
 void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly) {
@@ -216,17 +103,6 @@ void CompileTimeEnvironment::enter_function(TypedAST::FunctionLiteral* func) {
 
 void CompileTimeEnvironment::exit_function() {
 	m_function_stack.pop_back();
-}
-
-MonoId CompileTimeEnvironment::new_hidden_type_var() {
-	MonoId result = m_typechecker.new_var();
-	return result;
-}
-
-MonoId CompileTimeEnvironment::new_type_var() {
-	MonoId result = m_typechecker.new_var();
-	current_scope().m_type_vars.insert(result);
-	return result;
 }
 
 bool CompileTimeEnvironment::has_type_var(MonoId var) {

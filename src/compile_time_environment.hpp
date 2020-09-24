@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "chunked_array.hpp"
-#include "typechecker.hpp"
+#include "typesystem_types.hpp"
 
 namespace TypedAST {
 
@@ -50,13 +50,11 @@ struct CompileTimeEnvironment {
 	TypedAST::Declaration* m_current_decl {nullptr};
 
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
-	TypeChecker::TypeChecker m_typechecker;
 
 	CompileTimeEnvironment();
 
 	void declare(std::string const&, TypedAST::Declaration*);
 	void declare_arg(std::string const&, TypedAST::FunctionLiteral*, int arg_index);
-	void declare_builtin(std::string const&);
 	void declare_builtin(std::string const&, PolyId);
 
 	TypedAST::Declaration* access(std::string const&);
@@ -75,8 +73,6 @@ struct CompileTimeEnvironment {
 	void new_nested_scope();
 	void end_scope();
 
-	MonoId new_type_var();
-	MonoId new_hidden_type_var();
 	bool has_type_var(MonoId);
 };
 
