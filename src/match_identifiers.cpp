@@ -42,7 +42,6 @@ namespace TypeChecker {
 		    " : accessed undeclared identifier '" + ast->text() + "'"};
 	}
 
-	// TODO: refactor
 	ast->m_declaration = declaration;
 	env.current_top_level_declaration()->m_references.insert(declaration);
 	TypedAST::FunctionLiteral* surrounding_function =
@@ -194,14 +193,13 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case TypedASTTag::type:                                                       \
+	case TypedASTTag::type:                                                    \
 		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
-	case TypedASTTag::type:                                                       \
+	case TypedASTTag::type:                                                    \
 		return {};
 
-	// TODO: Compound literals
 	switch (ast->type()) {
 		DO_NOTHING(NumberLiteral);
 		DO_NOTHING(IntegerLiteral);
@@ -233,5 +231,7 @@ namespace TypeChecker {
 	          << ": " << typed_ast_string[(int)ast->type()] << '\n';
 	assert(0);
 }
+
+#undef CHECK_AND_RETURN
 
 } // namespace TypeChecker
