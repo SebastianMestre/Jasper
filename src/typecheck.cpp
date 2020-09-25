@@ -55,7 +55,6 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 #endif
 
 	ast->m_value_type = tc.new_var();
-	tc.m_env.declare(ast->identifier_text(), ast);
 
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
@@ -150,8 +149,6 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 			arg_types.push_back(mono);
 			arg_decl.m_value_type = mono;
-
-			tc.m_env.declare(arg_decl.identifier_text(), &arg_decl);
 		}
 
 		// return type
