@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;

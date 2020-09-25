@@ -9,7 +9,7 @@
 #include "token_tag.hpp"
 #include "typed_ast_tag.hpp"
 #include "typedefs.hpp"
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 namespace AST {
 struct AST;

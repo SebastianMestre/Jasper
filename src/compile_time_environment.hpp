@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "chunked_array.hpp"
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 namespace TypedAST {
 

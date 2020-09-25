@@ -4,7 +4,7 @@
 #include "tarjan_solver.hpp"
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 #include <cassert>
 #include <iostream>
