@@ -7,6 +7,9 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
+	m_meta_core.new_meta(); // 0 | value
+	m_meta_core.new_meta(); // 1 | type func
+
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
 	m_core.new_builtin_type_function(0);  // 2  | float
@@ -179,6 +182,14 @@ MonoId TypeChecker::mono_boolean() {
 
 MonoId TypeChecker::mono_unit() {
 	return 4;
+}
+
+MetaTypeId TypeChecker::meta_value() {
+	return 0;
+}
+
+MetaTypeId TypeChecker::meta_typefunc() {
+	return 1;
 }
 
 } // namespace TypeChecker

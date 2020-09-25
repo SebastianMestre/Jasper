@@ -2,12 +2,14 @@
 
 #include "compile_time_environment.hpp"
 #include "typesystem.hpp"
+#include "metatypesystem.hpp"
 
 namespace TypeChecker {
 
 struct TypeChecker {
 
 	TypeSystemCore m_core;
+	MetaTypeSystem m_meta_core;
 	Frontend::CompileTimeEnvironment m_env;
 
 	TypeChecker();
@@ -25,6 +27,8 @@ struct TypeChecker {
 	MonoId mono_boolean();
 	MonoId mono_unit();
 
+	MetaTypeId meta_value();
+	MetaTypeId meta_typefunc();
 };
 
 } // namespace TypeChecker

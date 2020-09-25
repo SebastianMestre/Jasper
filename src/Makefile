@@ -11,6 +11,7 @@ OBJNAMES := \
 	error_report.o \
 	lexer.o \
 	match_identifiers.o \
+	metatypesystem.o \
 	parser.o \
 	parse.o \
 	string_view.o \
