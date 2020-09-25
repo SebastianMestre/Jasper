@@ -2,6 +2,7 @@
 
 #include "compile_time_environment.hpp"
 #include "tarjan_solver.hpp"
+#include "typechecker.hpp"
 #include "typed_ast.hpp"
 #include "typesystem_types.hpp"
 
@@ -15,136 +16,129 @@ namespace TypeChecker {
 // however, I think that's the right thing to do.
 // At least, the alternative just sucks.
 
-void typecheck(TypedAST::NumberLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	ast->m_value_type = env.m_typechecker.mono_float();
+void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
+	ast->m_value_type = tc.mono_float();
 }
 
-void typecheck(TypedAST::IntegerLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	ast->m_value_type = env.m_typechecker.mono_int();
+void typecheck(TypedAST::IntegerLiteral* ast, TypeChecker& tc) {
+	ast->m_value_type = tc.mono_int();
 }
 
-void typecheck(TypedAST::StringLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	ast->m_value_type = env.m_typechecker.mono_string();
+void typecheck(TypedAST::StringLiteral* ast, TypeChecker& tc) {
+	ast->m_value_type = tc.mono_string();
 }
 
-void typecheck(TypedAST::BooleanLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	ast->m_value_type = env.m_typechecker.mono_boolean();
+void typecheck(TypedAST::BooleanLiteral* ast, TypeChecker& tc) {
+	ast->m_value_type = tc.mono_boolean();
 }
 
-void typecheck(TypedAST::NullLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	ast->m_value_type = env.m_typechecker.mono_unit();
+void typecheck(TypedAST::NullLiteral* ast, TypeChecker& tc) {
+	ast->m_value_type = tc.mono_unit();
 }
 
-void typecheck(TypedAST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
-	auto element_type = env.new_type_var();
+void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
+	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
-		typecheck(element.get(), env);
-		env.m_typechecker.m_core.unify(element_type, element->m_value_type);
+		typecheck(element.get(), tc);
+		tc.m_core.unify(element_type, element->m_value_type);
 	}
 
 	auto array_type =
-	    env.m_typechecker.m_core.new_term(BuiltinType::Array, {element_type}, "Array Literal");
+	    tc.m_core.new_term(BuiltinType::Array, {element_type}, "Array Literal");
 
 	ast->m_value_type = array_type;
 }
 
-void typecheck(TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
+void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 #if DEBUG
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
-	ast->m_value_type = env.new_type_var();
-	env.declare(ast->identifier_text(), ast);
+	ast->m_value_type = tc.new_var();
+	tc.m_env.declare(ast->identifier_text(), ast);
 
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
 	if (ast->m_value) {
-		typecheck(ast->m_value.get(), env);
+		typecheck(ast->m_value.get(), tc);
 		// unify instead of assign. This way, we can do recursion.
-		env.m_typechecker.m_core.unify(ast->m_value_type, ast->m_value->m_value_type);
+		tc.m_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 	} else {
 		// NOTE: this should be an error at an earlier stage...
 	}
 
 	ast->m_is_polymorphic = true;
-	ast->m_decl_type = env.m_typechecker.m_core.generalize(ast->m_value_type, env);
+	ast->m_decl_type = tc.generalize(ast->m_value_type);
 
 #if DEBUG
 	{
 		auto poly = ast->m_decl_type;
-		auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
+		auto& poly_data = tc.m_core.poly_data[poly];
 		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
 		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 		std::cerr << "@@ It is equal to:\n";
-		env.m_typechecker.m_core.print_type(poly_data.base);
+		tc.m_core.print_type(poly_data.base);
 
 	}
 #endif
 }
 
-void typecheck(TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
-	Frontend::Binding* binding = env.access_binding(ast->text());
-	assert(binding && "accessed an undeclared identifier");
+void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
+	TypedAST::Declaration* declaration = ast->m_declaration;
+	assert(declaration && "accessed an unmatched identifier");
 
 	// here we implement the [var] rule
 	// TODO: refactor
 	MonoId mono = -1;
-	if (binding->m_type == Frontend::BindingTag::Declaration) {
-		TypedAST::Declaration* decl = binding->get_decl();
-		assert(decl);
-		if (decl->m_is_polymorphic) {
-			mono = env.m_typechecker.m_core.inst_fresh(decl->m_decl_type);
-		} else {
-			mono = decl->m_value_type;
-		}
+	if (declaration->m_is_polymorphic) {
+		mono = tc.m_core.inst_fresh(declaration->m_decl_type);
 	} else {
-		TypedAST::FunctionArgument& arg = binding->get_arg();
-		mono = arg.m_value_type;
+		mono = declaration->m_value_type;
 	}
-
 	assert(mono != -1);
+
 	ast->m_value_type = mono;
 }
 
-void typecheck(TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
-	env.new_nested_scope();
+void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
+	tc.m_env.new_nested_scope();
 	for (auto& child : ast->m_body)
-		typecheck(child.get(), env);
-	env.end_scope();
+		typecheck(child.get(), tc);
+	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_condition.get(), env);
-	env.m_typechecker.m_core.unify(
-	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
+	typecheck(ast->m_condition.get(), tc);
+	tc.m_core.unify(
+	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body.get(), env);
+	typecheck(ast->m_body.get(), tc);
 
 	if (ast->m_else_body)
-		typecheck(ast->m_else_body.get(), env);
+		typecheck(ast->m_else_body.get(), tc);
 }
 
-void typecheck(TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_callee.get(), env);
+void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_callee.get(), tc);
 	for (auto& arg : ast->m_args)
-		typecheck(arg.get(), env);
+		typecheck(arg.get(), tc);
 
 	std::vector<MonoId> arg_types;
 	for (auto& arg : ast->m_args)
 		arg_types.push_back(arg->m_value_type);
 
-	ast->m_value_type = env.m_typechecker.rule_app(
+	ast->m_value_type = tc.rule_app(
 	    std::move(arg_types), ast->m_callee->m_value_type);
 }
 
-void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
-	env.enter_function(ast);
-	env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
+	tc.m_env.enter_function(ast);
+	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
 		// TODO: do something better, use the type hints
-		ast->m_return_type = env.new_type_var();
+		ast->m_return_type = tc.new_var();
 
 		int arg_count = ast->m_args.size();
 		std::vector<MonoId> arg_types;
@@ -152,18 +146,18 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 		for (int i = 0; i < arg_count; ++i) {
 			auto& arg_decl = ast->m_args[i];
 
-			int mono = env.new_type_var();
+			int mono = tc.new_var();
 
 			arg_types.push_back(mono);
 			arg_decl.m_value_type = mono;
 
-			env.declare_arg(arg_decl.identifier_text(), ast, i);
+			tc.m_env.declare(arg_decl.identifier_text(), &arg_decl);
 		}
 
 		// return type
 		arg_types.push_back(ast->m_return_type);
 
-		MonoId term_mono_id = env.m_typechecker.m_core.new_term(
+		MonoId term_mono_id = tc.m_core.new_term(
 		    BuiltinType::Function, std::move(arg_types));
 		ast->m_value_type = term_mono_id;
 	}
@@ -172,76 +166,76 @@ void typecheck(TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment&
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
 	for (auto& child : body->m_body)
-		typecheck(child.get(), env);
+		typecheck(child.get(), tc);
 
-	env.end_scope();
-	env.exit_function();
+	tc.m_env.end_scope();
+	tc.m_env.exit_function();
 }
 
-void typecheck(TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	env.new_nested_scope();
-	typecheck(ast->m_declaration.get(), env);
-	typecheck(ast->m_condition.get(), env);
-	env.m_typechecker.m_core.unify(
-	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
+	tc.m_env.new_nested_scope();
+	typecheck(ast->m_declaration.get(), tc);
+	typecheck(ast->m_condition.get(), tc);
+	tc.m_core.unify(
+	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_action.get(), env);
-	typecheck(ast->m_body.get(), env);
-	env.end_scope();
+	typecheck(ast->m_action.get(), tc);
+	typecheck(ast->m_body.get(), tc);
+	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	env.new_nested_scope();
-	typecheck(ast->m_condition.get(), env);
-	env.m_typechecker.m_core.unify(
-	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+void typecheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
+	tc.m_env.new_nested_scope();
+	typecheck(ast->m_condition.get(), tc);
+	tc.m_core.unify(
+	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body.get(), env);
-	env.end_scope();
+	typecheck(ast->m_body.get(), tc);
+	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_value.get(), env);
+void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
+	typecheck(ast->m_value.get(), tc);
 
 	auto mono = ast->m_value->m_value_type;
-	auto func = env.current_function();
-	env.m_typechecker.m_core.unify(func->m_return_type, mono);
+	auto func = tc.m_env.current_function();
+	tc.m_core.unify(func->m_return_type, mono);
 }
 
-void typecheck(TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_callee.get(), env);
-	typecheck(ast->m_index.get(), env);
+void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_callee.get(), tc);
+	typecheck(ast->m_index.get(), tc);
 }
 
-void typecheck(TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_condition.get(), env);
-	env.m_typechecker.m_core.unify(
-	    ast->m_condition->m_value_type, env.m_typechecker.mono_boolean());
+void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_condition.get(), tc);
+	tc.m_core.unify(
+	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_then_expr.get(), env);
-	typecheck(ast->m_else_expr.get(), env);
+	typecheck(ast->m_then_expr.get(), tc);
+	typecheck(ast->m_else_expr.get(), tc);
 
-	env.m_typechecker.m_core.unify(
+	tc.m_core.unify(
 	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
 
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
-void typecheck(TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	typecheck(ast->m_record.get(), env);
+void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_record.get(), tc);
 
 	// should this be a hidden type var?
-	MonoId member_type = env.new_type_var();
+	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = env.m_typechecker.m_core.new_dummy_type_function(
+	TypeFunctionId dummy_tf = tc.m_core.new_dummy_type_function(
 	    TypeFunctionTag::Record, {{ast->m_member->m_text, member_type}});
-	MonoId term_type = env.m_typechecker.m_core.new_term(dummy_tf, {}, "record instance");
+	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
-	env.m_typechecker.m_core.unify(ast->m_record->m_value_type, term_type);
+	tc.m_core.unify(ast->m_record->m_value_type, term_type);
 }
 
-void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
+void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 
 	// two way mapping
 	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
@@ -297,7 +291,7 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 		// set up some dummy types on every decl
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			decl->m_value_type = env.new_hidden_type_var();
+			decl->m_value_type = tc.new_hidden_var();
 		}
 
 		// typecheck all the values and make the type of the
@@ -306,8 +300,8 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			auto decl = index_to_decl[u];
 
 			if (decl->m_value) {
-				typecheck(decl->m_value.get(), env);
-				env.m_typechecker.m_core.unify(
+				typecheck(decl->m_value.get(), tc);
+				tc.m_core.unify(
 				    decl->m_value_type, decl->m_value->m_value_type);
 			} else {
 				// this should be an error...
@@ -320,27 +314,27 @@ void typecheck(TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment&
 			auto decl = index_to_decl[u];
 			decl->m_is_polymorphic = true;
 			decl->m_decl_type =
-			    env.m_typechecker.m_core.generalize(decl->m_value_type, env);
+			    tc.generalize(decl->m_value_type);
 
 #if DEBUG
 			{
 				auto poly = decl->m_decl_type;
-				auto& poly_data = env.m_typechecker.m_core.poly_data[poly];
+				auto& poly_data = tc.m_core.poly_data[poly];
 
 				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
 				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 				std::cerr << "@@ It is equal to:\n";
-				env.m_typechecker.m_core.print_type(poly_data.base);
+				tc.m_core.print_type(poly_data.base);
 			}
 #endif
 		}
 	}
 }
 
-void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
+void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
 	case TypedASTTag::type:                                                    \
-		return typecheck(static_cast<TypedAST::type*>(ast), env);
+		return typecheck(static_cast<TypedAST::type*>(ast), tc);
 
 	// TODO: Compound literals
 	switch (ast->type()) {

@@ -4,11 +4,9 @@ namespace TypedAST {
 struct TypedAST;
 }
 
-namespace Frontend {
-struct CompileTimeEnvironment;
-}
-
 namespace TypeChecker {
+
+struct TypeChecker;
 
 /*
  * Runs type deduction and checking on the given ast.
@@ -19,5 +17,5 @@ namespace TypeChecker {
  * PRECONDITION: match_identifiers has already been called
  * the given ast.
  */
-void typecheck(TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
+void typecheck(TypedAST::TypedAST* ast, TypeChecker&);
 } // namespace TypeChecker

@@ -35,6 +35,34 @@ struct TypedAST {
 
 Own<TypedAST> convert_ast(AST::AST*);
 
+struct FunctionLiteral;
+
+// doesnt have a ast_vtype
+struct DeclarationList : public TypedAST {
+	std::vector<Own<TypedAST>> m_declarations;
+
+	DeclarationList()
+	    : TypedAST {TypedASTTag::DeclarationList} {}
+};
+
+struct Declaration : public TypedAST {
+	Token const* m_identifier_token;
+	Own<TypedAST> m_value; // can be nullptr
+	std::unordered_set<Declaration*> m_references;
+	bool m_is_polymorphic {false};
+	PolyId m_decl_type;
+
+	// nullptr means global
+	FunctionLiteral* m_surrounding_function {nullptr};
+
+	std::string const& identifier_text() const {
+		return m_identifier_token->m_text;
+	}
+
+	Declaration()
+	    : TypedAST {TypedASTTag::Declaration} {}
+};
+
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
 struct NumberLiteral : public TypedAST {
@@ -110,49 +138,14 @@ struct DictionaryLiteral : public TypedAST {
 	    : TypedAST {TypedASTTag::DictionaryLiteral} {}
 };
 
-struct FunctionArgument {
-	Token const* m_identifier_token;
-	MonoId m_value_type;
-
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text;
-	}
-};
-
 struct FunctionLiteral : public TypedAST {
 	MonoId m_return_type;
 	Own<TypedAST> m_body;
-	std::vector<FunctionArgument> m_args;
+	std::vector<Declaration> m_args;
 	std::unordered_set<std::string> m_captures;
 
 	FunctionLiteral()
 	    : TypedAST {TypedASTTag::FunctionLiteral} {}
-};
-
-// doesnt have a ast_vtype
-struct DeclarationList : public TypedAST {
-	std::vector<Own<TypedAST>> m_declarations;
-
-	DeclarationList()
-	    : TypedAST {TypedASTTag::DeclarationList} {}
-};
-
-struct Declaration : public TypedAST {
-	Token const* m_identifier_token;
-	Own<TypedAST> m_value; // can be nullptr
-	std::unordered_set<Declaration*> m_references;
-	bool m_is_polymorphic {false};
-	PolyId m_decl_type;
-
-	// nullptr means global
-	FunctionLiteral* m_surrounding_function {nullptr};
-
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text;
-	}
-
-	Declaration()
-	    : TypedAST {TypedASTTag::Declaration} {}
 };
 
 // the ast_vtype must be computed

@@ -32,9 +32,10 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
-	Frontend::Binding* binding = env.access_binding(ast->text());
 
-	if (!binding) {
+	TypedAST::Declaration* declaration = env.access(ast->text());
+
+	if (!declaration) {
 		// TODO: clean up how we build error reports
 		return {
 		    "ERROR @ line " + std::to_string(ast->m_token->m_line0 + 1) +
@@ -42,24 +43,10 @@ namespace TypeChecker {
 	}
 
 	// TODO: refactor
-	TypedAST::FunctionLiteral* surrounding_function = nullptr;
-	if (binding->m_type == Frontend::BindingTag::Declaration) {
-		TypedAST::Declaration* declaration = binding->get_decl();
-
-		assert(declaration);
-		ast->m_declaration = declaration;
-
-		env.current_top_level_declaration()->m_references.insert(declaration);
-
-		surrounding_function = declaration->m_surrounding_function;
-	} else {
-		// This is only used to build the top-level-declaration graph. since this
-		// points to a function argument, it doesn't play a role in the graph, so
-		// it's ok that it is nullptr.
-		ast->m_declaration = nullptr;
-
-		surrounding_function = binding->get_func();
-	}
+	ast->m_declaration = declaration;
+	env.current_top_level_declaration()->m_references.insert(declaration);
+	TypedAST::FunctionLiteral* surrounding_function =
+	    declaration->m_surrounding_function;
 
 	// dont capture globals
 	if (surrounding_function) {
@@ -111,7 +98,7 @@ namespace TypeChecker {
 
 	for (int i = 0; i < arg_count; ++i) {
 		auto& arg_decl = ast->m_args[i];
-		env.declare_arg(arg_decl.identifier_text(), ast, i);
+		env.declare(arg_decl.identifier_text(), &arg_decl);
 	}
 
 	// scan body

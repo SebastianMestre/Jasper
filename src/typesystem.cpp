@@ -359,7 +359,6 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	return inst_with(poly, vals);
 }
 
-
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
 	MonoId repr = find(mono);
 	MonoHeader const& header = mono_header[repr];
@@ -372,24 +371,3 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 	}
 }
 
-// qualifies all free variables in the given monotype
-// NOTE(Mestre): I don't like how we take the CTenv as an
-// argument. This calls for some refactoring...
-PolyId TypeSystemCore::generalize(MonoId mono, Frontend::CompileTimeEnvironment& env) {
-	std::unordered_set<MonoId> free_vars;
-	gather_free_vars(mono, free_vars);
-
-	std::vector<MonoId> new_vars;
-	std::unordered_map<MonoId, MonoId> mapping;
-	for (MonoId var : free_vars) {
-		if (!env.has_type_var(var)) {
-			auto fresh_var = new_var();
-			new_vars.push_back(fresh_var);
-			mapping[var] = fresh_var;
-		}
-	}
-
-	MonoId base = inst_impl(mono, mapping);
-
-	return new_poly(base, std::move(new_vars));
-}

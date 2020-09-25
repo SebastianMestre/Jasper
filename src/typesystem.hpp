@@ -102,8 +102,6 @@ struct TypeSystemCore {
 	TypeVarId new_type_var(KindTag kind, int type_id);
 
 	// qualifies all unbound variables in the given monotype
-	PolyId generalize(MonoId mono, Frontend::CompileTimeEnvironment&);
-
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
 
 	// gives the representative for a given mono
