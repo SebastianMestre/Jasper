@@ -19,7 +19,8 @@ OBJNAMES := \
 	typecheck.o \
 	typechecker.o \
 	typed_ast.o \
-	typesystem.o
+	typesystem.o \
+	unification.o
 
 # ITPR stands for "interpreter"
 ITPR_OBJNAMES := \
