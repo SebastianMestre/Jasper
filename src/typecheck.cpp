@@ -95,20 +95,21 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	TypedAST::Declaration* declaration = ast->m_declaration;
 	assert(declaration && "accessed an unmatched identifier");
 
-	// FIXME: we should get our meta type from ast->m_declaration
-	ast->m_meta_type = tc.meta_value();
-
-	// here we implement the [var] rule
-	// TODO: refactor
-	MonoId mono = -1;
-	if (declaration->m_is_polymorphic) {
-		mono = tc.m_core.inst_fresh(declaration->m_decl_type);
+	MetaTypeId meta_type = tc.m_meta_core.find(declaration->m_meta_type);
+	ast->m_meta_type = meta_type;
+	if (meta_type == tc.meta_value()) {
+		// here we implement the [var] rule
+		if (declaration->m_is_polymorphic)
+			ast->m_value_type = tc.m_core.inst_fresh(declaration->m_decl_type);
+		else
+			ast->m_value_type = declaration->m_value_type;
+	} else if(meta_type == tc.meta_typefunc()){
+		// we are a type function.
+		// TODO: not too sure what needs to be done...
 	} else {
-		mono = declaration->m_value_type;
+		// meta type var
+		// TODO: not too sure what needs to be done...
 	}
-	assert(mono != -1);
-
-	ast->m_value_type = mono;
 }
 
 void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
