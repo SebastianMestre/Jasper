@@ -68,7 +68,7 @@ MetaTypeId MetaTypeSystem::new_var(char const* debug_data) {
 MetaTypeId MetaTypeSystem::new_meta(char const* debug_data) {
 	int result = m_metatype_header.size();
 	m_metatype_header.push_back(
-	    {MetaTypeTag::Var, result, debug_data ? debug_data : "meta"});
+	    {MetaTypeTag::Meta, result, debug_data ? debug_data : "meta"});
 	return result;
 }
 

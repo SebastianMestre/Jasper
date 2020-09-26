@@ -17,32 +17,26 @@ namespace TypeChecker {
 // At least, the alternative just sucks.
 
 void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	ast->m_value_type = tc.mono_float();
 }
 
 void typecheck(TypedAST::IntegerLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	ast->m_value_type = tc.mono_int();
 }
 
 void typecheck(TypedAST::StringLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	ast->m_value_type = tc.mono_string();
 }
 
 void typecheck(TypedAST::BooleanLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	ast->m_value_type = tc.mono_boolean();
 }
 
 void typecheck(TypedAST::NullLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	ast->m_value_type = tc.mono_unit();
 }
 
 void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element.get(), tc);
@@ -60,8 +54,6 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
-	// FIXME: we should get our meta type from ast->m_value
-	ast->m_meta_type = tc.meta_value();
 
 	ast->m_value_type = tc.new_var();
 
@@ -95,6 +87,7 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	assert(declaration && "accessed an unmatched identifier");
 
 	MetaTypeId meta_type = tc.m_meta_core.find(declaration->m_meta_type);
+
 	ast->m_meta_type = meta_type;
 	if (meta_type == tc.meta_value()) {
 		// here we implement the [var] rule
@@ -132,9 +125,6 @@ void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
-	// TODO: do we want to do something special with the meta type?
-	ast->m_meta_type = tc.meta_value();
-
 	typecheck(ast->m_callee.get(), tc);
 	for (auto& arg : ast->m_args)
 		typecheck(arg.get(), tc);
@@ -148,8 +138,6 @@ void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
-
 	tc.m_env.enter_function(ast);
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
@@ -162,11 +150,8 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 		for (int i = 0; i < arg_count; ++i) {
 			auto& arg_decl = ast->m_args[i];
-
 			int mono = tc.new_var();
-
 			arg_types.push_back(mono);
-			arg_decl.m_meta_type = tc.meta_value();
 			arg_decl.m_value_type = mono;
 		}
 
@@ -219,16 +204,12 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
-
 	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee.get(), tc);
 	typecheck(ast->m_index.get(), tc);
 }
 
 void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
-
 	typecheck(ast->m_condition.get(), tc);
 	tc.m_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
@@ -243,10 +224,6 @@ void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
-	// TODO: we want to support static record fields that
-	// contain monotypes and type functions, eventually.
-	ast->m_meta_type = tc.meta_value();
-
 	typecheck(ast->m_record.get(), tc);
 
 	// should this be a hidden type var?
@@ -317,7 +294,6 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 			// FIXME: we should get our metatype from decl->m_value
-			decl->m_meta_type = tc.meta_value();
 			decl->m_value_type = tc.new_hidden_var();
 		}
 

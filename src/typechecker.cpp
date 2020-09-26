@@ -134,6 +134,10 @@ MonoId TypeChecker::new_var() {
 	return result;
 }
 
+MetaTypeId TypeChecker::new_meta_var() {
+	return m_meta_core.new_var();
+}
+
 // qualifies all free variables in the given monotype
 PolyId TypeChecker::generalize(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;

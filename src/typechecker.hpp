@@ -23,6 +23,8 @@ struct TypeChecker {
 	PolyId generalize(MonoId mono);
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
+	MetaTypeId new_meta_var();
+
 	MonoId mono_int();
 	MonoId mono_float();
 	MonoId mono_string();
