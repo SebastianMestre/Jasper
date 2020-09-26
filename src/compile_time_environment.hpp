@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "chunked_array.hpp"
 #include "typechecker_types.hpp"
 
 namespace TypedAST {
@@ -29,12 +28,9 @@ struct CompileTimeEnvironment {
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
 	TypedAST::Declaration* m_current_decl {nullptr};
 
-	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
-
 	CompileTimeEnvironment();
 
 	void declare(std::string const&, TypedAST::Declaration*);
-	void declare_builtin(std::string const&, MetaTypeId, PolyId);
 
 	TypedAST::Declaration* access(std::string const&);
 

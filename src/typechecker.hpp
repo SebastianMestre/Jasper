@@ -1,8 +1,9 @@
 #pragma once
 
+#include "chunked_array.hpp"
 #include "compile_time_environment.hpp"
-#include "typesystem.hpp"
 #include "metatypesystem.hpp"
+#include "typesystem.hpp"
 
 namespace TypeChecker {
 
@@ -11,14 +12,15 @@ struct TypeChecker {
 	TypeSystemCore m_core;
 	MetaTypeSystem m_meta_core;
 	Frontend::CompileTimeEnvironment m_env;
+	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 
 	TypeChecker();
 
-	PolyId generalize(MonoId mono);
+	void declare_builtin(std::string const& name, MetaTypeId, PolyId);
 
 	MonoId new_hidden_var();
 	MonoId new_var();
-
+	PolyId generalize(MonoId mono);
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
 	MonoId mono_int();

@@ -1,5 +1,6 @@
 #include "typechecker.hpp"
 
+#include "typechecker_types.hpp"
 #include "typed_ast.hpp"
 
 #include <cassert>
@@ -34,7 +35,7 @@ TypeChecker::TypeChecker() {
 
 		{
 			auto poly = m_core.new_poly(var_id, {var_id});
-			m_env.declare_builtin("print", meta_value(), poly);
+			declare_builtin("print", meta_value(), poly);
 		}
 
 		{
@@ -48,7 +49,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), a) -> unit");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_append", meta_value(), poly_id);
+				declare_builtin("array_append", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -57,7 +58,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>)) -> int");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("size", meta_value(), poly_id);
+				declare_builtin("size", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -66,7 +67,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_extend", meta_value(), poly_id);
+				declare_builtin("array_extend", meta_value(), poly_id);
 			}
 			{
 				auto array_mono_id = m_core.new_term(
@@ -78,7 +79,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<int>), string)) -> string");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {});
-				m_env.declare_builtin("array_join", meta_value(), poly_id);
+				declare_builtin("array_join", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -87,7 +88,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), int) -> a");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_at", meta_value(), poly_id);
+				declare_builtin("array_at", meta_value(), poly_id);
 			}
 		}
 
@@ -99,12 +100,12 @@ TypeChecker::TypeChecker() {
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
 
-			m_env.declare_builtin("+", meta_value(), poly_id);
-			m_env.declare_builtin("-", meta_value(), poly_id);
-			m_env.declare_builtin("*", meta_value(), poly_id);
-			m_env.declare_builtin("/", meta_value(), poly_id);
-			m_env.declare_builtin(".", meta_value(), poly_id);
-			m_env.declare_builtin("=", meta_value(), poly_id);
+			declare_builtin("+", meta_value(), poly_id);
+			declare_builtin("-", meta_value(), poly_id);
+			declare_builtin("*", meta_value(), poly_id);
+			declare_builtin("/", meta_value(), poly_id);
+			declare_builtin(".", meta_value(), poly_id);
+			declare_builtin("=", meta_value(), poly_id);
 		}
 
 		{
@@ -115,8 +116,8 @@ TypeChecker::TypeChecker() {
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
 
-			m_env.declare_builtin( "<", meta_value(), poly_id);
-			m_env.declare_builtin("==", meta_value(), poly_id);
+			declare_builtin( "<", meta_value(), poly_id);
+			declare_builtin("==", meta_value(), poly_id);
 		}
 	}
 }
@@ -162,6 +163,15 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	m_core.unify(func_type, deduced_func_type);
 
 	return return_type;
+}
+
+void TypeChecker::declare_builtin(std::string const& name, MetaTypeId meta_type, PolyId poly_type){
+	m_builtin_declarations.push_back({});
+	TypedAST::Declaration* decl = &m_builtin_declarations.back();
+	decl->m_meta_type = meta_type;
+	decl->m_decl_type = poly_type;
+	decl->m_is_polymorphic = true;
+	m_env.declare(name, decl);
 }
 
 MonoId TypeChecker::mono_int() {
