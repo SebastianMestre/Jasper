@@ -120,6 +120,8 @@ TypeChecker::TypeChecker() {
 			declare_builtin("==", meta_value(), poly_id);
 		}
 	}
+
+	declare_builtin("int", meta_typefunc(), BuiltinType::Int);
 }
 
 MonoId TypeChecker::new_hidden_var() {
