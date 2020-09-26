@@ -34,7 +34,7 @@ struct CompileTimeEnvironment {
 	CompileTimeEnvironment();
 
 	void declare(std::string const&, TypedAST::Declaration*);
-	void declare_builtin(std::string const&, PolyId);
+	void declare_builtin(std::string const&, MetaTypeId, PolyId);
 
 	TypedAST::Declaration* access(std::string const&);
 

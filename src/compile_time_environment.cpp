@@ -18,9 +18,10 @@ void CompileTimeEnvironment::declare(
 	current_scope().m_vars.insert({name, decl});
 }
 
-void CompileTimeEnvironment::declare_builtin(std::string const& name, PolyId poly) {
+void CompileTimeEnvironment::declare_builtin(std::string const& name, MetaTypeId meta_type, PolyId poly) {
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
+	decl->m_meta_type = meta_type;
 	decl->m_decl_type = poly;
 	decl->m_is_polymorphic = true;
 	declare(name, decl);

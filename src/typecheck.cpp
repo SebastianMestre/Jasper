@@ -86,7 +86,6 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 		std::cerr << "@@ It is equal to:\n";
 		tc.m_core.print_type(poly_data.base);
-
 	}
 #endif
 }
@@ -104,9 +103,11 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 		else
 			ast->m_value_type = declaration->m_value_type;
 	} else if(meta_type == tc.meta_typefunc()){
+		assert(0 && "Accessed a typefunc by name (not implemented)");
 		// we are a type function.
 		// TODO: not too sure what needs to be done...
 	} else {
+		assert(0 && "Accessed a name with unknown metatype (not implemented)");
 		// meta type var
 		// TODO: not too sure what needs to be done...
 	}
@@ -165,6 +166,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 			int mono = tc.new_var();
 
 			arg_types.push_back(mono);
+			arg_decl.m_meta_type = tc.meta_value();
 			arg_decl.m_value_type = mono;
 		}
 

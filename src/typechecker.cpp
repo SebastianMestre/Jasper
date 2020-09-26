@@ -34,7 +34,7 @@ TypeChecker::TypeChecker() {
 
 		{
 			auto poly = m_core.new_poly(var_id, {var_id});
-			m_env.declare_builtin("print", poly);
+			m_env.declare_builtin("print", meta_value(), poly);
 		}
 
 		{
@@ -48,7 +48,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), a) -> unit");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_append", poly_id);
+				m_env.declare_builtin("array_append", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -57,7 +57,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>)) -> int");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("size", poly_id);
+				m_env.declare_builtin("size", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -66,7 +66,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_extend", poly_id);
+				m_env.declare_builtin("array_extend", meta_value(), poly_id);
 			}
 			{
 				auto array_mono_id = m_core.new_term(
@@ -78,7 +78,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<int>), string)) -> string");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {});
-				m_env.declare_builtin("array_join", poly_id);
+				m_env.declare_builtin("array_join", meta_value(), poly_id);
 			}
 			{
 				auto term_mono_id = m_core.new_term(
@@ -87,7 +87,7 @@ TypeChecker::TypeChecker() {
 				    "[builtin] (array(<a>), int) -> a");
 
 				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-				m_env.declare_builtin("array_at", poly_id);
+				m_env.declare_builtin("array_at", meta_value(), poly_id);
 			}
 		}
 
@@ -99,12 +99,12 @@ TypeChecker::TypeChecker() {
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
 
-			m_env.declare_builtin("+", poly_id);
-			m_env.declare_builtin("-", poly_id);
-			m_env.declare_builtin("*", poly_id);
-			m_env.declare_builtin("/", poly_id);
-			m_env.declare_builtin(".", poly_id);
-			m_env.declare_builtin("=", poly_id);
+			m_env.declare_builtin("+", meta_value(), poly_id);
+			m_env.declare_builtin("-", meta_value(), poly_id);
+			m_env.declare_builtin("*", meta_value(), poly_id);
+			m_env.declare_builtin("/", meta_value(), poly_id);
+			m_env.declare_builtin(".", meta_value(), poly_id);
+			m_env.declare_builtin("=", meta_value(), poly_id);
 		}
 
 		{
@@ -115,8 +115,8 @@ TypeChecker::TypeChecker() {
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
 
-			m_env.declare_builtin("<", poly_id);
-			m_env.declare_builtin("==", poly_id);
+			m_env.declare_builtin( "<", meta_value(), poly_id);
+			m_env.declare_builtin("==", meta_value(), poly_id);
 		}
 	}
 }
