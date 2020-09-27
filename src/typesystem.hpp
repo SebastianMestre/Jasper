@@ -6,6 +6,7 @@
 #include <string>
 
 #include "typesystem_types.hpp"
+#include "unification.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;
@@ -30,11 +31,24 @@ struct TypeFunctionHeader {
 //
 // Dummy type functions are for unifying purposes only, but do not count
 // as 'deduced', because they were not created by the user
-
 struct TypeFunctionData {
 	int argument_count; // -1 means variadic
 	std::unordered_map<std::string, MonoId> structure; // can be nullptr
 	bool is_dummy {false};
+};
+
+struct TypeFunctions {
+	std::vector<TypeFunctionData> data;
+	std::vector<TypeFunctionHeader> header;
+
+	TypeFunctionId new_builtin(int arguments);
+	TypeFunctionId new_dummy(
+	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
+
+	int new_var();
+
+	int find(int);
+	void unify(int, int);
 };
 
 enum class MonoTag { Var, Term };
@@ -79,8 +93,7 @@ struct TypeSystemCore {
 	std::vector<MonoHeader> mono_header;
 	std::vector<TermData> term_data;
 
-	std::vector<TypeFunctionHeader> type_function_header;
-	std::vector<TypeFunctionData> type_function_data;
+	TypeFunctions type_functions;
 
 	std::vector<PolyData> poly_data;
 
@@ -92,11 +105,6 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
-
-	TypeFunctionId new_builtin_type_function(int arguments);
-	TypeFunctionId new_dummy_type_function(
-	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
-	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional
 	TypeVarId new_type_var(KindTag kind, int type_id);
@@ -118,11 +126,6 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	void print_type(MonoId, int d = 0);
-
-	// union find for type functions
-	// TODO: type safe ids to overload these functions
-	TypeVarId func_find(TypeVarId func);
-	void func_unify(TypeFunctionId a, TypeFunctionId b);
 
 	// union find for type variables
 	// TODO: type safe ids to overload these functions.

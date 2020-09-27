@@ -38,10 +38,10 @@ MonoId TypeSystemCore::new_var() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = func_find(tf);
-	TypeFunctionHeader& tf_header = type_function_header[tf];
+	tf = type_functions.find(tf);
+	TypeFunctionHeader& tf_header = type_functions.header[tf];
 
-	int argument_count = type_function_data[tf_header.equals].argument_count;
+	int argument_count = type_functions.data[tf_header.equals].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size()) {
 		assert(0 && "instanciating polymorphic type with wrong argument count");
@@ -64,31 +64,6 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	PolyId poly = poly_data.size();
 	poly_data.push_back(std::move(data));
 	return poly;
-}
-
-TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId type_function_var = type_function_header.size();
-
-	type_function_header.push_back({TypeFunctionTag::Builtin, type_function_data.size()});
-	type_function_data.push_back({arguments});
-
-	return type_function_var;
-}
-
-TypeFunctionId TypeSystemCore::new_dummy_type_function
-    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
-	TypeFunctionId type_function_var = type_function_header.size();
-
-	type_function_header.push_back({type, type_function_data.size()});
-	type_function_data.push_back({-1, structure, true});
-
-	return type_function_var;
-}
-
-TypeFunctionId TypeSystemCore::new_type_function_var() {
-	TypeFunctionId type_function_var = type_function_header.size();
-	type_function_header.push_back({TypeFunctionTag::Var, type_function_var});
-	return type_function_var;
 }
 
 // NOTE: I use int here to make this fail if we change
@@ -172,7 +147,7 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 		TermData& a_data = term_data[ta];
 		TermData& b_data = term_data[tb];
 
-		func_unify(a_data.type_function, b_data.type_function);
+		type_functions.unify(a_data.type_function, b_data.type_function);
 
 		if (a_data.arguments.size() != b_data.arguments.size()) {
 			// for instance: (int,float)->int == (int)->int
@@ -188,93 +163,6 @@ void TypeSystemCore::unify(MonoId a, MonoId b) {
 	}
 }
 
-
-TypeFunctionId TypeSystemCore::func_find(TypeFunctionId func) {
-	TypeFunctionHeader& func_data = type_function_header[func];
-
-	if (func_data.type != TypeFunctionTag::Var or
-	    func_data.equals == func)
-		return func;
-
-	return func_data.equals = find(func_data.equals);
-}
-
-void TypeSystemCore::func_unify(TypeFunctionId a, TypeFunctionId b) {
-	// TODO: handle recursive unification
-
-	a = func_find(a);
-	b = func_find(b);
-
-	if (a == b)
-		return;
-
-	assert(type_function_header[a].type == type_function_header[b].type);
-
-	// ensure a is a var if at least one of them is a var
-	if (type_function_header[b].type == TypeFunctionTag::Var)
-		std::swap(a, b);
-
-	if (type_function_header[a].type == TypeFunctionTag::Var) {
-		type_function_header[a].equals = b;
-	} else {
-		// neither a nor b is a var. we will try to unify their data.
-
-		int a_data_idx = type_function_header[a].equals;
-		int b_data_idx = type_function_header[b].equals;
-
-		if (a_data_idx == b_data_idx)
-			return;
-
-		// ensure a is a dummy if at least one of them is a dummy
-		if (type_function_data[b_data_idx].is_dummy) {
-			// we don't really use a and b anymore, but let's keep it consistent.
-			std::swap(a, b);
-			std::swap(a_data_idx, b_data_idx);
-		}
-
-		TypeFunctionData& a_data = type_function_data[a_data_idx];
-		TypeFunctionData& b_data = type_function_data[b_data_idx];
-
-		if (type_function_data[a_data_idx].is_dummy) {
-			// do member-wise unification
-
-			for (auto& kv_a : a_data.structure) {
-				// for every field in a
-
-				// check that b has the same field
-				auto kv_b = b_data.structure.find(kv_a.first);
-
-				if (kv_b == b_data.structure.end())
-					// if b doesn't have, act accordingly
-					if (b_data.is_dummy)
-						b_data.structure.insert(kv_a);
-					else
-						assert(0 && "accessing non-existing field of a record type");
-				else
-					// if the field exists in b, check that the types match
-					unify(kv_a.second, kv_b->second);
-			}
-
-			// make a point to b after unifying their data.
-			// this way, if more fields get added to a or b, both get updated
-			//
-			// TODO: think more thoroughly about this...
-			// I get the feeling that we shouldn't really do this if b is a
-			// polymorphic record. why? Because b will have type variables that
-			// are bound to a forall kinda thing, and thus should NOT be unified.
-			// instead, we should do something similar to inst_fresh, but for
-			// type funcs.
-			type_function_header[a].type = TypeFunctionTag::Var;
-			type_function_header[a].equals = b;
-
-		} else {
-			// neither one is a dummy, and they are different, so we can't unify.
-			assert(0 and "unifying two different known type functions");
-		}
-	}
-}
-
-
 TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
 	TypeVarData& var_data = type_vars[type_var];
 
@@ -284,7 +172,7 @@ TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
 	case KindTag::Poly:
 		return {KindTag::Poly, var_data.type_var_id};
 	case KindTag::TypeFunction:
-		return {KindTag::TypeFunction, func_find(var_data.type_var_id)};
+		return {KindTag::TypeFunction, type_functions.find(var_data.type_var_id)};
 	}
 
 	assert(0 and "unknown kind");
@@ -306,7 +194,7 @@ void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
 	case KindTag::Poly:
 		break;
 	case KindTag::TypeFunction:
-		func_unify(rep_a.type_var_id, rep_b.type_var_id);
+		type_functions.unify(rep_a.type_var_id, rep_b.type_var_id);
 		break;
 	}
 
@@ -368,6 +256,116 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 		TermId term = header.data_id;
 		for (MonoId arg : term_data[term].arguments)
 			gather_free_vars(arg, free_vars);
+	}
+}
+
+TypeFunctionId TypeFunctions::new_builtin(int arguments) {
+	TypeFunctionId type_function_var = header.size();
+
+	header.push_back({TypeFunctionTag::Builtin, data.size()});
+	data.push_back({arguments});
+
+	return type_function_var;
+}
+
+TypeFunctionId TypeFunctions::new_dummy
+    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
+	TypeFunctionId type_function_var = header.size();
+
+	header.push_back({type, data.size()});
+	data.push_back({-1, structure, true});
+
+	return type_function_var;
+}
+
+TypeFunctionId TypeFunctions::new_var() {
+	TypeFunctionId type_function_var = header.size();
+	header.push_back({TypeFunctionTag::Var, type_function_var});
+	return type_function_var;
+}
+
+TypeFunctionId TypeFunctions::find(TypeFunctionId func) {
+	TypeFunctionHeader& func_header = header[func];
+
+	if (func_header.type != TypeFunctionTag::Var or
+	    func_header.equals == func)
+		return func;
+
+	return func_header.equals = find(func_header.equals);
+}
+
+void TypeFunctions::unify(TypeFunctionId a, TypeFunctionId b) {
+	// TODO: handle recursive unification
+
+	a = find(a);
+	b = find(b);
+
+	if (a == b)
+		return;
+
+	assert(header[a].type == header[b].type);
+
+	// ensure a is a var if at least one of them is a var
+	if (header[b].type == TypeFunctionTag::Var)
+		std::swap(a, b);
+
+	if (header[a].type == TypeFunctionTag::Var) {
+		header[a].equals = b;
+	} else {
+		// neither a nor b is a var. we will try to unify their data.
+
+		int a_data_idx = header[a].equals;
+		int b_data_idx = header[b].equals;
+
+		if (a_data_idx == b_data_idx)
+			return;
+
+		// ensure a is a dummy if at least one of them is a dummy
+		if (data[b_data_idx].is_dummy) {
+			// we don't really use a and b anymore, but let's keep it consistent.
+			std::swap(a, b);
+			std::swap(a_data_idx, b_data_idx);
+		}
+
+		TypeFunctionData& a_data = data[a_data_idx];
+		TypeFunctionData& b_data = data[b_data_idx];
+
+		if (data[a_data_idx].is_dummy) {
+			// do member-wise unification
+
+			for (auto& kv_a : a_data.structure) {
+				// for every field in a
+
+				// check that b has the same field
+				auto kv_b = b_data.structure.find(kv_a.first);
+
+				if (kv_b == b_data.structure.end())
+					// if b doesn't have, act accordingly
+					if (b_data.is_dummy)
+						b_data.structure.insert(kv_a);
+					else
+						assert(0 && "accessing non-existing field of a record type");
+				else
+					// if the field exists in b, check that the types match
+					unify(kv_a.second, kv_b->second);
+			}
+
+			// make a point to b after unifying their data.
+			// this way, if more fields get added to a or b, both get updated
+			//
+			// TODO: think more thoroughly about this...
+			// I get the feeling that we shouldn't really do this if b is a
+			// polymorphic record. why? Because b will have type variables that
+			// are bound to a forall kinda thing, and thus should NOT be unified.
+			// instead, we should do something similar to inst_fresh, but for
+			// type funcs.
+			header[a].type = TypeFunctionTag::Var;
+			header[a].equals = b;
+
+		} else {
+			// neither one is a dummy, and they are different, so we can't unify.
+			assert(0 and "unifying two different known type functions");
+		}
 	}
 }
 
