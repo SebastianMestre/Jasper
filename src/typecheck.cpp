@@ -91,12 +91,11 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	ast->m_meta_type = meta_type;
 	if (meta_type == tc.meta_value()) {
 		// here we implement the [var] rule
-		if (declaration->m_is_polymorphic)
-			ast->m_value_type = tc.m_core.inst_fresh(declaration->m_decl_type);
-		else
-			ast->m_value_type = declaration->m_value_type;
-	} else if(meta_type == tc.meta_typefunc()){
-		assert(0 && "Accessed a typefunc by name (not implemented)");
+		ast->m_value_type = declaration->m_is_polymorphic
+		                        ? tc.m_core.inst_fresh(declaration->m_decl_type)
+		                        : declaration->m_value_type;
+	} else if (meta_type == tc.meta_typefunc()) {
+		assert(0 && "Accessed a name of a typefunc (not implemented)");
 		// we are a type function.
 		// TODO: not too sure what needs to be done...
 	} else {
