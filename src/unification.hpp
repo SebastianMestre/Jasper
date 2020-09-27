@@ -19,11 +19,10 @@ struct Core {
 
 	Core() = default;
 
-	virtual int new_var();
-	virtual int new_data();
+	virtual int new_var() = 0;
 
-	virtual int find(int);
-	virtual void unify(int, int);
+	virtual int find(int) = 0;
+	virtual void unify(int, int) = 0;
 
 	virtual ~Core() = default;
 };
