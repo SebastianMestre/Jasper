@@ -2,6 +2,7 @@
 
 #include "../desugar.hpp"
 #include "../match_identifiers.hpp"
+#include "../metacheck.hpp"
 #include "../parse.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
@@ -46,6 +47,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 		}
 	}
 
+	TypeChecker::metacheck(top_level.get(), tc);
 	TypeChecker::typecheck(top_level.get(), tc);
 
 	GC gc;

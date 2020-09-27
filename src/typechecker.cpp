@@ -1,5 +1,6 @@
 #include "typechecker.hpp"
 
+#include "typechecker_types.hpp"
 #include "typed_ast.hpp"
 
 #include <cassert>
@@ -7,6 +8,9 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
+	m_meta_core.new_meta(); // 0 | value
+	m_meta_core.new_meta(); // 1 | type func
+
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
 	m_core.new_builtin_type_function(0);  // 2  | float
@@ -27,106 +31,97 @@ TypeChecker::TypeChecker() {
 	// HACK: this is an ugly hack. bear with me...
 
 	{
-		auto var = new_var();
-		auto poly = m_core.new_poly(var, {var});
-		m_env.declare_builtin("print", poly);
-	}
-
-	{
 		auto var_id = new_hidden_var();
 
-		auto array_mono_id = m_core.new_term(
-		    BuiltinType::Array, {var_id}, "array");
+		{
+			auto poly = m_core.new_poly(var_id, {var_id});
+			declare_builtin("print", meta_value(), poly);
+		}
+
+		{
+			auto array_mono_id =
+			    m_core.new_term(BuiltinType::Array, {var_id}, "array");
+
+			{
+				auto term_mono_id = m_core.new_term(
+				    BuiltinType::Function,
+				    {array_mono_id, var_id, mono_unit()},
+				    "[builtin] (array(<a>), a) -> unit");
+
+				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+				declare_builtin("array_append", meta_value(), poly_id);
+			}
+			{
+				auto term_mono_id = m_core.new_term(
+				    BuiltinType::Function,
+				    {array_mono_id, mono_int()},
+				    "[builtin] (array(<a>)) -> int");
+
+				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+				declare_builtin("size", meta_value(), poly_id);
+			}
+			{
+				auto term_mono_id = m_core.new_term(
+				    BuiltinType::Function,
+				    {array_mono_id, array_mono_id, array_mono_id},
+				    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
+
+				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+				declare_builtin("array_extend", meta_value(), poly_id);
+			}
+			{
+				auto array_mono_id = m_core.new_term(
+				    BuiltinType::Array, {mono_int()}, "array(<int>)");
+
+				auto term_mono_id = m_core.new_term(
+				    BuiltinType::Function,
+				    {array_mono_id, mono_string(), mono_string()},
+				    "[builtin] (array(<int>), string)) -> string");
+
+				auto poly_id = m_core.new_poly(term_mono_id, {});
+				declare_builtin("array_join", meta_value(), poly_id);
+			}
+			{
+				auto term_mono_id = m_core.new_term(
+				    BuiltinType::Function,
+				    {array_mono_id, mono_int(), var_id},
+				    "[builtin] (array(<a>), int) -> a");
+
+				auto poly_id = m_core.new_poly(term_mono_id, {var_id});
+				declare_builtin("array_at", meta_value(), poly_id);
+			}
+		}
 
 		{
 			auto term_mono_id = m_core.new_term(
 			    BuiltinType::Function,
-			    {array_mono_id, var_id, mono_unit()},
-			    "[builtin] (array(<a>), a) -> unit");
+			    {var_id, var_id, var_id},
+			    "[builtin] (a, a) -> a");
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-			m_env.declare_builtin("array_append", poly_id);
+
+			declare_builtin("+", meta_value(), poly_id);
+			declare_builtin("-", meta_value(), poly_id);
+			declare_builtin("*", meta_value(), poly_id);
+			declare_builtin("/", meta_value(), poly_id);
+			declare_builtin(".", meta_value(), poly_id);
+			declare_builtin("=", meta_value(), poly_id);
 		}
+
 		{
 			auto term_mono_id = m_core.new_term(
 			    BuiltinType::Function,
-			    {array_mono_id, mono_int()},
-			    "[builtin] (array(<a>)) -> int");
+			    {var_id, var_id, mono_boolean()},
+			    "[builtin] (a, a) -> Bool");
 
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-			m_env.declare_builtin("size", poly_id);
-		}
-		{
-			auto term_mono_id = m_core.new_term(
-			    BuiltinType::Function,
-			    {array_mono_id, array_mono_id, array_mono_id},
-			    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
 
-			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-			m_env.declare_builtin("array_extend", poly_id);
-		}
-		{
-			auto array_mono_id = m_core.new_term(
-			    BuiltinType::Array,
-			    {mono_int()},
-			    "array(<int>)");
-
-			auto term_mono_id = m_core.new_term(
-			    BuiltinType::Function,
-			    {array_mono_id,
-			     mono_string(),
-			     mono_string()},
-			    "[builtin] (array(<int>), string)) -> string");
-
-			auto poly_id = m_core.new_poly(term_mono_id, {});
-			m_env.declare_builtin("array_join", poly_id);
-		}
-		{
-			auto term_mono_id = m_core.new_term(
-			    BuiltinType::Function,
-			    {array_mono_id, mono_int(), var_id},
-			    "[builtin] (array(<a>), int) -> a");
-
-			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-			m_env.declare_builtin("array_at", poly_id);
+			declare_builtin( "<", meta_value(), poly_id);
+			declare_builtin("==", meta_value(), poly_id);
 		}
 	}
 
-	{
-		auto var_id = new_hidden_var();
-
-		// TODO: i use the same mono thrice... does this make sense?
-		auto term_mono_id = m_core.new_term(
-		    BuiltinType::Function,
-		    {var_id, var_id, var_id},
-		    "[builtin] (a, a) -> a");
-
-		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-
-		// TODO: re using the same PolyId... is this ok?
-		// I think this is fine because we always do inst_fresh when we use a poly
-		// , so it can't somehow get mutated
-		m_env.declare_builtin("+", poly_id);
-		m_env.declare_builtin("-", poly_id);
-		m_env.declare_builtin("*", poly_id);
-		m_env.declare_builtin("/", poly_id);
-		m_env.declare_builtin(".", poly_id);
-		m_env.declare_builtin("=", poly_id);
-	}
-
-	{
-		auto var_id = new_hidden_var();
-
-		auto term_mono_id = m_core.new_term(
-		    BuiltinType::Function,
-		    {var_id, var_id, mono_boolean()},
-		    "[builtin] (a, a) -> Bool");
-
-		auto poly_id = m_core.new_poly(term_mono_id, {var_id});
-
-		m_env.declare_builtin("<", poly_id);
-		m_env.declare_builtin("==", poly_id);
-	}
+	declare_builtin("int", meta_typefunc(), BuiltinType::Int);
 }
 
 MonoId TypeChecker::new_hidden_var() {
@@ -137,6 +132,10 @@ MonoId TypeChecker::new_var() {
 	MonoId result = m_core.new_var();
 	m_env.current_scope().m_type_vars.insert(result);
 	return result;
+}
+
+MetaTypeId TypeChecker::new_meta_var() {
+	return m_meta_core.new_var();
 }
 
 // qualifies all free variables in the given monotype
@@ -172,6 +171,15 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	return return_type;
 }
 
+void TypeChecker::declare_builtin(std::string const& name, MetaTypeId meta_type, PolyId poly_type){
+	m_builtin_declarations.push_back({});
+	TypedAST::Declaration* decl = &m_builtin_declarations.back();
+	decl->m_meta_type = meta_type;
+	decl->m_decl_type = poly_type;
+	decl->m_is_polymorphic = true;
+	m_env.declare(name, decl);
+}
+
 MonoId TypeChecker::mono_int() {
 	return 0;
 }
@@ -190,6 +198,14 @@ MonoId TypeChecker::mono_boolean() {
 
 MonoId TypeChecker::mono_unit() {
 	return 4;
+}
+
+MetaTypeId TypeChecker::meta_value() {
+	return 0;
+}
+
+MetaTypeId TypeChecker::meta_typefunc() {
+	return 1;
 }
 
 } // namespace TypeChecker

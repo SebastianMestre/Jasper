@@ -7,6 +7,8 @@ using MonoId = int;
 using PolyId = int;
 using TypeVarId = int;
 
+using MetaTypeId = int;
+
 namespace TypeChecker {
 
 struct BuiltinType {

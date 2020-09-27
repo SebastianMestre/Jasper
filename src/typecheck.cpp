@@ -4,7 +4,7 @@
 #include "tarjan_solver.hpp"
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -54,8 +54,8 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
 #endif
 
+
 	ast->m_value_type = tc.new_var();
-	tc.m_env.declare(ast->identifier_text(), ast);
 
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
@@ -78,7 +78,6 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 		std::cerr << "@@ It is equal to:\n";
 		tc.m_core.print_type(poly_data.base);
-
 	}
 #endif
 }
@@ -87,17 +86,23 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	TypedAST::Declaration* declaration = ast->m_declaration;
 	assert(declaration && "accessed an unmatched identifier");
 
-	// here we implement the [var] rule
-	// TODO: refactor
-	MonoId mono = -1;
-	if (declaration->m_is_polymorphic) {
-		mono = tc.m_core.inst_fresh(declaration->m_decl_type);
-	} else {
-		mono = declaration->m_value_type;
-	}
-	assert(mono != -1);
+	MetaTypeId meta_type = tc.m_meta_core.find(declaration->m_meta_type);
 
-	ast->m_value_type = mono;
+	ast->m_meta_type = meta_type;
+	if (meta_type == tc.meta_value()) {
+		// here we implement the [var] rule
+		ast->m_value_type = declaration->m_is_polymorphic
+		                        ? tc.m_core.inst_fresh(declaration->m_decl_type)
+		                        : declaration->m_value_type;
+	} else if (meta_type == tc.meta_typefunc()) {
+		assert(0 && "Accessed a name of a typefunc (not implemented)");
+		// we are a type function.
+		// TODO: not too sure what needs to be done...
+	} else {
+		assert(0 && "Accessed a name with unknown metatype (not implemented)");
+		// meta type var
+		// TODO: not too sure what needs to be done...
+	}
 }
 
 void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
@@ -132,7 +137,6 @@ void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
-
 	tc.m_env.enter_function(ast);
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
@@ -145,13 +149,9 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 		for (int i = 0; i < arg_count; ++i) {
 			auto& arg_decl = ast->m_args[i];
-
 			int mono = tc.new_var();
-
 			arg_types.push_back(mono);
 			arg_decl.m_value_type = mono;
-
-			tc.m_env.declare(arg_decl.identifier_text(), &arg_decl);
 		}
 
 		// return type
@@ -203,6 +203,7 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
+	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee.get(), tc);
 	typecheck(ast->m_index.get(), tc);
 }
@@ -291,6 +292,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// set up some dummy types on every decl
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
+			// FIXME: we should get our metatype from decl->m_value
 			decl->m_value_type = tc.new_hidden_var();
 		}
 

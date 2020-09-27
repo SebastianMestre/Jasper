@@ -9,7 +9,7 @@
 #include "token_tag.hpp"
 #include "typed_ast_tag.hpp"
 #include "typedefs.hpp"
-#include "typesystem_types.hpp"
+#include "typechecker_types.hpp"
 
 namespace AST {
 struct AST;
@@ -25,8 +25,9 @@ struct TypedAST {
 	TypedAST(TypedASTTag type)
 	    : m_type {type} {}
 
-	// is not set on polymorphic declarations
-	MonoId m_value_type{-1};
+	MetaTypeId m_meta_type {-1};
+	// is not set on polymorphic declarations and typefuncs (TODO: refactor)
+	MonoId m_value_type {-1};
 	TypedASTTag type() const {
 		return m_type;
 	}
@@ -48,7 +49,9 @@ struct DeclarationList : public TypedAST {
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	Own<TypedAST> m_value; // can be nullptr
+
 	std::unordered_set<Declaration*> m_references;
+
 	bool m_is_polymorphic {false};
 	PolyId m_decl_type;
 
