@@ -27,7 +27,7 @@ struct Parser {
 	/* token handler */
 	Lexer* m_lexer;
 
-	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(TokenTag);
+	Writer<std::vector<std::unique_ptr<AST::Declaration>>> parse_declaration_list(TokenTag);
 	Writer<std::vector<std::unique_ptr<AST::AST>>>
 	parse_expression_list(TokenTag, TokenTag, bool);
 

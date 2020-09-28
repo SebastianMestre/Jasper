@@ -25,6 +25,26 @@ struct AST {
 	virtual ~AST() = default;
 };
 
+struct Declaration : public AST {
+	Token const* m_identifier_token;
+	Own<AST> m_type;  // can be nullptr
+	Own<AST> m_value; // can be nullptr
+
+	std::string const& identifier_text() const {
+		return m_identifier_token->m_text;
+	}
+
+	Declaration()
+	    : AST {ASTTag::Declaration} {}
+};
+
+struct DeclarationList : public AST {
+	std::vector<Own<Declaration>> m_declarations;
+
+	DeclarationList()
+	    : AST {ASTTag::DeclarationList} {}
+};
+
 struct IntegerLiteral : public AST {
 	Token const* m_token;
 
@@ -76,7 +96,7 @@ struct NullLiteral : public AST {
 };
 
 struct ObjectLiteral : public AST {
-	std::vector<Own<AST>> m_body;
+	std::vector<Own<Declaration>> m_body;
 
 	ObjectLiteral()
 	    : AST {ASTTag::ObjectLiteral} {}
@@ -90,7 +110,7 @@ struct ArrayLiteral : public AST {
 };
 
 struct DictionaryLiteral : public AST {
-	std::vector<Own<AST>> m_body;
+	std::vector<Own<Declaration>> m_body;
 
 	DictionaryLiteral()
 	    : AST {ASTTag::DictionaryLiteral} {}
@@ -110,26 +130,6 @@ struct ShortFunctionLiteral : public AST {
 
 	ShortFunctionLiteral()
 	    : AST {ASTTag::ShortFunctionLiteral} {}
-};
-
-struct DeclarationList : public AST {
-	std::vector<Own<AST>> m_declarations;
-
-	DeclarationList()
-	    : AST {ASTTag::DeclarationList} {}
-};
-
-struct Declaration : public AST {
-	Token const* m_identifier_token;
-	Own<AST> m_type;  // can be nullptr
-	Own<AST> m_value; // can be nullptr
-
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text;
-	}
-
-	Declaration()
-	    : AST {ASTTag::Declaration} {}
 };
 
 struct Identifier : public AST {

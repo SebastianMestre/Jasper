@@ -80,12 +80,12 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::vector<std::unique_ptr<AST::AST>>>
+Writer<std::vector<std::unique_ptr<AST::Declaration>>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+	Writer<std::vector<std::unique_ptr<AST::Declaration>>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
-	std::vector<std::unique_ptr<AST::AST>> declarations;
+	std::vector<std::unique_ptr<AST::Declaration>> declarations;
 
 	while (1) {
 		auto p0 = peek();

@@ -8,6 +8,21 @@
 
 namespace AST {
 
+Own<Declaration> desugar(Own<Declaration> ast) {
+	// TODO: handle type hint
+	if (ast->m_value)
+		ast->m_value = desugar(std::move(ast->m_value));
+
+	return ast;
+}
+
+Own<AST> desugar(Own<DeclarationList> ast) {
+	for (auto&& declaration : ast->m_declarations)
+		declaration = desugar(std::move(declaration));
+
+	return ast;
+}
+
 Own<AST> desugar(Own<ObjectLiteral> ast) {
 	// TODO: convert
 	// obt { x : t1 = e1; y : t2 = e2; }
@@ -56,21 +71,6 @@ Own<AST> desugar(Own<ShortFunctionLiteral> ast) {
 	func->m_body = std::move(block);
 
 	return func;
-}
-
-Own<AST> desugar(Own<DeclarationList> ast) {
-	for (auto&& declaration : ast->m_declarations)
-		declaration = desugar(std::move(declaration));
-
-	return ast;
-}
-
-Own<AST> desugar(Own<Declaration> ast) {
-	// TODO: handle type hint
-	if (ast->m_value)
-		ast->m_value = desugar(std::move(ast->m_value));
-
-	return ast;
 }
 
 Own<AST> desugarPizza(Own<BinaryExpression> ast) {
