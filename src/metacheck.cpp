@@ -142,23 +142,17 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
 		decl->m_meta_type = tc.new_meta_var();
 
-	for (auto& decl : ast->m_declarations) {
-		auto* d = static_cast<TypedAST::Declaration*>(decl.get());
-		metacheck(d->m_value.get(), tc);
-	}
+	for (auto& decl : ast->m_declarations)
+		metacheck(decl->m_value.get(), tc);
 
-	for (auto& decl : ast->m_declarations){
-		auto* d = static_cast<TypedAST::Declaration*>(decl.get());
-		tc.m_meta_core.unify(d->m_meta_type, d->m_value->m_meta_type);
-	}
+	for (auto& decl : ast->m_declarations)
+		tc.m_meta_core.unify(decl->m_meta_type, decl->m_value->m_meta_type);
 
-	for (auto& decl : ast->m_declarations){
-		auto* d = static_cast<TypedAST::Declaration*>(decl.get());
-		if (tc.m_meta_core.find(d->m_meta_type) == tc.meta_typefunc())
-			for (auto* other : d->m_references)
+	for (auto& decl : ast->m_declarations)
+		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
+			for (auto* other : decl->m_references)
 				if (tc.m_meta_core.find(other->m_meta_type) == tc.meta_value())
 					assert(0 && "value referenced in a type definition");
-	}
 }
 
 void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {

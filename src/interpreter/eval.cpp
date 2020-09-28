@@ -11,14 +11,6 @@
 
 namespace Interpreter {
 
-gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
-	for (auto& decl : ast->m_declarations) {
-		assert(decl->type() == TypedASTTag::Declaration);
-		eval(static_cast<TypedAST::Declaration*>(decl.get()), e);
-	}
-	return e.null();
-};
-
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	// TODO: type and mutable check -> return error
 	e.declare(ast->identifier_text(), e.null());
@@ -27,6 +19,13 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 		auto value = eval(ast->m_value.get(), e);
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
+	}
+	return e.null();
+};
+
+gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
+	for (auto& decl : ast->m_declarations) {
+		eval(decl.get(), e);
 	}
 	return e.null();
 };

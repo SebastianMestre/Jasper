@@ -172,17 +172,15 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
-		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		env.declare(d->identifier_text(), d);
-		d->m_surrounding_function = env.current_function();
+		env.declare(decl->identifier_text(), decl.get());
+		decl->m_surrounding_function = env.current_function();
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		env.enter_top_level_decl(d);
+		env.enter_top_level_decl(decl.get());
 
-		if (d->m_value)
-			CHECK_AND_RETURN(match_identifiers(d->m_value.get(), env));
+		if (decl->m_value)
+			CHECK_AND_RETURN(match_identifiers(decl->m_value.get(), env));
 
 		env.exit_top_level_decl();
 	}

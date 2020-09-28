@@ -245,9 +245,8 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	// assign a unique int to every top level declaration
 	int i = 0;
 	for (auto& decl : ast->m_declarations) {
-		auto d = static_cast<TypedAST::Declaration*>(decl.get());
-		index_to_decl.push_back(d);
-		decl_to_index.insert({d, i});
+		index_to_decl.push_back(decl.get());
+		decl_to_index.insert({decl.get(), i});
 		++i;
 	}
 
