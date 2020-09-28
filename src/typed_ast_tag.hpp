@@ -24,7 +24,10 @@
 	X(WhileStatement)                                                          \
                                                                                \
 	X(DeclarationList)                                                         \
-	X(Declaration)
+	X(Declaration)                                                             \
+                                                                               \
+	X(StructExpression)                                                        \
+	X(TypeFunctionHandle)
 
 #define X(name) #name,
 constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};
