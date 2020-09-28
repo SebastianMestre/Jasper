@@ -176,8 +176,16 @@ void TypeChecker::declare_builtin(std::string const& name, MetaTypeId meta_type,
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_meta_type = meta_type;
-	decl->m_decl_type = poly_type;
-	decl->m_is_polymorphic = true;
+	// BIG HACK:
+	// if we are declaring a typefunc, 'poly_type' is actually a TypeFunctionId
+	if (meta_type == meta_typefunc()) {
+		auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
+		handle->m_value = poly_type;
+		decl->m_value = std::move(handle);
+	} else {
+		decl->m_decl_type = poly_type;
+		decl->m_is_polymorphic = true;
+	}
 	m_env.declare(name, decl);
 }
 
