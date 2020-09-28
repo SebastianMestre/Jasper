@@ -73,17 +73,7 @@ Own<TypedAST> convert_ast(AST::FunctionLiteral* ast) {
 	return typed_function;
 }
 
-Own<TypedAST> convert_ast(AST::DeclarationList* ast) {
-	auto typed_declist = std::make_unique<DeclarationList>();
-
-	for (auto& declaration : ast->m_declarations) {
-		typed_declist->m_declarations.push_back(convert_ast(declaration.get()));
-	}
-
-	return typed_declist;
-}
-
-Own<TypedAST> convert_ast(AST::Declaration* ast) {
+Own<Declaration> convert_ast(AST::Declaration* ast) {
 	auto typed_dec = std::make_unique<Declaration>();
 
 	typed_dec->m_identifier_token = ast->m_identifier_token;
@@ -92,6 +82,16 @@ Own<TypedAST> convert_ast(AST::Declaration* ast) {
 		typed_dec->m_value = convert_ast(ast->m_value.get());
 
 	return typed_dec;
+}
+
+Own<TypedAST> convert_ast(AST::DeclarationList* ast) {
+	auto typed_declist = std::make_unique<DeclarationList>();
+
+	for (auto& declaration : ast->m_declarations) {
+		typed_declist->m_declarations.push_back(convert_ast(declaration.get()));
+	}
+
+	return typed_declist;
 }
 
 Own<TypedAST> convert_ast(AST::Identifier* ast) {

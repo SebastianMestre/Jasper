@@ -80,12 +80,12 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::vector<std::unique_ptr<AST::AST>>>
+Writer<std::vector<std::unique_ptr<AST::Declaration>>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+	Writer<std::vector<std::unique_ptr<AST::Declaration>>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
-	std::vector<std::unique_ptr<AST::AST>> declarations;
+	std::vector<std::unique_ptr<AST::Declaration>> declarations;
 
 	while (1) {
 		auto p0 = peek();
@@ -173,8 +173,8 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 	return make_writer(std::move(expressions));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<std::unique_ptr<AST::Declaration>> Parser::parse_declaration() {
+	Writer<std::unique_ptr<AST::Declaration>> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
 	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
@@ -212,7 +212,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	p->m_type = std::move(type.m_result);
 	p->m_value = std::move(value.m_result);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(p));
+	return make_writer<std::unique_ptr<AST::Declaration>>(std::move(p));
 }
 
 // These are important for infix expression parsing.
@@ -554,8 +554,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<std::unique_ptr<AST::Identifier>> Parser::parse_identifier() {
+	Writer<std::unique_ptr<AST::Identifier>> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
 	auto token = require(TokenTag::IDENTIFIER);
@@ -564,7 +564,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 
 	auto e = std::make_unique<AST::Identifier>();
 	e->m_token = token.m_result;
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<std::unique_ptr<AST::Identifier>>(std::move(e));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
@@ -942,7 +942,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 				return result;
 			}
 
-			return declaration;
+			return make_writer<std::unique_ptr<AST::AST>>(std::unique_ptr<AST::AST>(declaration.m_result.release()));
 		} else {
 
 			// TODO: wrap in an ExpressionStatement ?
@@ -1025,12 +1025,12 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
-    Parser::parse_type_list(bool with_identifiers = false) {
-	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>> Parser::parse_type_list(
+    bool with_identifiers = false) {
+	Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>
 	    result = {{"Parse Error: Failed to parse type list"}};
 
-	std::vector<std::unique_ptr<AST::AST>> identifiers;
+	std::vector<AST::Identifier> identifiers;
 	std::vector<std::unique_ptr<AST::AST>> types;
 
 	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
@@ -1044,8 +1044,8 @@ Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_
 
 			if (handle_error(result, require(TokenTag::COLON)))
 				return result;
-			
-			identifiers.push_back(std::move(cons.m_result));
+
+			identifiers.push_back(std::move(*cons.m_result));
 		}
 
 		auto type = parse_type_term();
@@ -1058,8 +1058,9 @@ Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_
 		types.push_back(std::move(type.m_result));
 	}
 
-	return make_writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
-	    (make_pair(std::move(identifiers), std::move(types)));
+	return make_writer<
+	    std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>(
+	    make_pair(std::move(identifiers), std::move(types)));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {

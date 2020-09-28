@@ -27,13 +27,13 @@ struct Parser {
 	/* token handler */
 	Lexer* m_lexer;
 
-	Writer<std::vector<std::unique_ptr<AST::AST>>> parse_declaration_list(TokenTag);
+	Writer<std::vector<std::unique_ptr<AST::Declaration>>> parse_declaration_list(TokenTag);
 	Writer<std::vector<std::unique_ptr<AST::AST>>>
 	parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<std::unique_ptr<AST::AST>> parse_top_level();
-	Writer<std::unique_ptr<AST::AST>> parse_identifier();
-	Writer<std::unique_ptr<AST::AST>> parse_declaration();
+	Writer<std::unique_ptr<AST::Identifier>> parse_identifier();
+	Writer<std::unique_ptr<AST::Declaration>> parse_declaration();
 	Writer<std::unique_ptr<AST::AST>> parse_expression(int bp = 0);
 	Writer<std::unique_ptr<AST::AST>> parse_terminal();
 	Writer<std::unique_ptr<AST::AST>> parse_ternary_expression();
@@ -49,7 +49,7 @@ struct Parser {
 	Writer<std::unique_ptr<AST::AST>> parse_for_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_while_statement();
 	Writer<std::unique_ptr<AST::AST>> parse_type_term();
-	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+	Writer<std::pair<std::vector<AST::Identifier>,std::vector<std::unique_ptr<AST::AST>>>>
 	    parse_type_list(bool);
 	Writer<std::unique_ptr<AST::AST>> parse_type_var();
 	Writer<std::unique_ptr<AST::AST>> parse_type_function();

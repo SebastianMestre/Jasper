@@ -38,14 +38,6 @@ Own<TypedAST> convert_ast(AST::AST*);
 
 struct FunctionLiteral;
 
-// doesnt have a ast_vtype
-struct DeclarationList : public TypedAST {
-	std::vector<Own<TypedAST>> m_declarations;
-
-	DeclarationList()
-	    : TypedAST {TypedASTTag::DeclarationList} {}
-};
-
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
 	Own<TypedAST> m_value; // can be nullptr
@@ -64,6 +56,14 @@ struct Declaration : public TypedAST {
 
 	Declaration()
 	    : TypedAST {TypedASTTag::Declaration} {}
+};
+
+// doesnt have a ast_vtype
+struct DeclarationList : public TypedAST {
+	std::vector<Own<Declaration>> m_declarations;
+
+	DeclarationList()
+	    : TypedAST {TypedASTTag::DeclarationList} {}
 };
 
 // las estructuras como declaration list, index expression, block, if, for no tienen
