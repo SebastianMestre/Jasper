@@ -206,6 +206,14 @@ void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee.get(), tc);
 	typecheck(ast->m_index.get(), tc);
+
+	auto var = tc.new_var();
+	auto arr = tc.m_core.new_term(BuiltinType::Array, {var});
+	tc.m_core.unify(arr, ast->m_callee->m_value_type);
+
+	tc.m_core.unify(tc.mono_int(), ast->m_index->m_value_type);
+
+	ast->m_value_type = var;
 }
 
 void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
