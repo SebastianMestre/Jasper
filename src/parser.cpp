@@ -173,8 +173,8 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 	return make_writer(std::move(expressions));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<std::unique_ptr<AST::Declaration>> Parser::parse_declaration() {
+	Writer<std::unique_ptr<AST::Declaration>> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
 	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
@@ -212,7 +212,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_declaration() {
 	p->m_type = std::move(type.m_result);
 	p->m_value = std::move(value.m_result);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(p));
+	return make_writer<std::unique_ptr<AST::Declaration>>(std::move(p));
 }
 
 // These are important for infix expression parsing.
@@ -942,7 +942,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 				return result;
 			}
 
-			return declaration;
+			return make_writer<std::unique_ptr<AST::AST>>(std::unique_ptr<AST::AST>(declaration.m_result.release()));
 		} else {
 
 			// TODO: wrap in an ExpressionStatement ?
