@@ -508,6 +508,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 		return array;
 	}
 
+	if (token->m_type == TokenTag::KEYWORD_STRUCT) {
+		// TODO: do the other type functions
+		auto type = parse_type_function();
+		if (handle_error(result, type))
+			return result;
+		return type;
+	}
+
 	result.m_error.m_sub_errors.push_back({make_expected_error(
 	    token_string[int(TokenTag::KEYWORD_FN)], token)});
 
@@ -1042,7 +1050,7 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::
 			if (handle_error(result, cons))
 				return result;
 
-			if (handle_error(result, require(TokenTag::COLON)))
+			if (handle_error(result, require(TokenTag::DECLARE)))
 				return result;
 
 			identifiers.push_back(std::move(*cons.m_result));
