@@ -239,4 +239,11 @@ struct WhileStatement : public TypedAST {
 	    : TypedAST {TypedASTTag::WhileStatement} {}
 };
 
+
+struct TypeFunctionHandle : public TypedAST {
+	TypeFunctionId m_value;
+	// points to the ast node this one was made from
+	Own<TypedAST> m_syntax;
+};
+
 } // namespace TypedAST
