@@ -554,8 +554,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<std::unique_ptr<AST::Identifier>> Parser::parse_identifier() {
+	Writer<std::unique_ptr<AST::Identifier>> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
 	auto token = require(TokenTag::IDENTIFIER);
@@ -564,7 +564,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_identifier() {
 
 	auto e = std::make_unique<AST::Identifier>();
 	e->m_token = token.m_result;
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<std::unique_ptr<AST::Identifier>>(std::move(e));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
@@ -1045,9 +1045,7 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::
 			if (handle_error(result, require(TokenTag::COLON)))
 				return result;
 
-			// beware the cursed line -- lol imagine having type safety
-			identifiers.push_back(
-			    std::move(*static_cast<AST::Identifier*>(cons.m_result.get())));
+			identifiers.push_back(std::move(*cons.m_result));
 		}
 
 		auto type = parse_type_term();
