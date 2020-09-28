@@ -249,7 +249,7 @@ struct TypeVar : public AST {
 
 struct UnionExpression : public AST {
 	// TODO: better storage?
-	std::vector<Own<AST>> m_constructors;
+	std::vector<Identifier> m_constructors;
 	std::vector<Own<AST>> m_types;
 
 	UnionExpression()
@@ -265,7 +265,7 @@ struct TupleExpression : public AST {
 
 struct StructExpression : public AST {
 	// TODO: better storage?
-	std::vector<Own<AST>> m_fields;
+	std::vector<Identifier> m_fields;
 	std::vector<Own<AST>> m_types;
 
 	StructExpression()

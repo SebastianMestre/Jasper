@@ -1025,12 +1025,12 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
-Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
-    Parser::parse_type_list(bool with_identifiers = false) {
-	Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
+Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>> Parser::parse_type_list(
+    bool with_identifiers = false) {
+	Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>
 	    result = {{"Parse Error: Failed to parse type list"}};
 
-	std::vector<std::unique_ptr<AST::AST>> identifiers;
+	std::vector<AST::Identifier> identifiers;
 	std::vector<std::unique_ptr<AST::AST>> types;
 
 	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
@@ -1044,8 +1044,10 @@ Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_
 
 			if (handle_error(result, require(TokenTag::COLON)))
 				return result;
-			
-			identifiers.push_back(std::move(cons.m_result));
+
+			// beware the cursed line -- lol imagine having type safety
+			identifiers.push_back(
+			    std::move(*static_cast<AST::Identifier*>(cons.m_result.get())));
 		}
 
 		auto type = parse_type_term();
@@ -1058,8 +1060,9 @@ Writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_
 		types.push_back(std::move(type.m_result));
 	}
 
-	return make_writer<std::pair<std::vector<std::unique_ptr<AST::AST>>,std::vector<std::unique_ptr<AST::AST>>>>
-	    (make_pair(std::move(identifiers), std::move(types)));
+	return make_writer<
+	    std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>(
+	    make_pair(std::move(identifiers), std::move(types)));
 }
 
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
