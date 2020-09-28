@@ -247,6 +247,14 @@ struct StructExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::StructExpression} {}
 };
 
+struct TypeTerm : public TypedAST {
+	Own<TypedAST> m_callee;
+	std::vector<Own<TypedAST>> m_args; // should these be TypeTerms?
+
+	TypeTerm()
+	    : TypedAST {TypedASTTag::TypeTerm} {}
+};
+
 struct TypeFunctionHandle : public TypedAST {
 	TypeFunctionId m_value;
 	// points to the ast node this one was made from

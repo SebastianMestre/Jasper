@@ -27,6 +27,7 @@
 	X(Declaration)                                                             \
                                                                                \
 	X(StructExpression)                                                        \
+	X(TypeTerm)                                                                \
 	X(TypeFunctionHandle)
 
 #define X(name) #name,
