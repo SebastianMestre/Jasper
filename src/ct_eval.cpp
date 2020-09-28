@@ -1,5 +1,6 @@
 #include "ct_eval.hpp"
 
+#include "typechecker.hpp"
 #include "typed_ast.hpp"
 
 #include <iostream>
@@ -103,11 +104,40 @@ Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& 
 	return ast;
 }
 
+TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
+	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
+	if(ast->type() == TypedASTTag::Identifier){
+		auto as_id = static_cast<TypedAST::Identifier*>(ast);
+		auto decl = as_id->m_declaration;
+		auto value = static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
+		return value->m_value;
+	} else {
+		assert(0);
+	}
+}
+
 Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations) {
-		auto* d = static_cast<TypedAST::Declaration*>(decl.get());
-		d->m_value = ct_eval(std::move(d->m_value), tc);
+		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
+			// put a dummy typefunc var where required.
+			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
+			handle->m_value = tc.m_core.new_type_function_var();
+			handle->m_syntax = std::move(decl->m_value);
+			decl->m_value = std::move(handle);
+		}
 	}
+
+	for (auto& decl : ast->m_declarations) {
+		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
+			auto handle =
+			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
+			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);
+			tc.m_core.func_unify(tf, handle->m_value);
+		} else {
+			decl->m_value = ct_eval(std::move(decl->m_value), tc);
+		}
+	}
+
 	return ast;
 }
 
