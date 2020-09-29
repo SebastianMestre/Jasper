@@ -60,4 +60,17 @@ void Core::unify(int i, int j) {
 	}
 }
 
+int Core::new_var() {
+	int id = node_header.size();
+	node_header.push_back({Tag::Var, id});
+	return id;
+}
+
+int Core::new_term(int f, std::vector<int> args) {
+	int id = node_header.size();
+	node_header.push_back({Tag::Term, term_data.size()});
+	term_data.push_back({f, std::move(args)});
+	return id;
+}
+
 } // namespace Unification

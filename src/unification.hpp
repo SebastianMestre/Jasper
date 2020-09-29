@@ -27,6 +27,9 @@ struct Core {
 	int find(int i);
 	int find_term(int i);
 	void unify(int i, int j);
+
+	int new_var();
+	int new_term(int f, std::vector<int> args);
 };
 
 } // namespace Unification
