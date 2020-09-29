@@ -155,6 +155,27 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 					assert(0 && "value referenced in a type definition");
 }
 
+void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_typefunc();
+
+	for (auto& type : ast->m_types) {
+		metacheck(type.get(), tc);
+		tc.m_meta_core.unify(type->m_meta_type, tc.meta_monotype());
+	}
+}
+
+void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_monotype();
+
+	metacheck(ast->m_callee.get(), tc);
+	tc.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_typefunc());
+
+	for (auto& arg : ast->m_args) {
+		metacheck(arg.get(), tc);
+		tc.m_meta_core.unify(arg->m_meta_type, tc.meta_monotype());
+	}
+}
+
 void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
 	case TypedASTTag::type:                                                    \
@@ -187,6 +208,9 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
+
+		DISPATCH(StructExpression);
+		DISPATCH(TypeTerm);
 	}
 
 	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "

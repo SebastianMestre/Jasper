@@ -10,6 +10,7 @@ namespace TypeChecker {
 TypeChecker::TypeChecker() {
 	m_meta_core.new_meta(); // 0 | value
 	m_meta_core.new_meta(); // 1 | type func
+	m_meta_core.new_meta(); // 2 | mono type
 
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
@@ -175,8 +176,16 @@ void TypeChecker::declare_builtin(std::string const& name, MetaTypeId meta_type,
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_meta_type = meta_type;
-	decl->m_decl_type = poly_type;
-	decl->m_is_polymorphic = true;
+	// BIG HACK:
+	// if we are declaring a typefunc, 'poly_type' is actually a TypeFunctionId
+	if (meta_type == meta_typefunc()) {
+		auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
+		handle->m_value = poly_type;
+		decl->m_value = std::move(handle);
+	} else {
+		decl->m_decl_type = poly_type;
+		decl->m_is_polymorphic = true;
+	}
 	m_env.declare(name, decl);
 }
 
@@ -206,6 +215,10 @@ MetaTypeId TypeChecker::meta_value() {
 
 MetaTypeId TypeChecker::meta_typefunc() {
 	return 1;
+}
+
+MetaTypeId TypeChecker::meta_monotype() {
+	return 2;
 }
 
 } // namespace TypeChecker

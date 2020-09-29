@@ -190,6 +190,32 @@ Own<TypedAST> convert_ast(AST::WhileStatement* ast) {
 	return typed_while;
 }
 
+Own<TypedAST> convert_ast(AST::StructExpression* ast) {
+	auto typed_ast = std::make_unique<StructExpression>();
+
+	for (auto& field : ast->m_fields){
+		auto ptr = convert_ast(&field);
+		typed_ast->m_fields.push_back(std::move(*static_cast<Identifier*>(ptr.get())));
+	}
+
+	for (auto& type : ast->m_types){
+		typed_ast->m_types.push_back(convert_ast(type.get()));
+	}
+
+	return typed_ast;
+};
+
+Own<TypedAST> convert_ast(AST::TypeTerm* ast) {
+	auto typed_ast = std::make_unique<TypeTerm>();
+
+	typed_ast->m_callee = convert_ast(ast->m_callee.get());
+	for (auto& arg : ast->m_args){
+		typed_ast->m_args.push_back(convert_ast(arg.get()));
+	}
+
+	return typed_ast;
+}
+
 Own<TypedAST> convert_ast(AST::AST* ast) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
@@ -224,6 +250,9 @@ Own<TypedAST> convert_ast(AST::AST* ast) {
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
+
+		DISPATCH(StructExpression);
+		DISPATCH(TypeTerm);
 	}
 	std::cerr << "Error: AST type not handled in convert_ast: "
 	          << ast_string[(int)ast->type()] << std::endl;
