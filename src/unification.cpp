@@ -52,7 +52,7 @@ void Core::unify(int i, int j) {
 		int vi = node_header[i].data_idx;
 		int vj = node_header[j].data_idx;
 
-		unify_function(term_data[vi].function_id, term_data[vj].function_id);
+		unify_function(i, j);
 
 		assert(term_data[vi].argument_idx.size() == term_data[vj].argument_idx.size());
 		for (int k = 0; k < term_data[vi].argument_idx.size(); ++k)
