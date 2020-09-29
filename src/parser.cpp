@@ -1006,6 +1006,26 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	return result;
 }
 
+Writer<std::vector<Own<AST::AST>>> Parser::parse_type_term_arguments() {
+	Writer<std::vector<Own<AST::AST>>> result = {
+	    {"Parse Error: Failed to parse type arguments"}};
+
+	if (handle_error(result, require(TokenTag::POLY_OPEN)))
+		return result;
+
+	std::vector<Own<AST::AST>> args;
+
+	while (!consume(TokenTag::POLY_CLOSE)) {
+		auto arg = parse_type_term();
+		if (handle_error(result, arg))
+			return result;
+
+		args.push_back(std::move(arg.m_result));
+	}
+
+	return make_writer(std::move(args));
+}
+
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse type"}};
@@ -1017,19 +1037,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	auto e = std::make_unique<AST::TypeTerm>();
 	e->m_callee = std::move(callee.m_result);
 
-	if (!consume(TokenTag::POLY_OPEN))
+	if (!match(TokenTag::POLY_OPEN))
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 
-	std::vector<std::unique_ptr<AST::AST>> args;
-	while (!consume(TokenTag::POLY_CLOSE)) {
-		auto arg = parse_type_term();
-		if (handle_error(result, arg))
-			return result;
+	auto args = parse_type_term_arguments();
+	if (handle_error(result, args))
+		return result;
 
-		args.push_back(std::move(arg.m_result));
-	}
-
-	e->m_args = std::move(args);
+	e->m_args = std::move(args.m_result);
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
