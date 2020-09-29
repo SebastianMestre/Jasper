@@ -227,6 +227,7 @@ bool is_binary_operator(TokenTag t) {
 	switch (t) {
 	case TokenTag::PAREN_OPEN:   // a bit of a hack
 	case TokenTag::BRACKET_OPEN: // a bit of a hack
+	case TokenTag::POLY_OPEN:    // a bit of a hack
 
 	case TokenTag::LT:
 	case TokenTag::GT:
@@ -270,6 +271,7 @@ binding_power binding_power_of(TokenTag t) {
 		return {50, 51};
 	case TokenTag::PAREN_OPEN:   // a bit of a hack
 	case TokenTag::BRACKET_OPEN: // a bit of a hack
+	case TokenTag::POLY_OPEN:    // a bit of a hack
 	case TokenTag::DOT:
 		return {70, 71};
 	default:
@@ -367,6 +369,20 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			auto e = std::make_unique<AST::IndexExpression>();
 			e->m_callee = std::move(lhs.m_result);
 			e->m_index = std::move(index.m_result);
+			lhs.m_result = std::move(e);
+
+			continue;
+		}
+
+		if (match(TokenTag::POLY_OPEN)) {
+			auto args = parse_type_term_arguments();
+			if (handle_error(result, args))
+				return result;
+
+			auto e = std::make_unique<AST::TypeTerm>();
+
+			e->m_callee = std::move(lhs.m_result);
+			e->m_args = std::move(args.m_result);
 			lhs.m_result = std::move(e);
 
 			continue;
