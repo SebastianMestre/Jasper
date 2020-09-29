@@ -121,7 +121,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
 			// put a dummy typefunc var where required.
 			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
-			handle->m_value = tc.m_core.new_type_function_var();
+			handle->m_value = tc.m_core.m_tf_core.new_var();
 			handle->m_syntax = std::move(decl->m_value);
 			decl->m_value = std::move(handle);
 		}
@@ -132,7 +132,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);
-			tc.m_core.func_unify(tf, handle->m_value);
+			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else {
 			decl->m_value = ct_eval(std::move(decl->m_value), tc);
 		}

@@ -6,32 +6,23 @@
 #include <string>
 
 #include "typechecker_types.hpp"
+#include "unification.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;
 }
 
-enum class TypeFunctionTag { Var, Builtin, Sum, Product, Record };
-// A type function gives the 'real value' of a type.
-// This can refer to a sum type, a product type, a built-in type, etc.
-// For the purposes of the type system, we only care about the amount
-// of argument it takes.
-
-// If it's a var, equals points to another TypeFunctionHeader.
-// Else it points to a TypeFunctionData.
-struct TypeFunctionHeader {
-	TypeFunctionTag type;
-	int equals;
-};
-
+enum class TypeFunctionTag { Builtin, Sum, Product, Record };
 // Concrete type function. If it's a built-in, we use argument_count
 // to tell how many arguments it takes. Else, for sum, product and record,
 // we store their structure as a hash from names to monotypes.
 //
 // Dummy type functions are for unifying purposes only, but do not count
-// as 'deduced', because they were not created by the user
-
+// as 'deduced', because they were not created by the user/
+//
+// TODO: change for polymorphic approach
 struct TypeFunctionData {
+	TypeFunctionTag tag;
 	int argument_count; // -1 means variadic
 	std::unordered_map<std::string, MonoId> structure; // can be nullptr
 	bool is_dummy {false};
@@ -79,12 +70,14 @@ struct TypeSystemCore {
 	std::vector<MonoHeader> mono_header;
 	std::vector<TermData> term_data;
 
-	std::vector<TypeFunctionHeader> type_function_header;
-	std::vector<TypeFunctionData> type_function_data;
+	Unification::Core m_tf_core;
+	std::vector<TypeFunctionData> m_type_functions;
 
 	std::vector<PolyData> poly_data;
 
 	std::vector<TypeVarData> type_vars;
+
+	TypeSystemCore();
 
 	MonoId new_var();
 	MonoId new_term(
@@ -96,7 +89,6 @@ struct TypeSystemCore {
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_dummy_type_function(
 	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
-	TypeFunctionId new_type_function_var();
 	
 	// NOTE: using int here is provisional
 	TypeVarId new_type_var(KindTag kind, int type_id);
@@ -118,11 +110,6 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	void print_type(MonoId, int d = 0);
-
-	// union find for type functions
-	// TODO: type safe ids to overload these functions
-	TypeVarId func_find(TypeVarId func);
-	void func_unify(TypeFunctionId a, TypeFunctionId b);
 
 	// union find for type variables
 	// TODO: type safe ids to overload these functions.
