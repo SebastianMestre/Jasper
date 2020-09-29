@@ -29,6 +29,11 @@ int Core::find(int i) {
 	return node_header[i].data_idx = find(node_header[i].data_idx);
 }
 
+int Core::find_term(int i) {
+	i = find(i);
+	return node_header[i].tag == Tag::Term ? node_header[i].data_idx : -1;
+}
+
 void Core::unify(int i, int j) {
 	i = find(i);
 	j = find(j);
@@ -38,7 +43,7 @@ void Core::unify(int i, int j) {
 
 	if (node_header[i].tag == Tag::Var) {
 
-		if(node_header[j].tag == Tag::Term)
+		if (node_header[j].tag == Tag::Term)
 			assert(!occurs(i, j));
 
 		node_header[i].data_idx = j;

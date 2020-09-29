@@ -15,7 +15,7 @@ struct Core {
 	};
 
 	struct TermData {
-		int function_id;
+		int function_id; // possibly an external id
 		std::vector<int> argument_idx;
 	};
 
@@ -25,6 +25,7 @@ struct Core {
 
 	bool occurs(int v, int i);
 	int find(int i);
+	int find_term(int i);
 	void unify(int i, int j);
 };
 
