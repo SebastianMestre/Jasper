@@ -97,12 +97,7 @@ Own<TypedAST::ReturnStatement> ct_eval(Own<TypedAST::ReturnStatement> ast, TypeC
 	return ast;
 }
 
-// declarations
-
-Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& tc) {
-	ast->m_value = ct_eval(std::move(ast->m_value), tc);
-	return ast;
-}
+// types
 
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
@@ -116,23 +111,54 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	}
 }
 
+MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
+	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
+	if(ast->type() == TypedASTTag::Identifier){
+		auto as_id = static_cast<TypedAST::Identifier*>(ast);
+		auto decl = as_id->m_declaration;
+		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+		return value->m_value;
+	} else {
+		assert(0);
+	}
+}
+
+// declarations
+
+Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& tc) {
+	ast->m_value = ct_eval(std::move(ast->m_value), tc);
+	return ast;
+}
+
 Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations) {
-		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
-			// put a dummy typefunc var where required.
+		int meta_type = tc.m_meta_core.find(decl->m_meta_type);
+		// put a dummy var where required.
+		if (meta_type == tc.meta_typefunc()) {
 			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
 			handle->m_value = tc.m_core.new_type_function_var();
+			handle->m_syntax = std::move(decl->m_value);
+			decl->m_value = std::move(handle);
+		} else if(meta_type == tc.meta_monotype()) {
+			auto handle = std::make_unique<TypedAST::MonoTypeHandle>();
+			handle->m_value = tc.m_core.new_var(); // should it be hidden?
 			handle->m_syntax = std::move(decl->m_value);
 			decl->m_value = std::move(handle);
 		}
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
+		int meta_type = tc.m_meta_core.find(decl->m_meta_type);
+		if (meta_type == tc.meta_typefunc()) {
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);
 			tc.m_core.func_unify(tf, handle->m_value);
+		} else if (meta_type == tc.meta_monotype()) {
+			auto handle =
+			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+			MonoId mt = mono_type_from_ast(handle->m_syntax.get(), tc);
+			tc.m_core.unify(mt, handle->m_value);
 		} else {
 			decl->m_value = ct_eval(std::move(decl->m_value), tc);
 		}
@@ -140,6 +166,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 
 	return ast;
 }
+
 
 Own<TypedAST::TypedAST> ct_eval(Own<TypedAST::TypedAST> ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
