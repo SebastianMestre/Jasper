@@ -26,6 +26,7 @@ struct Core {
 	bool occurs(int v, int i);
 	int find(int i);
 	int find_term(int i);
+	int find_function(int i);
 	void unify(int i, int j);
 
 	int new_var();

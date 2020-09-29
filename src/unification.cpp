@@ -34,6 +34,12 @@ int Core::find_term(int i) {
 	return node_header[i].tag == Tag::Term ? node_header[i].data_idx : -1;
 }
 
+int Core::find_function(int i) {
+	i = find_term(i);
+	assert(i != -1 && "tried to find function of non term");
+	return term_data[i].function_id;
+}
+
 void Core::unify(int i, int j) {
 	i = find(i);
 	j = find(j);
