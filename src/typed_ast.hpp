@@ -264,4 +264,13 @@ struct TypeFunctionHandle : public TypedAST {
 	    : TypedAST {TypedASTTag::TypeFunctionHandle} {}
 };
 
+struct MonoTypeHandle : public TypedAST {
+	MonoId m_value;
+	// points to the ast node this one was made from
+	Own<TypedAST> m_syntax;
+
+	MonoTypeHandle()
+	    : TypedAST {TypedASTTag::MonoTypeHandle} {}
+};
+
 } // namespace TypedAST
