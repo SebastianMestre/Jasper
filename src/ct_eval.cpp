@@ -99,13 +99,35 @@ Own<TypedAST::ReturnStatement> ct_eval(Own<TypedAST::ReturnStatement> ast, TypeC
 
 // types
 
+MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
 	if(ast->type() == TypedASTTag::Identifier){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
-		auto value = static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
+		auto value =
+		    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
 		return value->m_value;
+	} else if (ast->type() == TypedASTTag::StructExpression) {
+		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
+
+		std::unordered_map<std::string, MonoId> fields;
+		int field_count = as_se->m_fields.size();
+		for (int i = 0; i < field_count; ++i){
+			MonoId mono = mono_type_from_ast(as_se->m_types[i].get(), tc);
+			std::string name = as_se->m_fields[i].text();
+			assert(!fields.count(name));
+			fields[name] = mono;
+		}
+
+		// TODO: we create a dummy typefunc then make it non-dummy. SERIOUSLY?
+		TypeFunctionId result = tc.m_core.new_dummy_type_function(
+		    TypeFunctionTag::Record, std::move(fields));
+
+		tc.m_core.type_function_data[result].is_dummy = false;
+
+		return result;
 	} else {
 		assert(0);
 	}
