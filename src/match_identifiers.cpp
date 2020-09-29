@@ -189,6 +189,23 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::StructExpression* ast, Frontend::CompileTimeEnvironment& env) {
+
+	for (auto& type : ast->m_types)
+		CHECK_AND_RETURN(match_identifiers(type.get(), env));
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::TypeTerm* ast, Frontend::CompileTimeEnvironment& env) {
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
+	for (auto& arg : ast->m_args)
+		CHECK_AND_RETURN(match_identifiers(arg.get(), env));
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
 	case TypedASTTag::type:                                                    \
@@ -221,6 +238,9 @@ namespace TypeChecker {
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
+
+		DISPATCH(StructExpression);
+		DISPATCH(TypeTerm);
 	}
 
 #undef DO_NOTHING

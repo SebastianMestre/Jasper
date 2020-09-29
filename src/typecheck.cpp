@@ -286,6 +286,16 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	auto const& comps = solver.vertices_of_components();
 	for (auto const& verts : comps) {
 
+		bool type_func_component = false;
+		for (int u : verts) {
+			auto decl = index_to_decl[u];
+			if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
+				type_func_component = true;
+		}
+
+		if (type_func_component)
+			continue;
+
 #if DEBUG
 		std::cerr << "@@@@ TYPECHECKING COMPONENT @@@@\n";
 		std::cerr << "@@@@ MEMBER LIST START @@@@\n";
@@ -345,6 +355,10 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	case TypedASTTag::type:                                                    \
 		return typecheck(static_cast<TypedAST::type*>(ast), tc);
 
+#define IGNORE(type)                                                           \
+	case TypedASTTag::type:                                                    \
+		return;
+
 	// TODO: Compound literals
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);
@@ -369,6 +383,8 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
+
+		IGNORE(TypeFunctionHandle)
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "
@@ -376,6 +392,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(0);
 
 #undef DISPATCH
+#undef IGNORE
 }
 
 } // namespace TypeChecker
