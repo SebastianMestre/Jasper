@@ -117,7 +117,19 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+
 		return value->m_value;
+	} else if (ast->type() == TypedASTTag::TypeTerm) {
+		auto as_tt = static_cast<TypedAST::TypeTerm*>(ast);
+
+		TypeFunctionId type_function = type_func_from_ast(as_tt->m_callee.get(), tc);
+
+		std::vector<MonoId> args;
+		for (auto& arg : as_tt->m_args)
+			args.push_back(mono_type_from_ast(arg.get(), tc));
+
+		MonoId result = tc.m_core.new_term(type_function, std::move(args), "from ast");
+		return result;
 	} else {
 		assert(0);
 	}
@@ -141,7 +153,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 			decl->m_value = std::move(handle);
 		} else if(meta_type == tc.meta_monotype()) {
 			auto handle = std::make_unique<TypedAST::MonoTypeHandle>();
-			handle->m_value = tc.m_core.new_var(); // should it be hidden?
+			handle->m_value = tc.new_var(); // should it be hidden?
 			handle->m_syntax = std::move(decl->m_value);
 			decl->m_value = std::move(handle);
 		}
@@ -157,6 +169,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 		} else if (meta_type == tc.meta_monotype()) {
 			auto handle =
 			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+
 			MonoId mt = mono_type_from_ast(handle->m_syntax.get(), tc);
 			tc.m_core.unify(mt, handle->m_value);
 		} else {
