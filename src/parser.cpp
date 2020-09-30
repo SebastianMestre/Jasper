@@ -227,6 +227,7 @@ bool is_binary_operator(TokenTag t) {
 	switch (t) {
 	case TokenTag::PAREN_OPEN:   // a bit of a hack
 	case TokenTag::BRACKET_OPEN: // a bit of a hack
+	case TokenTag::POLY_OPEN:    // a bit of a hack
 
 	case TokenTag::LT:
 	case TokenTag::GT:
@@ -270,6 +271,7 @@ binding_power binding_power_of(TokenTag t) {
 		return {50, 51};
 	case TokenTag::PAREN_OPEN:   // a bit of a hack
 	case TokenTag::BRACKET_OPEN: // a bit of a hack
+	case TokenTag::POLY_OPEN:    // a bit of a hack
 	case TokenTag::DOT:
 		return {70, 71};
 	default:
@@ -367,6 +369,20 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			auto e = std::make_unique<AST::IndexExpression>();
 			e->m_callee = std::move(lhs.m_result);
 			e->m_index = std::move(index.m_result);
+			lhs.m_result = std::move(e);
+
+			continue;
+		}
+
+		if (match(TokenTag::POLY_OPEN)) {
+			auto args = parse_type_term_arguments();
+			if (handle_error(result, args))
+				return result;
+
+			auto e = std::make_unique<AST::TypeTerm>();
+
+			e->m_callee = std::move(lhs.m_result);
+			e->m_args = std::move(args.m_result);
 			lhs.m_result = std::move(e);
 
 			continue;
@@ -1006,6 +1022,26 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	return result;
 }
 
+Writer<std::vector<Own<AST::AST>>> Parser::parse_type_term_arguments() {
+	Writer<std::vector<Own<AST::AST>>> result = {
+	    {"Parse Error: Failed to parse type arguments"}};
+
+	if (handle_error(result, require(TokenTag::POLY_OPEN)))
+		return result;
+
+	std::vector<Own<AST::AST>> args;
+
+	while (!consume(TokenTag::POLY_CLOSE)) {
+		auto arg = parse_type_term();
+		if (handle_error(result, arg))
+			return result;
+
+		args.push_back(std::move(arg.m_result));
+	}
+
+	return make_writer(std::move(args));
+}
+
 Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	Writer<std::unique_ptr<AST::AST>> result = {
 	    {"Parse Error: Failed to parse type"}};
@@ -1017,19 +1053,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
 	auto e = std::make_unique<AST::TypeTerm>();
 	e->m_callee = std::move(callee.m_result);
 
-	if (!consume(TokenTag::POLY_OPEN))
+	if (!match(TokenTag::POLY_OPEN))
 		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 
-	std::vector<std::unique_ptr<AST::AST>> args;
-	while (!consume(TokenTag::POLY_CLOSE)) {
-		auto arg = parse_type_term();
-		if (handle_error(result, arg))
-			return result;
+	auto args = parse_type_term_arguments();
+	if (handle_error(result, args))
+		return result;
 
-		args.push_back(std::move(arg.m_result));
-	}
-
-	e->m_args = std::move(args);
+	e->m_args = std::move(args.m_result);
 	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
 }
 
