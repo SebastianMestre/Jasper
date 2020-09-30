@@ -67,13 +67,13 @@ void Core::unify(int i, int j) {
 	}
 }
 
-int Core::new_var(char const* debug = nullptr) {
+int Core::new_var(char const* debug) {
 	int id = node_header.size();
 	node_header.push_back({Tag::Var, id, debug});
 	return id;
 }
 
-int Core::new_term(int f, std::vector<int> args, char const* debug = nullptr) {
+int Core::new_term(int f, std::vector<int> args, char const* debug) {
 	int id = node_header.size();
 	node_header.push_back({Tag::Term, term_data.size(), debug});
 	term_data.push_back({f, std::move(args)});

@@ -30,8 +30,8 @@ struct Core {
 	int find_function(int i);
 	void unify(int i, int j);
 
-	int new_var();
-	int new_term(int f, std::vector<int> args);
+	int new_var(const char* debug = nullptr);
+	int new_term(int f, std::vector<int> args, const char* debug = nullptr);
 };
 
 } // namespace Unification
