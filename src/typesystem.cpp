@@ -31,7 +31,7 @@ TypeSystemCore::TypeSystemCore() {
 						assert(0 && "accessing non-existing field of a record type");
 				else
 					// else the fields must have equivalent types
-					unify(kv_a.second, kv_b->second);
+					m_mono_core.unify(kv_a.second, kv_b->second);
 			}
 
 			// make a point to b after unifying their data.
@@ -53,55 +53,57 @@ TypeSystemCore::TypeSystemCore() {
 		}
 
 	};
+
+	m_mono_core.unify_function = [&](int a, int b) {
+		a = m_mono_core.find_term(a);
+		b = m_mono_core.find_term(b);
+
+		if (a == b)
+			return;
+	
+		Unification::Core::TermData& a_data = m_mono_core.term_data[a];
+		Unification::Core::TermData& b_data = m_mono_core.term_data[b];
+
+		m_tf_core.unify(a_data.function_id, b_data.function_id);
+	};
 }
 
 
 void TypeSystemCore::print_type(MonoId mono, int d) {
-	MonoHeader& header = mono_header[mono];
+	Unification::Core::NodeHeader& header =
+	    m_mono_core.node_header[m_mono_core.find(mono)];
+
 	for (int i = d; i--;)
 		std::cerr << ' ';
 	std::cerr << "[" << mono;
-	if (header.debug_data) std::cerr << " | " << header.debug_data;
+	if (header.debug) std::cerr << " | " << header.debug;
 	std::cerr << "] ";
-	if (header.type == MonoTag::Var) {
-		if (header.data_id == mono) {
+	if (header.tag == Unification::Core::Tag::Var) {
+		if (header.data_idx == mono) {
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_type(header.data_id, d + 1);
+			print_type(header.data_idx, d + 1);
 		}
 	} else {
-		TermId term = header.data_id;
-		TermData& data = term_data[term];
-		std::cerr << "Term " << term << " (tf " << data.type_function << ")\n";
-		for (int i = 0; i < data.arguments.size(); ++i)
-			print_type(data.arguments[i], d + 1);
+		TermId term = header.data_idx;
+		Unification::Core::TermData& data = m_mono_core.term_data[term];
+		std::cerr << "Term " << term << " (tf " << data.function_id << ")\n";
+		for (const auto arg : data.argument_idx)
+			print_type(arg, d + 1);
 	}
 }
 
-
-MonoId TypeSystemCore::new_var() {
-	int mono = mono_header.size();
-	mono_header.push_back({MonoTag::Var, mono});
-	return mono;
-}
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
 	tf = m_tf_core.find_function(tf);
 	int argument_count = m_type_functions[tf].argument_count;
 
-	if (argument_count != -1 && argument_count != args.size()) {
+	if (argument_count != -1 && argument_count != args.size())
 		assert(0 && "instanciating polymorphic type with wrong argument count");
-	}
 
-	int term = term_data.size();
-	int mono = mono_header.size();
-
-	term_data.push_back({tf, std::move(args)});
-	mono_header.push_back({MonoTag::Term, term, tag});
-
-	return mono;
+	return m_mono_core.new_term(tf, std::move(args), tag);
 }
 
 PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
@@ -138,101 +140,12 @@ TypeVarId TypeSystemCore::new_type_var(KindTag kind, int type_id) {
 }
 
 
-MonoId TypeSystemCore::find(MonoId mono) {
-	MonoHeader& header = mono_header[mono];
-
-	if (header.type != MonoTag::Var)
-		return mono;
-
-	// pointing to self
-	if (header.data_id == mono)
-		return mono;
-
-	return header.data_id = find(header.data_id);
-}
-
-bool TypeSystemCore::occurs_in(MonoId var, MonoId mono) {
-
-	{
-		// var must be a variable that points to itself
-		MonoHeader const& var_mono_header = mono_header[var];
-		assert(var_mono_header.type == MonoTag::Var);
-		assert(var == var_mono_header.data_id);
-	}
-
-	mono = find(mono);
-
-	if (mono_header[mono].type == MonoTag::Var) {
-		return mono_header[mono].data_id == var;
-	}
-
-	assert(mono_header[mono].type == MonoTag::Term);
-
-	TermId term = mono_header[mono].data_id;
-	TermData data = term_data[term];
-
-	for (MonoId c : data.arguments)
-		if (occurs_in(var, c))
-			return true;
-
-	return false;
-}
-
-void TypeSystemCore::unify(MonoId a, MonoId b) {
-	a = find(a);
-	b = find(b);
-
-	if (a == b)
-		return;
-
-	if (mono_header[a].type == MonoTag::Var) {
-		if (mono_header[b].type == MonoTag::Var) {
-			if (a < b) {
-				// make the newer one point to the older one
-				std::swap(a, b);
-			}
-		}
-
-		if (occurs_in(a, b)) {
-			assert(0 && "recursive unification\n");
-		}
-
-		mono_header[a].data_id = b;
-	} else if (mono_header[b].type == MonoTag::Var) {
-		return unify(b, a);
-	} else {
-		assert(mono_header[a].type == MonoTag::Term);
-		assert(mono_header[b].type == MonoTag::Term);
-
-		TermId ta = mono_header[a].data_id;
-		TermId tb = mono_header[b].data_id;
-
-		TermData& a_data = term_data[ta];
-		TermData& b_data = term_data[tb];
-
-		m_tf_core.unify(a_data.type_function, b_data.type_function);
-
-		if (a_data.arguments.size() != b_data.arguments.size()) {
-			// for instance: (int,float)->int == (int)->int
-			assert(0 && "deduced two instances of a polymorphic type with different amount of arguments to be equal.");
-		}
-
-		TypeFunctionId type_function = term_data[ta].type_function;
-		int argument_count = a_data.arguments.size();
-
-		for (int i {0}; i != argument_count; ++i) {
-			unify(a_data.arguments[i], b_data.arguments[i]);
-		}
-	}
-}
-
-
 TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
 	TypeVarData& var_data = type_vars[type_var];
 
 	switch(var_data.kind) {
 	case KindTag::Mono:
-		return {KindTag::Mono, find(var_data.type_var_id)};
+		return {KindTag::Mono, m_mono_core.find(var_data.type_var_id)};
 	case KindTag::Poly:
 		return {KindTag::Poly, var_data.type_var_id};
 	case KindTag::TypeFunction:
@@ -253,7 +166,7 @@ void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
 
 	switch(rep_a.kind) {
 	case KindTag::Mono:
-		unify(rep_a.type_var_id, rep_b.type_var_id);
+		m_mono_core.unify(rep_a.type_var_id, rep_b.type_var_id);
 		break;
 	case KindTag::Poly:
 		break;
@@ -272,23 +185,19 @@ MonoId TypeSystemCore::inst_impl(
 	// NOTE(Mestre): Is just calling find good enough? It means we
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
-	mono = find(mono);
-	MonoHeader header = mono_header[mono];
+	mono = m_mono_core.find(mono);
+	Unification::Core::NodeHeader header = m_mono_core.node_header[mono];
 
-	if (header.type == MonoTag::Var) {
+	if (header.tag == Unification::Core::Tag::Var) {
 		auto it = mapping.find(mono);
 		return it == mapping.end() ? mono : it->second;
-	}
-
-	if (header.type == MonoTag::Term) {
-		TermId term = header.data_id;
+	} else {
+		TermId term = header.data_idx;
 		std::vector<MonoId> new_args;
-		for (MonoId argument : term_data[term].arguments)
-			new_args.push_back(inst_impl(argument, mapping));
-		return new_term(term_data[term].type_function, std::move(new_args));
+		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
+			new_args.push_back(inst_impl(arg, mapping));
+		return new_term(m_mono_core.term_data[term].function_id, std::move(new_args));
 	}
-
-	assert(0 && "invalid term type");
 }
 
 MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
@@ -307,18 +216,19 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
-		vals.push_back(new_var());
+		vals.push_back(m_mono_core.new_var());
 	return inst_with(poly, vals);
 }
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
-	MonoId repr = find(mono);
-	MonoHeader const& header = mono_header[repr];
-	if (header.type == MonoTag::Var) {
-		free_vars.insert(repr);
+	mono = m_mono_core.find(mono);
+	const Unification::Core::NodeHeader& header = m_mono_core.node_header[mono];
+
+	if (header.tag == Unification::Core::Tag::Var) {
+		free_vars.insert(mono);
 	} else {
-		TermId term = header.data_id;
-		for (MonoId arg : term_data[term].arguments)
+		TermId term = header.data_idx;
+		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
 			gather_free_vars(arg, free_vars);
 	}
 }

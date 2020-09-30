@@ -126,11 +126,11 @@ TypeChecker::TypeChecker() {
 }
 
 MonoId TypeChecker::new_hidden_var() {
-	return m_core.new_var();
+	return m_core.m_mono_core.new_var();
 }
 
 MonoId TypeChecker::new_var() {
-	MonoId result = m_core.new_var();
+	MonoId result = m_core.m_mono_core.new_var();
 	m_env.current_scope().m_type_vars.insert(result);
 	return result;
 }
@@ -161,13 +161,13 @@ PolyId TypeChecker::generalize(MonoId mono) {
 
 // Hindley-Milner [App], modified for multiple argument functions.
 MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-	MonoId return_type = m_core.new_var();
+	MonoId return_type = m_core.m_mono_core.new_var();
 	args_types.push_back(return_type);
 
 	MonoId deduced_func_type =
 	    m_core.new_term(BuiltinType::Function, std::move(args_types));
 
-	m_core.unify(func_type, deduced_func_type);
+	m_core.m_mono_core.unify(func_type, deduced_func_type);
 
 	return return_type;
 }

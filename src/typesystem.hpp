@@ -28,30 +28,6 @@ struct TypeFunctionData {
 	bool is_dummy {false};
 };
 
-enum class MonoTag { Var, Term };
-// A monotype is a reference to a concrete type. It can be a
-// variable or a term.
-// We express this variant using an enum, and an index that points
-// to where the data is in the correct TypeSystemCore vector.
-//
-// If type is MonoTag::Var, the data_id index points to a
-// different mono in TypeSystemCore::mono_data.
-// It may point to itself, meaning that the type is not known.
-//
-// If the type is MonoTag::Term, the index points to a term,
-// that is stored in TypeSystemCore::term_data
-struct MonoHeader {
-	MonoTag type;
-	int data_id;
-	char const* debug_data {nullptr};
-};
-
-// A term is an application of a type function.
-struct TermData {
-	TypeFunctionId type_function;
-	std::vector<MonoId> arguments;
-};
-
 // A polytype is a type where some amount of type variables can take
 // any value, and still give a valid typing.
 struct PolyData {
@@ -67,8 +43,18 @@ struct TypeVarData {
 };
 
 struct TypeSystemCore {
-	std::vector<MonoHeader> mono_header;
-	std::vector<TermData> term_data;
+	// A monotype is a reference to a concrete type. It can be a
+	// variable or a term.
+	// We express this variant using an enum, and an index that points
+	// to where the data is in the correct TypeSystemCore vector.
+	//
+	// If type is MonoTag::Var, the data_id index points to a
+	// different mono in TypeSystemCore::mono_data.
+	// It may point to itself, meaning that the type is not known.
+	//
+	// If the type is MonoTag::Term, the index points to a term,
+	// that is stored in TypeSystemCore::term_data
+	Unification::Core m_mono_core;
 
 	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
@@ -79,11 +65,11 @@ struct TypeSystemCore {
 
 	TypeSystemCore();
 
-	MonoId new_var();
 	MonoId new_term(
 	    TypeFunctionId type_function,
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
+
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
@@ -95,15 +81,6 @@ struct TypeSystemCore {
 
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
-
-	// gives the representative for a given mono
-	MonoId find(MonoId mono);
-
-	// var must be a variable that is its own representative
-	bool occurs_in(MonoId var, MonoId mono);
-
-	// makes the two given types equal
-	void unify(MonoId a, MonoId b);
 
 	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
