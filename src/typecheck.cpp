@@ -286,14 +286,16 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	auto const& comps = solver.vertices_of_components();
 	for (auto const& verts : comps) {
 
-		bool type_func_component = false;
+		bool type_in_component = false;
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
-				type_func_component = true;
+
+			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
+				type_in_component = true;
 		}
 
-		if (type_func_component)
+		if (type_in_component)
 			continue;
 
 #if DEBUG
@@ -384,7 +386,8 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
 
-		IGNORE(TypeFunctionHandle)
+		IGNORE(TypeFunctionHandle);
+		IGNORE(MonoTypeHandle);
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "

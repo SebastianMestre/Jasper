@@ -28,7 +28,8 @@
                                                                                \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
-	X(TypeFunctionHandle)
+	X(TypeFunctionHandle)                                                      \
+	X(MonoTypeHandle)
 
 #define X(name) #name,
 constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};
