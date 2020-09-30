@@ -105,7 +105,7 @@ Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& 
 }
 
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
-	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
+	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
 	if(ast->type() == TypedASTTag::Identifier){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
@@ -118,7 +118,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 
 Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations) {
-		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
+		if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
 			// put a dummy typefunc var where required.
 			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
 			handle->m_value = tc.m_core.m_tf_core.new_var();
@@ -128,7 +128,7 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
+		if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc()) {
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);

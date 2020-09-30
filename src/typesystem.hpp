@@ -63,6 +63,8 @@ struct TypeSystemCore {
 
 	std::vector<TypeVarData> type_vars;
 
+	Unification::Core m_meta_core;
+
 	TypeSystemCore();
 
 	MonoId new_term(

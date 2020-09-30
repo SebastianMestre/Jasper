@@ -8,9 +8,10 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	m_meta_core.new_meta(); // 0 | value
-	m_meta_core.new_meta(); // 1 | type func
-	m_meta_core.new_meta(); // 2 | mono type
+	// NOTE: we don't care about the term data
+	m_core.m_meta_core.new_term(-1, {}); // 0 | value
+	m_core.m_meta_core.new_term(-1, {}); // 1 | type func
+	m_core.m_meta_core.new_term(-1, {}); // 2 | mono type
 
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
@@ -136,7 +137,7 @@ MonoId TypeChecker::new_var() {
 }
 
 MetaTypeId TypeChecker::new_meta_var() {
-	return m_meta_core.new_var();
+	return m_core.m_meta_core.new_var();
 }
 
 // qualifies all free variables in the given monotype

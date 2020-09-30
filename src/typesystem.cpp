@@ -66,6 +66,35 @@ TypeSystemCore::TypeSystemCore() {
 
 		m_tf_core.unify(a_data.function_id, b_data.function_id);
 	};
+
+	m_meta_core.unify_function = [&](int a, int b) {
+		a = m_mono_core.find_term(a);
+		b = m_mono_core.find_term(b);
+
+#if DEBUG
+		{
+			if (a == b)
+				return;
+
+			char const* empty = "(no data)";
+
+			char const* data_i = m_meta_core.node_header[i].debug
+			                     ? m_meta_core.node_header[i].debug
+			                     : empty;
+
+			char const* data_j = m_metatype_header[j].debug
+			                     ? m_metatype_header[j].debug
+			                     : empty;
+
+			std::cerr << "Tried to unify different metatypes.\n"
+			          << "Debug data:\n"
+			          << "i: " << data_i << '\n'
+			          << "j: " << data_j << '\n';
+		}
+#else
+		assert(a == b and "unified two different metatypes");
+#endif
+	};
 }
 
 

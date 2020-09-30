@@ -86,7 +86,7 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	TypedAST::Declaration* declaration = ast->m_declaration;
 	assert(declaration && "accessed an unmatched identifier");
 
-	MetaTypeId meta_type = tc.m_meta_core.find(declaration->m_meta_type);
+	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
 
 	ast->m_meta_type = meta_type;
 	if (meta_type == tc.meta_value()) {
@@ -289,7 +289,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		bool type_func_component = false;
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
+			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
 				type_func_component = true;
 		}
 
