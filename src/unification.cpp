@@ -13,7 +13,8 @@ bool Core::occurs(int v, int i){
 	if (i == v)
 		return true;
 
-	assert(node_header[i].tag == Tag::Term);
+	if (node_header[i].tag == Tag::Var)
+		return false;
 
 	int ti = node_header[i].data_idx;
 	for (int c : term_data[ti].argument_idx)
