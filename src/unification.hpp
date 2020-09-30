@@ -12,10 +12,11 @@ struct Core {
 	struct NodeHeader {
 		Tag tag;
 		int data_idx;
+		const char* debug {nullptr};
 	};
 
 	struct TermData {
-		int function_id; // possibly an external id
+		int function_id; // external id
 		std::vector<int> argument_idx;
 	};
 
