@@ -1,6 +1,7 @@
 #include "unification.hpp"
 
 #include <cassert>
+#include <iostream>
 
 namespace Unification {
 
@@ -80,24 +81,24 @@ int Core::new_term(int f, std::vector<int> args, char const* debug) {
 	return id;
 }
 
-void Core::print_node(int node_header, int d) {
-	Core::NodeHeader& header = node_header[find(node_header)];
+void Core::print_node(int header, int d) {
+	Core::NodeHeader& node = node_header[find(header)];
 
 	for (int i = d; i--;)
 		std::cerr << ' ';
-	std::cerr << "[" << mono;
-	if (header.debug) std::cerr << " | " << header.debug;
+	std::cerr << "[" << header;
+	if (node.debug) std::cerr << " | " << node.debug;
 	std::cerr << "] ";
-	if (header.tag == Core::Tag::Var) {
-		if (header.data_idx == node_header) {
+	if (node.tag == Core::Tag::Var) {
+		if (node.data_idx == header) {
 			std::cerr << "Free Var\n";
 		} else {
 			std::cerr << "Var\n";
-			print_node(header.data_idx, d + 1);
+			print_node(node.data_idx, d + 1);
 		}
 	} else {
-		Core::TermData& data = term_data[header.data_idx];
-		std::cerr << "Term " << header.data_idx << " (tf " << data.function_id << ")\n";
+		Core::TermData& data = term_data[node.data_idx];
+		std::cerr << "Term " << node.data_idx << " (tf " << data.function_id << ")\n";
 		for (const auto arg : data.argument_idx)
 			print_node(arg, d + 1);
 	}
