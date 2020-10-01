@@ -31,7 +31,7 @@ struct Core {
 	void unify(int i, int j);
 
 	int new_var(const char* debug = nullptr);
-	int new_term(int f, std::vector<int> args, const char* debug = nullptr);
+	int new_term(int f = -1, std::vector<int> args = {}, const char* debug = nullptr);
 };
 
 } // namespace Unification

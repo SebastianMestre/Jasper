@@ -147,14 +147,14 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size(), {});
+	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
 	m_type_functions.push_back({TypeFunctionTag::Builtin, arguments});
 	return id;
 }
 
 TypeFunctionId TypeSystemCore::new_dummy_type_function
     (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size(), {});
+	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
 	m_type_functions.push_back({type, 0, structure, true});
 	return id;
 }
