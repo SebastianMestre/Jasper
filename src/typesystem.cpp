@@ -160,54 +160,6 @@ TypeFunctionId TypeSystemCore::new_dummy_type_function
 }
 
 
-// NOTE: I use int here to make this fail if we change
-// the typesystem types to be type safe
-TypeVarId TypeSystemCore::new_type_var(KindTag kind, int type_id) {
-	TypeVarId type_var = type_vars.size();
-	type_vars.push_back({kind, type_id});
-	return type_var;
-}
-
-
-TypeVarData TypeSystemCore::var_find(TypeVarId type_var) {
-	TypeVarData& var_data = type_vars[type_var];
-
-	switch(var_data.kind) {
-	case KindTag::Mono:
-		return {KindTag::Mono, m_mono_core.find(var_data.type_var_id)};
-	case KindTag::Poly:
-		return {KindTag::Poly, var_data.type_var_id};
-	case KindTag::TypeFunction:
-		return {KindTag::TypeFunction, m_tf_core.find(var_data.type_var_id)};
-	}
-
-	assert(0 and "unknown kind");
-}
-
-void TypeSystemCore::var_unify(TypeVarId a, TypeVarId b) {
-	TypeVarData rep_a = var_find(a);
-	TypeVarData rep_b = var_find(b);
-
-	assert(rep_a.kind == rep_b.kind and "cannot unify different kinds");
-
-	if (rep_a.type_var_id == rep_b.type_var_id)
-		return;
-
-	switch(rep_a.kind) {
-	case KindTag::Mono:
-		m_mono_core.unify(rep_a.type_var_id, rep_b.type_var_id);
-		break;
-	case KindTag::Poly:
-		break;
-	case KindTag::TypeFunction:
-		m_tf_core.unify(rep_a.type_var_id, rep_b.type_var_id);
-		break;
-	}
-
-	assert(0 and "unknown kind");
-}
-
-
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
@@ -261,4 +213,3 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 			gather_free_vars(arg, free_vars);
 	}
 }
-

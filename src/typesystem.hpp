@@ -35,33 +35,13 @@ struct PolyData {
 	std::vector<MonoId> vars;
 };
 
-enum class KindTag { TypeFunction, Mono, Poly };
-// variable that can contain types, of any kind
-struct TypeVarData {
-	KindTag kind;
-	TypeVarId type_var_id;
-};
-
 struct TypeSystemCore {
-	// A monotype is a reference to a concrete type. It can be a
-	// variable or a term.
-	// We express this variant using an enum, and an index that points
-	// to where the data is in the correct TypeSystemCore vector.
-	//
-	// If type is MonoTag::Var, the data_id index points to a
-	// different mono in TypeSystemCore::mono_data.
-	// It may point to itself, meaning that the type is not known.
-	//
-	// If the type is MonoTag::Term, the index points to a term,
-	// that is stored in TypeSystemCore::term_data
 	Unification::Core m_mono_core;
 
 	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
 
 	std::vector<PolyData> poly_data;
-
-	std::vector<TypeVarData> type_vars;
 
 	Unification::Core m_meta_core;
 
@@ -78,9 +58,6 @@ struct TypeSystemCore {
 	TypeFunctionId new_dummy_type_function(
 	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
 	
-	// NOTE: using int here is provisional
-	TypeVarId new_type_var(KindTag kind, int type_id);
-
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
 
@@ -89,10 +66,4 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	void print_type(MonoId, int d = 0);
-
-	// union find for type variables
-	// TODO: type safe ids to overload these functions.
-	// Maybe even use type vars as the interface for every type-ish thing
-	TypeVarData var_find(TypeVarId type_var);
-	void var_unify(TypeVarId a, TypeVarId b);
 };
