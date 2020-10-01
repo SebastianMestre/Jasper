@@ -71,10 +71,10 @@ TypeSystemCore::TypeSystemCore() {
 		a = m_mono_core.find_term(a);
 		b = m_mono_core.find_term(b);
 
+		if (a == b)
+			return;
 #if DEBUG
 		{
-			if (a == b)
-				return;
 
 			char const* empty = "(no data)";
 
@@ -91,9 +91,9 @@ TypeSystemCore::TypeSystemCore() {
 			          << "i: " << data_i << '\n'
 			          << "j: " << data_j << '\n';
 		}
-#else
-		assert(a == b and "unified two different metatypes");
+
 #endif
+		assert(0 and "unified two different metatypes");
 	};
 }
 
