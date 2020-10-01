@@ -7,12 +7,12 @@
 #include "compile_time_environment.hpp"
 
 TypeSystemCore::TypeSystemCore() {
-	m_tf_core.unify_function = [&](int a, int b) {
-		if (m_tf_core.find_term(a) == m_tf_core.find_term(b))
+	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {
+		if (core.find_term(a) == core.find_term(b))
 			return;
 	
-		TypeFunctionData& a_data = m_type_functions[m_tf_core.find_function(a)];
-		TypeFunctionData& b_data = m_type_functions[m_tf_core.find_function(b)];
+		TypeFunctionData& a_data = m_type_functions[core.find_function(a)];
+		TypeFunctionData& b_data = m_type_functions[core.find_function(b)];
 
 		if (b_data.is_dummy) {
 			std::swap(a, b);
@@ -45,8 +45,8 @@ TypeSystemCore::TypeSystemCore() {
 			// type funcs.
 			//
 			// NOTE: this makes the unify_function need to access node_header
-			m_tf_core.node_header[a].tag = Unification::Core::Tag::Var;
-			m_tf_core.node_header[a].data_idx = b;
+			core.node_header[a].tag = Unification::Core::Tag::Var;
+			core.node_header[a].data_idx = b;
 
 		} else {
 			assert(0 and "unifying two different known type functions");
@@ -54,20 +54,20 @@ TypeSystemCore::TypeSystemCore() {
 
 	};
 
-	m_mono_core.unify_function = [&](int a, int b) {
-		a = m_mono_core.find_term(a);
-		b = m_mono_core.find_term(b);
+	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
+		a = core.find_term(a);
+		b = core.find_term(b);
 
 		if (a == b)
 			return;
 	
-		Unification::Core::TermData& a_data = m_mono_core.term_data[a];
-		Unification::Core::TermData& b_data = m_mono_core.term_data[b];
+		Unification::Core::TermData& a_data = core.term_data[a];
+		Unification::Core::TermData& b_data = core.term_data[b];
 
 		m_tf_core.unify(a_data.function_id, b_data.function_id);
 	};
 
-	m_meta_core.unify_function = [&](int a, int b) {
+	m_meta_core.unify_function = [this](Unification::Core& core, int a, int b) {
 		a = m_mono_core.find_term(a);
 		b = m_mono_core.find_term(b);
 
@@ -78,12 +78,12 @@ TypeSystemCore::TypeSystemCore() {
 
 			char const* empty = "(no data)";
 
-			char const* data_i = m_meta_core.node_header[i].debug
-			                     ? m_meta_core.node_header[i].debug
+			char const* data_i = core.node_header[i].debug
+			                     ? core.node_header[i].debug
 			                     : empty;
 
-			char const* data_j = m_metatype_header[j].debug
-			                     ? m_metatype_header[j].debug
+			char const* data_j = core.node_header[j].debug
+			                     ? core.node_header[j].debug
 			                     : empty;
 
 			std::cerr << "Tried to unify different metatypes.\n"

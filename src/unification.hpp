@@ -20,7 +20,7 @@ struct Core {
 		std::vector<int> argument_idx;
 	};
 
-	std::function<void(int,int)> unify_function;
+	std::function<void(Core&, int,int)> unify_function;
 	std::vector<NodeHeader> node_header;
 	std::vector<TermData> term_data;
 
