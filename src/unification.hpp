@@ -25,13 +25,17 @@ struct Core {
 	std::vector<TermData> term_data;
 
 	bool occurs(int v, int i);
+
 	int find(int i);
 	int find_term(int i);
 	int find_function(int i);
+
 	void unify(int i, int j);
 
 	int new_var(const char* debug = nullptr);
 	int new_term(int f = -1, std::vector<int> args = {}, const char* debug = nullptr);
+
+	void print_node(int node_header, int d = 0);
 };
 
 } // namespace Unification

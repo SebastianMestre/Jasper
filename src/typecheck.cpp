@@ -77,7 +77,7 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
 		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 		std::cerr << "@@ It is equal to:\n";
-		tc.m_core.print_type(poly_data.base);
+		tc.m_core.m_mono_core.print_node(poly_data.base);
 	}
 #endif
 }
@@ -345,7 +345,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
 				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 				std::cerr << "@@ It is equal to:\n";
-				tc.m_core.print_type(poly_data.base);
+				tc.m_core.m_mono_core.print_node(poly_data.base);
 			}
 #endif
 		}

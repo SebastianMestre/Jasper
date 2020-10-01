@@ -98,32 +98,6 @@ TypeSystemCore::TypeSystemCore() {
 }
 
 
-void TypeSystemCore::print_type(MonoId mono, int d) {
-	Unification::Core::NodeHeader& header =
-	    m_mono_core.node_header[m_mono_core.find(mono)];
-
-	for (int i = d; i--;)
-		std::cerr << ' ';
-	std::cerr << "[" << mono;
-	if (header.debug) std::cerr << " | " << header.debug;
-	std::cerr << "] ";
-	if (header.tag == Unification::Core::Tag::Var) {
-		if (header.data_idx == mono) {
-			std::cerr << "Free Var\n";
-		} else {
-			std::cerr << "Var\n";
-			print_type(header.data_idx, d + 1);
-		}
-	} else {
-		TermId term = header.data_idx;
-		Unification::Core::TermData& data = m_mono_core.term_data[term];
-		std::cerr << "Term " << term << " (tf " << data.function_id << ")\n";
-		for (const auto arg : data.argument_idx)
-			print_type(arg, d + 1);
-	}
-}
-
-
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
 	tf = m_tf_core.find_function(tf);

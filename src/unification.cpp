@@ -80,4 +80,27 @@ int Core::new_term(int f, std::vector<int> args, char const* debug) {
 	return id;
 }
 
+void Core::print_node(int node_header, int d) {
+	Core::NodeHeader& header = node_header[find(node_header)];
+
+	for (int i = d; i--;)
+		std::cerr << ' ';
+	std::cerr << "[" << mono;
+	if (header.debug) std::cerr << " | " << header.debug;
+	std::cerr << "] ";
+	if (header.tag == Core::Tag::Var) {
+		if (header.data_idx == node_header) {
+			std::cerr << "Free Var\n";
+		} else {
+			std::cerr << "Var\n";
+			print_node(header.data_idx, d + 1);
+		}
+	} else {
+		Core::TermData& data = term_data[header.data_idx];
+		std::cerr << "Term " << header.data_idx << " (tf " << data.function_id << ")\n";
+		for (const auto arg : data.argument_idx)
+			print_node(arg, d + 1);
+	}
+}
+
 } // namespace Unification
