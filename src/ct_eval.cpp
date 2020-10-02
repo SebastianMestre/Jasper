@@ -102,7 +102,7 @@ Own<TypedAST::ReturnStatement> ct_eval(Own<TypedAST::ReturnStatement> ast, TypeC
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
-	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
+	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
 	if(ast->type() == TypedASTTag::Identifier){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
@@ -125,7 +125,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		TypeFunctionId result = tc.m_core.new_dummy_type_function(
 		    TypeFunctionTag::Record, std::move(fields));
 
-		tc.m_core.type_function_data[result].is_dummy = false;
+		tc.m_core.m_type_functions[result].is_dummy = false;
 
 		return result;
 	} else {
@@ -134,7 +134,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 }
 
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
-	assert(tc.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
+	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
 	if(ast->type() == TypedASTTag::Identifier){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
@@ -166,11 +166,11 @@ Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& 
 
 Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_meta_core.find(decl->m_meta_type);
+		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 		// put a dummy var where required.
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
-			handle->m_value = tc.m_core.new_type_function_var();
+			handle->m_value = tc.m_core.m_tf_core.new_var();
 			handle->m_syntax = std::move(decl->m_value);
 			decl->m_value = std::move(handle);
 		} else if(meta_type == tc.meta_monotype()) {
@@ -182,18 +182,18 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_meta_core.find(decl->m_meta_type);
+		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);
-			tc.m_core.func_unify(tf, handle->m_value);
+			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else if (meta_type == tc.meta_monotype()) {
 			auto handle =
 			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
 
 			MonoId mt = mono_type_from_ast(handle->m_syntax.get(), tc);
-			tc.m_core.unify(mt, handle->m_value);
+			tc.m_core.m_mono_core.unify(mt, handle->m_value);
 		} else {
 			decl->m_value = ct_eval(std::move(decl->m_value), tc);
 		}

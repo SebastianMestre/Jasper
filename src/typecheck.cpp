@@ -40,7 +40,7 @@ void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element.get(), tc);
-		tc.m_core.unify(element_type, element->m_value_type);
+		tc.m_core.m_mono_core.unify(element_type, element->m_value_type);
 	}
 
 	auto array_type =
@@ -62,7 +62,7 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_value) {
 		typecheck(ast->m_value.get(), tc);
 		// unify instead of assign. This way, we can do recursion.
-		tc.m_core.unify(ast->m_value_type, ast->m_value->m_value_type);
+		tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 	} else {
 		// NOTE: this should be an error at an earlier stage...
 	}
@@ -77,7 +77,7 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
 		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 		std::cerr << "@@ It is equal to:\n";
-		tc.m_core.print_type(poly_data.base);
+		tc.m_core.m_mono_core.print_node(poly_data.base);
 	}
 #endif
 }
@@ -86,7 +86,7 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	TypedAST::Declaration* declaration = ast->m_declaration;
 	assert(declaration && "accessed an unmatched identifier");
 
-	MetaTypeId meta_type = tc.m_meta_core.find(declaration->m_meta_type);
+	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
 
 	ast->m_meta_type = meta_type;
 	if (meta_type == tc.meta_value()) {
@@ -114,7 +114,7 @@ void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 	typecheck(ast->m_condition.get(), tc);
-	tc.m_core.unify(
+	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_body.get(), tc);
@@ -176,7 +176,7 @@ void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_declaration.get(), tc);
 	typecheck(ast->m_condition.get(), tc);
-	tc.m_core.unify(
+	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_action.get(), tc);
@@ -187,7 +187,7 @@ void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 void typecheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_condition.get(), tc);
-	tc.m_core.unify(
+	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_body.get(), tc);
@@ -199,7 +199,7 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 	auto mono = ast->m_value->m_value_type;
 	auto func = tc.m_env.current_function();
-	tc.m_core.unify(func->m_return_type, mono);
+	tc.m_core.m_mono_core.unify(func->m_return_type, mono);
 }
 
 void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
@@ -209,22 +209,22 @@ void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 
 	auto var = tc.new_var();
 	auto arr = tc.m_core.new_term(BuiltinType::Array, {var});
-	tc.m_core.unify(arr, ast->m_callee->m_value_type);
+	tc.m_core.m_mono_core.unify(arr, ast->m_callee->m_value_type);
 
-	tc.m_core.unify(tc.mono_int(), ast->m_index->m_value_type);
+	tc.m_core.m_mono_core.unify(tc.mono_int(), ast->m_index->m_value_type);
 
 	ast->m_value_type = var;
 }
 
 void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_condition.get(), tc);
-	tc.m_core.unify(
+	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_then_expr.get(), tc);
 	typecheck(ast->m_else_expr.get(), tc);
 
-	tc.m_core.unify(
+	tc.m_core.m_mono_core.unify(
 	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
 
 	ast->m_value_type = ast->m_then_expr->m_value_type;
@@ -241,7 +241,7 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	    TypeFunctionTag::Record, {{ast->m_member->m_text, member_type}});
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
-	tc.m_core.unify(ast->m_record->m_value_type, term_type);
+	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
@@ -289,7 +289,8 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		bool type_in_component = false;
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			auto meta_type = tc.m_meta_core.find(decl->m_meta_type);
+
+			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
 				type_in_component = true;
 		}
@@ -321,7 +322,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 
 			if (decl->m_value) {
 				typecheck(decl->m_value.get(), tc);
-				tc.m_core.unify(
+				tc.m_core.m_mono_core.unify(
 				    decl->m_value_type, decl->m_value->m_value_type);
 			} else {
 				// this should be an error...
@@ -344,7 +345,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
 				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
 				std::cerr << "@@ It is equal to:\n";
-				tc.m_core.print_type(poly_data.base);
+				tc.m_core.m_mono_core.print_node(poly_data.base);
 			}
 #endif
 		}

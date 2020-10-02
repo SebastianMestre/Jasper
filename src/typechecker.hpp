@@ -2,7 +2,6 @@
 
 #include "chunked_array.hpp"
 #include "compile_time_environment.hpp"
-#include "metatypesystem.hpp"
 #include "typesystem.hpp"
 
 namespace TypeChecker {
@@ -10,7 +9,6 @@ namespace TypeChecker {
 struct TypeChecker {
 
 	TypeSystemCore m_core;
-	MetaTypeSystem m_meta_core;
 	Frontend::CompileTimeEnvironment m_env;
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 

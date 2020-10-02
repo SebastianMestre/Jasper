@@ -19,7 +19,7 @@ void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 
 	for (auto& element : ast->m_elements) {
 		metacheck(element.get(), tc);
-		tc.m_meta_core.unify(element->m_meta_type, tc.meta_value());
+		tc.m_core.m_meta_core.unify(element->m_meta_type, tc.meta_value());
 	}
 }
 
@@ -51,11 +51,11 @@ void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	metacheck(ast->m_callee.get(), tc);
-	tc.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
 
 	for (auto& arg : ast->m_args) {
 		metacheck(arg.get(), tc);
-		tc.m_meta_core.unify(arg->m_meta_type, tc.meta_value());
+		tc.m_core.m_meta_core.unify(arg->m_meta_type, tc.meta_value());
 	}
 }
 
@@ -63,23 +63,23 @@ void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	metacheck(ast->m_callee.get(), tc);
-	tc.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_index.get(), tc);
-	tc.m_meta_core.unify(ast->m_index->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_index->m_meta_type, tc.meta_value());
 }
 
 void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	metacheck(ast->m_condition.get(), tc);
-	tc.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_then_expr.get(), tc);
-	tc.m_meta_core.unify(ast->m_then_expr->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_then_expr->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_else_expr.get(), tc);
-	tc.m_meta_core.unify(ast->m_else_expr->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_else_expr->m_meta_type, tc.meta_value());
 }
 
 void metacheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
@@ -88,7 +88,7 @@ void metacheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	metacheck(ast->m_record.get(), tc);
-	tc.m_meta_core.unify(ast->m_record->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_record->m_meta_type, tc.meta_value());
 }
 
 // statements
@@ -100,7 +100,7 @@ void metacheck(TypedAST::Block* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_condition.get(), tc);
-	tc.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
+	tc.m_core.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_body.get(), tc);
 
@@ -111,7 +111,7 @@ void metacheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 void metacheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_declaration.get(), tc);
 	metacheck(ast->m_condition.get(), tc);
-	tc.m_meta_core.unify(
+	tc.m_core.m_meta_core.unify(
 	    ast->m_condition->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_action.get(), tc);
@@ -120,7 +120,7 @@ void metacheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_condition.get(), tc);
-	tc.m_meta_core.unify(
+	tc.m_core.m_meta_core.unify(
 	    ast->m_condition->m_meta_type, tc.meta_value());
 
 	metacheck(ast->m_body.get(), tc);
@@ -135,7 +135,7 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.new_meta_var();
 	metacheck(ast->m_value.get(), tc);
-	tc.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
+	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
 
 void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
@@ -146,12 +146,12 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		metacheck(decl->m_value.get(), tc);
 
 	for (auto& decl : ast->m_declarations)
-		tc.m_meta_core.unify(decl->m_meta_type, decl->m_value->m_meta_type);
+		tc.m_core.m_meta_core.unify(decl->m_meta_type, decl->m_value->m_meta_type);
 
 	for (auto& decl : ast->m_declarations)
-		if (tc.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
+		if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
 			for (auto* other : decl->m_references)
-				if (tc.m_meta_core.find(other->m_meta_type) == tc.meta_value())
+				if (tc.m_core.m_meta_core.find(other->m_meta_type) == tc.meta_value())
 					assert(0 && "value referenced in a type definition");
 }
 
@@ -160,7 +160,7 @@ void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
 
 	for (auto& type : ast->m_types) {
 		metacheck(type.get(), tc);
-		tc.m_meta_core.unify(type->m_meta_type, tc.meta_monotype());
+		tc.m_core.m_meta_core.unify(type->m_meta_type, tc.meta_monotype());
 	}
 }
 
@@ -168,11 +168,11 @@ void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_monotype();
 
 	metacheck(ast->m_callee.get(), tc);
-	tc.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_typefunc());
+	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_typefunc());
 
 	for (auto& arg : ast->m_args) {
 		metacheck(arg.get(), tc);
-		tc.m_meta_core.unify(arg->m_meta_type, tc.meta_monotype());
+		tc.m_core.m_meta_core.unify(arg->m_meta_type, tc.meta_monotype());
 	}
 }
 

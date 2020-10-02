@@ -13,7 +13,6 @@ OBJNAMES := \
 	lexer.o \
 	match_identifiers.o \
 	metacheck.o \
-	metatypesystem.o \
 	parser.o \
 	parse.o \
 	string_view.o \
@@ -22,7 +21,8 @@ OBJNAMES := \
 	typecheck.o \
 	typechecker.o \
 	typed_ast.o \
-	typesystem.o
+	typesystem.o \
+	unification.o
 
 # ITPR stands for "interpreter"
 ITPR_OBJNAMES := \
