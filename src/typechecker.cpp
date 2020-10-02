@@ -8,9 +8,11 @@
 namespace TypeChecker {
 
 TypeChecker::TypeChecker() {
-	m_core.m_meta_core.new_term(); // 0 | value
-	m_core.m_meta_core.new_term(); // 1 | type func
-	m_core.m_meta_core.new_term(); // 2 | mono type
+	// INVARIANT: we care only for the headers,
+	// wether something's a var or a term and which one
+	m_core.m_meta_core.new_term(-1); // 0 | value
+	m_core.m_meta_core.new_term(-1); // 1 | type func
+	m_core.m_meta_core.new_term(-1); // 2 | mono type
 
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
