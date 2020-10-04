@@ -1,7 +1,6 @@
 #include "string_set.hpp"
 
 #include "string_view.hpp"
-#include "interned_string.hpp"
 
 #include <cassert>
 #include <cstring>
