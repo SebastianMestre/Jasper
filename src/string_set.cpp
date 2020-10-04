@@ -108,7 +108,7 @@ void StringSet::rehash(size_t new_size) {
 	if (new_size < m_data.size())
 		return;
 
-	std::vector<std::pair<HashField, std::string>> old_data = std::move(m_data);
+	std::vector<std::pair<HashField, std::unique_ptr<std::string>>> old_data = std::move(m_data);
 
 	m_data.resize(0);
 	m_data.resize(new_size);
@@ -116,10 +116,10 @@ void StringSet::rehash(size_t new_size) {
 		if(slot.first.status == HashField::Occupied){
 			uint64_t hash_bits = slot.first.hash_bits;
 			auto pos = insertion_spot(
-			    slot.second.data(),
-			    slot.second.size(),
+			    slot.second->data(),
+			    slot.second->size(),
 			    hash_bits);
-			put(pos.first, std::move(slot.second), hash_bits);
+			put(pos.first, std::move(*slot.second), hash_bits);
 		}
 	}
 }
@@ -131,8 +131,8 @@ std::pair<int, bool> StringSet::insertion_spot(char const* data, size_t length, 
 	bool found = false;
 	while (m_data[position].first.status == HashField::Occupied) {
 
-		if (length == m_data[position].second.size() &&
-		    memcmp(data, m_data[position].second.data(), length) == 0) {
+		if (length == m_data[position].second->size() &&
+		    memcmp(data, m_data[position].second->data(), length) == 0) {
 			found = true;
 			break;
 		}
@@ -152,8 +152,8 @@ std::pair<int, bool> StringSet::find_spot(char const* data, size_t length, uint6
 	bool found = false;
 	while (m_data[position].first.status != HashField::Empty) {
 
-		if (length == m_data[position].second.size() &&
-		    memcmp(data, m_data[position].second.data(), length) == 0) {
+		if (length == m_data[position].second->size() &&
+		    memcmp(data, m_data[position].second->data(), length) == 0) {
 			found = true;
 			break;
 		}
@@ -171,5 +171,5 @@ void StringSet::put(int position, std::string&& str, uint64_t hash_bits){
 
 	m_data[position].first.status = HashField::Occupied;
 	m_data[position].first.hash_bits = hash_bits;
-	m_data[position].second = std::move(str);
+	m_data[position].second = std::make_unique<std::string>(std::move(str));
 }

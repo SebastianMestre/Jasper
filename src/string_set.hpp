@@ -1,6 +1,7 @@
-#include <vector>
+#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <cstdint>
 
@@ -19,7 +20,7 @@ struct StringSet {
 		uint64_t hash_bits : 62;
 	};
 
-	std::vector<std::pair<HashField, std::string>> m_data;
+	std::vector<std::pair<HashField, std::unique_ptr<std::string>>> m_data;
 	size_t m_size;
 
 	StringSet();
@@ -32,8 +33,8 @@ struct StringSet {
 	void insert(char const*);
 
 	bool includes(std::string const&) const;
-	// bool includes(InternedString const&) const;
-	// bool includes(string_view const&) const;
+	// bool includes(InternedString const&) const; // TODO
+	// bool includes(string_view const&) const; // TODO
 	bool includes(char const*, size_t) const;
 	bool includes(char const*) const;
 
