@@ -9,6 +9,8 @@
 #include "test_utils.hpp"
 #include "tester.hpp"
 
+#include "../string_set.hpp"
+
 void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
 	using Testers = std::vector<Test::Interpret>;
@@ -490,6 +492,27 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        return {TestStatusTag::Ok};
 	        }}));
+}
+
+void string_set_tests(Test::Tester& tester) {
+	tester.add_test(std::make_unique<Test::NormalTestSet>(
+	    std::vector<Test::NormalTestSet::TestFunction> {+[]() -> TestReport {
+		    StringSet s;
+		    s.insert("AAA");
+		    if (!s.includes("AAA"))
+			    return {TestStatusTag::Fail, "AAA is not in the set after inserting it"};
+
+		    s.insert("BBB");
+		    if (!s.includes("AAA"))
+			    return {
+			        TestStatusTag::Fail,
+			        "AAA is no longer in the set after inserting BBB"};
+
+		    if (!s.includes("BBB"))
+			    return {TestStatusTag::Fail, "BBB is not in the set after inserting it"};
+
+		    return {TestStatusTag::Ok};
+	    }}));
 }
 
 int main() {
