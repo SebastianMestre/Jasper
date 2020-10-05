@@ -145,7 +145,7 @@ struct FunctionLiteral : public TypedAST {
 	MonoId m_return_type;
 	Own<TypedAST> m_body;
 	std::vector<Declaration> m_args;
-	std::unordered_set<std::string> m_captures;
+	std::unordered_set<InternedString> m_captures;
 
 	FunctionLiteral()
 	    : TypedAST {TypedASTTag::FunctionLiteral} {}

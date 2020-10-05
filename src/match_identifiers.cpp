@@ -53,7 +53,7 @@ namespace TypeChecker {
 			auto* func = env.m_function_stack[i];
 			if (func == surrounding_function)
 				break;
-			func->m_captures.insert(ast->text().str());
+			func->m_captures.insert(ast->text());
 		}
 	}
 
