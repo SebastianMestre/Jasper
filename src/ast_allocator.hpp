@@ -17,7 +17,7 @@ struct ASTAllocator<T> {
 	std::vector<T> m_nodes;
 
 	template <typename U>
-	U& get(int index) {
+	U* get(int index) {
 		// has to be here, otherwise error
 		static_assert(std::is_same<T, U>::value, "requested non-existent node");
 		return &m_nodes[index];
@@ -39,7 +39,7 @@ struct ASTAllocator<T, Ts...> {
 
 	// it's here
 	template <typename U>
-	typename std::enable_if<std::is_same<T, U>::value, U&>::type
+	typename std::enable_if<std::is_same<T, U>::value, U*>::type
 	get(int index) {
 		return &m_nodes[index];
 	}
@@ -54,7 +54,7 @@ struct ASTAllocator<T, Ts...> {
 
 	// it's not here
 	template <typename U>
-	typename std::enable_if<!std::is_same<T, U>::value, U&>::type
+	typename std::enable_if<!std::is_same<T, U>::value, U*>::type
 	get(int index) {
 		return m_allocators.template get<U>(index);
 	}
