@@ -52,8 +52,11 @@ ITPR_OBJS := $(addprefix $(OBJDIR)/,$(ITPR_OBJNAMES))
 ALL_OBJS := $(OBJS) $(ITPR_OBJS) $(TEST_OBJS)
 
 LIBS := -lasan
+# LIBS := -lubsan
 
-CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
+# CXXFLAGS := -std=c++14 -Wall -O2 -g -fno-omit-frame-pointer
+CXXFLAGS := -std=c++14 -Wall -g -fno-omit-frame-pointer -fsanitize=address
+# CXXFLAGS := -std=c++14 -Wall -g -fno-omit-frame-pointer -fsanitize=undefined
 
 # maybe we should build the tests as well?
 all: interpreter
