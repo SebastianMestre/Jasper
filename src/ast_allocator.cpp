@@ -1,4 +1,4 @@
-#include "ast_handler.hpp"
+#include "ast_allocator.hpp"
 
 #include <cassert>
 
@@ -10,7 +10,7 @@ namespace AST {
 		assert(int(m_tag.size()) > index and "accessing invalid memory"); \
 		return &m_tag[index];
 
-AST* ASTHandler::access(ASTTag tag, int index) {
+AST* ASTAllocator::access(ASTTag tag, int index) {
 	switch(tag) {
 		FETCH(DeclarationList, m_declaration_lists)
 		FETCH(Declaration, m_declarations)
@@ -51,7 +51,7 @@ AST* ASTHandler::access(ASTTag tag, int index) {
 
 #undef FETCH
 
-AST* ASTHandler::access(const ASTHandler::Node& node) {
+AST* ASTAllocator::access(const ASTAllocator::Node& node) {
 	return access(node.tag, node.index);
 }
 
@@ -61,8 +61,8 @@ AST* ASTHandler::access(const ASTHandler::Node& node) {
 		m_tag.push_back({}); \
 		return node;
 
-ASTHandler::Node ASTHandler::create(ASTTag tag) {
-	ASTHandler::Node node {tag};
+ASTAllocator::Node ASTAllocator::create(ASTTag tag) {
+	ASTAllocator::Node node {tag};
 	switch(tag) {
 		PUSH(DeclarationList, m_declaration_lists)
 		PUSH(Declaration, m_declarations)

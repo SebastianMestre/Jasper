@@ -6,7 +6,7 @@ OBJDIR := ../build
 
 OBJNAMES := \
 	ast.o \
-	ast_handler.o \
+	ast_allocator.o \
 	compile_time_environment.o \
 	ct_eval.o \
 	desugar.o \

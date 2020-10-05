@@ -6,7 +6,7 @@
 
 namespace AST {
 
-struct ASTHandler {
+struct ASTAllocator {
 	struct Node {
 		ASTTag tag;
 		int index;
