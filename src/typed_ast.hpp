@@ -50,8 +50,8 @@ struct Declaration : public TypedAST {
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
 
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text.str();
+	InternedString const& identifier_text() const {
+		return m_identifier_token->m_text;
 	}
 
 	Declaration()
@@ -156,8 +156,8 @@ struct Identifier : public TypedAST {
 	Token const* m_token;
 	Declaration* m_declaration {nullptr};
 
-	std::string const& text() {
-		return m_token->m_text.str();
+	InternedString const& text() {
+		return m_token->m_text;
 	}
 
 	Identifier()

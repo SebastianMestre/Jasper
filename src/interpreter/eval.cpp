@@ -13,9 +13,9 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	// TODO: type and mutable check -> return error
-	e.declare(ast->identifier_text(), e.null());
+	e.declare(ast->identifier_text().str(), e.null());
 	if (ast->m_value) {
-		auto* ref = e.access(ast->identifier_text());
+		auto* ref = e.access(ast->identifier_text().str());
 		auto value = eval(ast->m_value.get(), e);
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
@@ -61,7 +61,7 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text()] = value.get();
+			result->m_value[decl->identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in object must have a value";
 			assert(0);
@@ -81,7 +81,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text()] = value.get();
+			result->m_value[decl->identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);
@@ -102,7 +102,7 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
-	return e.access(ast->text());
+	return e.access(ast->text().str());
 };
 
 gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
@@ -147,7 +147,7 @@ gc_ptr<Value> eval_call_function(
 	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
-		e.declare(argdecl.identifier_text(), unboxed(args[i].get()));
+		e.declare(argdecl.identifier_text().str(), unboxed(args[i].get()));
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iosfwd>
 #include <string>
 #include <unordered_set>

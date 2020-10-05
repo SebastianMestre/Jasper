@@ -116,7 +116,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i].get(), tc);
-			std::string name = as_se->m_fields[i].text();
+			std::string name = as_se->m_fields[i].text().str();
 			assert(!fields.count(name));
 			fields[name] = mono;
 		}
