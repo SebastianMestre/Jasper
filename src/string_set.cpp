@@ -27,7 +27,7 @@ static uint64_t compute_effective_hash(unsigned char const* data, size_t length)
 
 // ==== ==== ==== ====
 
-StringSet::StringSet(){
+StringSet::StringSet() {
 	m_data.resize(8);
 	memset(m_data.data(), 0, sizeof(m_data[0]) * m_data.size());
 }
@@ -102,9 +102,10 @@ void StringSet::rehash(size_t new_size) {
 	memset(m_data.data(), 0, sizeof(m_data[0]) * m_data.size());
 
 	m_size = 0;
-	for (auto& slot : old_data){
-		if(slot.status == HashField::Occupied){
-			auto pos = scan(slot.value->data(), slot.value->size(), slot.hash_bits);
+	for (auto& slot : old_data) {
+		if (slot.status == HashField::Occupied) {
+			auto pos =
+			    scan(slot.value->data(), slot.value->size(), slot.hash_bits);
 			assert(!pos.found);
 			m_data[pos.free_index].value = slot.value;
 			m_data[pos.free_index].status = HashField::Occupied;
@@ -114,7 +115,8 @@ void StringSet::rehash(size_t new_size) {
 	}
 }
 
-StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t hash_bits) const {
+StringSet::ScanData StringSet::scan(
+    char const* data, size_t length, uint64_t hash_bits) const {
 	assert(m_data.size() > m_size);
 
 	int position = hash_bits % m_data.size();
@@ -123,7 +125,7 @@ StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t ha
 
 	while (m_data[position].status != HashField::Empty) {
 		if (m_data[position].status == HashField::Tombstone) {
-			if (free_position == -1){
+			if (free_position == -1) {
 				free_position = position;
 			}
 		} else if (m_data[position].status == HashField::Occupied) {
@@ -147,7 +149,7 @@ StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t ha
 	return {free_position, position, found};
 }
 
-void StringSet::put(int position, std::string&& str, uint64_t hash_bits){
+void StringSet::put(int position, std::string&& str, uint64_t hash_bits) {
 	assert(m_data[position].status != HashField::Occupied);
 
 	m_storage.push_back(std::move(str));

@@ -29,7 +29,6 @@ struct StringSet {
 		uint64_t hash_bits : 62;
 	};
 
-	
 	ChunkedArray<std::string> m_storage;
 	std::vector<HashField> m_data;
 	size_t m_size {0};
