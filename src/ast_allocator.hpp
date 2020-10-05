@@ -3,54 +3,67 @@
 #include "ast.hpp"
 
 #include <vector>
+#include <type_traits>
 
 namespace AST {
 
-struct ASTAllocator {
-	struct Node {
-		ASTTag tag;
-		int index;
-	};
+template <typename ...Ts>
+struct ASTAllocator;
 
-	std::vector<DeclarationList> m_declaration_lists;
-	std::vector<Declaration> m_declarations;
+// base case
+template <typename T>
+struct ASTAllocator<T> {
 
-	// potential for reuse
-	std::vector<IntegerLiteral> m_integers;
-	std::vector<NumberLiteral> m_numbers;
-	std::vector<StringLiteral> m_strings;
-	std::vector<BooleanLiteral> m_booleans;
-	std::vector<NullLiteral> m_nulls;
-	std::vector<ObjectLiteral> m_objects;
-	std::vector<ArrayLiteral> m_arrays;
-	std::vector<DictionaryLiteral> m_dictionaries;
-	std::vector<FunctionLiteral> m_functions;
-	std::vector<ShortFunctionLiteral> m_short_functions;
+	std::vector<T> m_nodes;
 
-	std::vector<Identifier> m_identifiers;
-	std::vector<BinaryExpression> m_bps;
-	std::vector<CallExpression> m_calls;
-	std::vector<IndexExpression> m_indexes;
-	std::vector<RecordAccessExpression> m_record_accesses;
-	std::vector<TernaryExpression> m_ternaries;
+	template <typename U>
+	U& get(int index) {
+		// has to be here, otherwise error
+		static_assert(std::is_same<T, U>::value, "requested non-existent node");
+		return &m_nodes[index];
+	}
 
-	std::vector<Block> m_blocks;
-	std::vector<ReturnStatement> m_returns;
-	std::vector<IfElseStatement> m_conditionals;
-	std::vector<ForStatement> m_fors;
-	std::vector<WhileStatement> m_whiles;
+	template <typename U>
+	int make() {
+		int index = m_nodes.size();
+		m_nodes.push_back({});
+		return index;
+	}
+};
 
-	std::vector<TypeTerm> m_terms;
-	std::vector<TypeVar> m_vars;
-	std::vector<UnionExpression> m_unions;
-	std::vector<TupleExpression> m_tuples;
-	std::vector<StructExpression> m_structs;
+template <typename T, typename ...Ts>
+struct ASTAllocator<T, Ts...> {
 
-	// TODO: is overload of [] possible or better?
-	AST* access(ASTTag tag, int index);
-	AST* access(const Node& node);
+	std::vector<T> m_nodes;
+	ASTAllocator<Ts...> m_allocators;
 
-	Node create(ASTTag tag);
+	// it's here
+	template <typename U>
+	typename std::enable_if<std::is_same<T, U>::value, U&>::type
+	get(int index) {
+		return &m_nodes[index];
+	}
+
+	template <typename U>
+	typename std::enable_if<std::is_same<T, U>::value, int>::type
+	make() {
+		int index = m_nodes.size();
+		m_nodes.push_back({});
+		return index;
+	}
+
+	// it's not here
+	template <typename U>
+	typename std::enable_if<!std::is_same<T, U>::value, U&>::type
+	get(int index) {
+		return m_allocators.template get<U>(index);
+	}
+
+	template <typename U>
+	typename std::enable_if<!std::is_same<T, U>::value, int>::type
+	make() {
+		return m_allocators.template make<U>();
+	}
 };
 
 } // namespace AST
