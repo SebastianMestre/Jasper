@@ -34,6 +34,9 @@ TestReport InterpreterTestSet::execute() {
 
 NormalTestSet::NormalTestSet() {}
 
+NormalTestSet::NormalTestSet(TestFunction tester)
+    : m_testers {tester} {}
+
 NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
     : m_testers {std::move(testers)} {}
 

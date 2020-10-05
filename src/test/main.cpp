@@ -5,6 +5,7 @@
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "../tarjan_solver.hpp"
+#include "../node_allocator.hpp"
 #include "test_status_tag.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
@@ -492,9 +493,29 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 	        }}));
 }
 
+void allocator_tests(Test::Tester& tests) {
+	tests.add_test(std::make_unique<Test::NormalTestSet>(
+		+[]() -> TestReport {
+			NodeAllocator<bool, int, float> test_allocator;
+
+			int index = test_allocator.make<float>();
+			float* thing = test_allocator.get<float>(index);
+
+			*thing = 1.0f;
+
+			// NOTE: we mostly want to test for errors, not this
+			if (*test_allocator.get<float>(index) != 1.0f)
+				return {TestStatusTag::Fail, "Set a value in allocator via pointer. Maybe returned the wrong pointer?"};
+
+			return {TestStatusTag::Ok};
+		}
+	));
+}
+
 int main() {
 	Test::Tester tests;
 	interpreter_tests(tests);
 	tarjan_algorithm_tests(tests);
+	allocator_tests(tests);
 	tests.execute();
 }

@@ -34,6 +34,7 @@ struct NormalTestSet : public TestSet {
 	using TestFunction = TestReport (*)();
 
 	NormalTestSet();
+	NormalTestSet(TestFunction);
 	NormalTestSet(std::vector<TestFunction>);
 
 	std::vector<TestFunction> m_testers;
