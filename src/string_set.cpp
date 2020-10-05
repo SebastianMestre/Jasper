@@ -7,30 +7,22 @@
 
 #include <iostream>
 
-// compute a 64-bit hash using a simple horner hashing scheme
+// compute a 64-bit hash
 static uint64_t compute_hash(unsigned char const* data, size_t length) {
-	constexpr uint64_t base = 263;
-	// TODO find a larger prime (less than 2**64/263)
-	constexpr uint64_t mod = 1000000005721;
-
-	uint64_t result = 0;
+	// djb2 (k=33) hash function
+	uint64_t result = 5381;
 	while (length--) {
-		result *= base;
-		result += data[length];
-		result %= mod;
+		result *= 33;
+		result ^= data[length];
 	}
-
 	return result;
 }
 
-// compute a 62-bit hash using a simple horner hashing scheme
+// compute a 62-bit hash
 static uint64_t compute_effective_hash(unsigned char const* data, size_t length) {
 	uint64_t hash_bits = compute_hash(data, length);
 	// roll the two highest bits back to the low bits
-	// NOTE: due to how we implement compute_hash, the two highest bits are
-	// always off. Still, doing this is pretty much free, and it makes this
-	// function more future-proof.
-	return (hash_bits >> 62) ^ hash_bits;
+	return (hash_bits >> 62) ^ (hash_bits & ~(3 << 22));
 }
 
 // ==== ==== ==== ====
