@@ -19,4 +19,11 @@ struct InternedString {
 	static StringSet& database();
 };
 
+// Specialize std::hash to implement hashing for this type
+template<> struct std::hash<InternedString> {
+	std::size_t operator()(InternedString const& str) const noexcept {
+		return std::hash<std::string const*>{}(str.m_data);
+	};
+};
+
 std::ostream& operator<<(std::ostream&, InternedString const&);
