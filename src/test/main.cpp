@@ -517,7 +517,8 @@ void string_set_tests(Test::Tester& tester) {
 
 int main() {
 	Test::Tester tests;
-	interpreter_tests(tests);
 	tarjan_algorithm_tests(tests);
+	string_set_tests(tests);
+	interpreter_tests(tests);
 	tests.execute();
 }
