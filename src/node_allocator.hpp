@@ -5,14 +5,12 @@
 #include <vector>
 #include <type_traits>
 
-namespace AST {
-
 template <typename ...Ts>
-struct ASTAllocator;
+struct NodeAllocator;
 
 // base case
 template <typename T>
-struct ASTAllocator<T> {
+struct NodeAllocator<T> {
 
 	std::vector<T> m_nodes;
 
@@ -32,10 +30,10 @@ struct ASTAllocator<T> {
 };
 
 template <typename T, typename ...Ts>
-struct ASTAllocator<T, Ts...> {
+struct NodeAllocator<T, Ts...> {
 
 	std::vector<T> m_nodes;
-	ASTAllocator<Ts...> m_allocators;
+	NodeAllocator<Ts...> m_allocators;
 
 	// it's here
 	template <typename U>
@@ -65,5 +63,3 @@ struct ASTAllocator<T, Ts...> {
 		return m_allocators.template make<U>();
 	}
 };
-
-} // namespace AST
