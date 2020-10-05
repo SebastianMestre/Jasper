@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "interned_string.hpp"
 #include "typechecker_types.hpp"
 
 namespace TypedAST {
@@ -18,7 +19,7 @@ namespace Frontend {
 
 struct Scope {
 	bool m_nested {false};
-	std::unordered_map<std::string, TypedAST::Declaration*> m_vars;
+	std::unordered_map<InternedString, TypedAST::Declaration*> m_vars;
 	std::unordered_set<MonoId> m_type_vars;
 };
 
@@ -30,9 +31,9 @@ struct CompileTimeEnvironment {
 
 	CompileTimeEnvironment();
 
-	void declare(std::string const&, TypedAST::Declaration*);
+	void declare(InternedString const&, TypedAST::Declaration*);
 
-	TypedAST::Declaration* access(std::string const&);
+	TypedAST::Declaration* access(InternedString const&);
 
 	TypedAST::FunctionLiteral* current_function();
 	void enter_function(TypedAST::FunctionLiteral*);

@@ -81,7 +81,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text()] = value.get();
+			result->m_value[decl->identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);

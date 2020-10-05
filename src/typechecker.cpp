@@ -174,7 +174,7 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	return return_type;
 }
 
-void TypeChecker::declare_builtin(std::string const& name, MetaTypeId meta_type, PolyId poly_type){
+void TypeChecker::declare_builtin(InternedString const& name, MetaTypeId meta_type, PolyId poly_type){
 	m_builtin_declarations.push_back({});
 	TypedAST::Declaration* decl = &m_builtin_declarations.back();
 	decl->m_meta_type = meta_type;
