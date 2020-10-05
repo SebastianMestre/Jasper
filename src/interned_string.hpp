@@ -9,6 +9,7 @@ struct InternedString {
 
 	InternedString(InternedString const& other);
 	InternedString(char const* other);
+	InternedString(char const* other, size_t length);
 	explicit InternedString(std::string const& other);
 	explicit InternedString(std::string&& other);
 

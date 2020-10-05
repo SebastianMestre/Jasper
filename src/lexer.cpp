@@ -23,13 +23,11 @@ char Lexer::char_at(int index) {
 
 void Lexer::push_token(TokenTag tt, int width) {
 
-	std::string text(width, '\0');
-	for (int i = 0; i < width; ++i)
-		text[i] = m_source[m_source_index + i];
+	char const* base_ptr = m_source.data() + m_source_index;
 
 	Token t = {
 	    tt,
-	    InternedString(std::move(text)),
+	    InternedString(base_ptr, width),
 	    m_current_line,
 	    m_current_column,
 	    m_current_line,

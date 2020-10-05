@@ -14,6 +14,11 @@ StringSet& InternedString::database() {
 InternedString::InternedString(InternedString const& other)
     : m_data {other.m_data} {}
 
+InternedString::InternedString(char const* other, size_t length) {
+	auto insertion_result = database().insert(other, length);
+	m_data = &(*insertion_result.first);
+}
+
 InternedString::InternedString(char const* other) {
 	auto insertion_result = database().insert(other);
 	m_data = &(*insertion_result.first);
