@@ -41,15 +41,15 @@ StringSet::StringSet(){
 }
 
 std::pair<std::string const*, bool> StringSet::insert(std::string&& s) {
+	if (m_size * 2 >= m_data.size())
+		rehash(m_data.size() * 2);
+
 	uint64_t hash_bits = compute_effective_hash(
 	    reinterpret_cast<unsigned char const*>(s.data()), s.size());
 	auto pos = scan(s.data(), s.size(), hash_bits);
 
 	if (pos.found)
 		return {m_data[pos.stop_index].value, false};
-
-	if (m_size * 2 >= m_data.size())
-		rehash(m_data.size() * 2);
 
 	m_size += 1;
 	put(pos.free_index, std::move(s), hash_bits);
@@ -58,15 +58,14 @@ std::pair<std::string const*, bool> StringSet::insert(std::string&& s) {
 }
 
 std::pair<std::string const*, bool> StringSet::insert(char const* data, size_t length) {
+	if (m_size * 2 >= m_data.size())
+		rehash(m_data.size() * 2);
+
 	uint64_t hash_bits = compute_effective_hash(
 	    reinterpret_cast<unsigned char const*>(data), length);
 	auto pos = scan(data, length, hash_bits);
-
 	if (pos.found)
 		return {m_data[pos.stop_index].value, false};
-
-	if (m_size * 2 >= m_data.size())
-		rehash(m_data.size() * 2);
 
 	m_size += 1;
 	put(pos.free_index, std::string {data, length}, hash_bits);
@@ -114,7 +113,7 @@ void StringSet::rehash(size_t new_size) {
 	for (auto& slot : old_data){
 		if(slot.status == HashField::Occupied){
 			auto pos = scan(slot.value->data(), slot.value->size(), slot.hash_bits);
-			std::cerr << "INDEX " << pos.free_index << " STRING \"" << *slot.value << "\"\n";
+			assert(!pos.found);
 			m_data[pos.free_index].value = slot.value;
 			m_data[pos.free_index].status = HashField::Occupied;
 			m_data[pos.free_index].hash_bits = slot.hash_bits;
@@ -122,7 +121,6 @@ void StringSet::rehash(size_t new_size) {
 		}
 	}
 }
-
 
 StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t hash_bits) const {
 	assert(m_data.size() > m_size);
@@ -132,10 +130,10 @@ StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t ha
 	bool found = false;
 
 	while (m_data[position].status != HashField::Empty) {
-
 		if (m_data[position].status == HashField::Tombstone) {
-			if (free_position == -1)
+			if (free_position == -1){
 				free_position = position;
+			}
 		} else if (m_data[position].status == HashField::Occupied) {
 			if (length == m_data[position].value->size() &&
 			    memcmp(data, m_data[position].value->data(), length) == 0) {
@@ -158,8 +156,6 @@ StringSet::ScanData StringSet::scan(char const* data, size_t length, uint64_t ha
 }
 
 void StringSet::put(int position, std::string&& str, uint64_t hash_bits){
-	std::cerr << "PUTTING AT " << position << " -- SIZE IS " << m_data.size() << "\n";
-
 	assert(m_data[position].status != HashField::Occupied);
 
 	m_storage.push_back(std::move(str));
