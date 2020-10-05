@@ -23,14 +23,13 @@ char Lexer::char_at(int index) {
 
 void Lexer::push_token(TokenTag tt, int width) {
 
-	std::string text;
-	text.resize(width);
+	std::string text(width, '\0');
 	for (int i = 0; i < width; ++i)
 		text[i] = m_source[m_source_index + i];
 
 	Token t = {
 	    tt,
-	    std::move(text),
+	    InternedString(std::move(text)),
 	    m_current_line,
 	    m_current_column,
 	    m_current_line,
@@ -386,7 +385,7 @@ void Lexer::consume_token() {
 		}
 
 		m_tokens.push_back(
-		    {TokenTag::STRING, text, l0, c0, m_current_line, m_current_column});
+		    {TokenTag::STRING, InternedString {text}, l0, c0, m_current_line, m_current_column});
 
 		m_current_column += 1;
 		m_source_index += 1;
@@ -410,7 +409,7 @@ void Lexer::consume_token() {
 
 			m_tokens.push_back(
 			    {TokenTag::IDENTIFIER,
-			     text,
+			     InternedString {text},
 			     m_current_line,
 			     m_current_column - int(text.size()),
 			     m_current_line,
@@ -462,7 +461,7 @@ bool Lexer::consume_number() {
 	m_current_column += 1;
 	m_tokens.push_back(
 	    {type,
-	     text,
+	     InternedString {text},
 	     m_current_line,
 	     m_current_column - int(text.size()),
 	     m_current_line,

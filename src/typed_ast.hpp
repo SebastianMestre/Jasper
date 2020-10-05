@@ -51,7 +51,7 @@ struct Declaration : public TypedAST {
 	FunctionLiteral* m_surrounding_function {nullptr};
 
 	std::string const& identifier_text() const {
-		return m_identifier_token->m_text;
+		return m_identifier_token->m_text.str();
 	}
 
 	Declaration()
@@ -72,7 +72,7 @@ struct NumberLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	NumberLiteral()
@@ -83,7 +83,7 @@ struct IntegerLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	IntegerLiteral()
@@ -94,7 +94,7 @@ struct StringLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	StringLiteral()
@@ -105,7 +105,7 @@ struct BooleanLiteral : public TypedAST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	BooleanLiteral()
@@ -157,7 +157,7 @@ struct Identifier : public TypedAST {
 	Declaration* m_declaration {nullptr};
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	Identifier()
