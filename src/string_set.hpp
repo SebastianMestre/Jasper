@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+#include "chunked_array.hpp"
+
 #include <cstdint>
 
 struct string_view;
@@ -22,11 +24,14 @@ struct StringSet {
 		static constexpr uint64_t Occupied = 1;
 		static constexpr uint64_t Tombstone = 2;
 
-		uint64_t status : 2 {0};
-		uint64_t hash_bits : 62 {0};
+		std::string* value;
+		uint64_t status : 2;
+		uint64_t hash_bits : 62;
 	};
 
-	std::vector<std::pair<HashField, std::unique_ptr<std::string>>> m_data;
+	
+	ChunkedArray<std::string> m_storage;
+	std::vector<HashField> m_data;
 	size_t m_size {0};
 
 	StringSet();
