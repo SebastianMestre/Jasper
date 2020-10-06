@@ -496,16 +496,18 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 void allocator_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::NormalTestSet>(
 		+[]() -> TestReport {
-			NodeAllocator<bool, int, float> test_allocator;
+			NodeAllocator<int, float> test_allocator;
 
-			int index = test_allocator.make<float>();
-			float* thing = test_allocator.get<float>(index);
+			int* integer = test_allocator.make<int>();
+			*integer = 1;
 
-			*thing = 1.0f;
+			float* floating = test_allocator.make<float>();
+			*floating = 1.0f;
 
-			// NOTE: we mostly want to test for errors, not this
-			if (*test_allocator.get<float>(index) != 1.0f)
-				return {TestStatusTag::Fail, "Set a value in allocator via pointer. Maybe returned the wrong pointer?"};
+			for(int i = 1e3; i--;)
+				test_allocator.make<float>();
+
+			*floating = 2.0f;
 
 			return {TestStatusTag::Ok};
 		}
