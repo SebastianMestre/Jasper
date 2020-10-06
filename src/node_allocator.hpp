@@ -28,10 +28,12 @@ template <>
 struct NodeAllocator<> {
 
 	template <typename U>
-	U* get(int index) { assert(0 and "No matching type"); }
+	U* get(int index) { static_assert(std::is_same<U,_dummy>::value and "No matching type"); }
 
 	template <typename U>
-	int make() { assert(0 and "No matching type"); }
+	int make() { static_assert(std::is_same<U,_dummy>::value and "No matching type"); }
+
+	struct _dummy {};
 };
 
 template <typename T, typename ...Ts>
