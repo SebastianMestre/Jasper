@@ -34,10 +34,6 @@ InternedString::InternedString(std::string&& other) {
 	m_data = &(*insertion_result.first);
 }
 
-bool InternedString::operator==(InternedString const& other) const {
-	return m_data == other.m_data;
-}
-
 std::string const& InternedString::str() const {
 	assert(m_data);
 	return *m_data;
