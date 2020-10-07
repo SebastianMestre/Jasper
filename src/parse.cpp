@@ -4,30 +4,36 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
-Writer<std::unique_ptr<AST::AST>>
-parse_program(std::string const& source, TokenArray& ta) {
+Writer<std::pair<AST::AST*, AST::Allocator>> parse_program(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
 
 	Lexer l = {std::move(v), ta};
 
+	std::pair<AST::AST*, AST::Allocator> graph {nullptr, {}};
+
 	Parser p;
 	p.m_lexer = &l;
+	p.m_ast_allocator = &graph.second;
 
-	return p.parse_top_level();
+	auto result = p.parse_top_level();
+	return {result.m_error, graph};
 }
 
-Writer<std::unique_ptr<AST::AST>>
-parse_expression(std::string const& source, TokenArray& ta) {
+Writer<std::pair<AST::AST*, AST::Allocator>> parse_expression(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
 
 	Lexer l = {std::move(v), ta};
 
+	std::pair<AST::AST*, AST::Allocator> graph {nullptr, {}};
+
 	Parser p;
 	p.m_lexer = &l;
+	p.m_ast_allocator = &graph.second;
 
-	return p.parse_expression();
+	auto result = p.parse_expression();
+	return {result.m_error, graph};
 }

@@ -63,29 +63,28 @@ bool Parser::match(TokenTag expected_type) {
 	return true;
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_top_level() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_top_level() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse top level program"}};
 
 	auto declarations = parse_declaration_list(TokenTag::END);
 
-	if (handle_error(result, declarations)) {
+	if (handle_error(result, declarations))
 		return result;
-	}
 
-	auto e = std::make_unique<AST::DeclarationList>();
+	auto e = m_ast_allocator->make<AST::DeclarationList>();
 
-	e->m_declarations = std::move(declarations.m_result);
+	e->m_declarations = declarations.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::vector<std::unique_ptr<AST::Declaration>>>
+Writer<std::vector<AST::Declaration*>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<std::unique_ptr<AST::Declaration>>> result = {
+	Writer<std::vector<AST::Declaration*>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
-	std::vector<std::unique_ptr<AST::Declaration>> declarations;
+	std::vector<AST::Declaration*> declarations;
 
 	while (1) {
 		auto p0 = peek();
@@ -108,18 +107,18 @@ Parser::parse_declaration_list(TokenTag terminator) {
 		if (handle_error(result, declaration))
 			return result;
 
-		declarations.push_back(std::move(declaration.m_result));
+		declarations.push_back(declaration.m_result);
 	}
 
 	return make_writer(std::move(declarations));
 }
 
-Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
+Writer<std::vector<AST::AST*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+	Writer<std::vector<AST::AST*>> result = {
 	    {"Parse Error: Failed to parse expression list"}};
 
-	std::vector<std::unique_ptr<AST::AST>> expressions;
+	std::vector<AST::AST*> expressions;
 
 	if (peek()->m_type == terminator) {
 		m_lexer->advance();
@@ -150,7 +149,7 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 			if (handle_error(result, expression)) {
 				return result;
 			} else {
-				expressions.push_back(std::move(expression.m_result));
+				expressions.push_back(expression.m_result);
 			}
 
 			auto p1 = peek();
@@ -173,8 +172,8 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_expression_list(
 	return make_writer(std::move(expressions));
 }
 
-Writer<std::unique_ptr<AST::Declaration>> Parser::parse_declaration() {
-	Writer<std::unique_ptr<AST::Declaration>> result = {
+Writer<AST::Declaration*> Parser::parse_declaration() {
+	Writer<AST::Declaration*> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
 	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
@@ -182,7 +181,7 @@ Writer<std::unique_ptr<AST::Declaration>> Parser::parse_declaration() {
 	if (handle_error(result, name))
 		return result;
 
-	Writer<std::unique_ptr<AST::AST>> type;
+	Writer<AST::AST*> type;
 
 	if (consume(TokenTag::DECLARE_ASSIGN)) {
 	} else if (consume(TokenTag::DECLARE)) {
@@ -206,13 +205,13 @@ Writer<std::unique_ptr<AST::Declaration>> Parser::parse_declaration() {
 	if (handle_error(result, require(TokenTag::SEMICOLON)))
 		return result;
 
-	auto p = std::make_unique<AST::Declaration>();
+	auto p = m_ast_allocator->make<AST::Declaration>();
 
 	p->m_identifier_token = name.m_result;
-	p->m_type = std::move(type.m_result);
-	p->m_value = std::move(value.m_result);
+	p->m_type = type.m_result;
+	p->m_value = value.m_result;
 
-	return make_writer<std::unique_ptr<AST::Declaration>>(std::move(p));
+	return make_writer<AST::Declaration*>(p);
 }
 
 // These are important for infix expression parsing.
@@ -279,8 +278,8 @@ binding_power binding_power_of(TokenTag t) {
 	}
 }
 
-Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
-	Writer<std::vector<std::unique_ptr<AST::AST>>> result = {
+Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
+	Writer<std::vector<AST::AST*>> result = {
 	    {"Parse Error: Failed to argument list"}};
 
 	if (handle_error(result, require(TokenTag::PAREN_OPEN))) {
@@ -301,11 +300,11 @@ Writer<std::vector<std::unique_ptr<AST::AST>>> Parser::parse_argument_list() {
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_expression(int bp) {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse expression"}};
 
-	Writer<std::unique_ptr<AST::AST>> lhs;
+	Writer<AST::AST*> lhs;
 
 	lhs = parse_terminal();
 	if (handle_error(result, lhs)) {
@@ -345,11 +344,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 				return result;
 			}
 
-			auto e = std::make_unique<AST::CallExpression>();
+			auto e = m_ast_allocator->make<AST::CallExpression>();
 
-			e->m_callee = std::move(lhs.m_result);
+			e->m_callee = lhs.m_result;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = std::move(e);
+			lhs.m_result = e;
 
 			continue;
 		}
@@ -366,10 +365,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 				return result;
 			}
 
-			auto e = std::make_unique<AST::IndexExpression>();
-			e->m_callee = std::move(lhs.m_result);
-			e->m_index = std::move(index.m_result);
-			lhs.m_result = std::move(e);
+			auto e = m_ast_allocator->make<AST::IndexExpression>();
+
+			e->m_callee = lhs.m_result;
+			e->m_index = index.m_result;
+			lhs.m_result = e;
 
 			continue;
 		}
@@ -379,11 +379,11 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			if (handle_error(result, args))
 				return result;
 
-			auto e = std::make_unique<AST::TypeTerm>();
+			auto e = m_ast_allocator->make<AST::TypeTerm>();
 
-			e->m_callee = std::move(lhs.m_result);
+			e->m_callee = lhs.m_result;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = std::move(e);
+			lhs.m_result = e;
 
 			continue;
 		}
@@ -394,10 +394,10 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 			if (handle_error(result, member))
 				return result;
 
-			auto e = std::make_unique<AST::RecordAccessExpression>();
-			e->m_record = std::move(lhs.m_result);
-			e->m_member = std::move(member.m_result);
-			lhs.m_result = std::move(e);
+			auto e = m_ast_allocator->make<AST::RecordAccessExpression>();
+			e->m_record = lhs.m_result;
+			e->m_member = member.m_result;
+			lhs.m_result = e;
 
 			continue;
 		}
@@ -405,13 +405,13 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 		m_lexer->advance();
 		auto rhs = parse_expression(rp);
 
-		auto e = std::make_unique<AST::BinaryExpression>();
+		auto e = m_ast_allocator->make<AST::BinaryExpression>();
 
 		e->m_op_token = op;
-		e->m_lhs = std::move(lhs.m_result);
-		e->m_rhs = std::move(rhs.m_result);
+		e->m_lhs = lhs.m_result;
+		e->m_rhs = rhs.m_result;
 
-		lhs.m_result = std::move(e);
+		lhs.m_result = e;
 	}
 
 	return lhs;
@@ -420,58 +420,58 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_expression(int bp) {
 /* We say a terminal is any expression that is not an infix expression.
  * This is not what the term usually means in the literature.
  */
-Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_terminal() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse terminal expression"}};
 
 	auto token = peek();
 
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
-		auto e = std::make_unique<AST::NullLiteral>();
+		auto e = m_ast_allocator->make<AST::NullLiteral>();
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_TRUE) {
-		auto e = std::make_unique<AST::BooleanLiteral>();
+		auto e = m_ast_allocator->make<AST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FALSE) {
-		auto e = std::make_unique<AST::BooleanLiteral>();
+		auto e = m_ast_allocator->make<AST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::INTEGER) {
-		auto e = std::make_unique<AST::IntegerLiteral>();
+		auto e = m_ast_allocator->make<AST::IntegerLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::NUMBER) {
-		auto e = std::make_unique<AST::NumberLiteral>();
+		auto e = m_ast_allocator->make<AST::NumberLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::IDENTIFIER) {
-		auto e = std::make_unique<AST::Identifier>();
+		auto e = m_ast_allocator->make<AST::Identifier>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::STRING) {
-		auto e = std::make_unique<AST::StringLiteral>();
+		auto e = m_ast_allocator->make<AST::StringLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
@@ -544,8 +544,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_terminal() {
 	return result;
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_ternary_expression() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_IF)))
@@ -569,30 +569,30 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_ternary_expression() {
 	if (handle_error(result, else_expr))
 		return result;
 
-	auto e = std::make_unique<AST::TernaryExpression>();
+	auto e = m_ast_allocator->make<AST::TernaryExpression>();
 
-	e->m_condition = std::move(condition.m_result);
-	e->m_then_expr = std::move(then_expr.m_result);
-	e->m_else_expr = std::move(else_expr.m_result);
+	e->m_condition = condition.m_result;
+	e->m_then_expr = then_expr.m_result;
+	e->m_else_expr = else_expr.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::Identifier>> Parser::parse_identifier() {
-	Writer<std::unique_ptr<AST::Identifier>> result = {
+Writer<AST::Identifier*> Parser::parse_identifier() {
+	Writer<AST::Identifier*> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
 	auto token = require(TokenTag::IDENTIFIER);
 	if (handle_error(result, token))
 		return result;
 
-	auto e = std::make_unique<AST::Identifier>();
+	auto e = m_ast_allocator->make<AST::Identifier>();
 	e->m_token = token.m_result;
-	return make_writer<std::unique_ptr<AST::Identifier>>(std::move(e));
+	return make_writer<AST::Identifier*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_array_literal() {
+	Writer<AST::AST*> result = {
 	    {"Failed to parse array literal"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_ARRAY))) {
@@ -610,14 +610,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_array_literal() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::ArrayLiteral>();
+	auto e = m_ast_allocator->make<AST::ArrayLiteral>();
 	e->m_elements = std::move(elements.m_result);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_object_literal() {
+	Writer<AST::AST*> result = {
 	    {"Failed to parse object literal"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_OBJECT))) {
@@ -638,14 +638,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_object_literal() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::ObjectLiteral>();
+	auto e = m_ast_allocator->make<AST::ObjectLiteral>();
 	e->m_body = std::move(declarations.m_result);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_dictionary_literal() {
+	Writer<AST::AST*> result = {
 	    {"Failed to parse dictionary literal"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_DICT))) {
@@ -666,10 +666,10 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::DictionaryLiteral>();
+	auto e = m_ast_allocator->make<AST::DictionaryLiteral>();
 	e->m_body = std::move(declarations.m_result);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
 /*
@@ -678,8 +678,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_dictionary_literal() {
  *   print(x);
  * }
  */
-Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_function() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse function"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_FN)))
@@ -688,14 +688,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 	if (handle_error(result, require(TokenTag::PAREN_OPEN)))
 		return result;
 
-	std::vector<std::unique_ptr<AST::AST>> args;
+	std::vector<AST::AST*> args;
 	while (1) {
 		if (consume(TokenTag::PAREN_CLOSE)) {
 			break;
 		} else if (match(TokenTag::IDENTIFIER)) {
 			// consume argument name
 
-			auto arg = std::make_unique<AST::Declaration>();
+			auto arg = m_ast_allocator->make<AST::Declaration>();
 
 			arg->m_identifier_token = peek();
 			m_lexer->advance();
@@ -705,10 +705,10 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-				arg->m_type = std::move(type.m_result);
+				arg->m_type = type.m_result;
 			}
 
-			args.push_back(std::move(arg));
+			args.push_back(arg);
 
 			if (consume(TokenTag::COMMA)) {
 				// If we find a comma, we have to parse
@@ -737,33 +737,33 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_function() {
 		if (handle_error(result, expression))
 			return result;
 
-		auto e = std::make_unique<AST::ShortFunctionLiteral>();
-		e->m_body = std::move(expression.m_result);
+		auto e = m_ast_allocator->make<AST::ShortFunctionLiteral>();
+		e->m_body = expression.m_result;
 		e->m_args = std::move(args);
 
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	} else {
 		auto block = parse_block();
 		if (handle_error(result, block))
 			return result;
 
-		auto e = std::make_unique<AST::FunctionLiteral>();
-		e->m_body = std::move(block.m_result);
+		auto e = m_ast_allocator->make<AST::FunctionLiteral>();
+		e->m_body = block.m_result;
 		e->m_args = std::move(args);
 
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 	}
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_block() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse block statement"}};
 
 	if (handle_error(result, require(TokenTag::BRACE_OPEN))) {
 		return result;
 	}
 
-	std::vector<std::unique_ptr<AST::AST>> statements;
+	std::vector<AST::AST*> statements;
 
 	// loop until we find a matching closing bracket
 	while (1) {
@@ -784,19 +784,19 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_block() {
 		if (handle_error(result, statement)) {
 			return result;
 		} else {
-			statements.push_back(std::move(statement.m_result));
+			statements.push_back(statement.m_result);
 		}
 	}
 
-	auto e = std::make_unique<AST::Block>();
+	auto e = m_ast_allocator->make<AST::Block>();
 
 	e->m_body = std::move(statements);
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_return_statement() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse return statement"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_RETURN))) {
@@ -813,15 +813,15 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_return_statement() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::ReturnStatement>();
+	auto e = m_ast_allocator->make<AST::ReturnStatement>();
 
-	e->m_value = std::move(value.m_result);
+	e->m_value = value.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_if_else_statement() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse if-else statement"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_IF))) {
@@ -846,10 +846,10 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::IfElseStatement>();
+	auto e = m_ast_allocator->make<AST::IfElseStatement>();
 
-	e->m_condition = std::move(condition.m_result);
-	e->m_body = std::move(body.m_result);
+	e->m_condition = condition.m_result;
+	e->m_body = body.m_result;
 
 	if (consume(TokenTag::KEYWORD_ELSE)) {
 		auto else_body = parse_statement();
@@ -857,14 +857,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_if_else_statement() {
 		if (handle_error(result, else_body))
 			return result;
 
-		e->m_else_body = std::move(else_body.m_result);
+		e->m_else_body = else_body.m_result;
 	}
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_for_statement() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse for statement"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_FOR))) {
@@ -903,18 +903,18 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_for_statement() {
 		return result;
 	}
 
-	auto e = std::make_unique<AST::ForStatement>();
+	auto e = m_ast_allocator->make<AST::ForStatement>();
 
-	e->m_declaration = std::move(declaration.m_result);
-	e->m_condition = std::move(condition.m_result);
-	e->m_action = std::move(action.m_result);
-	e->m_body = std::move(body.m_result);
+	e->m_declaration = declaration.m_result;
+	e->m_condition = condition.m_result;
+	e->m_action = action.m_result;
+	e->m_body = body.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_while_statement() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse while statement"}};
 
 	if (handle_error(result, require(TokenTag::KEYWORD_WHILE)))
@@ -934,12 +934,12 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
 	if (handle_error(result, body))
 		return result;
 
-	auto e = std::make_unique<AST::WhileStatement>();
+	auto e = m_ast_allocator->make<AST::WhileStatement>();
 
-	e->m_condition = std::move(condition.m_result);
-	e->m_body = std::move(body.m_result);
+	e->m_condition = condition.m_result;
+	e->m_body = body.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
 /*
@@ -947,8 +947,8 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_while_statement() {
  * parse. This prevents us from backtracking and ensures the parser runs in
  * linear time.
  */
-Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_statement() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse statement"}};
 
 	// TODO: paren_open, string tokens, integer and numer
@@ -966,7 +966,7 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 				return result;
 			}
 
-			return make_writer<std::unique_ptr<AST::AST>>(std::unique_ptr<AST::AST>(declaration.m_result.release()));
+			return make_writer<AST::AST*>(declaration.m_result);
 		} else {
 
 			// TODO: wrap in an ExpressionStatement ?
@@ -1022,55 +1022,55 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_statement() {
 	return result;
 }
 
-Writer<std::vector<Own<AST::AST>>> Parser::parse_type_term_arguments() {
-	Writer<std::vector<Own<AST::AST>>> result = {
+Writer<std::vector<AST::AST*>> Parser::parse_type_term_arguments() {
+	Writer<std::vector<AST::AST*>> result = {
 	    {"Parse Error: Failed to parse type arguments"}};
 
 	if (handle_error(result, require(TokenTag::POLY_OPEN)))
 		return result;
 
-	std::vector<Own<AST::AST>> args;
+	std::vector<AST::AST*> args;
 
 	while (!consume(TokenTag::POLY_CLOSE)) {
 		auto arg = parse_type_term();
 		if (handle_error(result, arg))
 			return result;
 
-		args.push_back(std::move(arg.m_result));
+		args.push_back(arg.m_result);
 	}
 
 	return make_writer(std::move(args));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_type_term() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_type_term() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse type"}};
 
 	auto callee = parse_identifier();
 	if (handle_error(result, callee))
 		return result;
 
-	auto e = std::make_unique<AST::TypeTerm>();
-	e->m_callee = std::move(callee.m_result);
+	auto e = m_ast_allocator->make<AST::TypeTerm>();
+	e->m_callee = callee.m_result;
 
 	if (!match(TokenTag::POLY_OPEN))
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+		return make_writer<AST::AST*>(e);
 
 	auto args = parse_type_term_arguments();
 	if (handle_error(result, args))
 		return result;
 
 	e->m_args = std::move(args.m_result);
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(e));
+	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>> Parser::parse_type_list(
+Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>> Parser::parse_type_list(
     bool with_identifiers = false) {
-	Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>
+	Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>>
 	    result = {{"Parse Error: Failed to parse type list"}};
 
-	std::vector<AST::Identifier> identifiers;
-	std::vector<std::unique_ptr<AST::AST>> types;
+	std::vector<AST::Identifier*> identifiers;
+	std::vector<AST::AST*> types;
 
 	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
 		return result;
@@ -1084,7 +1084,7 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::
 			if (handle_error(result, require(TokenTag::DECLARE)))
 				return result;
 
-			identifiers.push_back(std::move(*cons.m_result));
+			identifiers.push_back(cons.m_result);
 		}
 
 		auto type = parse_type_term();
@@ -1094,16 +1094,16 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::
 		if (handle_error(result, require(TokenTag::SEMICOLON)))
 			return result;
 
-		types.push_back(std::move(type.m_result));
+		types.push_back(type.m_result);
 	}
 
 	return make_writer<
-	    std::pair<std::vector<AST::Identifier>, std::vector<std::unique_ptr<AST::AST>>>>(
+	    std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>>(
 	    make_pair(std::move(identifiers), std::move(types)));
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_type_var() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse type var"}};
 
 	if (handle_error(result, require(TokenTag::AT)))
@@ -1113,14 +1113,14 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_var() {
 	if (handle_error(result, token))
 		return result;
 
-	auto t = std::make_unique<AST::TypeVar>();
+	auto t = m_ast_allocator->make<AST::TypeVar>();
 	t->m_token = token.m_result;
 
-	return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+	return make_writer<AST::AST*>(t);
 }
 
-Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
-	Writer<std::unique_ptr<AST::AST>> result = {
+Writer<AST::AST*> Parser::parse_type_function() {
+	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse type function"}};
 
 	if (consume(TokenTag::KEYWORD_UNION)) {
@@ -1128,30 +1128,30 @@ Writer<std::unique_ptr<AST::AST>> Parser::parse_type_function() {
 		if (handle_error(result, tl))
 			return result;
 
-		auto u = std::make_unique<AST::UnionExpression>();
+		auto u = m_ast_allocator->make<AST::UnionExpression>();
 		u->m_constructors = std::move(tl.m_result.first);
 		u->m_types = std::move(tl.m_result.second);
 
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(u));
+		return make_writer<AST::AST*>(u);
 	} else if (consume(TokenTag::KEYWORD_TUPLE)) {
 		auto tl = parse_type_list(false);
 		if (handle_error(result, tl))
 			return result;
 
-		auto t = std::make_unique<AST::TupleExpression>();
+		auto t = m_ast_allocator->make<AST::TupleExpression>();
 		t->m_types = std::move(tl.m_result.second);
 
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(t));
+		return make_writer<AST::AST*>(t);
 	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
 		auto tl = parse_type_list(true);
 		if (handle_error(result, tl))
 			return result;
 
-		auto s = std::make_unique<AST::StructExpression>();
+		auto s = m_ast_allocator->make<AST::StructExpression>();
 		s->m_fields = std::move(tl.m_result.first);
 		s->m_types = std::move(tl.m_result.second);
 
-		return make_writer<std::unique_ptr<AST::AST>>(std::move(s));
+		return make_writer<AST::AST*>(s);
 	}
 
 	return result;

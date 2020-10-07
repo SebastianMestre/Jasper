@@ -38,8 +38,8 @@ Own<TypedAST> convert_ast(AST::NullLiteral* ast) {
 Own<TypedAST> convert_ast(AST::ArrayLiteral* ast) {
 	auto typed_array = std::make_unique<ArrayLiteral>();
 
-	for (auto& element : ast->m_elements) {
-		typed_array->m_elements.push_back(convert_ast(element.get()));
+	for (auto element : ast->m_elements) {
+		typed_array->m_elements.push_back(convert_ast(element));
 	}
 
 	return typed_array;
@@ -48,8 +48,8 @@ Own<TypedAST> convert_ast(AST::ArrayLiteral* ast) {
 Own<TypedAST> convert_ast(AST::DictionaryLiteral* ast) {
 	auto typed_dict = std::make_unique<DictionaryLiteral>();
 
-	for (auto& element : ast->m_body) {
-		typed_dict->m_body.push_back(convert_ast(element.get()));
+	for (auto element : ast->m_body) {
+		typed_dict->m_body.push_back(convert_ast(element));
 	}
 
 	return typed_dict;
@@ -58,9 +58,9 @@ Own<TypedAST> convert_ast(AST::DictionaryLiteral* ast) {
 Own<TypedAST> convert_ast(AST::FunctionLiteral* ast) {
 	auto typed_function = std::make_unique<FunctionLiteral>();
 
-	for (auto& arg : ast->m_args) {
+	for (auto arg : ast->m_args) {
 		assert(arg->type() == ASTTag::Declaration);
-		auto* decl = static_cast<AST::Declaration*>(arg.get());
+		auto* decl = static_cast<AST::Declaration*>(arg);
 
 		Declaration typed_decl;
 		typed_decl.m_identifier_token = decl->m_identifier_token;
@@ -68,7 +68,7 @@ Own<TypedAST> convert_ast(AST::FunctionLiteral* ast) {
 		typed_function->m_args.push_back(std::move(typed_decl));
 	}
 
-	typed_function->m_body = convert_ast(ast->m_body.get());
+	typed_function->m_body = convert_ast(ast->m_body);
 
 	return typed_function;
 }
@@ -79,7 +79,7 @@ Own<Declaration> convert_ast(AST::Declaration* ast) {
 	typed_dec->m_identifier_token = ast->m_identifier_token;
 	// TODO: handle type hint
 	if (ast->m_value)
-		typed_dec->m_value = convert_ast(ast->m_value.get());
+		typed_dec->m_value = convert_ast(ast->m_value);
 
 	return typed_dec;
 }
@@ -87,8 +87,8 @@ Own<Declaration> convert_ast(AST::Declaration* ast) {
 Own<TypedAST> convert_ast(AST::DeclarationList* ast) {
 	auto typed_declist = std::make_unique<DeclarationList>();
 
-	for (auto& declaration : ast->m_declarations) {
-		typed_declist->m_declarations.push_back(convert_ast(declaration.get()));
+	for (auto declaration : ast->m_declarations) {
+		typed_declist->m_declarations.push_back(convert_ast(declaration));
 	}
 
 	return typed_declist;
@@ -103,11 +103,11 @@ Own<TypedAST> convert_ast(AST::Identifier* ast) {
 Own<TypedAST> convert_ast(AST::CallExpression* ast) {
 	auto typed_ce = std::make_unique<CallExpression>();
 
-	for (auto& arg : ast->m_args) {
-		typed_ce->m_args.push_back(convert_ast(arg.get()));
+	for (auto arg : ast->m_args) {
+		typed_ce->m_args.push_back(convert_ast(arg));
 	}
 
-	typed_ce->m_callee = convert_ast(ast->m_callee.get());
+	typed_ce->m_callee = convert_ast(ast->m_callee);
 
 	return typed_ce;
 }
@@ -115,8 +115,8 @@ Own<TypedAST> convert_ast(AST::CallExpression* ast) {
 Own<TypedAST> convert_ast(AST::IndexExpression* ast) {
 	auto typed_index = std::make_unique<IndexExpression>();
 
-	typed_index->m_callee = convert_ast(ast->m_callee.get());
-	typed_index->m_index = convert_ast(ast->m_index.get());
+	typed_index->m_callee = convert_ast(ast->m_callee);
+	typed_index->m_index = convert_ast(ast->m_index);
 
 	return typed_index;
 }
@@ -124,9 +124,9 @@ Own<TypedAST> convert_ast(AST::IndexExpression* ast) {
 Own<TypedAST> convert_ast(AST::TernaryExpression* ast) {
 	auto typed_ternary = std::make_unique<TernaryExpression>();
 
-	typed_ternary->m_condition = convert_ast(ast->m_condition.get());
-	typed_ternary->m_then_expr = convert_ast(ast->m_then_expr.get());
-	typed_ternary->m_else_expr = convert_ast(ast->m_else_expr.get());
+	typed_ternary->m_condition = convert_ast(ast->m_condition);
+	typed_ternary->m_then_expr = convert_ast(ast->m_then_expr);
+	typed_ternary->m_else_expr = convert_ast(ast->m_else_expr);
 
 	return typed_ternary;
 }
@@ -135,7 +135,7 @@ Own<TypedAST> convert_ast(AST::RecordAccessExpression* ast) {
 	auto typed_ast = std::make_unique<RecordAccessExpression>();
 
 	typed_ast->m_member = ast->m_member;
-	typed_ast->m_record = convert_ast(ast->m_record.get());
+	typed_ast->m_record = convert_ast(ast->m_record);
 
 	return typed_ast;
 }
@@ -143,8 +143,8 @@ Own<TypedAST> convert_ast(AST::RecordAccessExpression* ast) {
 Own<TypedAST> convert_ast(AST::Block* ast) {
 	auto typed_block = std::make_unique<Block>();
 
-	for (auto& element : ast->m_body) {
-		typed_block->m_body.push_back(convert_ast(element.get()));
+	for (auto element : ast->m_body) {
+		typed_block->m_body.push_back(convert_ast(element));
 	}
 
 	return typed_block;
@@ -153,7 +153,7 @@ Own<TypedAST> convert_ast(AST::Block* ast) {
 Own<TypedAST> convert_ast(AST::ReturnStatement* ast) {
 	auto typed_rs = std::make_unique<ReturnStatement>();
 
-	typed_rs->m_value = convert_ast(ast->m_value.get());
+	typed_rs->m_value = convert_ast(ast->m_value);
 
 	return typed_rs;
 }
@@ -161,11 +161,11 @@ Own<TypedAST> convert_ast(AST::ReturnStatement* ast) {
 Own<TypedAST> convert_ast(AST::IfElseStatement* ast) {
 	auto typed_if_else = std::make_unique<IfElseStatement>();
 
-	typed_if_else->m_condition = convert_ast(ast->m_condition.get());
-	typed_if_else->m_body = convert_ast(ast->m_body.get());
+	typed_if_else->m_condition = convert_ast(ast->m_condition);
+	typed_if_else->m_body = convert_ast(ast->m_body);
 
 	if (ast->m_else_body)
-		typed_if_else->m_else_body = convert_ast(ast->m_else_body.get());
+		typed_if_else->m_else_body = convert_ast(ast->m_else_body);
 
 	return typed_if_else;
 }
@@ -173,10 +173,10 @@ Own<TypedAST> convert_ast(AST::IfElseStatement* ast) {
 Own<TypedAST> convert_ast(AST::ForStatement* ast) {
 	auto typed_for = std::make_unique<ForStatement>();
 
-	typed_for->m_declaration = convert_ast(ast->m_declaration.get());
-	typed_for->m_condition = convert_ast(ast->m_condition.get());
-	typed_for->m_action = convert_ast(ast->m_action.get());
-	typed_for->m_body = convert_ast(ast->m_body.get());
+	typed_for->m_declaration = convert_ast(ast->m_declaration);
+	typed_for->m_condition = convert_ast(ast->m_condition);
+	typed_for->m_action = convert_ast(ast->m_action);
+	typed_for->m_body = convert_ast(ast->m_body);
 
 	return typed_for;
 }
@@ -184,8 +184,8 @@ Own<TypedAST> convert_ast(AST::ForStatement* ast) {
 Own<TypedAST> convert_ast(AST::WhileStatement* ast) {
 	auto typed_while = std::make_unique<WhileStatement>();
 
-	typed_while->m_condition = convert_ast(ast->m_condition.get());
-	typed_while->m_body = convert_ast(ast->m_body.get());
+	typed_while->m_condition = convert_ast(ast->m_condition);
+	typed_while->m_body = convert_ast(ast->m_body);
 
 	return typed_while;
 }
@@ -193,13 +193,13 @@ Own<TypedAST> convert_ast(AST::WhileStatement* ast) {
 Own<TypedAST> convert_ast(AST::StructExpression* ast) {
 	auto typed_ast = std::make_unique<StructExpression>();
 
-	for (auto& field : ast->m_fields){
-		auto ptr = convert_ast(&field);
+	for (auto field : ast->m_fields){
+		auto ptr = convert_ast(field);
 		typed_ast->m_fields.push_back(std::move(*static_cast<Identifier*>(ptr.get())));
 	}
 
-	for (auto& type : ast->m_types){
-		typed_ast->m_types.push_back(convert_ast(type.get()));
+	for (auto type : ast->m_types){
+		typed_ast->m_types.push_back(convert_ast(type));
 	}
 
 	return typed_ast;
@@ -208,9 +208,9 @@ Own<TypedAST> convert_ast(AST::StructExpression* ast) {
 Own<TypedAST> convert_ast(AST::TypeTerm* ast) {
 	auto typed_ast = std::make_unique<TypeTerm>();
 
-	typed_ast->m_callee = convert_ast(ast->m_callee.get());
-	for (auto& arg : ast->m_args){
-		typed_ast->m_args.push_back(convert_ast(arg.get()));
+	typed_ast->m_callee = convert_ast(ast->m_callee);
+	for (auto arg : ast->m_args){
+		typed_ast->m_args.push_back(convert_ast(arg));
 	}
 
 	return typed_ast;

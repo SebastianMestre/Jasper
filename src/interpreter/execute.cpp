@@ -15,29 +15,35 @@
 #include "native.hpp"
 #include "utils.hpp"
 
+#include <iostream>
+
 namespace Interpreter {
 
 ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) {
 
 	TokenArray ta;
 	auto parse_result = parse_program(source, ta);
+
+	std::cerr << "no deletion happened up until now" << std::endl;
+
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
 		return ExitStatusTag::ParseError;
 	}
 
-	if (dump_ast)
-		print(parse_result.m_result.get(), 1);
+	auto ast_root = parse_result.m_result.first;
+	auto ast_allocator = std::move(parse_result.m_result.second);
 
-	auto top_level_ast = std::move(parse_result.m_result);
+	if (dump_ast)
+		print(ast_root, 1);
 
 	// Can this even happen? parse_program should always either return a
 	// DeclarationList or an error
-	if (top_level_ast->type() != ASTTag::DeclarationList)
+	if (ast_root->type() != ASTTag::DeclarationList)
 		return ExitStatusTag::TopLevelTypeError;
 
-	auto desugared_ast = AST::desugar(std::move(top_level_ast));
-	auto top_level = TypedAST::convert_ast(desugared_ast.get());
+	auto desugared_ast = AST::desugar(ast_root, ast_allocator);
+	auto top_level = TypedAST::convert_ast(desugared_ast);
 	TypeChecker::TypeChecker tc;
 
 	{
@@ -70,7 +76,7 @@ Value* eval_expression(const std::string& expr, Environment& env) {
 	TokenArray ta;
 
 	auto top_level_call_ast = parse_expression(expr, ta);
-	auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result.get());
+	auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result.first);
 
 	// TODO: return a gc_ptr
 	auto value = eval(top_level_call.get(), env);

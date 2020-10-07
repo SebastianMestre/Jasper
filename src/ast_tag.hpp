@@ -1,5 +1,7 @@
 #pragma once
 
+#include "node_allocator.hpp"
+
 #define AST_TAGS \
 	X(NumberLiteral) \
 	X(IntegerLiteral) \

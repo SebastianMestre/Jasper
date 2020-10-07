@@ -2,184 +2,185 @@
 
 #include "ast.hpp"
 #include "typedefs.hpp"
+#include "ast_allocator.hpp"
 
 #include <cassert>
 #include <iostream>
 
 namespace AST {
 
-Own<Declaration> desugar(Own<Declaration> ast) {
+Declaration* desugar(Declaration* ast, Allocator& alloc) {
 	// TODO: handle type hint
 	if (ast->m_value)
-		ast->m_value = desugar(std::move(ast->m_value));
+		ast->m_value = desugar(ast->m_value, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<DeclarationList> ast) {
-	for (auto&& declaration : ast->m_declarations)
-		declaration = desugar(std::move(declaration));
+AST* desugar(DeclarationList* ast, Allocator& alloc) {
+	for (auto declaration : ast->m_declarations)
+		declaration = desugar(declaration, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<ObjectLiteral> ast) {
+AST* desugar(ObjectLiteral* ast, Allocator& alloc) {
 	// TODO: convert
 	// obt { x : t1 = e1; y : t2 = e2; }
 	// into
 	// struct { x : t1; y : t2; } { e1; e2; }
 	for (int i = 0; i < ast->m_body.size(); ++i)
-		ast->m_body[i] = desugar(std::move(ast->m_body[i]));
+		ast->m_body[i] = desugar(ast->m_body[i], alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<ArrayLiteral> ast) {
+AST* desugar(ArrayLiteral* ast, Allocator& alloc) {
 	for (int i = 0; i < ast->m_elements.size(); ++i)
-		ast->m_elements[i] = desugar(std::move(ast->m_elements[i]));
+		ast->m_elements[i] = desugar(ast->m_elements[i], alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<DictionaryLiteral> ast) {
+AST* desugar(DictionaryLiteral* ast, Allocator& alloc) {
 	for (int i = 0; i < ast->m_body.size(); ++i)
-		ast->m_body[i] = desugar(std::move(ast->m_body[i]));
+		ast->m_body[i] = desugar(ast->m_body[i], alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<FunctionLiteral> ast) {
-	for (auto&& arg : ast->m_args)
-		arg = desugar(std::move(arg));
+AST* desugar(FunctionLiteral* ast, Allocator& alloc) {
+	for (auto arg : ast->m_args)
+		arg = desugar(arg, alloc);
 
-	ast->m_body = desugar(std::move(ast->m_body));
+	ast->m_body = desugar(ast->m_body, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<ShortFunctionLiteral> ast) {
-	auto return_stmt = std::make_unique<ReturnStatement>();
-	return_stmt->m_value = desugar(std::move(ast->m_body));
+AST* desugar(ShortFunctionLiteral* ast, Allocator& alloc) {
+	auto return_stmt = alloc.make<ReturnStatement>();
+	return_stmt->m_value = desugar(ast->m_body, alloc);
 
-	auto block = std::make_unique<Block>();
-	block->m_body.push_back(std::move(return_stmt));
+	auto block = alloc.make<Block>();
+	block->m_body.push_back(return_stmt);
 
-	auto func = std::make_unique<FunctionLiteral>();
-	for (auto&& arg : ast->m_args)
-		func->m_args.push_back(desugar(std::move(arg)));
+	auto func = alloc.make<FunctionLiteral>();
+	for (auto arg : ast->m_args)
+		func->m_args.push_back(desugar(arg, alloc));
 
-	func->m_body = std::move(block);
+	func->m_body = block;
 
 	return func;
 }
 
-Own<AST> desugarPizza(Own<BinaryExpression> ast) {
+AST* desugarPizza(BinaryExpression* ast, Allocator& alloc) {
 	// TODO: error handling
 	assert(ast->m_rhs->type() == ASTTag::CallExpression);
 
-	auto rhs = desugar(std::move(ast->m_rhs));
-	auto call = static_cast<CallExpression*>(rhs.get());
+	auto rhs = desugar(ast->m_rhs, alloc);
+	auto call = static_cast<CallExpression*>(rhs);
 
-	call->m_args.insert(call->m_args.begin(), desugar(std::move(ast->m_lhs)));
+	call->m_args.insert(call->m_args.begin(), desugar(ast->m_lhs, alloc));
 
 	return rhs;
 }
 
-Own<AST> desugar(Own<RecordAccessExpression> ast) {
-	ast->m_record = desugar(std::move(ast->m_record));
+AST* desugar(RecordAccessExpression* ast, Allocator& alloc) {
+	ast->m_record = desugar(ast->m_record, alloc);
 	return ast;
 }
 
 // This function desugars binary operators into function calls
-Own<AST> desugar(Own<BinaryExpression> ast) {
+AST* desugar(BinaryExpression* ast, Allocator& alloc) {
 
 	if (ast->m_op_token->m_type == TokenTag::PIZZA)
-		return desugarPizza(std::move(ast));
+		return desugarPizza(ast, alloc);
 
 	if (ast->m_op_token->m_type == TokenTag::DOT)
 		assert(0);
 
-	auto identifier = std::make_unique<Identifier>();
+	auto identifier = alloc.make<Identifier>();
 	identifier->m_token = ast->m_op_token;
 
-	auto result = std::make_unique<CallExpression>();
-	result->m_callee = std::move(identifier);
+	auto result = alloc.make<CallExpression>();
+	result->m_callee = identifier;
 
-	result->m_args.push_back(desugar(std::move(ast->m_lhs)));
-	result->m_args.push_back(desugar(std::move(ast->m_rhs)));
+	result->m_args.push_back(desugar(ast->m_lhs, alloc));
+	result->m_args.push_back(desugar(ast->m_rhs, alloc));
 
 	return result;
 }
 
-Own<AST> desugar(Own<CallExpression> ast) {
-	for (auto&& arg : ast->m_args) {
-		arg = desugar(std::move(arg));
+AST* desugar(CallExpression* ast, Allocator& alloc) {
+	for (auto arg : ast->m_args) {
+		arg = desugar(arg, alloc);
 	}
 
-	ast->m_callee = desugar(std::move(ast->m_callee));
+	ast->m_callee = desugar(ast->m_callee, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<IndexExpression> ast) {
-	ast->m_callee = desugar(std::move(ast->m_callee));
-	ast->m_index = desugar(std::move(ast->m_index));
+AST* desugar(IndexExpression* ast, Allocator& alloc) {
+	ast->m_callee = desugar(ast->m_callee, alloc);
+	ast->m_index = desugar(ast->m_index, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<TernaryExpression> ast) {
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_then_expr = desugar(std::move(ast->m_then_expr));
-	ast->m_else_expr = desugar(std::move(ast->m_else_expr));
+AST* desugar(TernaryExpression* ast, Allocator& alloc) {
+	ast->m_condition = desugar(ast->m_condition, alloc);
+	ast->m_then_expr = desugar(ast->m_then_expr, alloc);
+	ast->m_else_expr = desugar(ast->m_else_expr, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<Block> ast) {
-	for (auto&& element : ast->m_body) {
-		element = desugar(std::move(element));
+AST* desugar(Block* ast, Allocator& alloc) {
+	for (auto element : ast->m_body) {
+		element = desugar(element, alloc);
 	}
 
 	return ast;
 }
 
-Own<AST> desugar(Own<ReturnStatement> ast) {
-	ast->m_value = desugar(std::move(ast->m_value));
+AST* desugar(ReturnStatement* ast, Allocator& alloc) {
+	ast->m_value = desugar(ast->m_value, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<IfElseStatement> ast) {
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_body = desugar(std::move(ast->m_body));
+AST* desugar(IfElseStatement* ast, Allocator& alloc) {
+	ast->m_condition = desugar(ast->m_condition, alloc);
+	ast->m_body = desugar(ast->m_body, alloc);
 
 	if (ast->m_else_body)
-		ast->m_else_body = desugar(std::move(ast->m_else_body));
+		ast->m_else_body = desugar(ast->m_else_body, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<ForStatement> ast) {
-	ast->m_declaration = desugar(std::move(ast->m_declaration));
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_action = desugar(std::move(ast->m_action));
-	ast->m_body = desugar(std::move(ast->m_body));
+AST* desugar(ForStatement* ast, Allocator& alloc) {
+	ast->m_declaration = desugar(ast->m_declaration, alloc);
+	ast->m_condition = desugar(ast->m_condition, alloc);
+	ast->m_action = desugar(ast->m_action, alloc);
+	ast->m_body = desugar(ast->m_body, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<WhileStatement> ast) {
-	ast->m_condition = desugar(std::move(ast->m_condition));
-	ast->m_body = desugar(std::move(ast->m_body));
+AST* desugar(WhileStatement* ast, Allocator& alloc) {
+	ast->m_condition = desugar(ast->m_condition, alloc);
+	ast->m_body = desugar(ast->m_body, alloc);
 
 	return ast;
 }
 
-Own<AST> desugar(Own<AST> ast) {
+AST* desugar(AST* ast, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
-		return desugar(Own<type>(static_cast<type*>(ast.release())));
+		return desugar(static_cast<type*>(ast), alloc);
 
 #define RETURN(type)                                                           \
 	case ASTTag::type:                                                         \
@@ -229,6 +230,7 @@ Own<AST> desugar(Own<AST> ast) {
 
 #undef RETURN
 #undef DISPATCH
+#undef REJECT
 }
 
 } // namespace AST

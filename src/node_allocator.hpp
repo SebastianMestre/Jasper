@@ -2,6 +2,8 @@
 
 #include "chunked_array.hpp"
 
+#include <iostream>
+
 #include <type_traits>
 
 template <typename T>
@@ -42,4 +44,9 @@ struct NodeAllocator<T, Ts...> {
 	template <typename U>
 	typename std::enable_if<!std::is_same<T, U>::value, U*>::type
 	make() { return m_allocators.template make<U>(); }
+
+	~NodeAllocator() {
+		std::cerr << "I've been deleted!" << std::endl;
+		*(int*)0 = 0;
+	}
 };
