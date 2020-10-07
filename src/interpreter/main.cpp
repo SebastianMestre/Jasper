@@ -34,9 +34,10 @@ int main() {
 
 		    {
 			    TokenArray ta;
-			    auto top_level_call_ast = parse_expression("__invoke()", ta);
-			    auto top_level_call =
-			        TypedAST::convert_ast(top_level_call_ast.m_result.first);
+			    AST::Allocator ast_allocator;
+
+			    auto top_level_call_ast = parse_expression("__invoke()", ta, ast_allocator);
+			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result);
 
 			    auto result = eval(top_level_call.get(), env);
 

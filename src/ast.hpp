@@ -27,8 +27,8 @@ struct AST {
 
 struct Declaration : public AST {
 	Token const* m_identifier_token;
-	AST* m_type;  // can be nullptr
-	AST* m_value; // can be nullptr
+	AST* m_type {nullptr};  // can be nullptr
+	AST* m_value {nullptr}; // can be nullptr
 
 	std::string const& identifier_text() const {
 		return m_identifier_token->m_text;
@@ -202,7 +202,7 @@ struct ReturnStatement : public AST {
 struct IfElseStatement : public AST {
 	AST* m_condition;
 	AST* m_body;
-	AST* m_else_body; // can be nullptr
+	AST* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
 	    : AST {ASTTag::IfElseStatement} {}
