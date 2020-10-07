@@ -15,7 +15,9 @@ struct InternedString {
 	explicit InternedString(std::string const& other);
 	explicit InternedString(std::string&& other);
 
-	bool operator==(InternedString const& other) const;
+	bool operator==(InternedString const& other) const {
+		return m_data == other.m_data;
+	}
 
 	std::string const& str() const;
 

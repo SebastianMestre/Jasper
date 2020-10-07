@@ -202,6 +202,7 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	auto& arglist = ast->m_args;
 
 	std::vector<gc_ptr<Value>> args;
+	args.reserve(arglist.size());
 	for (int i = 0; i < int(arglist.size()); ++i) {
 		args.push_back(eval(arglist[i].get(), e));
 	}
