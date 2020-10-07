@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ast.hpp"
+#include "node_allocator.hpp"
 
 namespace AST {
 
