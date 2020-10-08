@@ -50,6 +50,28 @@ struct FlatMap {
 		return insert(value_type {std::move(value)});
 	}
 
+	Value& operator[](Key const& k) {
+		rehash_if_needed();
+		uint64_t hash_bits = m_hash(k);
+		auto scan_result = scan(k, hash_bits);
+		if (scan_result.found)
+			return m_slots[scan_result.end_idx].second;
+		m_size += 1;
+		put(scan_result.free_idx, value_type {k, {}}, hash_bits);
+		return m_slots[scan_result.free_idx].second;
+	}
+
+	Value& operator[](Key&& k) {
+		rehash_if_needed();
+		uint64_t hash_bits = m_hash(k);
+		auto scan_result = scan(k, hash_bits);
+		if (scan_result.found)
+			return m_slots[scan_result.end_idx].second;
+		m_size += 1;
+		put(scan_result.free_idx, value_type {std::move(k), {}}, hash_bits);
+		return m_slots[scan_result.free_idx].second;
+	}
+
 private:
 
 	// for every slot in the table, we also have a metadata byte.
