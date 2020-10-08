@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../flat_map.hpp"
+#include "../simple_flat_map.hpp"
 #include "../interned_string.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
@@ -14,7 +14,7 @@ struct Scope {
 	Scope* m_parent {nullptr};
 	Scope* m_prev {nullptr};
 	// TODO: store references instead of values
-	FlatMap<InternedString, Value*> m_declarations;
+	SimpleFlatMap<InternedString, Value*> m_declarations;
 
 	void declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier& i);
