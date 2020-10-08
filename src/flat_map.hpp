@@ -72,6 +72,12 @@ struct FlatMap {
 		return m_slots[scan_result.free_idx].second;
 	}
 
+	int count(Key const& k) const {
+		uint64_t hash_bits = m_hash(k);
+		auto scan_result = scan(k, hash_bits);
+		return int(scan_result.found);
+	}
+
 private:
 
 	// for every slot in the table, we also have a metadata byte.
@@ -105,7 +111,7 @@ private:
 		int free_idx;
 	};
 
-	ScanResult scan (Key const& key, uint64_t hash_bits) {
+	ScanResult scan (Key const& key, uint64_t hash_bits) const {
 		uint64_t hi_hash_bits = hash_bits >> 7; // high 57 bits
 		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
 
