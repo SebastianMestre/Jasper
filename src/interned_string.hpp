@@ -9,6 +9,7 @@ struct StringSet;
 struct InternedString {
 	std::string const* m_data {nullptr};
 
+	InternedString() = default;
 	InternedString(InternedString const& other);
 	InternedString(char const* other);
 	InternedString(char const* other, size_t length);
