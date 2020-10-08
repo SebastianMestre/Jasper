@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <cstdint>
+
 // Decently fast flat hash table
 template<typename Key, typename Value>
 struct FlatMap {
