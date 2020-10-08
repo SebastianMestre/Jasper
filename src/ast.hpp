@@ -27,8 +27,8 @@ struct AST {
 
 struct Declaration : public AST {
 	Token const* m_identifier_token;
-	Own<AST> m_type;  // can be nullptr
-	Own<AST> m_value; // can be nullptr
+	AST* m_type {nullptr};  // can be nullptr
+	AST* m_value {nullptr}; // can be nullptr
 
 	std::string const& identifier_text() const {
 		return m_identifier_token->m_text.str();
@@ -39,7 +39,7 @@ struct Declaration : public AST {
 };
 
 struct DeclarationList : public AST {
-	std::vector<Own<Declaration>> m_declarations;
+	std::vector<Declaration*> m_declarations;
 
 	DeclarationList()
 	    : AST {ASTTag::DeclarationList} {}
@@ -96,37 +96,37 @@ struct NullLiteral : public AST {
 };
 
 struct ObjectLiteral : public AST {
-	std::vector<Own<Declaration>> m_body;
+	std::vector<Declaration*> m_body;
 
 	ObjectLiteral()
 	    : AST {ASTTag::ObjectLiteral} {}
 };
 
 struct ArrayLiteral : public AST {
-	std::vector<Own<AST>> m_elements;
+	std::vector<AST*> m_elements;
 
 	ArrayLiteral()
 	    : AST {ASTTag::ArrayLiteral} {}
 };
 
 struct DictionaryLiteral : public AST {
-	std::vector<Own<Declaration>> m_body;
+	std::vector<Declaration*> m_body;
 
 	DictionaryLiteral()
 	    : AST {ASTTag::DictionaryLiteral} {}
 };
 
 struct FunctionLiteral : public AST {
-	Own<AST> m_body;
-	std::vector<Own<AST>> m_args;
+	AST* m_body;
+	std::vector<AST*> m_args;
 
 	FunctionLiteral()
 	    : AST {ASTTag::FunctionLiteral} {}
 };
 
 struct ShortFunctionLiteral : public AST {
-	Own<AST> m_body;
-	std::vector<Own<AST>> m_args;
+	AST* m_body;
+	std::vector<AST*> m_args;
 
 	ShortFunctionLiteral()
 	    : AST {ASTTag::ShortFunctionLiteral} {}
@@ -145,31 +145,31 @@ struct Identifier : public AST {
 
 struct BinaryExpression : public AST {
 	Token const* m_op_token;
-	Own<AST> m_lhs;
-	Own<AST> m_rhs;
+	AST* m_lhs;
+	AST* m_rhs;
 
 	BinaryExpression()
 	    : AST {ASTTag::BinaryExpression} {}
 };
 
 struct CallExpression : public AST {
-	Own<AST> m_callee;
-	std::vector<Own<AST>> m_args;
+	AST* m_callee;
+	std::vector<AST*> m_args;
 
 	CallExpression()
 	    : AST {ASTTag::CallExpression} {}
 };
 
 struct IndexExpression : public AST {
-	Own<AST> m_callee;
-	Own<AST> m_index;
+	AST* m_callee;
+	AST* m_index;
 
 	IndexExpression()
 	    : AST {ASTTag::IndexExpression} {}
 };
 
 struct RecordAccessExpression : public AST {
-	Own<AST> m_record;
+	AST* m_record;
 	Token const* m_member;
 
 	RecordAccessExpression()
@@ -177,58 +177,58 @@ struct RecordAccessExpression : public AST {
 };
 
 struct TernaryExpression : public AST {
-	Own<AST> m_condition;
-	Own<AST> m_then_expr;
-	Own<AST> m_else_expr;
+	AST* m_condition;
+	AST* m_then_expr;
+	AST* m_else_expr;
 
 	TernaryExpression()
 	    : AST {ASTTag::TernaryExpression} {}
 };
 
 struct Block : public AST {
-	std::vector<Own<AST>> m_body;
+	std::vector<AST*> m_body;
 
 	Block()
 	    : AST {ASTTag::Block} {}
 };
 
 struct ReturnStatement : public AST {
-	Own<AST> m_value;
+	AST* m_value;
 
 	ReturnStatement()
 	    : AST {ASTTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public AST {
-	Own<AST> m_condition;
-	Own<AST> m_body;
-	Own<AST> m_else_body; // can be nullptr
+	AST* m_condition;
+	AST* m_body;
+	AST* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
 	    : AST {ASTTag::IfElseStatement} {}
 };
 
 struct ForStatement : public AST {
-	Own<AST> m_declaration;
-	Own<AST> m_condition;
-	Own<AST> m_action;
-	Own<AST> m_body;
+	AST* m_declaration;
+	AST* m_condition;
+	AST* m_action;
+	AST* m_body;
 
 	ForStatement()
 	    : AST {ASTTag::ForStatement} {}
 };
 
 struct WhileStatement : public AST {
-	Own<AST> m_condition;
-	Own<AST> m_body;
+	AST* m_condition;
+	AST* m_body;
 
 	WhileStatement()
 	    : AST {ASTTag::WhileStatement} {}
 };
 
 struct TypeTerm : public AST {
-	Own<AST> m_callee;
-	std::vector<Own<AST>> m_args;
+	AST* m_callee;
+	std::vector<AST*> m_args;
 
 	TypeTerm()
 	    : AST {ASTTag::TypeTerm} {}
@@ -249,15 +249,15 @@ struct TypeVar : public AST {
 
 struct UnionExpression : public AST {
 	// TODO: better storage?
-	std::vector<Identifier> m_constructors;
-	std::vector<Own<AST>> m_types;
+	std::vector<Identifier*> m_constructors;
+	std::vector<AST*> m_types;
 
 	UnionExpression()
 	    : AST {ASTTag::UnionExpression} {}
 };
 
 struct TupleExpression : public AST {
-	std::vector<Own<AST>> m_types;
+	std::vector<AST*> m_types;
 
 	TupleExpression()
 	    : AST {ASTTag::TupleExpression} {}
@@ -265,8 +265,8 @@ struct TupleExpression : public AST {
 
 struct StructExpression : public AST {
 	// TODO: better storage?
-	std::vector<Identifier> m_fields;
-	std::vector<Own<AST>> m_types;
+	std::vector<Identifier*> m_fields;
+	std::vector<AST*> m_types;
 
 	StructExpression()
 	    : AST {ASTTag::StructExpression} {}
