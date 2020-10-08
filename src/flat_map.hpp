@@ -78,6 +78,22 @@ struct FlatMap {
 		return int(scan_result.found);
 	}
 
+	iterator find(Key const& k) const {
+		uint64_t hash_bits = m_hash(k);
+		auto scan_result = scan(k, hash_bits);
+		if (scan_result.found)
+			return &m_slots[scan_result.end_idx];
+		return end();
+	}
+
+	iterator end() const {
+		return m_slots.data() + m_slots.size();
+	}
+
+	iterator begin() const {
+		return m_slots.data();
+	}
+
 private:
 
 	// for every slot in the table, we also have a metadata byte.
