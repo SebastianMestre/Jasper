@@ -6,7 +6,7 @@
 namespace TypedAST {
 
 // TODO: could we use the TYPED_AST_TAGS macro here?
-using Allocator = NodeAllocator<
+struct Allocator : public NodeAllocator<
     NumberLiteral,
     IntegerLiteral,
     StringLiteral,
@@ -31,6 +31,6 @@ using Allocator = NodeAllocator<
     StructExpression,
     TypeTerm,
     TypeFunctionHandle,
-    MonoTypeHandle>;
+    MonoTypeHandle> {};
 
 } // namespace TypedAST

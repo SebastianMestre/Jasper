@@ -6,7 +6,7 @@
 namespace AST {
 
 // TODO: could we use the AST_TAGS macro here?
-using Allocator = NodeAllocator<
+struct Allocator : public NodeAllocator<
     NumberLiteral,
     IntegerLiteral,
     StringLiteral,
@@ -34,6 +34,6 @@ using Allocator = NodeAllocator<
     TypeVar,
     UnionExpression,
     TupleExpression,
-    StructExpression>;
+    StructExpression> {};
 
 } // namespace AST
