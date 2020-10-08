@@ -28,7 +28,8 @@ struct InternedString {
 // Specialize std::hash to implement hashing for this type
 template<> struct std::hash<InternedString> {
 	std::size_t operator()(InternedString const& str) const noexcept {
-		return std::hash<std::string const*>{}(str.m_data);
+		auto hash_bits = std::hash<std::string const*>{}(str.m_data);
+		return (hash_bits >> 4) | (hash_bits << 60);
 	};
 };
 
