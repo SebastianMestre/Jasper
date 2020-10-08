@@ -11,89 +11,98 @@ namespace TypeChecker {
 
 // literals
 
-Own<TypedAST::ArrayLiteral> ct_eval(Own<TypedAST::ArrayLiteral> ast, TypeChecker& tc) {
-	for (auto&& element : ast->m_elements)
-		element = ct_eval(std::move(element), tc);
+TypedAST::ArrayLiteral* ct_eval(
+    TypedAST::ArrayLiteral* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	for (auto& element : ast->m_elements)
+		element = ct_eval(element, tc, alloc);
 	return ast;
 }
 
 // expressions
 
-Own<TypedAST::FunctionLiteral> ct_eval(
-    Own<TypedAST::FunctionLiteral> ast, TypeChecker& tc) {
+TypedAST::FunctionLiteral* ct_eval(
+    TypedAST::FunctionLiteral* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 
 	// TODO: type hints
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
-	for (auto&& child : body->m_body)
-		child = ct_eval(std::move(child), tc);
+	auto body = static_cast<TypedAST::Block*>(ast->m_body);
+	for (auto child : body->m_body)
+		child = ct_eval(child, tc, alloc);
 
 	return ast;
 }
 
-Own<TypedAST::CallExpression> ct_eval(
-    Own<TypedAST::CallExpression> ast, TypeChecker& tc) {
+TypedAST::CallExpression* ct_eval(
+    TypedAST::CallExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 
-	ast->m_callee = ct_eval(std::move(ast->m_callee), tc);
+	ast->m_callee = ct_eval(ast->m_callee, tc, alloc);
 
-	for (auto&& arg : ast->m_args)
-		arg = ct_eval(std::move(arg), tc);
-
-	return ast;
-}
-
-Own<TypedAST::IndexExpression> ct_eval(Own<TypedAST::IndexExpression> ast, TypeChecker& tc) {
-	ast->m_callee = ct_eval(std::move(ast->m_callee), tc);
-	ast->m_index = ct_eval(std::move(ast->m_index), tc);
+	for (auto& arg : ast->m_args)
+		arg = ct_eval(arg, tc, alloc);
 
 	return ast;
 }
 
-Own<TypedAST::TernaryExpression> ct_eval(Own<TypedAST::TernaryExpression> ast, TypeChecker& tc) {
-	ast->m_condition = ct_eval(std::move(ast->m_condition), tc);
-	ast->m_then_expr = ct_eval(std::move(ast->m_then_expr), tc);
-	ast->m_else_expr = ct_eval(std::move(ast->m_else_expr), tc);
+TypedAST::IndexExpression* ct_eval(
+    TypedAST::IndexExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_callee = ct_eval(ast->m_callee, tc, alloc);
+	ast->m_index = ct_eval(ast->m_index, tc, alloc);
+
 	return ast;
 }
 
-Own<TypedAST::RecordAccessExpression> ct_eval(Own<TypedAST::RecordAccessExpression> ast, TypeChecker& tc) {
-	ast->m_record = ct_eval(std::move(ast->m_record), tc);
+TypedAST::TernaryExpression* ct_eval(
+    TypedAST::TernaryExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ast->m_then_expr = ct_eval(ast->m_then_expr, tc, alloc);
+	ast->m_else_expr = ct_eval(ast->m_else_expr, tc, alloc);
+	return ast;
+}
+
+TypedAST::RecordAccessExpression* ct_eval(
+    TypedAST::RecordAccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_record = ct_eval(ast->m_record, tc, alloc);
 	return ast;
 }
 
 // statements
 
-Own<TypedAST::Block> ct_eval(Own<TypedAST::Block> ast, TypeChecker& tc) {
-	for (auto&& child : ast->m_body)
-		child = ct_eval(std::move(child), tc);
+TypedAST::Block* ct_eval(
+    TypedAST::Block* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	for (auto& child : ast->m_body)
+		child = ct_eval(child, tc, alloc);
 	return ast;
 }
 
-Own<TypedAST::IfElseStatement> ct_eval(Own<TypedAST::IfElseStatement> ast, TypeChecker& tc) {
-	ast->m_condition = ct_eval(std::move(ast->m_condition), tc);
-	ast->m_body = ct_eval(std::move(ast->m_body), tc);
+TypedAST::IfElseStatement* ct_eval(
+    TypedAST::IfElseStatement* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ast->m_body = ct_eval(ast->m_body, tc, alloc);
 	if (ast->m_else_body)
-		ast->m_else_body = ct_eval(std::move(ast->m_else_body), tc);
+		ast->m_else_body = ct_eval(ast->m_else_body, tc, alloc);
 	return ast;
 }
 
-Own<TypedAST::ForStatement> ct_eval(Own<TypedAST::ForStatement> ast, TypeChecker& tc) {
-	ast->m_declaration = ct_eval(std::move(ast->m_declaration), tc);
-	ast->m_condition = ct_eval(std::move(ast->m_condition), tc);
-	ast->m_action = ct_eval(std::move(ast->m_action), tc);
-	ast->m_body = ct_eval(std::move(ast->m_body), tc);
+TypedAST::ForStatement* ct_eval(
+    TypedAST::ForStatement* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_declaration = ct_eval(ast->m_declaration, tc, alloc);
+	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ast->m_action = ct_eval(ast->m_action, tc, alloc);
+	ast->m_body = ct_eval(ast->m_body, tc, alloc);
 	return ast;
 }
 
-Own<TypedAST::WhileStatement> ct_eval(Own<TypedAST::WhileStatement> ast, TypeChecker& tc) {
-	ast->m_condition = ct_eval(std::move(ast->m_condition), tc);
-	ast->m_body = ct_eval(std::move(ast->m_body), tc);
+TypedAST::WhileStatement* ct_eval(
+    TypedAST::WhileStatement* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ast->m_body = ct_eval(ast->m_body, tc, alloc);
 	return ast;
 }
 
-Own<TypedAST::ReturnStatement> ct_eval(Own<TypedAST::ReturnStatement> ast, TypeChecker& tc) {
-	ast->m_value = ct_eval(std::move(ast->m_value), tc);
+TypedAST::ReturnStatement* ct_eval(
+    TypedAST::ReturnStatement* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 	return ast;
 }
 
@@ -107,7 +116,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value =
-		    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
+		    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value);
 		return value->m_value;
 	} else if (ast->type() == TypedASTTag::StructExpression) {
 		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
@@ -115,8 +124,8 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		std::unordered_map<std::string, MonoId> fields;
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
-			MonoId mono = mono_type_from_ast(as_se->m_types[i].get(), tc);
-			std::string name = as_se->m_fields[i].text().str();
+			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
+			std::string name = as_se->m_fields[i]->text().str();
 			assert(!fields.count(name));
 			fields[name] = mono;
 		}
@@ -138,17 +147,17 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 	if(ast->type() == TypedASTTag::Identifier){
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
-		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
 
 		return value->m_value;
 	} else if (ast->type() == TypedASTTag::TypeTerm) {
 		auto as_tt = static_cast<TypedAST::TypeTerm*>(ast);
 
-		TypeFunctionId type_function = type_func_from_ast(as_tt->m_callee.get(), tc);
+		TypeFunctionId type_function = type_func_from_ast(as_tt->m_callee, tc);
 
 		std::vector<MonoId> args;
 		for (auto& arg : as_tt->m_args)
-			args.push_back(mono_type_from_ast(arg.get(), tc));
+			args.push_back(mono_type_from_ast(arg, tc));
 
 		MonoId result = tc.m_core.new_term(type_function, std::move(args), "from ast");
 		return result;
@@ -159,25 +168,27 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 
 // declarations
 
-Own<TypedAST::Declaration> ct_eval(Own<TypedAST::Declaration> ast, TypeChecker& tc) {
-	ast->m_value = ct_eval(std::move(ast->m_value), tc);
+TypedAST::Declaration* ct_eval(
+    TypedAST::Declaration* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 	return ast;
 }
 
-Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeChecker& tc) {
+TypedAST::DeclarationList* ct_eval(
+    TypedAST::DeclarationList* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 		// put a dummy var where required.
 		if (meta_type == tc.meta_typefunc()) {
-			auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
+			auto handle = alloc.make<TypedAST::TypeFunctionHandle>();
 			handle->m_value = tc.m_core.m_tf_core.new_var();
-			handle->m_syntax = std::move(decl->m_value);
-			decl->m_value = std::move(handle);
+			handle->m_syntax = decl->m_value;
+			decl->m_value = handle;
 		} else if(meta_type == tc.meta_monotype()) {
-			auto handle = std::make_unique<TypedAST::MonoTypeHandle>();
+			auto handle = alloc.make<TypedAST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
-			handle->m_syntax = std::move(decl->m_value);
-			decl->m_value = std::move(handle);
+			handle->m_syntax = decl->m_value;
+			decl->m_value = handle;
 		}
 	}
 
@@ -185,17 +196,17 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle =
-			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value.get());
-			TypeFunctionId tf = type_func_from_ast(handle->m_syntax.get(), tc);
+			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value);
+			TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else if (meta_type == tc.meta_monotype()) {
 			auto handle =
-			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value.get());
+			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
 
-			MonoId mt = mono_type_from_ast(handle->m_syntax.get(), tc);
+			MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_mono_core.unify(mt, handle->m_value);
 		} else {
-			decl->m_value = ct_eval(std::move(decl->m_value), tc);
+			decl->m_value = ct_eval(decl->m_value, tc, alloc);
 		}
 	}
 
@@ -203,11 +214,11 @@ Own<TypedAST::DeclarationList> ct_eval(Own<TypedAST::DeclarationList> ast, TypeC
 }
 
 
-Own<TypedAST::TypedAST> ct_eval(Own<TypedAST::TypedAST> ast, TypeChecker& tc) {
+TypedAST::TypedAST* ct_eval(
+    TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case TypedASTTag::type:                                                    \
-		return ct_eval(                                                        \
-		    Own<TypedAST::type> {static_cast<TypedAST::type*>(ast.release())}, tc)
+		return ct_eval(static_cast<TypedAST::type*>(ast), tc, alloc)           \
 
 #define RETURN(type)                                                           \
 	case TypedASTTag::type:                                                    \

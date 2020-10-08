@@ -4,222 +4,225 @@
 #include "ast.hpp"
 #include "typed_ast.hpp"
 #include "typedefs.hpp"
+#include "typed_ast_allocator.hpp"
 
 namespace TypedAST {
 
-Own<TypedAST> convert_ast(AST::IntegerLiteral* ast) {
-	auto typed_integer = std::make_unique<IntegerLiteral>();
+TypedAST* convert_ast(AST::IntegerLiteral* ast, Allocator& alloc) {
+	auto typed_integer = alloc.make<IntegerLiteral>();
 	typed_integer->m_token = ast->m_token;
 	return typed_integer;
 }
 
-Own<TypedAST> convert_ast(AST::NumberLiteral* ast) {
-	auto typed_number = std::make_unique<NumberLiteral>();
+TypedAST* convert_ast(AST::NumberLiteral* ast, Allocator& alloc) {
+	auto typed_number = alloc.make<NumberLiteral>();
 	typed_number->m_token = ast->m_token;
 	return typed_number;
 }
 
-Own<TypedAST> convert_ast(AST::StringLiteral* ast) {
-	auto typed_string = std::make_unique<StringLiteral>();
+TypedAST* convert_ast(AST::StringLiteral* ast, Allocator& alloc) {
+	auto typed_string = alloc.make<StringLiteral>();
 	typed_string->m_token = ast->m_token;
 	return typed_string;
 }
 
-Own<TypedAST> convert_ast(AST::BooleanLiteral* ast) {
-	auto typed_boolean = std::make_unique<BooleanLiteral>();
+TypedAST* convert_ast(AST::BooleanLiteral* ast, Allocator& alloc) {
+	auto typed_boolean = alloc.make<BooleanLiteral>();
 	typed_boolean->m_token = ast->m_token;
 	return typed_boolean;
 }
 
-Own<TypedAST> convert_ast(AST::NullLiteral* ast) {
-	return std::make_unique<NullLiteral>();
+TypedAST* convert_ast(AST::NullLiteral* ast, Allocator& alloc) {
+	return alloc.make<NullLiteral>();
 }
 
-Own<TypedAST> convert_ast(AST::ArrayLiteral* ast) {
-	auto typed_array = std::make_unique<ArrayLiteral>();
+TypedAST* convert_ast(AST::ArrayLiteral* ast, Allocator& alloc) {
+	auto typed_array = alloc.make<ArrayLiteral>();
 
 	for (auto element : ast->m_elements) {
-		typed_array->m_elements.push_back(convert_ast(element));
+		typed_array->m_elements.push_back(convert_ast(element, alloc));
 	}
 
 	return typed_array;
 }
 
-Own<TypedAST> convert_ast(AST::DictionaryLiteral* ast) {
-	auto typed_dict = std::make_unique<DictionaryLiteral>();
+TypedAST* convert_ast(AST::DictionaryLiteral* ast, Allocator& alloc) {
+	auto typed_dict = alloc.make<DictionaryLiteral>();
 
 	for (auto element : ast->m_body) {
-		typed_dict->m_body.push_back(convert_ast(element));
+		typed_dict->m_body.push_back(convert_ast(element, alloc));
 	}
 
 	return typed_dict;
 }
 
-Own<TypedAST> convert_ast(AST::FunctionLiteral* ast) {
-	auto typed_function = std::make_unique<FunctionLiteral>();
+TypedAST* convert_ast(AST::FunctionLiteral* ast, Allocator& alloc) {
+	auto typed_function = alloc.make<FunctionLiteral>();
 
 	for (auto arg : ast->m_args) {
 		assert(arg->type() == ASTTag::Declaration);
-		auto* decl = static_cast<AST::Declaration*>(arg);
+		auto decl = static_cast<AST::Declaration*>(arg);
 
-		Declaration typed_decl;
-		typed_decl.m_identifier_token = decl->m_identifier_token;
-		typed_decl.m_surrounding_function = typed_function.get();
-		typed_function->m_args.push_back(std::move(typed_decl));
+		auto typed_decl = alloc.make<Declaration>();
+
+		typed_decl->m_identifier_token = decl->m_identifier_token;
+		typed_decl->m_surrounding_function = typed_function;
+
+		typed_function->m_args.push_back(typed_decl);
 	}
 
-	typed_function->m_body = convert_ast(ast->m_body);
+	typed_function->m_body = convert_ast(ast->m_body, alloc);
 
 	return typed_function;
 }
 
-Own<Declaration> convert_ast(AST::Declaration* ast) {
-	auto typed_dec = std::make_unique<Declaration>();
+Declaration* convert_ast(AST::Declaration* ast, Allocator& alloc) {
+	auto typed_dec = alloc.make<Declaration>();
 
 	typed_dec->m_identifier_token = ast->m_identifier_token;
 	// TODO: handle type hint
 	if (ast->m_value)
-		typed_dec->m_value = convert_ast(ast->m_value);
+		typed_dec->m_value = convert_ast(ast->m_value, alloc);
 
 	return typed_dec;
 }
 
-Own<TypedAST> convert_ast(AST::DeclarationList* ast) {
-	auto typed_declist = std::make_unique<DeclarationList>();
+TypedAST* convert_ast(AST::DeclarationList* ast, Allocator& alloc) {
+	auto typed_declist = alloc.make<DeclarationList>();
 
 	for (auto declaration : ast->m_declarations) {
-		typed_declist->m_declarations.push_back(convert_ast(declaration));
+		typed_declist->m_declarations.push_back(convert_ast(declaration, alloc));
 	}
 
 	return typed_declist;
 }
 
-Own<TypedAST> convert_ast(AST::Identifier* ast) {
-	auto typed_id = std::make_unique<Identifier>();
+TypedAST* convert_ast(AST::Identifier* ast, Allocator& alloc) {
+	auto typed_id = alloc.make<Identifier>();
 	typed_id->m_token = ast->m_token;
 	return typed_id;
 }
 
-Own<TypedAST> convert_ast(AST::CallExpression* ast) {
-	auto typed_ce = std::make_unique<CallExpression>();
+TypedAST* convert_ast(AST::CallExpression* ast, Allocator& alloc) {
+	auto typed_ce = alloc.make<CallExpression>();
 
 	for (auto arg : ast->m_args) {
-		typed_ce->m_args.push_back(convert_ast(arg));
+		typed_ce->m_args.push_back(convert_ast(arg, alloc));
 	}
 
-	typed_ce->m_callee = convert_ast(ast->m_callee);
+	typed_ce->m_callee = convert_ast(ast->m_callee, alloc);
 
 	return typed_ce;
 }
 
-Own<TypedAST> convert_ast(AST::IndexExpression* ast) {
-	auto typed_index = std::make_unique<IndexExpression>();
+TypedAST* convert_ast(AST::IndexExpression* ast, Allocator& alloc) {
+	auto typed_index = alloc.make<IndexExpression>();
 
-	typed_index->m_callee = convert_ast(ast->m_callee);
-	typed_index->m_index = convert_ast(ast->m_index);
+	typed_index->m_callee = convert_ast(ast->m_callee, alloc);
+	typed_index->m_index = convert_ast(ast->m_index, alloc);
 
 	return typed_index;
 }
 
-Own<TypedAST> convert_ast(AST::TernaryExpression* ast) {
-	auto typed_ternary = std::make_unique<TernaryExpression>();
+TypedAST* convert_ast(AST::TernaryExpression* ast, Allocator& alloc) {
+	auto typed_ternary = alloc.make<TernaryExpression>();
 
-	typed_ternary->m_condition = convert_ast(ast->m_condition);
-	typed_ternary->m_then_expr = convert_ast(ast->m_then_expr);
-	typed_ternary->m_else_expr = convert_ast(ast->m_else_expr);
+	typed_ternary->m_condition = convert_ast(ast->m_condition, alloc);
+	typed_ternary->m_then_expr = convert_ast(ast->m_then_expr, alloc);
+	typed_ternary->m_else_expr = convert_ast(ast->m_else_expr, alloc);
 
 	return typed_ternary;
 }
 
-Own<TypedAST> convert_ast(AST::RecordAccessExpression* ast) {
-	auto typed_ast = std::make_unique<RecordAccessExpression>();
+TypedAST* convert_ast(AST::RecordAccessExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<RecordAccessExpression>();
 
 	typed_ast->m_member = ast->m_member;
-	typed_ast->m_record = convert_ast(ast->m_record);
+	typed_ast->m_record = convert_ast(ast->m_record, alloc);
 
 	return typed_ast;
 }
 
-Own<TypedAST> convert_ast(AST::Block* ast) {
-	auto typed_block = std::make_unique<Block>();
+TypedAST* convert_ast(AST::Block* ast, Allocator& alloc) {
+	auto typed_block = alloc.make<Block>();
 
 	for (auto element : ast->m_body) {
-		typed_block->m_body.push_back(convert_ast(element));
+		typed_block->m_body.push_back(convert_ast(element, alloc));
 	}
 
 	return typed_block;
 }
 
-Own<TypedAST> convert_ast(AST::ReturnStatement* ast) {
-	auto typed_rs = std::make_unique<ReturnStatement>();
+TypedAST* convert_ast(AST::ReturnStatement* ast, Allocator& alloc) {
+	auto typed_rs = alloc.make<ReturnStatement>();
 
-	typed_rs->m_value = convert_ast(ast->m_value);
+	typed_rs->m_value = convert_ast(ast->m_value, alloc);
 
 	return typed_rs;
 }
 
-Own<TypedAST> convert_ast(AST::IfElseStatement* ast) {
-	auto typed_if_else = std::make_unique<IfElseStatement>();
+TypedAST* convert_ast(AST::IfElseStatement* ast, Allocator& alloc) {
+	auto typed_if_else = alloc.make<IfElseStatement>();
 
-	typed_if_else->m_condition = convert_ast(ast->m_condition);
-	typed_if_else->m_body = convert_ast(ast->m_body);
+	typed_if_else->m_condition = convert_ast(ast->m_condition, alloc);
+	typed_if_else->m_body = convert_ast(ast->m_body, alloc);
 
 	if (ast->m_else_body)
-		typed_if_else->m_else_body = convert_ast(ast->m_else_body);
+		typed_if_else->m_else_body = convert_ast(ast->m_else_body, alloc);
 
 	return typed_if_else;
 }
 
-Own<TypedAST> convert_ast(AST::ForStatement* ast) {
-	auto typed_for = std::make_unique<ForStatement>();
+TypedAST* convert_ast(AST::ForStatement* ast, Allocator& alloc) {
+	auto typed_for = alloc.make<ForStatement>();
 
-	typed_for->m_declaration = convert_ast(ast->m_declaration);
-	typed_for->m_condition = convert_ast(ast->m_condition);
-	typed_for->m_action = convert_ast(ast->m_action);
-	typed_for->m_body = convert_ast(ast->m_body);
+	typed_for->m_declaration = convert_ast(ast->m_declaration, alloc);
+	typed_for->m_condition = convert_ast(ast->m_condition, alloc);
+	typed_for->m_action = convert_ast(ast->m_action, alloc);
+	typed_for->m_body = convert_ast(ast->m_body, alloc);
 
 	return typed_for;
 }
 
-Own<TypedAST> convert_ast(AST::WhileStatement* ast) {
-	auto typed_while = std::make_unique<WhileStatement>();
+TypedAST* convert_ast(AST::WhileStatement* ast, Allocator& alloc) {
+	auto typed_while = alloc.make<WhileStatement>();
 
-	typed_while->m_condition = convert_ast(ast->m_condition);
-	typed_while->m_body = convert_ast(ast->m_body);
+	typed_while->m_condition = convert_ast(ast->m_condition, alloc);
+	typed_while->m_body = convert_ast(ast->m_body, alloc);
 
 	return typed_while;
 }
 
-Own<TypedAST> convert_ast(AST::StructExpression* ast) {
-	auto typed_ast = std::make_unique<StructExpression>();
+TypedAST* convert_ast(AST::StructExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<StructExpression>();
 
 	for (auto field : ast->m_fields){
-		auto ptr = convert_ast(field);
-		typed_ast->m_fields.push_back(std::move(*static_cast<Identifier*>(ptr.get())));
+		auto ptr = convert_ast(field, alloc);
+		typed_ast->m_fields.push_back(static_cast<Identifier*>(ptr));
 	}
 
 	for (auto type : ast->m_types){
-		typed_ast->m_types.push_back(convert_ast(type));
+		typed_ast->m_types.push_back(convert_ast(type, alloc));
 	}
 
 	return typed_ast;
 };
 
-Own<TypedAST> convert_ast(AST::TypeTerm* ast) {
-	auto typed_ast = std::make_unique<TypeTerm>();
+TypedAST* convert_ast(AST::TypeTerm* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<TypeTerm>();
 
-	typed_ast->m_callee = convert_ast(ast->m_callee);
+	typed_ast->m_callee = convert_ast(ast->m_callee, alloc);
 	for (auto arg : ast->m_args){
-		typed_ast->m_args.push_back(convert_ast(arg));
+		typed_ast->m_args.push_back(convert_ast(arg, alloc));
 	}
 
 	return typed_ast;
 }
 
-Own<TypedAST> convert_ast(AST::AST* ast) {
+TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
-		return convert_ast(static_cast<AST::type*>(ast))
+		return convert_ast(static_cast<AST::type*>(ast), alloc)
 
 #define REJECT(type)                                                           \
 	case ASTTag::type:                                                         \

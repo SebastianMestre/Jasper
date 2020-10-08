@@ -39,7 +39,7 @@ void typecheck(TypedAST::NullLiteral* ast, TypeChecker& tc) {
 void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
-		typecheck(element.get(), tc);
+		typecheck(element, tc);
 		tc.m_core.m_mono_core.unify(element_type, element->m_value_type);
 	}
 
@@ -60,7 +60,7 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
 	if (ast->m_value) {
-		typecheck(ast->m_value.get(), tc);
+		typecheck(ast->m_value, tc);
 		// unify instead of assign. This way, we can do recursion.
 		tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 	} else {
@@ -108,25 +108,25 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	for (auto& child : ast->m_body)
-		typecheck(child.get(), tc);
+		typecheck(child, tc);
 	tc.m_env.end_scope();
 }
 
 void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
-	typecheck(ast->m_condition.get(), tc);
+	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body.get(), tc);
+	typecheck(ast->m_body, tc);
 
 	if (ast->m_else_body)
-		typecheck(ast->m_else_body.get(), tc);
+		typecheck(ast->m_else_body, tc);
 }
 
 void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_callee.get(), tc);
+	typecheck(ast->m_callee, tc);
 	for (auto& arg : ast->m_args)
-		typecheck(arg.get(), tc);
+		typecheck(arg, tc);
 
 	std::vector<MonoId> arg_types;
 	for (auto& arg : ast->m_args)
@@ -148,10 +148,10 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 		std::vector<MonoId> arg_types;
 
 		for (int i = 0; i < arg_count; ++i) {
-			auto& arg_decl = ast->m_args[i];
+			auto arg_decl = ast->m_args[i];
 			int mono = tc.new_var();
 			arg_types.push_back(mono);
-			arg_decl.m_value_type = mono;
+			arg_decl->m_value_type = mono;
 		}
 
 		// return type
@@ -164,9 +164,9 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
+	auto body = static_cast<TypedAST::Block*>(ast->m_body);
 	for (auto& child : body->m_body)
-		typecheck(child.get(), tc);
+		typecheck(child, tc);
 
 	tc.m_env.end_scope();
 	tc.m_env.exit_function();
@@ -174,28 +174,28 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
-	typecheck(ast->m_declaration.get(), tc);
-	typecheck(ast->m_condition.get(), tc);
+	typecheck(ast->m_declaration, tc);
+	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_action.get(), tc);
-	typecheck(ast->m_body.get(), tc);
+	typecheck(ast->m_action, tc);
+	typecheck(ast->m_body, tc);
 	tc.m_env.end_scope();
 }
 
 void typecheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
-	typecheck(ast->m_condition.get(), tc);
+	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body.get(), tc);
+	typecheck(ast->m_body, tc);
 	tc.m_env.end_scope();
 }
 
 void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
-	typecheck(ast->m_value.get(), tc);
+	typecheck(ast->m_value, tc);
 
 	auto mono = ast->m_value->m_value_type;
 	auto func = tc.m_env.current_function();
@@ -204,8 +204,8 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	// TODO: put the monotype in the ast
-	typecheck(ast->m_callee.get(), tc);
-	typecheck(ast->m_index.get(), tc);
+	typecheck(ast->m_callee, tc);
+	typecheck(ast->m_index, tc);
 
 	auto var = tc.new_var();
 	auto arr = tc.m_core.new_term(BuiltinType::Array, {var});
@@ -217,12 +217,12 @@ void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_condition.get(), tc);
+	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_then_expr.get(), tc);
-	typecheck(ast->m_else_expr.get(), tc);
+	typecheck(ast->m_then_expr, tc);
+	typecheck(ast->m_else_expr, tc);
 
 	tc.m_core.m_mono_core.unify(
 	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
@@ -231,7 +231,7 @@ void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_record.get(), tc);
+	typecheck(ast->m_record, tc);
 
 	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
@@ -253,8 +253,8 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	// assign a unique int to every top level declaration
 	int i = 0;
 	for (auto& decl : ast->m_declarations) {
-		index_to_decl.push_back(decl.get());
-		decl_to_index.insert({decl.get(), i});
+		index_to_decl.push_back(decl);
+		decl_to_index.insert({decl, i});
 		++i;
 	}
 
@@ -321,7 +321,7 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 			auto decl = index_to_decl[u];
 
 			if (decl->m_value) {
-				typecheck(decl->m_value.get(), tc);
+				typecheck(decl->m_value, tc);
 				tc.m_core.m_mono_core.unify(
 				    decl->m_value_type, decl->m_value->m_value_type);
 			} else {

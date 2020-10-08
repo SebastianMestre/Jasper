@@ -39,25 +39,27 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 		return ExitStatusTag::TopLevelTypeError;
 
 	auto desugared_ast = AST::desugar(parse_result.m_result, ast_allocator);
-	auto top_level = TypedAST::convert_ast(desugared_ast);
-	TypeChecker::TypeChecker tc;
+
+	TypedAST::Allocator typed_ast_allocator;
+	auto top_level = TypedAST::convert_ast(desugared_ast, typed_ast_allocator);
+	TypeChecker::TypeChecker tc{typed_ast_allocator};
 
 	{
-		auto err = TypeChecker::match_identifiers(top_level.get(), tc.m_env);
+		auto err = TypeChecker::match_identifiers(top_level, tc.m_env);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;
 		}
 	}
 
-	TypeChecker::metacheck(top_level.get(), tc);
-	top_level = TypeChecker::ct_eval(std::move(top_level), tc);
-	TypeChecker::typecheck(top_level.get(), tc);
+	TypeChecker::metacheck(top_level, tc);
+	top_level = TypeChecker::ct_eval(top_level, tc, typed_ast_allocator);
+	TypeChecker::typecheck(top_level, tc);
 
 	GC gc;
 	Environment env = {&gc};
 	declare_native_functions(env);
-	eval(top_level.get(), env);
+	eval(top_level, env);
 
 	ExitStatusTag runner_exit_code = runner(env);
 
@@ -71,12 +73,13 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 Value* eval_expression(const std::string& expr, Environment& env) {
 	TokenArray ta;
 	AST::Allocator ast_allocator;
+	TypedAST::Allocator typed_ast_allocator;
 
 	auto top_level_call_ast = parse_expression(expr, ta, ast_allocator);
-	auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result);
+	auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
 	// TODO: return a gc_ptr
-	auto value = eval(top_level_call.get(), env);
+	auto value = eval(top_level_call, env);
 	return unboxed(value.get());
 }
 
