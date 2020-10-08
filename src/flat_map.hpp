@@ -12,25 +12,25 @@
 template<typename Key, typename Value>
 struct FlatMap {
 	using value_type = std::pair<Key, Value>;
-	using iterator = value_type*;
 	using const_iterator = value_type const*;
+	using iterator = const_iterator;
 
-	FlatMap(){
+	FlatMap() {
 		constexpr int initial_size = 16;
 		m_metadata.resize(initial_size, 0);
 		m_slots.resize(initial_size);
 	}
 
-	std::pair<iterator, bool> insert(const value_type& value){
+	std::pair<iterator, bool> insert(const value_type& value) {
 		uint64_t hash_bits = m_hash(value.first);
 		auto scan_result = scan(value.first, hash_bits);
 		if (scan_result.found)
 			return {&m_slots[scan_result.end_idx], false};
-		put(scan_result.free_idx, value_type{value}, hash_bits);
+		put(scan_result.free_idx, value_type {value}, hash_bits);
 		return {&m_slots[scan_result.free_idx], true};
 	}
 
-	std::pair<iterator, bool> insert(value_type&& value){
+	std::pair<iterator, bool> insert(value_type&& value) {
 		uint64_t hash_bits = m_hash(value.first);
 		auto scan_result = scan(value.first, hash_bits);
 		if (scan_result.found)
@@ -46,7 +46,7 @@ struct FlatMap {
 		return insert(value_type {std::move(value)});
 	}
 
-  private:
+private:
 
 	// for every slot in the table, we also have a metadata byte.
 	// if the first metadata bit is on:
@@ -104,12 +104,12 @@ struct FlatMap {
 		}
 	}
 
-	void put(int position, value_type value, uint64_t hash_bits){
+	void put(int position, value_type&& value, uint64_t hash_bits){
 		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
 		uint8_t comparator = (lo_hash_bits << 1) | 1;
 
 		m_metadata[position] = comparator;
-		m_slots[position] = static_cast<value_type&&>(value);//std::move(value);
+		m_slots[position] = std::move(value);
 	}
 
 };
