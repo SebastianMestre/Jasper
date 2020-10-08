@@ -67,7 +67,7 @@ gc_ptr<Object> GC::new_object(ObjectType declarations) {
 	return result;
 }
 
-gc_ptr<Dictionary> GC::new_dictionary(ObjectType declarations) {
+gc_ptr<Dictionary> GC::new_dictionary(DictionaryType declarations) {
 	auto result = new Dictionary;
 	result->m_value = std::move(declarations);
 	m_blocks.push_back(result);

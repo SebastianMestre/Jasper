@@ -2,6 +2,7 @@
 
 #include "chunked_array.hpp"
 #include "compile_time_environment.hpp"
+#include "interned_string.hpp"
 #include "typesystem.hpp"
 
 namespace TypeChecker {
@@ -14,7 +15,7 @@ struct TypeChecker {
 
 	TypeChecker();
 
-	void declare_builtin(std::string const& name, MetaTypeId, PolyId);
+	void declare_builtin(InternedString const& name, MetaTypeId, PolyId);
 
 	MonoId new_hidden_var();
 	MonoId new_var();

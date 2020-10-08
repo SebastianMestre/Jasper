@@ -10,11 +10,13 @@ OBJNAMES := \
 	ct_eval.o \
 	desugar.o \
 	error_report.o \
+	interned_string.o \
 	lexer.o \
 	match_identifiers.o \
 	metacheck.o \
 	parser.o \
 	parse.o \
+	string_set.o \
 	string_view.o \
 	tarjan_solver.o \
 	token.o \
@@ -50,8 +52,11 @@ ITPR_OBJS := $(addprefix $(OBJDIR)/,$(ITPR_OBJNAMES))
 ALL_OBJS := $(OBJS) $(ITPR_OBJS) $(TEST_OBJS)
 
 LIBS := -lasan
+# LIBS := -lubsan
 
-CXXFLAGS := -std=c++14 -Wall -fsanitize=address -g
+# CXXFLAGS := -std=c++14 -Wall -O2 -g -fno-omit-frame-pointer
+CXXFLAGS := -std=c++14 -Wall -g -fno-omit-frame-pointer -fsanitize=address
+# CXXFLAGS := -std=c++14 -Wall -g -fno-omit-frame-pointer -fsanitize=undefined
 
 # maybe we should build the tests as well?
 all: interpreter

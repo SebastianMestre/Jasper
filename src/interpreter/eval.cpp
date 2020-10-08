@@ -81,7 +81,7 @@ gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 
 		if (decl->m_value) {
 			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text()] = value.get();
+			result->m_value[decl->identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);
@@ -202,6 +202,7 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	auto& arglist = ast->m_args;
 
 	std::vector<gc_ptr<Value>> args;
+	args.reserve(arglist.size());
 	for (int i = 0; i < int(arglist.size()); ++i) {
 		args.push_back(eval(arglist[i].get(), e));
 	}

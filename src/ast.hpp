@@ -31,7 +31,7 @@ struct Declaration : public AST {
 	AST* m_value {nullptr}; // can be nullptr
 
 	std::string const& identifier_text() const {
-		return m_identifier_token->m_text;
+		return m_identifier_token->m_text.str();
 	}
 
 	Declaration()
@@ -49,7 +49,7 @@ struct IntegerLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	IntegerLiteral()
@@ -60,7 +60,7 @@ struct NumberLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	NumberLiteral()
@@ -71,7 +71,7 @@ struct StringLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	StringLiteral()
@@ -82,7 +82,7 @@ struct BooleanLiteral : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	BooleanLiteral()
@@ -136,7 +136,7 @@ struct Identifier : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	Identifier()
@@ -240,7 +240,7 @@ struct TypeVar : public AST {
 	Token const* m_token;
 
 	std::string const& text() {
-		return m_token->m_text;
+		return m_token->m_text.str();
 	}
 
 	TypeVar()

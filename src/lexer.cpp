@@ -23,14 +23,11 @@ char Lexer::char_at(int index) {
 
 void Lexer::push_token(TokenTag tt, int width) {
 
-	std::string text;
-	text.resize(width);
-	for (int i = 0; i < width; ++i)
-		text[i] = m_source[m_source_index + i];
+	char const* base_ptr = m_source.data() + m_source_index;
 
 	Token t = {
 	    tt,
-	    std::move(text),
+	    InternedString(base_ptr, width),
 	    m_current_line,
 	    m_current_column,
 	    m_current_line,
@@ -361,7 +358,7 @@ void Lexer::consume_token() {
 		int l0 = m_current_line;
 
 		// TODO: support escape sequences
-		int len = 0;
+		size_t len = 0;
 		while ((not done()) && current_char() != '"') {
 			len += 1;
 			m_source_index += 1;
@@ -378,15 +375,9 @@ void Lexer::consume_token() {
 			assert(0);
 		}
 
-		std::string text;
-		assert(len == (m_source_index - i0));
-		text.reserve(len);
-		for (int i = i0; i != m_source_index; ++i) {
-			text.push_back(m_source[i]);
-		}
-
+		char const* base_ptr = m_source.data() + i0;
 		m_tokens.push_back(
-		    {TokenTag::STRING, text, l0, c0, m_current_line, m_current_column});
+		    {TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
 
 		m_current_column += 1;
 		m_source_index += 1;
@@ -397,22 +388,23 @@ void Lexer::consume_token() {
 			return;
 
 		if (is_identifier_start_char(current_char())) {
-			std::string text;
-			text.push_back(current_char());
+
+			char const* base_ptr = m_source.data() + m_source_index;
+			size_t len = 1;
 
 			while (is_identifier_char(next_char())) {
+				len += 1;
 				m_source_index += 1;
-				text.push_back(current_char());
 			}
 
 			m_source_index += 1;
-			m_current_column += text.size();
+			m_current_column += len;
 
 			m_tokens.push_back(
 			    {TokenTag::IDENTIFIER,
-			     text,
+			     InternedString {base_ptr, len},
 			     m_current_line,
-			     m_current_column - int(text.size()),
+			     m_current_column - int(len),
 			     m_current_line,
 			     m_current_column});
 
@@ -434,26 +426,26 @@ bool Lexer::consume_number() {
 	if (!isdigit(current_char()))
 		return false;
 
-	std::string text;
-	text.push_back(current_char());
+	char const* base_ptr = m_source.data() + m_source_index;
+	size_t len = 1;
 
 	bool is_int = true;
 	while (isdigit(next_char())) {
 		m_source_index += 1;
 		m_current_column += 1;
-		text.push_back(current_char());
+		len += 1;
 	}
 
 	if (next_char() == '.') {
 		is_int = false;
 		m_source_index += 1;
 		m_current_column += 1;
-		text.push_back(current_char());
+		len += 1;
 
 		while (isdigit(next_char())) {
 			m_source_index += 1;
 			m_current_column += 1;
-			text.push_back(current_char());
+			len += 1;
 		}
 	}
 
@@ -462,9 +454,9 @@ bool Lexer::consume_number() {
 	m_current_column += 1;
 	m_tokens.push_back(
 	    {type,
-	     text,
+	     InternedString {base_ptr, len},
 	     m_current_line,
-	     m_current_column - int(text.size()),
+	     m_current_column - int(len),
 	     m_current_line,
 	     m_current_column});
 

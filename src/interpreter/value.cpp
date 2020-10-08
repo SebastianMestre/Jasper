@@ -77,15 +77,16 @@ Value* Object::getMember(Identifier const& id) {
 
 Dictionary::Dictionary()
     : Value(ValueTag::Dictionary) {}
-Dictionary::Dictionary(ObjectType o)
+
+Dictionary::Dictionary(DictionaryType o)
     : Value(ValueTag::Dictionary)
     , m_value(std::move(o)) {}
 
-void Dictionary::addMember(Identifier const& id, Value* v) {
+void Dictionary::addMember(StringType const& id, Value* v) {
 	m_value[id] = v;
 }
 
-Value* Dictionary::getMember(Identifier const& id) {
+Value* Dictionary::getMember(StringType const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
 		// TODO: return RangeError
@@ -95,7 +96,7 @@ Value* Dictionary::getMember(Identifier const& id) {
 	}
 }
 
-void Dictionary::removeMember(Identifier const& id) {
+void Dictionary::removeMember(StringType const& id) {
 	m_value.erase(id);
 }
 

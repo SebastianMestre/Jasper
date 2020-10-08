@@ -116,7 +116,7 @@ gc_ptr<Object> Environment::new_object(ObjectType declarations) {
 	return m_gc->new_object(std::move(declarations));
 }
 
-gc_ptr<Dictionary> Environment::new_dictionary(ObjectType declarations) {
+gc_ptr<Dictionary> Environment::new_dictionary(DictionaryType declarations) {
 	return m_gc->new_dictionary(std::move(declarations));
 }
 

@@ -39,7 +39,7 @@ namespace TypeChecker {
 		// TODO: clean up how we build error reports
 		return {
 		    "ERROR @ line " + std::to_string(ast->m_token->m_line0 + 1) +
-		    " : accessed undeclared identifier '" + ast->text() + "'"};
+		    " : accessed undeclared identifier '" + ast->text().str() + "'"};
 	}
 
 	ast->m_declaration = declaration;

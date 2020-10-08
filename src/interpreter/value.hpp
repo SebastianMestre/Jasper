@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../interned_string.hpp"
 #include "environment_fwd.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
@@ -14,8 +15,10 @@ struct FunctionLiteral;
 
 namespace Interpreter {
 
-using Identifier = std::string;
+using Identifier = InternedString;
+using StringType = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
+using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Value*>;
 using FunctionType = TypedAST::FunctionLiteral*;
 using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
@@ -95,14 +98,14 @@ struct Object : Value {
 };
 
 struct Dictionary : Value {
-	ObjectType m_value;
+	DictionaryType m_value;
 
 	Dictionary();
-	Dictionary(ObjectType);
+	Dictionary(DictionaryType);
 
-	void addMember(Identifier const& id, Value* v);
-	Value* getMember(Identifier const& id);
-	void removeMember(Identifier const& id);
+	void addMember(StringType const& id, Value* v);
+	Value* getMember(StringType const& id);
+	void removeMember(StringType const& id);
 };
 
 struct Function : Value {

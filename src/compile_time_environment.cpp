@@ -13,13 +13,13 @@ Scope& CompileTimeEnvironment::current_scope() {
 }
 
 void CompileTimeEnvironment::declare(
-    std::string const& name, TypedAST::Declaration* decl) {
+    InternedString const& name, TypedAST::Declaration* decl) {
 	// current_scope().m_vars[name] = decl;
 	current_scope().m_vars.insert({name, decl});
 }
 
-TypedAST::Declaration* CompileTimeEnvironment::access(std::string const& name) {
-	auto scan_scope = [](Scope& scope, std::string const& name) -> TypedAST::Declaration* {
+TypedAST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
+	auto scan_scope = [](Scope& scope, InternedString const& name) -> TypedAST::Declaration* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
 			return it->second;

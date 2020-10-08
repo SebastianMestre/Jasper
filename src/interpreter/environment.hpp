@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../interned_string.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
 #include "value.hpp"
@@ -54,7 +55,7 @@ struct Environment {
 	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_object(ObjectType) -> gc_ptr<Object>;
-	auto new_dictionary(ObjectType) -> gc_ptr<Dictionary>;
+	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
 	auto new_function(FunctionType, ObjectType) -> gc_ptr<Function>;
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
