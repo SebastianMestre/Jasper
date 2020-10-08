@@ -22,19 +22,23 @@ struct FlatMap {
 	}
 
 	std::pair<iterator, bool> insert(const value_type& value) {
+		rehash_if_needed();
 		uint64_t hash_bits = m_hash(value.first);
 		auto scan_result = scan(value.first, hash_bits);
 		if (scan_result.found)
 			return {&m_slots[scan_result.end_idx], false};
+		m_size += 1;
 		put(scan_result.free_idx, value_type {value}, hash_bits);
 		return {&m_slots[scan_result.free_idx], true};
 	}
 
 	std::pair<iterator, bool> insert(value_type&& value) {
+		rehash_if_needed();
 		uint64_t hash_bits = m_hash(value.first);
 		auto scan_result = scan(value.first, hash_bits);
 		if (scan_result.found)
 			return {&m_slots[scan_result.end_idx], false};
+		m_size += 1;
 		put(scan_result.free_idx, std::move(value), hash_bits);
 		return {&m_slots[scan_result.free_idx], true};
 	}
@@ -70,6 +74,7 @@ private:
 
 	std::vector<uint8_t> m_metadata;
 	std::vector<value_type> m_slots;
+	size_t m_size {0};
 	std::hash<Key> m_hash;
 
 	struct ScanResult {
@@ -105,11 +110,48 @@ private:
 	}
 
 	void put(int position, value_type&& value, uint64_t hash_bits){
-		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
+		uint8_t lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
 		uint8_t comparator = (lo_hash_bits << 1) | 1;
 
 		m_metadata[position] = comparator;
 		m_slots[position] = std::move(value);
 	}
 
+	void rehash_if_needed() {
+		if (m_slots.size() <= m_size * 2)
+			rehash(m_slots.size() * 2);
+	}
+
+	void rehash(size_t new_size) {
+		if (new_size < m_slots.size())
+			return;
+
+		std::vector<value_type> old_slots = std::move(m_slots);
+		m_slots.clear();
+		m_slots.resize(new_size);
+
+		std::vector<uint8_t> old_metadata = std::move(m_metadata);
+		m_metadata.assign(new_size, 0);
+
+		for (size_t i {0}; i != old_slots.size(); ++i) {
+			if (!(old_metadata[i] & Magic::IsFullFlag))
+				continue;
+
+			value_type& slot = old_slots[i];
+			uint64_t hash_bits = m_hash(slot.first);
+			uint64_t hi_hash_bits = hash_bits >> 7;
+			size_t pos = hi_hash_bits % m_slots.size();
+			// we know there are no repeats, so we can do something simpler than `scan`
+			while (true) {
+				if (m_metadata[pos] == Magic::Empty)
+					break;
+				pos += 1;
+				if (pos == m_slots.size())
+					pos = 0;
+			}
+
+			m_metadata[pos] = old_metadata[i];
+			m_slots[pos] = std::move(old_slots[i]);
+		}
+	}
 };
