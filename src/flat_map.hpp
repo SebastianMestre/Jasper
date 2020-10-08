@@ -9,6 +9,7 @@
 // Decently fast flat hash table
 // If rehashing occurs, iterators are invalidated
 // If rehashing occurs, references are invalidated
+// Good when comparing keys is expensive
 template<typename Key, typename Value>
 struct FlatMap {
 	using value_type = std::pair<Key, Value>;
@@ -16,7 +17,8 @@ struct FlatMap {
 	using iterator = const_iterator;
 
 	FlatMap() {
-		constexpr int initial_size = 16;
+		// MUST be power of two
+		constexpr int initial_size = 64;
 		m_metadata.resize(initial_size, 0);
 		m_slots.resize(initial_size);
 	}
@@ -132,7 +134,7 @@ private:
 		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
 
 		uint8_t comparator = (lo_hash_bits << 1) | 1;
-		size_t pos = hi_hash_bits % m_slots.size();
+		size_t pos = hi_hash_bits & (m_slots.size() - 1);
 		int free_idx = -1;
 		while (true) {
 			if (m_metadata[pos] == comparator && m_slots[pos].first == key)
@@ -184,7 +186,7 @@ private:
 			value_type& slot = old_slots[i];
 			uint64_t hash_bits = m_hash(slot.first);
 			uint64_t hi_hash_bits = hash_bits >> 7;
-			size_t pos = hi_hash_bits % m_slots.size();
+			size_t pos = hi_hash_bits & (m_slots.size() - 1);
 			// we know there are no repeats, so we can do something simpler than `scan`
 			while (true) {
 				if (m_metadata[pos] == Magic::Empty)
