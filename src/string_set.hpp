@@ -11,6 +11,7 @@ struct string_view;
 struct InternedString;
 
 // a flat linear hashing table
+// if rehashing occurs, references are not invalidated
 struct StringSet {
 	struct ScanData {
 		int free_index;

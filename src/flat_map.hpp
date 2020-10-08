@@ -1,12 +1,52 @@
 #pragma once
 
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <cstdint>
 
 // Decently fast flat hash table
+// If rehashing occurs, iterators are invalidated
+// If rehashing occurs, references are invalidated
 template<typename Key, typename Value>
 struct FlatMap {
+	using value_type = std::pair<Key, Value>;
+	using iterator = value_type*;
+	using const_iterator = value_type const*;
+
+	FlatMap(){
+		constexpr int initial_size = 16;
+		m_metadata.resize(initial_size, 0);
+		m_slots.resize(initial_size);
+	}
+
+	std::pair<iterator, bool> insert(const value_type& value){
+		uint64_t hash_bits = m_hash(value.first);
+		auto scan_result = scan(value.first, hash_bits);
+		if (scan_result.found)
+			return {&m_slots[scan_result.end_idx], false};
+		put(scan_result.free_idx, value_type{value}, hash_bits);
+		return {&m_slots[scan_result.free_idx], true};
+	}
+
+	std::pair<iterator, bool> insert(value_type&& value){
+		uint64_t hash_bits = m_hash(value.first);
+		auto scan_result = scan(value.first, hash_bits);
+		if (scan_result.found)
+			return {&m_slots[scan_result.end_idx], false};
+		put(scan_result.free_idx, std::move(value), hash_bits);
+		return {&m_slots[scan_result.free_idx], true};
+	}
+
+	template <typename P>
+	typename std::enable_if<
+		std::is_constructible<value_type, P&&>::value,
+		std::pair<iterator, bool>>::type insert(P&& value) {
+		return insert(value_type {std::move(value)});
+	}
+
+  private:
 
 	// for every slot in the table, we also have a metadata byte.
 	// if the first metadata bit is on:
@@ -29,7 +69,8 @@ struct FlatMap {
 	};
 
 	std::vector<uint8_t> m_metadata;
-	std::vector<std::pair<const Key,Value>> m_slots;
+	std::vector<value_type> m_slots;
+	std::hash<Key> m_hash;
 
 	struct ScanResult {
 		bool found;
@@ -42,16 +83,16 @@ struct FlatMap {
 		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
 
 		uint8_t comparator = (lo_hash_bits << 1) | 1;
-		int pos = hi_hash_bits % m_slots.size();
+		size_t pos = hi_hash_bits % m_slots.size();
 		int free_idx = -1;
 		while (true) {
 			if (m_metadata[pos] == comparator && m_slots[pos].first == key)
-				return {true, pos, free_idx};
+				return {true, (int)pos, free_idx};
 
 			if (m_metadata[pos] == Magic::Empty) {
 				if (free_idx == -1)
 					free_idx = pos;
-				return {false, pos, free_idx};
+				return {false, (int)pos, free_idx};
 			}
 
 			if (free_idx == -1 && m_metadata[pos] == Magic::Tombstone)
@@ -62,4 +103,13 @@ struct FlatMap {
 				pos = 0;
 		}
 	}
+
+	void put(int position, value_type value, uint64_t hash_bits){
+		uint8_t  lo_hash_bits = hash_bits & ((1 << 7)-1); // low 7 bits
+		uint8_t comparator = (lo_hash_bits << 1) | 1;
+
+		m_metadata[position] = comparator;
+		m_slots[position] = static_cast<value_type&&>(value);//std::move(value);
+	}
+
 };
