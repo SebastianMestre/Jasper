@@ -10,8 +10,6 @@ OBJNAMES := \
 	ct_eval.o \
 	desugar.o \
 	error_report.o \
-	flat_map.o \
-	simple_flat_map.o \
 	interned_string.o \
 	lexer.o \
 	match_identifiers.o \

@@ -20,6 +20,10 @@ struct InternedString {
 		return m_data == other.m_data;
 	}
 
+	bool operator<(InternedString const& other) const {
+		return m_data < other.m_data;
+	}
+
 	std::string const& str() const;
 
 	static StringSet& database();
