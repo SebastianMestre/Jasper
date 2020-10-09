@@ -120,33 +120,24 @@ StringSet::ScanData StringSet::scan(
 
 	int position = hash_bits % m_data.size();
 	int free_position = -1;
-	bool found = false;
 
-	while (m_data[position].status != HashField::Empty) {
+	while (true) {
 		if (m_data[position].status == HashField::Occupied) {
 			if (m_data[position].hash_bits == hash_bits &&
 			    length == m_data[position].value->size() &&
-			    memcmp(data, m_data[position].value->data(), length) == 0) {
-				found = true;
-				break;
-			}
-		} else if (m_data[position].status == HashField::Tombstone) {
-			if (free_position == -1) {
+			    memcmp(data, m_data[position].value->data(), length) == 0)
+				return {free_position, position, true};
+		} else {
+			if (free_position == -1)
 				free_position = position;
-			}
+			if (m_data[position].status == HashField::Empty)
+				return {free_position, position, false};
 		}
 
 		position += 1;
 		if (position == static_cast<int>(m_data.size()))
 			position = 0;
 	}
-
-	if (m_data[position].status == HashField::Empty) {
-		if (free_position == -1)
-			free_position = position;
-	}
-
-	return {free_position, position, found};
 }
 
 void StringSet::put(int position, std::string&& str, uint64_t hash_bits) {
