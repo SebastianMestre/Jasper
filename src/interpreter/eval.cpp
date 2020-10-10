@@ -25,7 +25,7 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		eval(decl, e);
+		eval(&decl, e);
 	}
 	return e.null();
 };
@@ -54,14 +54,10 @@ gc_ptr<Value> eval(TypedAST::NullLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
-	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == TypedASTTag::Declaration);
-		TypedAST::Declaration* decl =
-		    static_cast<TypedAST::Declaration*>(declTypeErased);
-
-		if (decl->m_value) {
-			auto value = eval(decl->m_value, e);
-			result->m_value[decl->identifier_text()] = value.get();
+	for (auto& decl : ast->m_body) {
+		if (decl.m_value) {
+			auto value = eval(decl.m_value, e);
+			result->m_value[decl.identifier_text()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in object must have a value";
 			assert(0);
@@ -74,14 +70,10 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
-	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == TypedASTTag::Declaration);
-		TypedAST::Declaration* decl =
-		    static_cast<TypedAST::Declaration*>(declTypeErased);
-
-		if (decl->m_value) {
-			auto value = eval(decl->m_value, e);
-			result->m_value[decl->identifier_text().str()] = value.get();
+	for (auto& decl : ast->m_body) {
+		if (decl.m_value) {
+			auto value = eval(decl.m_value, e);
+			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);
@@ -109,7 +101,7 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
 	e.new_nested_scope();
 
-	for (auto& stmt : ast->m_body) {
+	for (auto stmt : ast->m_body) {
 		eval(stmt, e);
 		if (e.m_return_value)
 			break;
@@ -147,7 +139,7 @@ gc_ptr<Value> eval_call_function(
 	e.new_scope();
 	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
-		e.declare(argdecl->identifier_text(), unboxed(args[i].get()));
+		e.declare(argdecl.identifier_text(), unboxed(args[i].get()));
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
@@ -272,7 +264,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.new_nested_scope();
 
 	// NOTE: this is kinda fishy. why do we assert here?
-	auto declaration = eval(ast->m_declaration, e);
+	auto declaration = eval(&ast->m_declaration, e);
 	assert(declaration);
 
 	while (1) {

@@ -62,7 +62,7 @@ struct Declaration : public TypedAST {
 
 // doesnt have a ast_vtype
 struct DeclarationList : public TypedAST {
-	std::vector<Declaration*> m_declarations;
+	std::vector<Declaration> m_declarations;
 
 	DeclarationList()
 	    : TypedAST {TypedASTTag::DeclarationList} {}
@@ -121,7 +121,7 @@ struct NullLiteral : public TypedAST {
 };
 
 struct ObjectLiteral : public TypedAST {
-	std::vector<TypedAST*> m_body;
+	std::vector<Declaration> m_body;
 
 	// future feature
 	// the value type for objects must be followeb by a class identifier
@@ -137,7 +137,7 @@ struct ArrayLiteral : public TypedAST {
 };
 
 struct DictionaryLiteral : public TypedAST {
-	std::vector<TypedAST*> m_body;
+	std::vector<Declaration> m_body;
 
 	DictionaryLiteral()
 	    : TypedAST {TypedASTTag::DictionaryLiteral} {}
@@ -146,7 +146,7 @@ struct DictionaryLiteral : public TypedAST {
 struct FunctionLiteral : public TypedAST {
 	MonoId m_return_type;
 	TypedAST* m_body;
-	std::vector<Declaration*> m_args;
+	std::vector<Declaration> m_args;
 	std::unordered_set<InternedString> m_captures;
 
 	FunctionLiteral()
@@ -224,7 +224,7 @@ struct IfElseStatement : public TypedAST {
 };
 
 struct ForStatement : public TypedAST {
-	TypedAST* m_declaration;
+	Declaration m_declaration;
 	TypedAST* m_condition;
 	TypedAST* m_action;
 	TypedAST* m_body;
@@ -242,7 +242,7 @@ struct WhileStatement : public TypedAST {
 };
 
 struct StructExpression : public TypedAST {
-	std::vector<Identifier*> m_fields;
+	std::vector<Identifier> m_fields;
 	std::vector<TypedAST*> m_types;
 
 	StructExpression()

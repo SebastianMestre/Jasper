@@ -34,11 +34,9 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	int arg_count = ast->m_args.size();
-	for (int i = 0; i < arg_count; ++i) {
+	for (int i = 0; i < arg_count; ++i)
 		// TODO: metacheck type hints
-		auto arg_decl = ast->m_args[i];
-		arg_decl->m_meta_type = tc.meta_value();
-	}
+		ast->m_args[i].m_meta_type = tc.meta_value();
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);
@@ -109,7 +107,7 @@ void metacheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
-	metacheck(ast->m_declaration, tc);
+	metacheck(&ast->m_declaration, tc);
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(
 	    ast->m_condition->m_meta_type, tc.meta_value());
@@ -140,17 +138,17 @@ void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
-		decl->m_meta_type = tc.new_meta_var();
+		decl.m_meta_type = tc.new_meta_var();
 
 	for (auto& decl : ast->m_declarations)
-		metacheck(decl->m_value, tc);
+		metacheck(decl.m_value, tc);
 
 	for (auto& decl : ast->m_declarations)
-		tc.m_core.m_meta_core.unify(decl->m_meta_type, decl->m_value->m_meta_type);
+		tc.m_core.m_meta_core.unify(decl.m_meta_type, decl.m_value->m_meta_type);
 
 	for (auto& decl : ast->m_declarations)
-		if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
-			for (auto other : decl->m_references)
+		if (tc.m_core.m_meta_core.find(decl.m_meta_type) == tc.meta_typefunc())
+			for (auto other : decl.m_references)
 				if (tc.m_core.m_meta_core.find(other->m_meta_type) == tc.meta_value())
 					assert(0 && "value referenced in a type definition");
 }

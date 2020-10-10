@@ -27,7 +27,7 @@ TypedAST::FunctionLiteral* ct_eval(
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);
-	for (auto child : body->m_body)
+	for (auto& child : body->m_body)
 		child = ct_eval(child, tc, alloc);
 
 	return ast;
@@ -86,7 +86,7 @@ TypedAST::IfElseStatement* ct_eval(
 
 TypedAST::ForStatement* ct_eval(
     TypedAST::ForStatement* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	ast->m_declaration = ct_eval(ast->m_declaration, tc, alloc);
+	ct_eval(&ast->m_declaration, tc, alloc);
 	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
 	ast->m_action = ct_eval(ast->m_action, tc, alloc);
 	ast->m_body = ct_eval(ast->m_body, tc, alloc);
@@ -125,7 +125,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
-			std::string name = as_se->m_fields[i]->text().str();
+			std::string name = as_se->m_fields[i].text().str();
 			assert(!fields.count(name));
 			fields[name] = mono;
 		}
@@ -177,36 +177,36 @@ TypedAST::Declaration* ct_eval(
 TypedAST::DeclarationList* ct_eval(
     TypedAST::DeclarationList* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
 		// put a dummy var where required.
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle = alloc.make<TypedAST::TypeFunctionHandle>();
 			handle->m_value = tc.m_core.m_tf_core.new_var();
-			handle->m_syntax = decl->m_value;
-			decl->m_value = handle;
+			handle->m_syntax = decl.m_value;
+			decl.m_value = handle;
 		} else if(meta_type == tc.meta_monotype()) {
 			auto handle = alloc.make<TypedAST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
-			handle->m_syntax = decl->m_value;
-			decl->m_value = handle;
+			handle->m_syntax = decl.m_value;
+			decl.m_value = handle;
 		}
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle =
-			    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value);
+			    static_cast<TypedAST::TypeFunctionHandle*>(decl.m_value);
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else if (meta_type == tc.meta_monotype()) {
 			auto handle =
-			    static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
+			    static_cast<TypedAST::MonoTypeHandle*>(decl.m_value);
 
 			MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_mono_core.unify(mt, handle->m_value);
 		} else {
-			decl->m_value = ct_eval(decl->m_value, tc, alloc);
+			decl.m_value = ct_eval(decl.m_value, tc, alloc);
 		}
 	}
 

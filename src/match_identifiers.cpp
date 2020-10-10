@@ -95,10 +95,8 @@ namespace TypeChecker {
 
 	int arg_count = ast->m_args.size();
 
-	for (int i = 0; i < arg_count; ++i) {
-		auto arg_decl = ast->m_args[i];
-		env.declare(arg_decl->identifier_text(), arg_decl);
-	}
+	for (int i = 0; i < arg_count; ++i)
+		env.declare(ast->m_args[i].identifier_text(), &ast->m_args[i]);
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);
@@ -124,7 +122,7 @@ namespace TypeChecker {
     TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
-	CHECK_AND_RETURN(match_identifiers(ast->m_declaration, env));
+	CHECK_AND_RETURN(match_identifiers(&ast->m_declaration, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_action, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
@@ -172,15 +170,15 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
-		env.declare(decl->identifier_text(), decl);
-		decl->m_surrounding_function = env.current_function();
+		env.declare(decl.identifier_text(), &decl);
+		decl.m_surrounding_function = env.current_function();
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		env.enter_top_level_decl(decl);
+		env.enter_top_level_decl(&decl);
 
-		if (decl->m_value)
-			CHECK_AND_RETURN(match_identifiers(decl->m_value, env));
+		if (decl.m_value)
+			CHECK_AND_RETURN(match_identifiers(decl.m_value, env));
 
 		env.exit_top_level_decl();
 	}

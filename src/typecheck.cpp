@@ -148,10 +148,9 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 		std::vector<MonoId> arg_types;
 
 		for (int i = 0; i < arg_count; ++i) {
-			auto arg_decl = ast->m_args[i];
 			int mono = tc.new_var();
 			arg_types.push_back(mono);
-			arg_decl->m_value_type = mono;
+			ast->m_args[i].m_value_type = mono;
 		}
 
 		// return type
@@ -174,7 +173,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
-	typecheck(ast->m_declaration, tc);
+	typecheck(&ast->m_declaration, tc);
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
@@ -253,8 +252,8 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	// assign a unique int to every top level declaration
 	int i = 0;
 	for (auto& decl : ast->m_declarations) {
-		index_to_decl.push_back(decl);
-		decl_to_index.insert({decl, i});
+		index_to_decl.push_back(&decl);
+		decl_to_index.insert({&decl, i});
 		++i;
 	}
 

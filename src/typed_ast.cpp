@@ -49,8 +49,9 @@ TypedAST* convert_ast(AST::ArrayLiteral* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::DictionaryLiteral* ast, Allocator& alloc) {
 	auto typed_dict = alloc.make<DictionaryLiteral>();
 
-	for (auto element : ast->m_body) {
-		typed_dict->m_body.push_back(convert_ast(element, alloc));
+	for (auto& element : ast->m_body) {
+		auto decl = static_cast<Declaration*>(convert_ast(&element, alloc));
+		typed_dict->m_body.push_back(std::move(*decl));
 	}
 
 	return typed_dict;
@@ -59,16 +60,13 @@ TypedAST* convert_ast(AST::DictionaryLiteral* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::FunctionLiteral* ast, Allocator& alloc) {
 	auto typed_function = alloc.make<FunctionLiteral>();
 
-	for (auto arg : ast->m_args) {
-		assert(arg->type() == ASTTag::Declaration);
-		auto decl = static_cast<AST::Declaration*>(arg);
+	for (auto& arg : ast->m_args) {
+		Declaration typed_decl;
 
-		auto typed_decl = alloc.make<Declaration>();
+		typed_decl.m_identifier_token = arg.m_identifier_token;
+		typed_decl.m_surrounding_function = typed_function;
 
-		typed_decl->m_identifier_token = decl->m_identifier_token;
-		typed_decl->m_surrounding_function = typed_function;
-
-		typed_function->m_args.push_back(typed_decl);
+		typed_function->m_args.push_back(std::move(typed_decl));
 	}
 
 	typed_function->m_body = convert_ast(ast->m_body, alloc);
@@ -76,7 +74,7 @@ TypedAST* convert_ast(AST::FunctionLiteral* ast, Allocator& alloc) {
 	return typed_function;
 }
 
-Declaration* convert_ast(AST::Declaration* ast, Allocator& alloc) {
+TypedAST* convert_ast(AST::Declaration* ast, Allocator& alloc) {
 	auto typed_dec = alloc.make<Declaration>();
 
 	typed_dec->m_identifier_token = ast->m_identifier_token;
@@ -90,8 +88,9 @@ Declaration* convert_ast(AST::Declaration* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::DeclarationList* ast, Allocator& alloc) {
 	auto typed_declist = alloc.make<DeclarationList>();
 
-	for (auto declaration : ast->m_declarations) {
-		typed_declist->m_declarations.push_back(convert_ast(declaration, alloc));
+	for (auto& declaration : ast->m_declarations) {
+		auto decl = static_cast<Declaration*>(convert_ast(&declaration, alloc));
+		typed_declist->m_declarations.push_back(std::move(*decl));
 	}
 
 	return typed_declist;
@@ -176,7 +175,8 @@ TypedAST* convert_ast(AST::IfElseStatement* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::ForStatement* ast, Allocator& alloc) {
 	auto typed_for = alloc.make<ForStatement>();
 
-	typed_for->m_declaration = convert_ast(ast->m_declaration, alloc);
+	auto decl = static_cast<Declaration*>(convert_ast(&ast->m_declaration, alloc));
+	typed_for->m_declaration = std::move(*decl);
 	typed_for->m_condition = convert_ast(ast->m_condition, alloc);
 	typed_for->m_action = convert_ast(ast->m_action, alloc);
 	typed_for->m_body = convert_ast(ast->m_body, alloc);
@@ -196,9 +196,9 @@ TypedAST* convert_ast(AST::WhileStatement* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::StructExpression* ast, Allocator& alloc) {
 	auto typed_ast = alloc.make<StructExpression>();
 
-	for (auto field : ast->m_fields){
-		auto ptr = convert_ast(field, alloc);
-		typed_ast->m_fields.push_back(static_cast<Identifier*>(ptr));
+	for (auto& field : ast->m_fields){
+		auto typed_field = static_cast<Identifier*>(convert_ast(&field, alloc));
+		typed_ast->m_fields.push_back(std::move(*typed_field));
 	}
 
 	for (auto type : ast->m_types){
