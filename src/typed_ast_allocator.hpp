@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ast.hpp"
+#include "typed_ast.hpp"
 #include "node_allocator.hpp"
 
-namespace AST {
+namespace TypedAST {
 
-// TODO: could we use the AST_TAGS macro here?
+// TODO: could we use the TYPED_AST_TAGS macro here?
 struct Allocator : public NodeAllocator<
     NumberLiteral,
     IntegerLiteral,
@@ -16,24 +16,21 @@ struct Allocator : public NodeAllocator<
     ArrayLiteral,
     DictionaryLiteral,
     FunctionLiteral,
-    ShortFunctionLiteral,
-    DeclarationList,
-    Declaration,
     Identifier,
-    BinaryExpression,
     CallExpression,
     IndexExpression,
     RecordAccessExpression,
+    TernaryExpression,
     Block,
     ReturnStatement,
     IfElseStatement,
-    TernaryExpression,
     ForStatement,
     WhileStatement,
+    DeclarationList,
+    Declaration,
+    StructExpression,
     TypeTerm,
-    TypeVar,
-    UnionExpression,
-    TupleExpression,
-    StructExpression> {};
+    TypeFunctionHandle,
+    MonoTypeHandle> {};
 
-} // namespace AST
+} // namespace TypedAST

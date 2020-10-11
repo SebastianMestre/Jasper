@@ -20,7 +20,7 @@ void print(DeclarationList* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ DeclarationList\n";
 	for (auto decl : ast->m_declarations)
-		print(decl, d + 1);
+		print(&decl, d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -72,7 +72,7 @@ void print(ObjectLiteral* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ObjectLiteral\n" << tab << "Declarations:\n";
 	for (auto decl : ast->m_body)
-		print(decl, d + 1);
+		print(&decl, d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -90,7 +90,7 @@ void print(DictionaryLiteral* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ DictionaryLiteral\n" << tab << "Declarations:\n";
 	for (auto decl : ast->m_body)
-		print(decl, d + 1);
+		print(&decl, d + 1);
 	std::cout << stab << "]\n";
 }
 
@@ -112,7 +112,7 @@ void print(FunctionLiteral* ast, int d) {
 	std::string tab(d, tabc);
 	std::cout << stab << "[ Function\n" << tab << "Arguments:\n";
 	for (auto arg : ast->m_args) {
-		print(arg, d + 1);
+		print(&arg, d + 1);
 	}
 	std::cout << tab << "Body:\n";
 	if (ast->m_body)
@@ -206,7 +206,7 @@ void print(ForStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
 	std::cout << stab << "[ ForStatement\n" << tab << "Declaration:\n";
-	print(ast->m_declaration, d + 1);
+	print(&ast->m_declaration, d + 1);
 	std::cout << tab << "Condition:\n";
 	print(ast->m_condition, d + 1);
 	std::cout << tab << "Action:\n";

@@ -74,17 +74,17 @@ Writer<AST::AST*> Parser::parse_top_level() {
 
 	auto e = m_ast_allocator->make<AST::DeclarationList>();
 
-	e->m_declarations = declarations.m_result;
+	e->m_declarations = std::move(declarations.m_result);
 
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::vector<AST::Declaration*>>
+Writer<std::vector<AST::Declaration>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<AST::Declaration*>> result = {
+	Writer<std::vector<AST::Declaration>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
-	std::vector<AST::Declaration*> declarations;
+	std::vector<AST::Declaration> declarations;
 
 	while (1) {
 		auto p0 = peek();
@@ -107,7 +107,7 @@ Parser::parse_declaration_list(TokenTag terminator) {
 		if (handle_error(result, declaration))
 			return result;
 
-		declarations.push_back(declaration.m_result);
+		declarations.push_back(std::move(*declaration.m_result));
 	}
 
 	return make_writer(std::move(declarations));
@@ -688,16 +688,16 @@ Writer<AST::AST*> Parser::parse_function() {
 	if (handle_error(result, require(TokenTag::PAREN_OPEN)))
 		return result;
 
-	std::vector<AST::AST*> args;
+	std::vector<AST::Declaration> args;
 	while (1) {
 		if (consume(TokenTag::PAREN_CLOSE)) {
 			break;
 		} else if (match(TokenTag::IDENTIFIER)) {
 			// consume argument name
 
-			auto arg = m_ast_allocator->make<AST::Declaration>();
+			AST::Declaration arg;
 
-			arg->m_identifier_token = peek();
+			arg.m_identifier_token = peek();
 			m_lexer->advance();
 
 			if (consume(TokenTag::DECLARE)) {
@@ -705,10 +705,10 @@ Writer<AST::AST*> Parser::parse_function() {
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-				arg->m_type = type.m_result;
+				arg.m_type = type.m_result;
 			}
 
-			args.push_back(arg);
+			args.push_back(std::move(arg));
 
 			if (consume(TokenTag::COMMA)) {
 				// If we find a comma, we have to parse
@@ -905,7 +905,7 @@ Writer<AST::AST*> Parser::parse_for_statement() {
 
 	auto e = m_ast_allocator->make<AST::ForStatement>();
 
-	e->m_declaration = declaration.m_result;
+	e->m_declaration = std::move(*declaration.m_result);
 	e->m_condition = condition.m_result;
 	e->m_action = action.m_result;
 	e->m_body = body.m_result;
@@ -1064,12 +1064,12 @@ Writer<AST::AST*> Parser::parse_type_term() {
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>> Parser::parse_type_list(
+Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> Parser::parse_type_list(
     bool with_identifiers = false) {
-	Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>>
+	Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>>
 	    result = {{"Parse Error: Failed to parse type list"}};
 
-	std::vector<AST::Identifier*> identifiers;
+	std::vector<AST::Identifier> identifiers;
 	std::vector<AST::AST*> types;
 
 	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
@@ -1084,7 +1084,7 @@ Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>> Parser:
 			if (handle_error(result, require(TokenTag::DECLARE)))
 				return result;
 
-			identifiers.push_back(cons.m_result);
+			identifiers.push_back(std::move(*cons.m_result));
 		}
 
 		auto type = parse_type_term();
@@ -1098,7 +1098,7 @@ Writer<std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>> Parser:
 	}
 
 	return make_writer<
-	    std::pair<std::vector<AST::Identifier*>, std::vector<AST::AST*>>>(
+	    std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>>(
 	    make_pair(std::move(identifiers), std::move(types)));
 }
 

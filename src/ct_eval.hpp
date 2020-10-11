@@ -1,4 +1,5 @@
 #include "typedefs.hpp"
+#include "typed_ast_allocator.hpp"
 
 namespace TypedAST {
 struct TypedAST;
@@ -8,6 +9,6 @@ namespace TypeChecker {
 
 struct TypeChecker;
 
-Own<TypedAST::TypedAST> ct_eval(Own<TypedAST::TypedAST>, TypeChecker& tc);
+TypedAST::TypedAST* ct_eval(TypedAST::TypedAST*, TypeChecker& tc, TypedAST::Allocator& alloc);
 
 } // namespace TypeChecker

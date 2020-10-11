@@ -39,7 +39,7 @@ struct Declaration : public AST {
 };
 
 struct DeclarationList : public AST {
-	std::vector<Declaration*> m_declarations;
+	std::vector<Declaration> m_declarations;
 
 	DeclarationList()
 	    : AST {ASTTag::DeclarationList} {}
@@ -96,7 +96,7 @@ struct NullLiteral : public AST {
 };
 
 struct ObjectLiteral : public AST {
-	std::vector<Declaration*> m_body;
+	std::vector<Declaration> m_body;
 
 	ObjectLiteral()
 	    : AST {ASTTag::ObjectLiteral} {}
@@ -110,7 +110,7 @@ struct ArrayLiteral : public AST {
 };
 
 struct DictionaryLiteral : public AST {
-	std::vector<Declaration*> m_body;
+	std::vector<Declaration> m_body;
 
 	DictionaryLiteral()
 	    : AST {ASTTag::DictionaryLiteral} {}
@@ -118,7 +118,7 @@ struct DictionaryLiteral : public AST {
 
 struct FunctionLiteral : public AST {
 	AST* m_body;
-	std::vector<AST*> m_args;
+	std::vector<Declaration> m_args;
 
 	FunctionLiteral()
 	    : AST {ASTTag::FunctionLiteral} {}
@@ -126,7 +126,7 @@ struct FunctionLiteral : public AST {
 
 struct ShortFunctionLiteral : public AST {
 	AST* m_body;
-	std::vector<AST*> m_args;
+	std::vector<Declaration> m_args;
 
 	ShortFunctionLiteral()
 	    : AST {ASTTag::ShortFunctionLiteral} {}
@@ -209,7 +209,7 @@ struct IfElseStatement : public AST {
 };
 
 struct ForStatement : public AST {
-	AST* m_declaration;
+	Declaration m_declaration;
 	AST* m_condition;
 	AST* m_action;
 	AST* m_body;
@@ -249,7 +249,7 @@ struct TypeVar : public AST {
 
 struct UnionExpression : public AST {
 	// TODO: better storage?
-	std::vector<Identifier*> m_constructors;
+	std::vector<Identifier> m_constructors;
 	std::vector<AST*> m_types;
 
 	UnionExpression()
@@ -265,7 +265,7 @@ struct TupleExpression : public AST {
 
 struct StructExpression : public AST {
 	// TODO: better storage?
-	std::vector<Identifier*> m_fields;
+	std::vector<Identifier> m_fields;
 	std::vector<AST*> m_types;
 
 	StructExpression()

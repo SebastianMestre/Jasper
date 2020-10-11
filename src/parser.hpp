@@ -29,7 +29,7 @@ struct Parser {
 	Lexer* m_lexer;
 	AST::Allocator* m_ast_allocator;
 
-	Writer<std::vector<AST::Declaration*>> parse_declaration_list(TokenTag);
+	Writer<std::vector<AST::Declaration>> parse_declaration_list(TokenTag);
 	Writer<std::vector<AST::AST*>>
 	parse_expression_list(TokenTag, TokenTag, bool);
 
@@ -52,7 +52,7 @@ struct Parser {
 	Writer<AST::AST*> parse_while_statement();
 	Writer<AST::AST*> parse_type_term();
 	Writer<std::vector<AST::AST*>> parse_type_term_arguments();
-	Writer<std::pair<std::vector<AST::Identifier*>,std::vector<AST::AST*>>>
+	Writer<std::pair<std::vector<AST::Identifier>,std::vector<AST::AST*>>>
 	    parse_type_list(bool);
 	Writer<AST::AST*> parse_type_var();
 	Writer<AST::AST*> parse_type_function();

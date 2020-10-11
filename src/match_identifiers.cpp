@@ -25,7 +25,7 @@ namespace TypeChecker {
 	env.declare(ast->identifier_text(), ast);
 
 	if (ast->m_value)
-		CHECK_AND_RETURN(match_identifiers(ast->m_value.get(), env));
+		CHECK_AND_RETURN(match_identifiers(ast->m_value, env));
 
 	return {};
 }
@@ -64,26 +64,26 @@ namespace TypeChecker {
     TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 	for (auto& child : ast->m_body)
-		CHECK_AND_RETURN(match_identifiers(child.get(), env));
+		CHECK_AND_RETURN(match_identifiers(child, env));
 	env.end_scope();
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 
 	if (ast->m_else_body)
-		CHECK_AND_RETURN(match_identifiers(ast->m_else_body.get(), env));
+		CHECK_AND_RETURN(match_identifiers(ast->m_else_body, env));
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
 	for (auto& arg : ast->m_args)
-		CHECK_AND_RETURN(match_identifiers(arg.get(), env));
+		CHECK_AND_RETURN(match_identifiers(arg, env));
 	return {};
 }
 
@@ -95,16 +95,14 @@ namespace TypeChecker {
 
 	int arg_count = ast->m_args.size();
 
-	for (int i = 0; i < arg_count; ++i) {
-		auto& arg_decl = ast->m_args[i];
-		env.declare(arg_decl.identifier_text(), &arg_decl);
-	}
+	for (int i = 0; i < arg_count; ++i)
+		env.declare(ast->m_args[i].identifier_text(), &ast->m_args[i]);
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
+	auto body = static_cast<TypedAST::Block*>(ast->m_body);
 	for (auto& child : body->m_body)
-		CHECK_AND_RETURN(match_identifiers(child.get(), env));
+		CHECK_AND_RETURN(match_identifiers(child, env));
 
 	env.end_scope();
 	env.exit_function();
@@ -115,7 +113,7 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& element : ast->m_elements)
-		CHECK_AND_RETURN(match_identifiers(element.get(), env));
+		CHECK_AND_RETURN(match_identifiers(element, env));
 
 	return {};
 }
@@ -124,10 +122,10 @@ namespace TypeChecker {
     TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
-	CHECK_AND_RETURN(match_identifiers(ast->m_declaration.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_action.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
+	CHECK_AND_RETURN(match_identifiers(&ast->m_declaration, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_action, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 
 	env.end_scope();
 	return {};
@@ -137,8 +135,8 @@ namespace TypeChecker {
     TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
-	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_body.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 
 	env.end_scope();
 	return {};
@@ -146,41 +144,41 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_value.get(), env);
+	return match_identifiers(ast->m_value, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_index.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_index, env));
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	CHECK_AND_RETURN(match_identifiers(ast->m_condition.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_then_expr.get(), env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_else_expr.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_then_expr, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_else_expr, env));
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_record.get(), env);
+	return match_identifiers(ast->m_record, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
-		env.declare(decl->identifier_text(), decl.get());
-		decl->m_surrounding_function = env.current_function();
+		env.declare(decl.identifier_text(), &decl);
+		decl.m_surrounding_function = env.current_function();
 	}
 
 	for (auto& decl : ast->m_declarations) {
-		env.enter_top_level_decl(decl.get());
+		env.enter_top_level_decl(&decl);
 
-		if (decl->m_value)
-			CHECK_AND_RETURN(match_identifiers(decl->m_value.get(), env));
+		if (decl.m_value)
+			CHECK_AND_RETURN(match_identifiers(decl.m_value, env));
 
 		env.exit_top_level_decl();
 	}
@@ -192,16 +190,16 @@ namespace TypeChecker {
     TypedAST::StructExpression* ast, Frontend::CompileTimeEnvironment& env) {
 
 	for (auto& type : ast->m_types)
-		CHECK_AND_RETURN(match_identifiers(type.get(), env));
+		CHECK_AND_RETURN(match_identifiers(type, env));
 
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::TypeTerm* ast, Frontend::CompileTimeEnvironment& env) {
-	CHECK_AND_RETURN(match_identifiers(ast->m_callee.get(), env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
 	for (auto& arg : ast->m_args)
-		CHECK_AND_RETURN(match_identifiers(arg.get(), env));
+		CHECK_AND_RETURN(match_identifiers(arg, env));
 	return {};
 }
 

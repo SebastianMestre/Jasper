@@ -7,7 +7,7 @@
 
 namespace TypeChecker {
 
-TypeChecker::TypeChecker() {
+TypeChecker::TypeChecker(TypedAST::Allocator& allocator) : m_typed_ast_allocator(&allocator) {
 	// INVARIANT: we care only for the headers,
 	// wether something's a var or a term and which one
 	m_core.m_meta_core.new_term(-1); // 0 | value
@@ -181,9 +181,9 @@ void TypeChecker::declare_builtin(InternedString const& name, MetaTypeId meta_ty
 	// BIG HACK:
 	// if we are declaring a typefunc, 'poly_type' is actually a TypeFunctionId
 	if (meta_type == meta_typefunc()) {
-		auto handle = std::make_unique<TypedAST::TypeFunctionHandle>();
+		auto handle = m_typed_ast_allocator->make<TypedAST::TypeFunctionHandle>();
 		handle->m_value = poly_type;
-		decl->m_value = std::move(handle);
+		decl->m_value = handle;
 	} else {
 		decl->m_decl_type = poly_type;
 		decl->m_is_polymorphic = true;
