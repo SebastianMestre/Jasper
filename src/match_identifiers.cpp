@@ -47,6 +47,14 @@ namespace TypeChecker {
 	TypedAST::FunctionLiteral* surrounding_function =
 	    declaration->m_surrounding_function;
 
+	if(!surrounding_function){
+		ast->m_origin = TypedAST::Identifier::Origin::Global;
+	} else if(surrounding_function != env.current_function()) {
+		ast->m_origin = TypedAST::Identifier::Origin::Capture;
+	} else {
+		ast->m_origin = TypedAST::Identifier::Origin::Local;
+	}
+
 	// dont capture globals
 	if (surrounding_function) {
 		for (int i = env.m_function_stack.size(); i--;) {

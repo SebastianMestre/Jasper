@@ -47,6 +47,8 @@ struct Declaration : public TypedAST {
 	bool m_is_polymorphic {false};
 	PolyId m_decl_type;
 
+	int m_frame_offset {-1};
+
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
 
@@ -153,8 +155,13 @@ struct FunctionLiteral : public TypedAST {
 
 // the ast_vtype must be computed
 struct Identifier : public TypedAST {
+	enum class Origin { Global, Capture, Local };
+
 	Token const* m_token;
 	Declaration* m_declaration {nullptr};
+
+	Origin m_origin;
+	int m_frame_offset {-1};
 
 	InternedString const& text() {
 		return m_token->m_text;

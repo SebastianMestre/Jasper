@@ -7,6 +7,7 @@ OBJDIR := ../build
 OBJNAMES := \
 	ast.o \
 	compile_time_environment.o \
+	compute_offsets.o \
 	ct_eval.o \
 	desugar.o \
 	error_report.o \

@@ -12,10 +12,12 @@
 namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
-	// TODO: type and mutable check -> return error
+	e.m_stack.resize(e.m_stack_ptr);
 	e.declare(ast->identifier_text(), e.null());
+	auto* ref = e.access(ast->identifier_text());
+	e.m_stack.push_back(ref);
+	e.m_stack_ptr += 1;
 	if (ast->m_value) {
-		auto* ref = e.access(ast->identifier_text());
 		auto value = eval(ast->m_value.get(), e);
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
@@ -102,11 +104,21 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
-	return e.access(ast->text());
+	if (ast->m_origin == TypedAST::Identifier::Origin::Local) {
+		if(ast->m_frame_offset == -1){
+			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
+		}
+		assert(ast->m_frame_offset != -1);
+		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
+	} else {
+		// slow path
+		return e.access(ast->text());
+	}
 };
 
 gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
+	e.m_sp_stack.push_back(e.m_stack_ptr);
 	e.new_nested_scope();
 
 	for (auto& stmt : ast->m_body) {
@@ -116,6 +128,8 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 	}
 
 	e.end_scope();
+	e.m_stack_ptr = e.m_sp_stack.back();
+	e.m_sp_stack.pop_back();
 
 	return e.null();
 };
@@ -141,13 +155,26 @@ auto is_callable_value(Value* v) -> bool {
 gc_ptr<Value> eval_call_function(
     gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 
+	e.m_fp_stack.push_back(e.m_frame_ptr);
+	e.m_sp_stack.push_back(e.m_stack_ptr);
+	e.m_frame_ptr = e.m_stack_ptr;
+
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
 
 	e.new_scope();
-	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
+	int arg_count = callee->m_def->m_args.size();
+	e.m_stack.resize(e.m_stack_ptr);
+	e.m_stack.reserve(e.m_stack_ptr + arg_count);
+	for (int i = 0; i < int(arg_count); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
-		e.declare(argdecl.identifier_text(), unboxed(args[i].get()));
+		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
+
+		auto val = unboxed(args[i].get());
+		auto ref = e.new_reference(val);
+		e.direct_declare(argdecl.identifier_text(), ref.get());
+		e.m_stack.push_back(ref.get());
+		e.m_stack_ptr += 1;
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
@@ -163,6 +190,12 @@ gc_ptr<Value> eval_call_function(
 	eval(body, e);
 
 	e.end_scope();
+
+	e.m_frame_ptr = e.m_fp_stack.back();
+	e.m_fp_stack.pop_back();
+
+	e.m_stack_ptr = e.m_sp_stack.back();
+	e.m_sp_stack.pop_back();
 
 	return e.fetch_return_value();
 }

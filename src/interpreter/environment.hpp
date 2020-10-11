@@ -28,6 +28,12 @@ struct Environment {
 	Scope* m_scope;
 	Value* m_return_value {nullptr};
 
+	int m_frame_ptr {0};
+	int m_stack_ptr {0};
+	std::vector<Reference*> m_stack;
+	std::vector<int> m_fp_stack;
+	std::vector<int> m_sp_stack;
+
 	Environment(GC* gc)
 	    : m_gc {gc}
 	    , m_scope {&m_global_scope} {}
