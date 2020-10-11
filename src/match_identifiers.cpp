@@ -46,22 +46,20 @@ namespace TypeChecker {
 	ast->m_surrounding_function = env.current_function();
 
 	env.current_top_level_declaration()->m_references.insert(declaration);
-	TypedAST::FunctionLiteral* surrounding_function =
-	    declaration->m_surrounding_function;
 
-	if(!surrounding_function){
+	if (!declaration->m_surrounding_function) {
 		ast->m_origin = TypedAST::Identifier::Origin::Global;
-	} else if(surrounding_function != env.current_function()) {
+	} else if (declaration->m_surrounding_function != ast->m_surrounding_function) {
 		ast->m_origin = TypedAST::Identifier::Origin::Capture;
 	} else {
 		ast->m_origin = TypedAST::Identifier::Origin::Local;
 	}
 
 	// dont capture globals
-	if (surrounding_function) {
+	if (declaration->m_surrounding_function) {
 		for (int i = env.m_function_stack.size(); i--;) {
 			auto* func = env.m_function_stack[i];
-			if (func == surrounding_function)
+			if (func == declaration->m_surrounding_function)
 				break;
 			func->m_captures.insert({ast->text(), {declaration}});
 		}

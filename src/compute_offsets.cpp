@@ -15,7 +15,14 @@ void compute_offsets(TypedAST::Declaration* ast, int frame_offset) {
 
 void compute_offsets(TypedAST::Identifier* ast, int frame_offset) {
 	TypedAST::Declaration* decl = ast->m_declaration;
-	ast->m_frame_offset = decl->m_frame_offset;
+	if (ast->m_origin == TypedAST::Identifier::Origin::Local) {
+		ast->m_frame_offset = decl->m_frame_offset;
+	} else if (ast->m_origin == TypedAST::Identifier::Origin::Capture) {
+		auto& capture_data = ast->m_surrounding_function->m_captures[ast->text()];
+		ast->m_frame_offset = capture_data.inner_frame_offset;
+	} else {
+		return;
+	}
 }
 
 //TODO
@@ -43,11 +50,29 @@ void compute_offsets(TypedAST::CallExpression* ast, int frame_offset) {
 }
 
 void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
-	// functions always start a new frame
+	// functions start a new frame
 	frame_offset = 0;
 
+	// first thing in a frame are captures
+	for (auto& kv : ast->m_captures) {
+		kv.second.inner_frame_offset = frame_offset++;
+		auto decl = kv.second.outer_declaration;
+		if (decl->m_surrounding_function == ast->m_surrounding_function) {
+			// capture of a local variable
+			// just use the frame offset of the declaration
+			kv.second.outer_frame_offset = decl->m_frame_offset;
+		} else {
+			// capture of a capture
+			// look at the captures of the surrounding function
+			kv.second.outer_frame_offset =
+			    ast->m_surrounding_function->m_captures[kv.first].inner_frame_offset;
+		}
+	}
+
+	// second thing in a frame: arguments
 	for (auto& arg_decl : ast->m_args)
 		arg_decl.m_frame_offset = frame_offset++;
+
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);
