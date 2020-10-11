@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "token.hpp"
@@ -144,10 +145,17 @@ struct DictionaryLiteral : public TypedAST {
 };
 
 struct FunctionLiteral : public TypedAST {
+	struct CaptureData {
+		Declaration* outer_declaration{nullptr};
+		int outer_frame_offset{-1};
+		int inner_frame_offset{-1};
+	};
+
 	MonoId m_return_type;
 	Own<TypedAST> m_body;
 	std::vector<Declaration> m_args;
-	std::unordered_set<InternedString> m_captures;
+	std::unordered_map<InternedString, CaptureData> m_captures;
+	FunctionLiteral* m_surrounding_function {nullptr};
 
 	FunctionLiteral()
 	    : TypedAST {TypedASTTag::FunctionLiteral} {}
@@ -159,6 +167,7 @@ struct Identifier : public TypedAST {
 
 	Token const* m_token;
 	Declaration* m_declaration {nullptr};
+	FunctionLiteral* m_surrounding_function {nullptr};
 
 	Origin m_origin;
 	int m_frame_offset {-1};

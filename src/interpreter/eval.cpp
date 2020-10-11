@@ -279,7 +279,7 @@ gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
 	for (auto const& identifier : ast->m_captures) {
-		result->m_captures[identifier] = e.m_scope->access(identifier);
+		result->m_captures[identifier.first] = e.m_scope->access(identifier.first);
 	}
 
 	return result;

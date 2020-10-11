@@ -43,6 +43,8 @@ namespace TypeChecker {
 	}
 
 	ast->m_declaration = declaration;
+	ast->m_surrounding_function = env.current_function();
+
 	env.current_top_level_declaration()->m_references.insert(declaration);
 	TypedAST::FunctionLiteral* surrounding_function =
 	    declaration->m_surrounding_function;
@@ -61,7 +63,7 @@ namespace TypeChecker {
 			auto* func = env.m_function_stack[i];
 			if (func == surrounding_function)
 				break;
-			func->m_captures.insert(ast->text());
+			func->m_captures.insert({ast->text(), {declaration}});
 		}
 	}
 
@@ -97,6 +99,8 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+
+	ast->m_surrounding_function = env.current_function();
 
 	env.enter_function(ast);
 	env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
