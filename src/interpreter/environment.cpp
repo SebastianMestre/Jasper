@@ -7,8 +7,8 @@
 namespace Interpreter {
 
 void Scope::declare(const Identifier& i, Reference* v) {
-	// TODO: check name collision
-	m_declarations[i] = v;
+	auto insertion_result = m_declarations.insert({i, v});
+	assert(insertion_result.second);
 }
 
 Reference* Scope::access(const Identifier& i) {

@@ -13,9 +13,9 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	e.m_stack.resize(e.m_stack_ptr);
-	e.declare(ast->identifier_text(), e.null());
-	auto* ref = e.access(ast->identifier_text());
-	e.m_stack.push_back(ref);
+	auto ref = e.new_reference(e.null());
+	e.direct_declare(ast->identifier_text(), ref.get());
+	e.m_stack.push_back(ref.get());
 	e.m_stack_ptr += 1;
 	if (ast->m_value) {
 		auto value = eval(ast->m_value.get(), e);
