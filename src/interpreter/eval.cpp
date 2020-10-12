@@ -15,7 +15,7 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	auto ref = e.new_reference(e.null());
 	e.push_direct(ref.get());
 	if (ast->m_value) {
-		auto value = eval(ast->m_value.get(), e);
+		auto value = eval(ast->m_value, e);
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
 	}
@@ -25,8 +25,8 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
 		auto ref = e.new_reference(e.null());
-		e.global_declare_direct(decl->identifier_text(), ref.get());
-		auto value = eval(decl->m_value.get(), e);
+		e.global_declare_direct(decl.identifier_text(), ref.get());
+		auto value = eval(decl.m_value, e);
 		ref->m_value = value.get();
 	}
 	return e.null();
@@ -56,14 +56,10 @@ gc_ptr<Value> eval(TypedAST::NullLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 	auto result = e.new_object({});
 
-	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == TypedASTTag::Declaration);
-		TypedAST::Declaration* decl =
-		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
-
-		if (decl->m_value) {
-			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text()] = value.get();
+	for (auto& decl : ast->m_body) {
+		if (decl.m_value) {
+			auto value = eval(decl.m_value, e);
+			result->m_value[decl.identifier_text()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in object must have a value";
 			assert(0);
@@ -76,14 +72,10 @@ gc_ptr<Value> eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 	auto result = e.new_dictionary({});
 
-	for (auto& declTypeErased : ast->m_body) {
-		assert(declTypeErased->type() == TypedASTTag::Declaration);
-		TypedAST::Declaration* decl =
-		    static_cast<TypedAST::Declaration*>(declTypeErased.get());
-
-		if (decl->m_value) {
-			auto value = eval(decl->m_value.get(), e);
-			result->m_value[decl->identifier_text().str()] = value.get();
+	for (auto& decl : ast->m_body) {
+		if (decl.m_value) {
+			auto value = eval(decl.m_value, e);
+			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
 			assert(0);
@@ -97,7 +89,7 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 	auto result = e.new_list({});
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
-		auto value = eval(element.get(), e);
+		auto value = eval(element, e);
 		result->m_value.push_back(unboxed(value.get()));
 	}
 	return result;
@@ -120,8 +112,8 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
 	e.start_stack_region();
 
-	for (auto& stmt : ast->m_body) {
-		eval(stmt.get(), e);
+	for (auto stmt : ast->m_body) {
+		eval(stmt, e);
 		if (e.m_return_value)
 			break;
 	}
@@ -133,7 +125,7 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::ReturnStatement* ast, Environment& e) {
 	// TODO: proper error handling
-	auto value = eval(ast->m_value.get(), e);
+	auto value = eval(ast->m_value, e);
 	auto returning = unboxed(value.get());
 	assert(returning);
 
@@ -171,7 +163,7 @@ gc_ptr<Value> eval_call_function(
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
-	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body.get());
+	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
 	assert(body);
 
 	eval(body, e);
@@ -209,7 +201,7 @@ gc_ptr<Value> eval_call_callable(
 
 gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 
-	auto value = eval(ast->m_callee.get(), e);
+	auto value = eval(ast->m_callee, e);
 	auto* callee = unboxed(value.get());
 	assert(callee);
 
@@ -218,7 +210,7 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	std::vector<gc_ptr<Value>> args;
 	args.reserve(arglist.size());
 	for (int i = 0; i < int(arglist.size()); ++i) {
-		args.push_back(eval(arglist[i].get(), e));
+		args.push_back(eval(arglist[i], e));
 	}
 
 	return eval_call_callable(callee, std::move(args), e);
@@ -227,12 +219,12 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
-	auto callee_value = eval(ast->m_callee.get(), e);
+	auto callee_value = eval(ast->m_callee, e);
 	auto* callee = unboxed(callee_value.get());
 	assert(callee);
 	assert(callee->type() == ValueTag::Array);
 
-	auto index_value = eval(ast->m_index.get(), e);
+	auto index_value = eval(ast->m_index, e);
 	auto* index = unboxed(index_value.get());
 	assert(index);
 	assert(index->type() == ValueTag::Integer);
@@ -246,14 +238,14 @@ gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
 	// TODO: proper error handling
 
-	auto condition = eval(ast->m_condition.get(), e);
+	auto condition = eval(ast->m_condition, e);
 	auto* condition_value = unboxed(condition.get());
 	assert(condition_value);
 	assert(condition_value->type() == ValueTag::Boolean);
 
 	return static_cast<Boolean*>(condition_value)->m_value
-	       ? eval(ast->m_then_expr.get(), e)
-	       : eval(ast->m_else_expr.get(), e);
+	       ? eval(ast->m_then_expr, e)
+	       : eval(ast->m_else_expr, e);
 };
 
 gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
@@ -269,16 +261,16 @@ gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
-	auto condition_result = eval(ast->m_condition.get(), e);
+	auto condition_result = eval(ast->m_condition, e);
 	assert(condition_result);
 
 	assert(condition_result->type() == ValueTag::Boolean);
 	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
 	if (condition_result_b->m_value) {
-		eval(ast->m_body.get(), e);
+		eval(ast->m_body, e);
 	} else if (ast->m_else_body) {
-		eval(ast->m_else_body.get(), e);
+		eval(ast->m_else_body, e);
 	}
 
 	return e.null();
@@ -289,11 +281,11 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 	e.start_stack_region();
 
 	// NOTE: this is kinda fishy. why do we assert here?
-	auto declaration = eval(ast->m_declaration.get(), e);
+	auto declaration = eval(&ast->m_declaration, e);
 	assert(declaration);
 
 	while (1) {
-		auto condition_result = eval(ast->m_condition.get(), e);
+		auto condition_result = eval(ast->m_condition, e);
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
@@ -303,13 +295,13 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		if (!condition_result_b->m_value)
 			break;
 
-		eval(ast->m_body.get(), e);
+		eval(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;
 
 		// NOTE: this is kinda fishy. why do we assert here?
-		auto loop_action = eval(ast->m_action.get(), e);
+		auto loop_action = eval(ast->m_action, e);
 		assert(loop_action);
 	}
 
@@ -320,7 +312,7 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 	while (1) {
-		auto condition_result = eval(ast->m_condition.get(), e);
+		auto condition_result = eval(ast->m_condition, e);
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
@@ -330,7 +322,7 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 		if (!condition_result_b->m_value)
 			break;
 
-		eval(ast->m_body.get(), e);
+		eval(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;

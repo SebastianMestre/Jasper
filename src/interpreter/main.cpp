@@ -7,6 +7,7 @@
 #include "../parse.hpp"
 #include "../token_array.hpp"
 #include "../typed_ast.hpp"
+#include "../typed_ast_allocator.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
@@ -35,11 +36,12 @@ int main() {
 		    {
 			    TokenArray ta;
 			    AST::Allocator ast_allocator;
+			    TypedAST::Allocator typed_ast_allocator;
 
 			    auto top_level_call_ast = parse_expression("__invoke()", ta, ast_allocator);
-			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result);
+			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
-			    auto result = eval(top_level_call.get(), env);
+			    auto result = eval(top_level_call, env);
 
 			    if (result)
 				    Interpreter::print(result.get());

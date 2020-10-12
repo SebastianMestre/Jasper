@@ -35,13 +35,15 @@ struct TypedAST {
 	virtual ~TypedAST() = default;
 };
 
-Own<TypedAST> convert_ast(AST::AST*);
+struct Allocator;
+
+TypedAST* convert_ast(AST::AST*, Allocator& alloc);
 
 struct FunctionLiteral;
 
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
-	Own<TypedAST> m_value; // can be nullptr
+	TypedAST* m_value {nullptr}; // can be nullptr
 
 	std::unordered_set<Declaration*> m_references;
 
@@ -63,7 +65,7 @@ struct Declaration : public TypedAST {
 
 // doesnt have a ast_vtype
 struct DeclarationList : public TypedAST {
-	std::vector<Own<Declaration>> m_declarations;
+	std::vector<Declaration> m_declarations;
 
 	DeclarationList()
 	    : TypedAST {TypedASTTag::DeclarationList} {}
@@ -122,7 +124,7 @@ struct NullLiteral : public TypedAST {
 };
 
 struct ObjectLiteral : public TypedAST {
-	std::vector<Own<TypedAST>> m_body;
+	std::vector<Declaration> m_body;
 
 	// future feature
 	// the value type for objects must be followeb by a class identifier
@@ -131,14 +133,14 @@ struct ObjectLiteral : public TypedAST {
 };
 
 struct ArrayLiteral : public TypedAST {
-	std::vector<Own<TypedAST>> m_elements;
+	std::vector<TypedAST*> m_elements;
 
 	ArrayLiteral()
 	    : TypedAST {TypedASTTag::ArrayLiteral} {}
 };
 
 struct DictionaryLiteral : public TypedAST {
-	std::vector<Own<TypedAST>> m_body;
+	std::vector<Declaration> m_body;
 
 	DictionaryLiteral()
 	    : TypedAST {TypedASTTag::DictionaryLiteral} {}
@@ -152,7 +154,7 @@ struct FunctionLiteral : public TypedAST {
 	};
 
 	MonoId m_return_type;
-	Own<TypedAST> m_body;
+	TypedAST* m_body;
 	std::vector<Declaration> m_args;
 	std::unordered_map<InternedString, CaptureData> m_captures;
 	FunctionLiteral* m_surrounding_function {nullptr};
@@ -166,7 +168,7 @@ struct Identifier : public TypedAST {
 	enum class Origin { Global, Capture, Local };
 
 	Token const* m_token;
-	Declaration* m_declaration {nullptr};
+	Declaration* m_declaration {nullptr}; // can be nullptr
 	FunctionLiteral* m_surrounding_function {nullptr};
 
 	Origin m_origin;
@@ -182,23 +184,23 @@ struct Identifier : public TypedAST {
 
 // the value depends on the return value of callee
 struct CallExpression : public TypedAST {
-	Own<TypedAST> m_callee;
-	std::vector<Own<TypedAST>> m_args;
+	TypedAST* m_callee;
+	std::vector<TypedAST*> m_args;
 
 	CallExpression()
 	    : TypedAST {TypedASTTag::CallExpression} {}
 };
 
 struct IndexExpression : public TypedAST {
-	Own<TypedAST> m_callee;
-	Own<TypedAST> m_index;
+	TypedAST* m_callee;
+	TypedAST* m_index;
 
 	IndexExpression()
 	    : TypedAST {TypedASTTag::IndexExpression} {}
 };
 
 struct RecordAccessExpression : public TypedAST {
-	Own<TypedAST> m_record;
+	TypedAST* m_record;
 	Token const* m_member;
 
 	RecordAccessExpression()
@@ -206,50 +208,50 @@ struct RecordAccessExpression : public TypedAST {
 };
 
 struct TernaryExpression : public TypedAST {
-	Own<TypedAST> m_condition;
-	Own<TypedAST> m_then_expr;
-	Own<TypedAST> m_else_expr;
+	TypedAST* m_condition;
+	TypedAST* m_then_expr;
+	TypedAST* m_else_expr;
 
 	TernaryExpression()
 	    : TypedAST {TypedASTTag::TernaryExpression} {}
 };
 
 struct Block : public TypedAST {
-	std::vector<Own<TypedAST>> m_body;
+	std::vector<TypedAST*> m_body;
 
 	Block()
 	    : TypedAST {TypedASTTag::Block} {}
 };
 
 struct ReturnStatement : public TypedAST {
-	Own<TypedAST> m_value;
+	TypedAST* m_value;
 
 	ReturnStatement()
 	    : TypedAST {TypedASTTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public TypedAST {
-	Own<TypedAST> m_condition;
-	Own<TypedAST> m_body;
-	Own<TypedAST> m_else_body; // can be nullptr
+	TypedAST* m_condition;
+	TypedAST* m_body;
+	TypedAST* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
 	    : TypedAST {TypedASTTag::IfElseStatement} {}
 };
 
 struct ForStatement : public TypedAST {
-	Own<TypedAST> m_declaration;
-	Own<TypedAST> m_condition;
-	Own<TypedAST> m_action;
-	Own<TypedAST> m_body;
+	Declaration m_declaration;
+	TypedAST* m_condition;
+	TypedAST* m_action;
+	TypedAST* m_body;
 
 	ForStatement()
 	    : TypedAST {TypedASTTag::ForStatement} {}
 };
 
 struct WhileStatement : public TypedAST {
-	Own<TypedAST> m_condition;
-	Own<TypedAST> m_body;
+	TypedAST* m_condition;
+	TypedAST* m_body;
 
 	WhileStatement()
 	    : TypedAST {TypedASTTag::WhileStatement} {}
@@ -257,15 +259,15 @@ struct WhileStatement : public TypedAST {
 
 struct StructExpression : public TypedAST {
 	std::vector<Identifier> m_fields;
-	std::vector<Own<TypedAST>> m_types;
+	std::vector<TypedAST*> m_types;
 
 	StructExpression()
 	    : TypedAST {TypedASTTag::StructExpression} {}
 };
 
 struct TypeTerm : public TypedAST {
-	Own<TypedAST> m_callee;
-	std::vector<Own<TypedAST>> m_args; // should these be TypeTerms?
+	TypedAST* m_callee;
+	std::vector<TypedAST*> m_args; // should these be TypeTerms?
 
 	TypeTerm()
 	    : TypedAST {TypedASTTag::TypeTerm} {}
@@ -274,7 +276,7 @@ struct TypeTerm : public TypedAST {
 struct TypeFunctionHandle : public TypedAST {
 	TypeFunctionId m_value;
 	// points to the ast node this one was made from
-	Own<TypedAST> m_syntax;
+	TypedAST* m_syntax;
 
 	TypeFunctionHandle()
 	    : TypedAST {TypedASTTag::TypeFunctionHandle} {}
@@ -283,7 +285,7 @@ struct TypeFunctionHandle : public TypedAST {
 struct MonoTypeHandle : public TypedAST {
 	MonoId m_value;
 	// points to the ast node this one was made from
-	Own<TypedAST> m_syntax;
+	TypedAST* m_syntax;
 
 	MonoTypeHandle()
 	    : TypedAST {TypedASTTag::MonoTypeHandle} {}

@@ -10,7 +10,7 @@ namespace TypeChecker {
 
 void compute_offsets(TypedAST::Declaration* ast, int frame_offset) {
 	if (ast->m_value)
-		compute_offsets(ast->m_value.get(), frame_offset);
+		compute_offsets(ast->m_value, frame_offset);
 }
 
 void compute_offsets(TypedAST::Identifier* ast, int frame_offset) {
@@ -29,24 +29,24 @@ void compute_offsets(TypedAST::Identifier* ast, int frame_offset) {
 void compute_offsets(TypedAST::Block* ast, int frame_offset) {
 	for (auto& child : ast->m_body) {
 		if (child->type() == TypedASTTag::Declaration) {
-			auto decl = static_cast<TypedAST::Declaration*>(child.get());
+			auto decl = static_cast<TypedAST::Declaration*>(child);
 			decl->m_frame_offset = frame_offset++;
 		}
-		compute_offsets(child.get(), frame_offset);
+		compute_offsets(child, frame_offset);
 	}
 }
 
 void compute_offsets(TypedAST::IfElseStatement* ast, int frame_offset) {
-	compute_offsets(ast->m_condition.get(), frame_offset);
-	compute_offsets(ast->m_body.get(), frame_offset);
+	compute_offsets(ast->m_condition, frame_offset);
+	compute_offsets(ast->m_body, frame_offset);
 	if (ast->m_else_body)
-		compute_offsets(ast->m_else_body.get(), frame_offset);
+		compute_offsets(ast->m_else_body, frame_offset);
 }
 
 void compute_offsets(TypedAST::CallExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_callee.get(), frame_offset);
+	compute_offsets(ast->m_callee, frame_offset);
 	for (auto& arg : ast->m_args)
-		compute_offsets(arg.get(), frame_offset);
+		compute_offsets(arg, frame_offset);
 }
 
 void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
@@ -76,64 +76,64 @@ void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body.get());
+	auto body = static_cast<TypedAST::Block*>(ast->m_body);
 	compute_offsets(body, frame_offset);
 }
 
 void compute_offsets(TypedAST::ArrayLiteral* ast, int frame_offset) {
 	for (auto& element : ast->m_elements)
-		compute_offsets(element.get(), frame_offset);
+		compute_offsets(element, frame_offset);
 }
 
 void compute_offsets(TypedAST::ForStatement* ast, int frame_offset) {
-	auto decl = static_cast<TypedAST::Declaration*>(ast->m_declaration.get());
-	decl->m_frame_offset = frame_offset++;
-	compute_offsets(ast->m_declaration.get(), frame_offset);
-	compute_offsets(ast->m_condition.get(), frame_offset+1);
-	compute_offsets(ast->m_action.get(), frame_offset+1);
-	compute_offsets(ast->m_body.get(), frame_offset+1);
+	auto& decl = ast->m_declaration;
+	decl.m_frame_offset = frame_offset++;
+	compute_offsets(&ast->m_declaration, frame_offset);
+	compute_offsets(ast->m_condition, frame_offset+1);
+	compute_offsets(ast->m_action, frame_offset+1);
+	compute_offsets(ast->m_body, frame_offset+1);
 }
 
 void compute_offsets(TypedAST::WhileStatement* ast, int frame_offset) {
-	compute_offsets(ast->m_condition.get(), frame_offset);
-	compute_offsets(ast->m_body.get(), frame_offset);
+	compute_offsets(ast->m_condition, frame_offset);
+	compute_offsets(ast->m_body, frame_offset);
 }
 
 void compute_offsets(TypedAST::ReturnStatement* ast, int frame_offset) {
-	compute_offsets(ast->m_value.get(), frame_offset);
+	compute_offsets(ast->m_value, frame_offset);
 }
 
 void compute_offsets(TypedAST::IndexExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_callee.get(), frame_offset);
-	compute_offsets(ast->m_index.get(), frame_offset);
+	compute_offsets(ast->m_callee, frame_offset);
+	compute_offsets(ast->m_index, frame_offset);
 }
 
 void compute_offsets(TypedAST::TernaryExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_condition.get(), frame_offset);
-	compute_offsets(ast->m_then_expr.get(), frame_offset);
-	compute_offsets(ast->m_else_expr.get(), frame_offset);
+	compute_offsets(ast->m_condition, frame_offset);
+	compute_offsets(ast->m_then_expr, frame_offset);
+	compute_offsets(ast->m_else_expr, frame_offset);
 }
 
 void compute_offsets(TypedAST::RecordAccessExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_record.get(), frame_offset);
+	compute_offsets(ast->m_record, frame_offset);
 }
 
 void compute_offsets(TypedAST::DeclarationList* ast, int frame_offset) {
 	for (auto& decl : ast->m_declarations) {
-		if (decl->m_value)
-			compute_offsets(decl->m_value.get(), frame_offset);
+		if (decl.m_value)
+			compute_offsets(decl.m_value, frame_offset);
 	}
 }
 
 void compute_offsets(TypedAST::StructExpression* ast, int frame_offset) {
 	for (auto& type : ast->m_types)
-		compute_offsets(type.get(), frame_offset);
+		compute_offsets(type, frame_offset);
 }
 
 void compute_offsets(TypedAST::TypeTerm* ast, int frame_offset) {
-	compute_offsets(ast->m_callee.get(), frame_offset);
+	compute_offsets(ast->m_callee, frame_offset);
 	for (auto& arg : ast->m_args)
-		compute_offsets(arg.get(), frame_offset);
+		compute_offsets(arg, frame_offset);
 }
 
 void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {

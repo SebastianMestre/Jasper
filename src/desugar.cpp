@@ -19,7 +19,7 @@ Declaration* desugar(Declaration* ast, Allocator& alloc) {
 
 AST* desugar(DeclarationList* ast, Allocator& alloc) {
 	for (auto& declaration : ast->m_declarations)
-		declaration = desugar(declaration, alloc);
+		desugar(&declaration, alloc);
 
 	return ast;
 }
@@ -30,7 +30,7 @@ AST* desugar(ObjectLiteral* ast, Allocator& alloc) {
 	// into
 	// struct { x : t1; y : t2; } { e1; e2; }
 	for (int i = 0; i < ast->m_body.size(); ++i)
-		ast->m_body[i] = desugar(ast->m_body[i], alloc);
+		desugar(&ast->m_body[i], alloc);
 
 	return ast;
 }
@@ -44,14 +44,14 @@ AST* desugar(ArrayLiteral* ast, Allocator& alloc) {
 
 AST* desugar(DictionaryLiteral* ast, Allocator& alloc) {
 	for (int i = 0; i < ast->m_body.size(); ++i)
-		ast->m_body[i] = desugar(ast->m_body[i], alloc);
+		desugar(&ast->m_body[i], alloc);
 
 	return ast;
 }
 
 AST* desugar(FunctionLiteral* ast, Allocator& alloc) {
 	for (auto& arg : ast->m_args)
-		arg = desugar(arg, alloc);
+		desugar(&arg, alloc);
 
 	ast->m_body = desugar(ast->m_body, alloc);
 
@@ -66,8 +66,10 @@ AST* desugar(ShortFunctionLiteral* ast, Allocator& alloc) {
 	block->m_body.push_back(return_stmt);
 
 	auto func = alloc.make<FunctionLiteral>();
-	for (auto& arg : ast->m_args)
-		func->m_args.push_back(desugar(arg, alloc));
+	func->m_args = std::move(ast->m_args);
+
+	for (auto& arg : func->m_args)
+		desugar(&arg, alloc);
 
 	func->m_body = block;
 
@@ -162,7 +164,7 @@ AST* desugar(IfElseStatement* ast, Allocator& alloc) {
 }
 
 AST* desugar(ForStatement* ast, Allocator& alloc) {
-	ast->m_declaration = desugar(ast->m_declaration, alloc);
+	desugar(&ast->m_declaration, alloc);
 	ast->m_condition = desugar(ast->m_condition, alloc);
 	ast->m_action = desugar(ast->m_action, alloc);
 	ast->m_body = desugar(ast->m_body, alloc);

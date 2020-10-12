@@ -4,6 +4,7 @@
 #include "compile_time_environment.hpp"
 #include "interned_string.hpp"
 #include "typesystem.hpp"
+#include "typed_ast_allocator.hpp"
 
 namespace TypeChecker {
 
@@ -13,7 +14,9 @@ struct TypeChecker {
 	Frontend::CompileTimeEnvironment m_env;
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 
-	TypeChecker();
+	TypedAST::Allocator* m_typed_ast_allocator;
+
+	TypeChecker(TypedAST::Allocator& allocator);
 
 	void declare_builtin(InternedString const& name, MetaTypeId, PolyId);
 
