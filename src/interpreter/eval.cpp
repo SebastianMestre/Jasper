@@ -27,7 +27,7 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
 		auto ref = e.new_reference(e.null());
-		e.direct_declare(decl->identifier_text(), ref.get());
+		e.global_declare(decl->identifier_text(), ref.get());
 		auto value = eval(decl->m_value.get(), e);
 		ref->m_value = value.get();
 	}
@@ -114,7 +114,7 @@ gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
 	} else {
 		// slow path
-		return e.access(ast->text());
+		return e.global_access(ast->text());
 	}
 };
 

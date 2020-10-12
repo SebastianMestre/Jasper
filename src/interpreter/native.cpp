@@ -366,52 +366,52 @@ Value* value_assign(ArrayType v, Environment& e) {
 }
 
 void declare_native_functions(Environment& env) {
-	env.declare(
+	env.global_declare(
 	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
 
-	env.declare(
+	env.global_declare(
 	    "array_append",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&array_append)));
 
-	env.declare(
+	env.global_declare(
 	    "array_extend",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&array_extend)));
 
-	env.declare(
+	env.global_declare(
 	    "size", env.new_native_function(static_cast<NativeFunctionType*>(&size)));
 
-	env.declare(
+	env.global_declare(
 	    "array_join",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&array_join)));
 
-	env.declare(
+	env.global_declare(
 	    "array_at",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&array_at)));
 
-	env.declare(
+	env.global_declare(
 	    "+", env.new_native_function(static_cast<NativeFunctionType*>(&value_add)));
-	env.declare(
+	env.global_declare(
 	    "-", env.new_native_function(static_cast<NativeFunctionType*>(&value_sub)));
-	env.declare(
+	env.global_declare(
 	    "*", env.new_native_function(static_cast<NativeFunctionType*>(&value_mul)));
-	env.declare(
+	env.global_declare(
 	    "/", env.new_native_function(static_cast<NativeFunctionType*>(&value_div)));
-	env.declare(
+	env.global_declare(
 	    "<",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_less)));
-	env.declare(
+	env.global_declare(
 	    "=",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_assign)));
-	env.declare(
+	env.global_declare(
 	    "==",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_equals)));
-	env.declare(
+	env.global_declare(
 	    "^^",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicxor)));
-	env.declare(
+	env.global_declare(
 	    "&&",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicand)));
-	env.declare(
+	env.global_declare(
 	    "||",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicor)));
 }

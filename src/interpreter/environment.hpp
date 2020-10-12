@@ -43,14 +43,12 @@ struct Environment {
 
 	void run_gc();
 
-	// SHORT-HANDS
+	// Binds a global name to the given reference
+	void global_declare(const Identifier& i, Reference* v);
+	void global_declare(const Identifier& i, Value* v);
+	void global_declare(const Identifier& i, gc_ptr<Value> v);
 
-	// Binds a name to a new reference of the given value
-	void declare(const Identifier&, Value*);
-	void declare(const Identifier&, gc_ptr<Value>);
-	// Binds a name to the given reference
-	void direct_declare(const Identifier& i, Reference* v);
-	Reference* access(const Identifier&);
+	Reference* global_access(const Identifier& i);
 
 	auto null() -> Null*;
 	auto new_integer(int) -> gc_ptr<Integer>;

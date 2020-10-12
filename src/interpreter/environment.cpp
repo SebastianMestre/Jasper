@@ -49,27 +49,23 @@ void Environment::run_gc() {
 	m_gc->sweep();
 }
 
-void Environment::direct_declare(const Identifier& i, Reference* r) {
-	if (r->type() != ValueTag::Reference) {
-		assert(0 && "directly declared a non-reference!");
-	}
-	m_scope->declare(i, r);
+void Environment::global_declare(const Identifier& i, Reference* r) {
+	m_global_scope.declare(i, r);
 }
 
-void Environment::declare(const Identifier& i, gc_ptr<Value> v) {
-	declare(i, v.get());
-}
-
-void Environment::declare(const Identifier& i, Value* v) {
-	if (v->type() == ValueTag::Reference) {
+void Environment::global_declare(const Identifier& i, Value* v) {
+	if (v->type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
-	}
 	auto r = new_reference(v);
-	m_scope->declare(i, r.get());
+	global_declare(i, r.get());
 }
 
-Reference* Environment::access(const Identifier& i) {
-	return m_scope->access(i);
+void Environment::global_declare(const Identifier& i, gc_ptr<Value> v) {
+	global_declare(i, v.get());
+}
+
+Reference* Environment::global_access(const Identifier& i) {
+	return m_global_scope.access(i);
 }
 
 Null* Environment::null() {
