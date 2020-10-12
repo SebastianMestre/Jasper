@@ -22,7 +22,6 @@ struct Environment {
 	GC* m_gc;
 	Scope m_global_scope;
 
-	Scope* m_scope;
 	Value* m_return_value {nullptr};
 
 	int m_frame_ptr {0};
@@ -32,8 +31,7 @@ struct Environment {
 	std::vector<int> m_sp_stack;
 
 	Environment(GC* gc)
-	    : m_gc {gc}
-	    , m_scope {&m_global_scope} {}
+	    : m_gc {gc} {}
 
 	void save_return_value(Value*);
 	Value* fetch_return_value();
