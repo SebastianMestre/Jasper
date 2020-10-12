@@ -13,8 +13,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	auto ref = e.new_reference(e.null());
-	e.m_stack.push_back(ref.get());
-	e.m_stack_ptr += 1;
+	e.push_direct(ref.get());
 	if (ast->m_value) {
 		auto value = eval(ast->m_value.get(), e);
 		auto unboxed_val = unboxed(value.get());
@@ -158,8 +157,7 @@ gc_ptr<Value> eval_call_function(
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
-		e.m_stack.push_back(static_cast<Reference*>(kv.second));
-		e.m_stack_ptr += 1;
+		e.push_direct(static_cast<Reference*>(kv.second));
 	}
 
 	// TODO: error handling ?
@@ -169,11 +167,7 @@ gc_ptr<Value> eval_call_function(
 	for (int i = 0; i < int(arg_count); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
 		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
-
-		auto val = unboxed(args[i].get());
-		auto ref = e.new_reference(val);
-		e.m_stack.push_back(ref.get());
-		e.m_stack_ptr += 1;
+		e.push(unboxed(args[i].get()));
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 

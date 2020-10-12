@@ -49,6 +49,9 @@ struct Environment {
 	void start_stack_region();
 	void end_stack_region();
 
+	void push_direct(Reference* ref);
+	void push(Value* val);
+
 	auto null() -> Null*;
 	auto new_integer(int) -> gc_ptr<Integer>;
 	auto new_float(float) -> gc_ptr<Float>;

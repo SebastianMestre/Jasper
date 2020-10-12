@@ -94,6 +94,17 @@ void Environment::end_stack_region() {
 	m_stack.resize(m_stack_ptr);
 }
 
+void Environment::push_direct(Reference* ref){
+	m_stack.push_back(ref);
+	m_stack_ptr += 1;
+}
+
+void Environment::push(Value* val){
+	assert(val->type() != ValueTag::Reference);
+	auto ref = new_reference(val);
+	push_direct(ref.get());
+}
+
 Null* Environment::null() {
 	return m_gc->null();
 }
