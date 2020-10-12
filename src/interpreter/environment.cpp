@@ -14,16 +14,12 @@ void Scope::declare(const Identifier& i, Reference* v) {
 Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
-	if (v != m_declarations.end()) {
-		assert(v->second->type() == ValueTag::Reference);
-		return static_cast<Reference*>(v->second);
+	if (v == m_declarations.end()) {
+		// TODO: error
+		return nullptr;
 	}
 
-	if (m_parent != nullptr)
-		return m_parent->access(i);
-
-	// TODO: ReferenceError
-	return nullptr;
+	return v->second;
 }
 
 void Environment::save_return_value(Value* v) {
@@ -42,9 +38,11 @@ void Environment::run_gc() {
 	m_gc->unmark_all();
 	m_gc->mark_roots();
 
-	for (Scope* scope_it = m_scope; scope_it != nullptr; scope_it = scope_it->m_prev)
-		for (auto& p : scope_it->m_declarations)
-			gc_visit(p.second);
+	for (auto p : m_stack)
+		gc_visit(p);
+
+	for (auto& p : m_global_scope.m_declarations)
+		gc_visit(p.second);
 
 	m_gc->sweep();
 }

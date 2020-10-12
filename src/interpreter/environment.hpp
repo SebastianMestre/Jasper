@@ -12,10 +12,7 @@ namespace Interpreter {
 struct GC;
 
 struct Scope {
-	Scope* m_parent {nullptr};
-	Scope* m_prev {nullptr};
-	// TODO: store references instead of values
-	std::map<InternedString, Value*> m_declarations;
+	std::map<InternedString, Reference*> m_declarations;
 
 	void declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier& i);
