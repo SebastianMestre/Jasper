@@ -47,7 +47,7 @@ void Environment::run_gc() {
 	m_gc->sweep();
 }
 
-void Environment::global_declare(const Identifier& i, Reference* r) {
+void Environment::global_declare_direct(const Identifier& i, Reference* r) {
 	m_global_scope.declare(i, r);
 }
 
@@ -55,7 +55,7 @@ void Environment::global_declare(const Identifier& i, Value* v) {
 	if (v->type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
 	auto r = new_reference(v);
-	global_declare(i, r.get());
+	global_declare_direct(i, r.get());
 }
 
 void Environment::global_declare(const Identifier& i, gc_ptr<Value> v) {

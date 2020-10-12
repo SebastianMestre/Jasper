@@ -39,7 +39,7 @@ struct Environment {
 	void run_gc();
 
 	// Binds a global name to the given reference
-	void global_declare(const Identifier& i, Reference* v);
+	void global_declare_direct(const Identifier& i, Reference* v);
 	void global_declare(const Identifier& i, Value* v);
 	void global_declare(const Identifier& i, gc_ptr<Value> v);
 
