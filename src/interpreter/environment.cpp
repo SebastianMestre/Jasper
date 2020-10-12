@@ -47,6 +47,7 @@ void Environment::run_gc() {
 	m_gc->sweep();
 }
 
+
 void Environment::global_declare_direct(const Identifier& i, Reference* r) {
 	m_global_scope.declare(i, r);
 }
@@ -64,6 +65,33 @@ void Environment::global_declare(const Identifier& i, gc_ptr<Value> v) {
 
 Reference* Environment::global_access(const Identifier& i) {
 	return m_global_scope.access(i);
+}
+
+void Environment::start_stack_frame() {
+	m_fp_stack.push_back(m_frame_ptr);
+	m_sp_stack.push_back(m_stack_ptr);
+	m_frame_ptr = m_stack_ptr;
+}
+
+void Environment::end_stack_frame(){
+	m_frame_ptr = m_fp_stack.back();
+	m_fp_stack.pop_back();
+
+	m_stack_ptr = m_sp_stack.back();
+	m_sp_stack.pop_back();
+
+	m_stack.resize(m_stack_ptr);
+}
+
+void Environment::start_stack_region() {
+	m_sp_stack.push_back(m_stack_ptr);
+}
+
+void Environment::end_stack_region() {
+	m_stack_ptr = m_sp_stack.back();
+	m_sp_stack.pop_back();
+
+	m_stack.resize(m_stack_ptr);
 }
 
 Null* Environment::null() {

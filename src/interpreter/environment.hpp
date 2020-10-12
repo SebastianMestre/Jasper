@@ -42,8 +42,12 @@ struct Environment {
 	void global_declare_direct(const Identifier& i, Reference* v);
 	void global_declare(const Identifier& i, Value* v);
 	void global_declare(const Identifier& i, gc_ptr<Value> v);
-
 	Reference* global_access(const Identifier& i);
+
+	void start_stack_frame();
+	void end_stack_frame();
+	void start_stack_region();
+	void end_stack_region();
 
 	auto null() -> Null*;
 	auto new_integer(int) -> gc_ptr<Integer>;

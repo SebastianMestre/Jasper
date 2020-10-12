@@ -12,7 +12,6 @@
 namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
-	e.m_stack.resize(e.m_stack_ptr);
 	auto ref = e.new_reference(e.null());
 	e.m_stack.push_back(ref.get());
 	e.m_stack_ptr += 1;
@@ -120,7 +119,7 @@ gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
-	e.m_sp_stack.push_back(e.m_stack_ptr);
+	e.start_stack_region();
 
 	for (auto& stmt : ast->m_body) {
 		eval(stmt.get(), e);
@@ -128,8 +127,7 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 			break;
 	}
 
-	e.m_stack_ptr = e.m_sp_stack.back();
-	e.m_sp_stack.pop_back();
+	e.end_stack_region();
 
 	return e.null();
 };
@@ -155,10 +153,7 @@ auto is_callable_value(Value* v) -> bool {
 gc_ptr<Value> eval_call_function(
     gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 
-	e.m_fp_stack.push_back(e.m_frame_ptr);
-	e.m_sp_stack.push_back(e.m_stack_ptr);
-	e.m_frame_ptr = e.m_stack_ptr;
-	e.m_stack.resize(e.m_stack_ptr);
+	e.start_stack_frame();
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
@@ -187,11 +182,7 @@ gc_ptr<Value> eval_call_function(
 
 	eval(body, e);
 
-	e.m_frame_ptr = e.m_fp_stack.back();
-	e.m_fp_stack.pop_back();
-
-	e.m_stack_ptr = e.m_sp_stack.back();
-	e.m_sp_stack.pop_back();
+	e.end_stack_frame();
 
 	return e.fetch_return_value();
 }
@@ -301,6 +292,8 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 
+	e.start_stack_region();
+
 	// NOTE: this is kinda fishy. why do we assert here?
 	auto declaration = eval(ast->m_declaration.get(), e);
 	assert(declaration);
@@ -325,6 +318,8 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		auto loop_action = eval(ast->m_action.get(), e);
 		assert(loop_action);
 	}
+
+	e.end_stack_region();
 
 	return e.null();
 };
