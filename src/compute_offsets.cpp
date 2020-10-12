@@ -145,10 +145,6 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 	case TypedASTTag::type:                                                    \
 		return;
 
-#define REJECT(type)                                                           \
-	case TypedASTTag::type:                                                    \
-		assert(0);
-
 	switch (ast->type()) {
 		DO_NOTHING(NumberLiteral);
 		DO_NOTHING(IntegerLiteral);
@@ -177,7 +173,6 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(TypeTerm);
 	}
 
-#undef REJECT
 #undef DO_NOTHING
 #undef DISPATCH
 	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
