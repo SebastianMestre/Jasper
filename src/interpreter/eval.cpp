@@ -14,7 +14,6 @@ namespace Interpreter {
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	e.m_stack.resize(e.m_stack_ptr);
 	auto ref = e.new_reference(e.null());
-	e.direct_declare(ast->identifier_text(), ref.get());
 	e.m_stack.push_back(ref.get());
 	e.m_stack_ptr += 1;
 	if (ast->m_value) {
@@ -27,7 +26,10 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		eval(decl.get(), e);
+		auto ref = e.new_reference(e.null());
+		e.direct_declare(decl->identifier_text(), ref.get());
+		auto value = eval(decl->m_value.get(), e);
+		ref->m_value = value.get();
 	}
 	return e.null();
 };
@@ -104,10 +106,10 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
-	if (ast->m_origin == TypedAST::Identifier::Origin::Local) {
-		if(ast->m_frame_offset == -1){
+	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
+	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
+		if (ast->m_frame_offset == -1)
 			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
-		}
 		assert(ast->m_frame_offset != -1);
 		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
 	} else {
@@ -119,7 +121,6 @@ gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
 	e.m_sp_stack.push_back(e.m_stack_ptr);
-	e.new_nested_scope();
 
 	for (auto& stmt : ast->m_body) {
 		eval(stmt.get(), e);
@@ -127,7 +128,6 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 			break;
 	}
 
-	e.end_scope();
 	e.m_stack_ptr = e.m_sp_stack.back();
 	e.m_sp_stack.pop_back();
 
@@ -170,7 +170,6 @@ gc_ptr<Value> eval_call_function(
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
 
-	e.new_scope();
 	int arg_count = callee->m_def->m_args.size();
 	for (int i = 0; i < int(arg_count); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
@@ -178,24 +177,15 @@ gc_ptr<Value> eval_call_function(
 
 		auto val = unboxed(args[i].get());
 		auto ref = e.new_reference(val);
-		e.direct_declare(argdecl.identifier_text(), ref.get());
 		e.m_stack.push_back(ref.get());
 		e.m_stack_ptr += 1;
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
-	for (auto& kv : callee->m_captures) {
-		assert(kv.second);
-		assert(kv.second->type() == ValueTag::Reference);
-		e.direct_declare(kv.first, static_cast<Reference*>(kv.second));
-	}
-
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body.get());
 	assert(body);
 
 	eval(body, e);
-
-	e.end_scope();
 
 	e.m_frame_ptr = e.m_fp_stack.back();
 	e.m_fp_stack.pop_back();
@@ -284,8 +274,10 @@ gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
-	for (auto const& identifier : ast->m_captures) {
-		result->m_captures[identifier.first] = e.m_scope->access(identifier.first);
+	for (auto const& capture : ast->m_captures) {
+		assert(capture.second.outer_frame_offset != -1);
+		result->m_captures[capture.first] =
+		    e.m_stack[e.m_frame_ptr + capture.second.outer_frame_offset];
 	}
 
 	return result;
@@ -308,7 +300,6 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
-	e.new_nested_scope();
 
 	// NOTE: this is kinda fishy. why do we assert here?
 	auto declaration = eval(ast->m_declaration.get(), e);
@@ -335,14 +326,10 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		assert(loop_action);
 	}
 
-	e.end_scope();
-
 	return e.null();
 };
 
 gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
-	e.new_nested_scope();
-
 	while (1) {
 		auto condition_result = eval(ast->m_condition.get(), e);
 		auto unboxed_condition_result = unboxed(condition_result.get());
@@ -359,8 +346,6 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 		if (e.m_return_value)
 			break;
 	}
-
-	e.end_scope();
 
 	return e.null();
 };
