@@ -158,14 +158,20 @@ gc_ptr<Value> eval_call_function(
 	e.m_fp_stack.push_back(e.m_frame_ptr);
 	e.m_sp_stack.push_back(e.m_stack_ptr);
 	e.m_frame_ptr = e.m_stack_ptr;
+	e.m_stack.resize(e.m_stack_ptr);
+
+	for (auto& kv : callee->m_captures) {
+		assert(kv.second);
+		assert(kv.second->type() == ValueTag::Reference);
+		e.m_stack.push_back(static_cast<Reference*>(kv.second));
+		e.m_stack_ptr += 1;
+	}
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
 
 	e.new_scope();
 	int arg_count = callee->m_def->m_args.size();
-	e.m_stack.resize(e.m_stack_ptr);
-	e.m_stack.reserve(e.m_stack_ptr + arg_count);
 	for (int i = 0; i < int(arg_count); ++i) {
 		auto& argdecl = callee->m_def->m_args[i];
 		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
