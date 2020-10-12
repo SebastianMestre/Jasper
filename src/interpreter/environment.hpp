@@ -38,10 +38,6 @@ struct Environment {
 	    : m_gc {gc}
 	    , m_scope {&m_global_scope} {}
 
-	Scope* new_scope();
-	Scope* new_nested_scope();
-	void end_scope();
-
 	void save_return_value(Value*);
 	Value* fetch_return_value();
 

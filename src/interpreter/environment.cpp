@@ -26,22 +26,6 @@ Reference* Scope::access(const Identifier& i) {
 	return nullptr;
 }
 
-Scope* Environment::new_nested_scope() {
-	m_scope = new Scope {m_scope, m_scope};
-	return m_scope;
-}
-
-Scope* Environment::new_scope() {
-	m_scope = new Scope {&m_global_scope, m_scope};
-	return m_scope;
-}
-
-void Environment::end_scope() {
-	Scope* prev = m_scope->m_prev;
-	delete m_scope;
-	m_scope = prev;
-}
-
 void Environment::save_return_value(Value* v) {
 	// check if not stepping on another value
 	assert(!m_return_value);
