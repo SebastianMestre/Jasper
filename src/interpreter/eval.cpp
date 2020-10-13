@@ -176,6 +176,8 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	assert(callee);
 	assert(is_callable_value(callee));
 
+	e.start_stack_region();
+
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
@@ -207,6 +209,7 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	}
 
 	e.end_stack_frame();
+	e.end_stack_region();
 
 	return result;
 };
