@@ -53,7 +53,11 @@ void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
 	// functions start a new frame
 	frame_offset = 0;
 
-	// first thing in a frame are captures
+	// first thing in a frame: arguments
+	for (auto& arg_decl : ast->m_args)
+		arg_decl.m_frame_offset = frame_offset++;
+
+	// second thing: captures
 	for (auto& kv : ast->m_captures) {
 		kv.second.inner_frame_offset = frame_offset++;
 		auto decl = kv.second.outer_declaration;
@@ -69,10 +73,7 @@ void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
 		}
 	}
 
-	// second thing in a frame: arguments
-	for (auto& arg_decl : ast->m_args)
-		arg_decl.m_frame_offset = frame_offset++;
-
+	// TODO? store the frame size
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);

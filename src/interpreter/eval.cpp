@@ -146,12 +146,6 @@ gc_ptr<Value> eval_call_function(
 
 	e.start_stack_frame();
 
-	for (auto& kv : callee->m_captures) {
-		assert(kv.second);
-		assert(kv.second->type() == ValueTag::Reference);
-		e.push_direct(static_cast<Reference*>(kv.second));
-	}
-
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == args.size());
 
@@ -162,6 +156,12 @@ gc_ptr<Value> eval_call_function(
 		e.push(unboxed(args[i].get()));
 	}
 	// NOTE: we could `args.clear()` at this point. Is it worth doing?
+
+	for (auto& kv : callee->m_captures) {
+		assert(kv.second);
+		assert(kv.second->type() == ValueTag::Reference);
+		e.push_direct(static_cast<Reference*>(kv.second));
+	}
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
 	assert(body);
