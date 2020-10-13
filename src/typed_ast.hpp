@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "token.hpp"
@@ -48,6 +49,8 @@ struct Declaration : public TypedAST {
 
 	bool m_is_polymorphic {false};
 	PolyId m_decl_type;
+
+	int m_frame_offset {-1};
 
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
@@ -144,10 +147,17 @@ struct DictionaryLiteral : public TypedAST {
 };
 
 struct FunctionLiteral : public TypedAST {
+	struct CaptureData {
+		Declaration* outer_declaration{nullptr};
+		int outer_frame_offset{-1};
+		int inner_frame_offset{-1};
+	};
+
 	MonoId m_return_type;
 	TypedAST* m_body;
 	std::vector<Declaration> m_args;
-	std::unordered_set<InternedString> m_captures;
+	std::unordered_map<InternedString, CaptureData> m_captures;
+	FunctionLiteral* m_surrounding_function {nullptr};
 
 	FunctionLiteral()
 	    : TypedAST {TypedASTTag::FunctionLiteral} {}
@@ -155,8 +165,14 @@ struct FunctionLiteral : public TypedAST {
 
 // the ast_vtype must be computed
 struct Identifier : public TypedAST {
+	enum class Origin { Global, Capture, Local };
+
 	Token const* m_token;
 	Declaration* m_declaration {nullptr}; // can be nullptr
+	FunctionLiteral* m_surrounding_function {nullptr};
+
+	Origin m_origin;
+	int m_frame_offset {-1};
 
 	InternedString const& text() {
 		return m_token->m_text;

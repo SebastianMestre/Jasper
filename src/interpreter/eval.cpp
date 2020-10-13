@@ -12,10 +12,9 @@
 namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
-	// TODO: type and mutable check -> return error
-	e.declare(ast->identifier_text(), e.null());
+	auto ref = e.new_reference(e.null());
+	e.push_direct(ref.get());
 	if (ast->m_value) {
-		auto* ref = e.access(ast->identifier_text());
 		auto value = eval(ast->m_value, e);
 		auto unboxed_val = unboxed(value.get());
 		ref->m_value = unboxed_val;
@@ -25,7 +24,10 @@ gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 
 gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 	for (auto& decl : ast->m_declarations) {
-		eval(&decl, e);
+		auto ref = e.new_reference(e.null());
+		e.global_declare_direct(decl.identifier_text(), ref.get());
+		auto value = eval(decl.m_value, e);
+		ref->m_value = value.get();
 	}
 	return e.null();
 };
@@ -94,12 +96,21 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
-	return e.access(ast->text());
+	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
+	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
+		if (ast->m_frame_offset == -1)
+			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
+		assert(ast->m_frame_offset != -1);
+		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
+	} else {
+		// slow path
+		return e.global_access(ast->text());
+	}
 };
 
 gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 
-	e.new_nested_scope();
+	e.start_stack_region();
 
 	for (auto stmt : ast->m_body) {
 		eval(stmt, e);
@@ -107,7 +118,7 @@ gc_ptr<Value> eval(TypedAST::Block* ast, Environment& e) {
 			break;
 	}
 
-	e.end_scope();
+	e.end_stack_region();
 
 	return e.null();
 };
@@ -133,28 +144,31 @@ auto is_callable_value(Value* v) -> bool {
 gc_ptr<Value> eval_call_function(
     gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
 
-	// TODO: error handling ?
-	assert(callee->m_def->m_args.size() == args.size());
-
-	e.new_scope();
-	for (int i = 0; i < int(callee->m_def->m_args.size()); ++i) {
-		auto& argdecl = callee->m_def->m_args[i];
-		e.declare(argdecl.identifier_text(), unboxed(args[i].get()));
-	}
-	// NOTE: we could `args.clear()` at this point. Is it worth doing?
+	e.start_stack_frame();
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
-		e.direct_declare(kv.first, static_cast<Reference*>(kv.second));
+		e.push_direct(static_cast<Reference*>(kv.second));
 	}
+
+	// TODO: error handling ?
+	assert(callee->m_def->m_args.size() == args.size());
+
+	int arg_count = callee->m_def->m_args.size();
+	for (int i = 0; i < int(arg_count); ++i) {
+		auto& argdecl = callee->m_def->m_args[i];
+		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
+		e.push(unboxed(args[i].get()));
+	}
+	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
 	assert(body);
 
 	eval(body, e);
 
-	e.end_scope();
+	e.end_stack_frame();
 
 	return e.fetch_return_value();
 }
@@ -237,8 +251,10 @@ gc_ptr<Value> eval(TypedAST::TernaryExpression* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
-	for (auto const& identifier : ast->m_captures) {
-		result->m_captures[identifier] = e.m_scope->access(identifier);
+	for (auto const& capture : ast->m_captures) {
+		assert(capture.second.outer_frame_offset != -1);
+		result->m_captures[capture.first] =
+		    e.m_stack[e.m_frame_ptr + capture.second.outer_frame_offset];
 	}
 
 	return result;
@@ -261,7 +277,8 @@ gc_ptr<Value> eval(TypedAST::IfElseStatement* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
-	e.new_nested_scope();
+
+	e.start_stack_region();
 
 	// NOTE: this is kinda fishy. why do we assert here?
 	auto declaration = eval(&ast->m_declaration, e);
@@ -288,14 +305,12 @@ gc_ptr<Value> eval(TypedAST::ForStatement* ast, Environment& e) {
 		assert(loop_action);
 	}
 
-	e.end_scope();
+	e.end_stack_region();
 
 	return e.null();
 };
 
 gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
-	e.new_nested_scope();
-
 	while (1) {
 		auto condition_result = eval(ast->m_condition, e);
 		auto unboxed_condition_result = unboxed(condition_result.get());
@@ -312,8 +327,6 @@ gc_ptr<Value> eval(TypedAST::WhileStatement* ast, Environment& e) {
 		if (e.m_return_value)
 			break;
 	}
-
-	e.end_scope();
 
 	return e.null();
 };

@@ -7,39 +7,19 @@
 namespace Interpreter {
 
 void Scope::declare(const Identifier& i, Reference* v) {
-	// TODO: check name collision
-	m_declarations[i] = v;
+	auto insertion_result = m_declarations.insert({i, v});
+	assert(insertion_result.second);
 }
 
 Reference* Scope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
-	if (v != m_declarations.end()) {
-		assert(v->second->type() == ValueTag::Reference);
-		return static_cast<Reference*>(v->second);
+	if (v == m_declarations.end()) {
+		// TODO: error
+		return nullptr;
 	}
 
-	if (m_parent != nullptr)
-		return m_parent->access(i);
-
-	// TODO: ReferenceError
-	return nullptr;
-}
-
-Scope* Environment::new_nested_scope() {
-	m_scope = new Scope {m_scope, m_scope};
-	return m_scope;
-}
-
-Scope* Environment::new_scope() {
-	m_scope = new Scope {&m_global_scope, m_scope};
-	return m_scope;
-}
-
-void Environment::end_scope() {
-	Scope* prev = m_scope->m_prev;
-	delete m_scope;
-	m_scope = prev;
+	return v->second;
 }
 
 void Environment::save_return_value(Value* v) {
@@ -58,34 +38,71 @@ void Environment::run_gc() {
 	m_gc->unmark_all();
 	m_gc->mark_roots();
 
-	for (Scope* scope_it = m_scope; scope_it != nullptr; scope_it = scope_it->m_prev)
-		for (auto& p : scope_it->m_declarations)
-			gc_visit(p.second);
+	for (auto p : m_stack)
+		gc_visit(p);
+
+	for (auto& p : m_global_scope.m_declarations)
+		gc_visit(p.second);
 
 	m_gc->sweep();
 }
 
-void Environment::direct_declare(const Identifier& i, Reference* r) {
-	if (r->type() != ValueTag::Reference) {
-		assert(0 && "directly declared a non-reference!");
-	}
-	m_scope->declare(i, r);
+
+void Environment::global_declare_direct(const Identifier& i, Reference* r) {
+	m_global_scope.declare(i, r);
 }
 
-void Environment::declare(const Identifier& i, gc_ptr<Value> v) {
-	declare(i, v.get());
-}
-
-void Environment::declare(const Identifier& i, Value* v) {
-	if (v->type() == ValueTag::Reference) {
+void Environment::global_declare(const Identifier& i, Value* v) {
+	if (v->type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
-	}
 	auto r = new_reference(v);
-	m_scope->declare(i, r.get());
+	global_declare_direct(i, r.get());
 }
 
-Reference* Environment::access(const Identifier& i) {
-	return m_scope->access(i);
+void Environment::global_declare(const Identifier& i, gc_ptr<Value> v) {
+	global_declare(i, v.get());
+}
+
+Reference* Environment::global_access(const Identifier& i) {
+	return m_global_scope.access(i);
+}
+
+void Environment::start_stack_frame() {
+	m_fp_stack.push_back(m_frame_ptr);
+	m_sp_stack.push_back(m_stack_ptr);
+	m_frame_ptr = m_stack_ptr;
+}
+
+void Environment::end_stack_frame(){
+	m_frame_ptr = m_fp_stack.back();
+	m_fp_stack.pop_back();
+
+	m_stack_ptr = m_sp_stack.back();
+	m_sp_stack.pop_back();
+
+	m_stack.resize(m_stack_ptr);
+}
+
+void Environment::start_stack_region() {
+	m_sp_stack.push_back(m_stack_ptr);
+}
+
+void Environment::end_stack_region() {
+	m_stack_ptr = m_sp_stack.back();
+	m_sp_stack.pop_back();
+
+	m_stack.resize(m_stack_ptr);
+}
+
+void Environment::push_direct(Reference* ref){
+	m_stack.push_back(ref);
+	m_stack_ptr += 1;
+}
+
+void Environment::push(Value* val){
+	assert(val->type() != ValueTag::Reference);
+	auto ref = new_reference(val);
+	push_direct(ref.get());
 }
 
 Null* Environment::null() {

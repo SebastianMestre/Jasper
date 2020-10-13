@@ -12,10 +12,7 @@ namespace Interpreter {
 struct GC;
 
 struct Scope {
-	Scope* m_parent {nullptr};
-	Scope* m_prev {nullptr};
-	// TODO: store references instead of values
-	std::map<InternedString, Value*> m_declarations;
+	std::map<InternedString, Reference*> m_declarations;
 
 	void declare(const Identifier& i, Reference* v);
 	Reference* access(const Identifier& i);
@@ -25,30 +22,35 @@ struct Environment {
 	GC* m_gc;
 	Scope m_global_scope;
 
-	Scope* m_scope;
 	Value* m_return_value {nullptr};
 
-	Environment(GC* gc)
-	    : m_gc {gc}
-	    , m_scope {&m_global_scope} {}
+	int m_frame_ptr {0};
+	int m_stack_ptr {0};
+	std::vector<Reference*> m_stack;
+	std::vector<int> m_fp_stack;
+	std::vector<int> m_sp_stack;
 
-	Scope* new_scope();
-	Scope* new_nested_scope();
-	void end_scope();
+	Environment(GC* gc)
+	    : m_gc {gc} {}
 
 	void save_return_value(Value*);
 	Value* fetch_return_value();
 
 	void run_gc();
 
-	// SHORT-HANDS
+	// Binds a global name to the given reference
+	void global_declare_direct(const Identifier& i, Reference* v);
+	void global_declare(const Identifier& i, Value* v);
+	void global_declare(const Identifier& i, gc_ptr<Value> v);
+	Reference* global_access(const Identifier& i);
 
-	// Binds a name to a new reference of the given value
-	void declare(const Identifier&, Value*);
-	void declare(const Identifier&, gc_ptr<Value>);
-	// Binds a name to the given reference
-	void direct_declare(const Identifier& i, Reference* v);
-	Reference* access(const Identifier&);
+	void start_stack_frame();
+	void end_stack_frame();
+	void start_stack_region();
+	void end_stack_region();
+
+	void push_direct(Reference* ref);
+	void push(Value* val);
 
 	auto null() -> Null*;
 	auto new_integer(int) -> gc_ptr<Integer>;

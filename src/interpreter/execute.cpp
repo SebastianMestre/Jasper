@@ -1,5 +1,6 @@
 #include "execute.hpp"
 
+#include "../compute_offsets.hpp"
 #include "../ct_eval.hpp"
 #include "../desugar.hpp"
 #include "../match_identifiers.hpp"
@@ -55,6 +56,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 	TypeChecker::metacheck(top_level, tc);
 	top_level = TypeChecker::ct_eval(top_level, tc, typed_ast_allocator);
 	TypeChecker::typecheck(top_level, tc);
+	TypeChecker::compute_offsets(top_level, 0);
 
 	GC gc;
 	Environment env = {&gc};
