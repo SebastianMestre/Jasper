@@ -176,24 +176,22 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	assert(callee);
 	assert(is_callable_value(callee));
 
-	e.start_stack_region();
-
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	std::vector<gc_ptr<Value>> args;
-	args.reserve(arg_count);
-	for (int i = 0; i < arg_count; ++i) {
-		args.push_back(eval(arglist[i], e));
-	}
+	e.start_stack_region();
 
 	// arguments go before the frame pointer
 	if (callee->type() == ValueTag::Function) {
-		for (auto& value : args)
+		for (auto expr : arglist) {
+			auto value = eval(expr, e);
 			e.push(e.new_reference(unboxed(value.get())).get());
+		}
 	} else {
-		for (auto& value : args)
+		for (auto expr : arglist) {
+			auto value = eval(expr, e);
 			e.push(value.get());
+		}
 	}
 
 	e.start_stack_frame();
