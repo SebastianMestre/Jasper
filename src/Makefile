@@ -37,7 +37,10 @@ ITPR_OBJNAMES := \
 	interpreter/gc_ptr.o \
 	interpreter/value.o \
 	interpreter/native.o \
-	interpreter/utils.o
+	interpreter/utils.o \
+	interpreter/garbage_collector/block.o \
+	interpreter/garbage_collector/heap.o \
+	interpreter/garbage_collector/slot.o
 
 TEST_OBJNAMES := \
 	test/tester.o \
@@ -82,6 +85,7 @@ $(BINDIR):
 $(OBJDIR):
 	mkdir $(OBJDIR)
 	mkdir $(OBJDIR)/interpreter
+	mkdir $(OBJDIR)/interpreter/garbage_collector
 	mkdir $(OBJDIR)/test
 
 include $(ENTRY_POINTS:.o=.d)
