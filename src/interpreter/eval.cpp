@@ -160,7 +160,6 @@ gc_ptr<Value> eval_call_function(
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
 	assert(body);
-
 	eval(body, e);
 
 	return e.fetch_return_value();
@@ -177,32 +176,18 @@ gc_ptr<Value> eval_call_native_function(
 }
 
 gc_ptr<Value> eval_call_callable(
-    gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
-	e.start_stack_frame();
-
-	int arg_count = args.size();
-	for (int i = 0; i < int(arg_count); ++i) {
-		if (args[i]->type() == ValueTag::Reference) {
-			e.push_direct(static_cast<Reference*>(args[i].get()));
-		} else {
-			e.push(args[i].get());
-		}
-	}
+    gc_ptr<Value> callee, int arg_count, Environment& e) {
 
 	gc_ptr<Value> result = nullptr;
-	// TODO: proper error handling
-	assert(is_callable_value(callee.get()));
 	if (callee->type() == ValueTag::Function) {
-		result = eval_call_function(
-		    static_cast<Function*>(callee.get()), args.size(), e);
+		result =
+		    eval_call_function(static_cast<Function*>(callee.get()), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
 		result = eval_call_native_function(
-		    static_cast<NativeFunction*>(callee.get()), args.size(), e);
+		    static_cast<NativeFunction*>(callee.get()), arg_count, e);
 	} else {
 		assert(0);
 	}
-
-	e.end_stack_frame();
 
 	return result;
 }
@@ -214,14 +199,29 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	assert(callee);
 
 	auto& arglist = ast->m_args;
+	int arg_count = arglist.size();
 
 	std::vector<gc_ptr<Value>> args;
-	args.reserve(arglist.size());
-	for (int i = 0; i < int(arglist.size()); ++i) {
+	args.reserve(arg_count);
+	for (int i = 0; i < arg_count; ++i) {
 		args.push_back(eval(arglist[i], e));
 	}
 
-	return eval_call_callable(callee, std::move(args), e);
+	// TODO: this is a hack
+	e.start_stack_frame();
+
+	for(auto& value : args){
+		if (value->type() == ValueTag::Reference)
+			e.push_direct(static_cast<Reference*>(value.get()));
+		else
+			e.push(value.get());
+	}
+
+	auto result = eval_call_callable(callee, arg_count, e);
+
+	e.end_stack_frame();
+
+	return result;
 };
 
 gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
