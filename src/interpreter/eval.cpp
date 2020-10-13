@@ -5,6 +5,7 @@
 #include <cassert>
 #include <climits>
 
+#include "../span.hpp"
 #include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "utils.hpp"
@@ -164,11 +165,8 @@ gc_ptr<Value> eval_call_function(
 gc_ptr<Value> eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Environment& e) {
 	// TODO: don't do this conversion
-	std::vector<Value*> args;
-	args.reserve(arg_count);
-	for (int i = e.m_frame_ptr - arg_count; i < e.m_frame_ptr; ++i)
-		args.push_back(e.m_stack[i]);
-	return callee->m_fptr(std::move(args), e);
+	Span<Value*> args = {&e.m_stack[e.m_frame_ptr - arg_count], arg_count};
+	return callee->m_fptr(args, e);
 }
 
 gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {

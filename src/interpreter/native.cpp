@@ -1,3 +1,4 @@
+#include "../span.hpp"
 #include "environment.hpp"
 #include "utils.hpp"
 #include "value.hpp"
@@ -12,8 +13,10 @@ namespace Interpreter {
 
 // TODO: All of these should return gc_ptr
 
+using ArgsType = Span<Value*>;
+
 // print(...) prints the values or references in ...
-Value* print(ArrayType v, Environment& e) {
+Value* print(ArgsType v, Environment& e) {
 	for (auto value : v) {
 		print(value);
 	}
@@ -22,7 +25,7 @@ Value* print(ArrayType v, Environment& e) {
 
 // array_append(arr, ...) appends the values or references
 // in ... to the array
-Value* array_append(ArrayType v, Environment& e) {
+Value* array_append(ArgsType v, Environment& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -35,7 +38,7 @@ Value* array_append(ArrayType v, Environment& e) {
 
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
-Value* array_extend(ArrayType v, Environment& e) {
+Value* array_extend(ArgsType v, Environment& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -48,7 +51,7 @@ Value* array_extend(ArrayType v, Environment& e) {
 }
 
 // size(array) returns the size of the array
-Value* size(ArrayType v, Environment& e) {
+Value* size(ArgsType v, Environment& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -60,7 +63,7 @@ Value* size(ArrayType v, Environment& e) {
 
 // array_join(array, string) returns a string with
 // the array values separated by the string element
-Value* array_join(ArrayType v, Environment& e) {
+Value* array_join(ArgsType v, Environment& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -82,7 +85,7 @@ Value* array_join(ArrayType v, Environment& e) {
 }
 
 // array_at(array, int i) returns the i-th element of the given array
-Value* array_at(ArrayType v, Environment& e) {
+Value* array_at(ArgsType v, Environment& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -94,11 +97,11 @@ Value* array_at(ArrayType v, Environment& e) {
 	return array->m_value[index->m_value];
 }
 
-Value* dummy(ArrayType v, Environment& e) {
+Value* dummy(ArgsType v, Environment& e) {
 	return e.null();
 }
 
-Value* value_add(ArrayType v, Environment& e) {
+Value* value_add(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -132,7 +135,7 @@ Value* value_add(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_sub(ArrayType v, Environment& e) {
+Value* value_sub(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -160,7 +163,7 @@ Value* value_sub(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_mul(ArrayType v, Environment& e) {
+Value* value_mul(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -188,7 +191,7 @@ Value* value_mul(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_div(ArrayType v, Environment& e) {
+Value* value_div(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -216,7 +219,7 @@ Value* value_div(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_logicand(ArrayType v, Environment& e) {
+Value* value_logicand(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -235,7 +238,7 @@ Value* value_logicand(ArrayType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_logicor(ArrayType v, Environment& e) {
+Value* value_logicor(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -254,7 +257,7 @@ Value* value_logicor(ArrayType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_logicxor(ArrayType v, Environment& e) {
+Value* value_logicxor(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -273,7 +276,7 @@ Value* value_logicxor(ArrayType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_equals(ArrayType v, Environment& e) {
+Value* value_equals(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -317,7 +320,7 @@ Value* value_equals(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_less(ArrayType v, Environment& e) {
+Value* value_less(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -351,7 +354,7 @@ Value* value_less(ArrayType v, Environment& e) {
 	}
 }
 
-Value* value_assign(ArrayType v, Environment& e) {
+Value* value_assign(ArgsType v, Environment& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
