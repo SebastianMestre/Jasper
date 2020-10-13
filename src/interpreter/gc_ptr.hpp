@@ -19,6 +19,14 @@ struct gc_ptr {
 		o.m_ptr = nullptr;
 	}
 
+	gc_ptr& operator= (gc_ptr&& o) {
+		if (m_ptr)
+			m_ptr->m_cpp_refcount -= 1;
+		m_ptr = o.m_ptr;
+		o.m_ptr = nullptr;
+		return *this;
+	}
+
 	explicit operator bool() const {
 		return m_ptr != nullptr;
 	}

@@ -142,20 +142,15 @@ auto is_callable_value(Value* v) -> bool {
 }
 
 gc_ptr<Value> eval_call_function(
-    gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
-
-	e.start_stack_frame();
+    gc_ptr<Function> callee, int arg_count, Environment& e) {
 
 	// TODO: error handling ?
-	assert(callee->m_def->m_args.size() == args.size());
+	assert(callee->m_def->m_args.size() == arg_count);
 
-	int arg_count = callee->m_def->m_args.size();
-	for (int i = 0; i < int(arg_count); ++i) {
-		auto& argdecl = callee->m_def->m_args[i];
-		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
-		e.push(unboxed(args[i].get()));
-	}
-	// NOTE: we could `args.clear()` at this point. Is it worth doing?
+	// TODO: Do this more nicely.
+	for(int i = 0; i < arg_count; ++i)
+		e.m_stack[e.m_frame_ptr + i] =
+		    e.new_reference(unboxed(e.m_stack[e.m_frame_ptr + i])).get();
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
@@ -168,35 +163,48 @@ gc_ptr<Value> eval_call_function(
 
 	eval(body, e);
 
-	e.end_stack_frame();
-
 	return e.fetch_return_value();
 }
 
 gc_ptr<Value> eval_call_native_function(
-    gc_ptr<NativeFunction> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
+    gc_ptr<NativeFunction> callee, int arg_count, Environment& e) {
 	// TODO: don't do this conversion
-	std::vector<Value*> passable_args;
-	passable_args.reserve(args.size());
-	for (auto& arg : args)
-		passable_args.push_back(arg.get());
-	return callee->m_fptr(std::move(passable_args), e);
+	std::vector<Value*> args;
+	args.reserve(arg_count);
+	for (int i = 0; i < arg_count; ++i)
+		args.push_back(e.m_stack[e.m_frame_ptr + i]);
+	return callee->m_fptr(std::move(args), e);
 }
 
 gc_ptr<Value> eval_call_callable(
     gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
+	e.start_stack_frame();
+
+	int arg_count = args.size();
+	for (int i = 0; i < int(arg_count); ++i) {
+		if (args[i]->type() == ValueTag::Reference) {
+			e.push_direct(static_cast<Reference*>(args[i].get()));
+		} else {
+			e.push(args[i].get());
+		}
+	}
+
+	gc_ptr<Value> result = nullptr;
 	// TODO: proper error handling
 	assert(is_callable_value(callee.get()));
 	if (callee->type() == ValueTag::Function) {
-		return eval_call_function(
-		    static_cast<Function*>(callee.get()), std::move(args), e);
+		result = eval_call_function(
+		    static_cast<Function*>(callee.get()), args.size(), e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
-		return eval_call_native_function(
-		    static_cast<NativeFunction*>(callee.get()), std::move(args), e);
+		result = eval_call_native_function(
+		    static_cast<NativeFunction*>(callee.get()), args.size(), e);
 	} else {
 		assert(0);
-		return nullptr;
 	}
+
+	e.end_stack_frame();
+
+	return result;
 }
 
 gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
