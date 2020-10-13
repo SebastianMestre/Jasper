@@ -149,10 +149,6 @@ gc_ptr<Value> eval_call_function(
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
-	// TODO: Do this more nicely.
-	for (int i = e.m_frame_ptr - arg_count; i < e.m_frame_ptr; ++i)
-		e.m_stack[i] = e.new_reference(unboxed(e.m_stack[i])).get();
-
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
@@ -193,11 +189,15 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	}
 
 	// arguments go before the frame pointer
-	for(auto& value : args){
-		if (value->type() == ValueTag::Reference)
-			e.push_direct(static_cast<Reference*>(value.get()));
-		else
-			e.push(value.get());
+	if (callee->type() == ValueTag::Function) {
+		for (auto& value : args)
+			e.push(unboxed(value.get()));
+	} else {
+		for (auto& value : args)
+			if (value->type() == ValueTag::Reference)
+				e.push_direct(static_cast<Reference*>(value.get()));
+			else
+				e.push(value.get());
 	}
 
 	e.start_stack_frame();
