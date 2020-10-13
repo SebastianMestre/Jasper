@@ -20,6 +20,8 @@ struct Scope {
 
 struct Environment {
 	GC* m_gc;
+	int m_gc_size_on_last_pass {64};
+
 	Scope m_global_scope;
 
 	Value* m_return_value {nullptr};
@@ -37,6 +39,7 @@ struct Environment {
 	Value* fetch_return_value();
 
 	void run_gc();
+	void run_gc_if_needed();
 
 	// Binds a global name to the given reference
 	void global_declare_direct(const Identifier& i, Reference* v);
