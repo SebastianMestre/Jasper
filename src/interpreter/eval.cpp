@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <cassert>
+#include <climits>
 
 #include "../typed_ast.hpp"
 #include "environment.hpp"
@@ -98,9 +99,10 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
-		if (ast->m_frame_offset == -1)
+		if (ast->m_frame_offset == -INT_MIN) {
 			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
-		assert(ast->m_frame_offset != -1);
+			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
+		}
 		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
 	} else {
 		// slow path
@@ -148,9 +150,8 @@ gc_ptr<Value> eval_call_function(
 	assert(callee->m_def->m_args.size() == arg_count);
 
 	// TODO: Do this more nicely.
-	for(int i = 0; i < arg_count; ++i)
-		e.m_stack[e.m_frame_ptr + i] =
-		    e.new_reference(unboxed(e.m_stack[e.m_frame_ptr + i])).get();
+	for (int i = e.m_frame_ptr - arg_count; i < e.m_frame_ptr; ++i)
+		e.m_stack[i] = e.new_reference(unboxed(e.m_stack[i])).get();
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
@@ -170,8 +171,8 @@ gc_ptr<Value> eval_call_native_function(
 	// TODO: don't do this conversion
 	std::vector<Value*> args;
 	args.reserve(arg_count);
-	for (int i = 0; i < arg_count; ++i)
-		args.push_back(e.m_stack[e.m_frame_ptr + i]);
+	for (int i = e.m_frame_ptr - arg_count; i < e.m_frame_ptr; ++i)
+		args.push_back(e.m_stack[i]);
 	return callee->m_fptr(std::move(args), e);
 }
 
@@ -207,15 +208,15 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 		args.push_back(eval(arglist[i], e));
 	}
 
-	// TODO: this is a hack
-	e.start_stack_frame();
-
+	// arguments go before the frame pointer
 	for(auto& value : args){
 		if (value->type() == ValueTag::Reference)
 			e.push_direct(static_cast<Reference*>(value.get()));
 		else
 			e.push(value.get());
 	}
+
+	e.start_stack_frame();
 
 	auto result = eval_call_callable(callee, arg_count, e);
 
@@ -260,7 +261,7 @@ gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
 	for (auto const& capture : ast->m_captures) {
-		assert(capture.second.outer_frame_offset != -1);
+		assert(capture.second.outer_frame_offset != INT_MIN);
 		result->m_captures[capture.first] =
 		    e.m_stack[e.m_frame_ptr + capture.second.outer_frame_offset];
 	}
