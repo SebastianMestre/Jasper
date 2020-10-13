@@ -14,7 +14,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	auto ref = e.new_reference(e.null());
-	e.push_direct(ref.get());
+	e.push(ref.get());
 	if (ast->m_value) {
 		auto value = eval(ast->m_value, e);
 		auto unboxed_val = unboxed(value.get());
@@ -99,13 +99,12 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
-		if (ast->m_frame_offset == -INT_MIN) {
+		if (ast->m_frame_offset == INT_MIN) {
 			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
 			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
 		}
 		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
 	} else {
-		// slow path
 		return e.global_access(ast->text());
 	}
 };
@@ -152,7 +151,7 @@ gc_ptr<Value> eval_call_function(
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
-		e.push_direct(static_cast<Reference*>(kv.second));
+		e.push(kv.second);
 	}
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
@@ -191,13 +190,10 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	// arguments go before the frame pointer
 	if (callee->type() == ValueTag::Function) {
 		for (auto& value : args)
-			e.push(unboxed(value.get()));
+			e.push(e.new_reference(unboxed(value.get())).get());
 	} else {
 		for (auto& value : args)
-			if (value->type() == ValueTag::Reference)
-				e.push_direct(static_cast<Reference*>(value.get()));
-			else
-				e.push(value.get());
+			e.push(value.get());
 	}
 
 	e.start_stack_frame();
