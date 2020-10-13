@@ -176,28 +176,12 @@ gc_ptr<Value> eval_call_native_function(
 	return callee->m_fptr(std::move(args), e);
 }
 
-gc_ptr<Value> eval_call_callable(
-    gc_ptr<Value> callee, int arg_count, Environment& e) {
-
-	gc_ptr<Value> result = nullptr;
-	if (callee->type() == ValueTag::Function) {
-		result =
-		    eval_call_function(static_cast<Function*>(callee.get()), arg_count, e);
-	} else if (callee->type() == ValueTag::NativeFunction) {
-		result = eval_call_native_function(
-		    static_cast<NativeFunction*>(callee.get()), arg_count, e);
-	} else {
-		assert(0);
-	}
-
-	return result;
-}
-
 gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 
 	auto value = eval(ast->m_callee, e);
 	auto* callee = unboxed(value.get());
 	assert(callee);
+	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
@@ -218,7 +202,15 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 
 	e.start_stack_frame();
 
-	auto result = eval_call_callable(callee, arg_count, e);
+	gc_ptr<Value> result = nullptr;
+	if (callee->type() == ValueTag::Function) {
+		result = eval_call_function(static_cast<Function*>(callee), arg_count, e);
+	} else if (callee->type() == ValueTag::NativeFunction) {
+		result = eval_call_native_function(
+		    static_cast<NativeFunction*>(callee), arg_count, e);
+	} else {
+		assert(0);
+	}
 
 	e.end_stack_frame();
 
