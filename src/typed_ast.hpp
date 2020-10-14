@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <climits>
+
 #include "token.hpp"
 #include "token_tag.hpp"
 #include "typed_ast_tag.hpp"
@@ -50,7 +52,7 @@ struct Declaration : public TypedAST {
 	bool m_is_polymorphic {false};
 	PolyId m_decl_type;
 
-	int m_frame_offset {-1};
+	int m_frame_offset {INT_MIN};
 
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
@@ -149,8 +151,8 @@ struct DictionaryLiteral : public TypedAST {
 struct FunctionLiteral : public TypedAST {
 	struct CaptureData {
 		Declaration* outer_declaration{nullptr};
-		int outer_frame_offset{-1};
-		int inner_frame_offset{-1};
+		int outer_frame_offset{INT_MIN};
+		int inner_frame_offset{INT_MIN};
 	};
 
 	MonoId m_return_type;
@@ -172,7 +174,7 @@ struct Identifier : public TypedAST {
 	FunctionLiteral* m_surrounding_function {nullptr};
 
 	Origin m_origin;
-	int m_frame_offset {-1};
+	int m_frame_offset {INT_MIN};
 
 	InternedString const& text() {
 		return m_token->m_text;

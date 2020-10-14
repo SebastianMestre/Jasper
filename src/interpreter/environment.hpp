@@ -28,7 +28,7 @@ struct Environment {
 
 	int m_frame_ptr {0};
 	int m_stack_ptr {0};
-	std::vector<Reference*> m_stack;
+	std::vector<Value*> m_stack;
 	std::vector<int> m_fp_stack;
 	std::vector<int> m_sp_stack;
 
