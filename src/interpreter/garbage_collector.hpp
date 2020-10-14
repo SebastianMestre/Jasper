@@ -23,6 +23,7 @@ struct GC {
 	void mark_roots();
 	void sweep();
 	void sweep_all();
+	int size () { return m_blocks.size(); }
 
 	void add_root(Value* new_root);
 
