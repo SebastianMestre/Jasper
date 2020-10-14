@@ -3,7 +3,9 @@
 #include <iostream>
 
 #include <cassert>
+#include <climits>
 
+#include "../span.hpp"
 #include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "utils.hpp"
@@ -13,7 +15,7 @@ namespace Interpreter {
 
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	auto ref = e.new_reference(e.null());
-	e.push_direct(ref.get());
+	e.push(ref.get());
 	if (ast->m_value) {
 		auto value = eval(ast->m_value, e);
 		auto unboxed_val = unboxed(value.get());
@@ -98,12 +100,12 @@ gc_ptr<Value> eval(TypedAST::ArrayLiteral* ast, Environment& e) {
 gc_ptr<Value> eval(TypedAST::Identifier* ast, Environment& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
-		if (ast->m_frame_offset == -1)
+		if (ast->m_frame_offset == INT_MIN) {
 			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
-		assert(ast->m_frame_offset != -1);
+			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
+		}
 		return e.m_stack[e.m_frame_ptr + ast->m_frame_offset];
 	} else {
-		// slow path
 		return e.global_access(ast->text());
 	}
 };
@@ -142,61 +144,29 @@ auto is_callable_value(Value* v) -> bool {
 }
 
 gc_ptr<Value> eval_call_function(
-    gc_ptr<Function> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
+    gc_ptr<Function> callee, int arg_count, Environment& e) {
 
-	e.start_stack_frame();
+	// TODO: error handling ?
+	assert(callee->m_def->m_args.size() == arg_count);
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
-		e.push_direct(static_cast<Reference*>(kv.second));
+		e.push(kv.second);
 	}
-
-	// TODO: error handling ?
-	assert(callee->m_def->m_args.size() == args.size());
-
-	int arg_count = callee->m_def->m_args.size();
-	for (int i = 0; i < int(arg_count); ++i) {
-		auto& argdecl = callee->m_def->m_args[i];
-		assert(e.m_stack_ptr - e.m_frame_ptr == argdecl.m_frame_offset);
-		e.push(unboxed(args[i].get()));
-	}
-	// NOTE: we could `args.clear()` at this point. Is it worth doing?
 
 	auto* body = dynamic_cast<TypedAST::Block*>(callee->m_def->m_body);
 	assert(body);
-
 	eval(body, e);
-
-	e.end_stack_frame();
 
 	return e.fetch_return_value();
 }
 
 gc_ptr<Value> eval_call_native_function(
-    gc_ptr<NativeFunction> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
+    gc_ptr<NativeFunction> callee, int arg_count, Environment& e) {
 	// TODO: don't do this conversion
-	std::vector<Value*> passable_args;
-	passable_args.reserve(args.size());
-	for (auto& arg : args)
-		passable_args.push_back(arg.get());
-	return callee->m_fptr(std::move(passable_args), e);
-}
-
-gc_ptr<Value> eval_call_callable(
-    gc_ptr<Value> callee, std::vector<gc_ptr<Value>> args, Environment& e) {
-	// TODO: proper error handling
-	assert(is_callable_value(callee.get()));
-	if (callee->type() == ValueTag::Function) {
-		return eval_call_function(
-		    static_cast<Function*>(callee.get()), std::move(args), e);
-	} else if (callee->type() == ValueTag::NativeFunction) {
-		return eval_call_native_function(
-		    static_cast<NativeFunction*>(callee.get()), std::move(args), e);
-	} else {
-		assert(0);
-		return nullptr;
-	}
+	Span<Value*> args = {&e.m_stack[e.m_frame_ptr - arg_count], arg_count};
+	return callee->m_fptr(args, e);
 }
 
 gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
@@ -204,16 +174,42 @@ gc_ptr<Value> eval(TypedAST::CallExpression* ast, Environment& e) {
 	auto value = eval(ast->m_callee, e);
 	auto* callee = unboxed(value.get());
 	assert(callee);
+	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
+	int arg_count = arglist.size();
 
-	std::vector<gc_ptr<Value>> args;
-	args.reserve(arglist.size());
-	for (int i = 0; i < int(arglist.size()); ++i) {
-		args.push_back(eval(arglist[i], e));
+	e.start_stack_region();
+
+	// arguments go before the frame pointer
+	if (callee->type() == ValueTag::Function) {
+		for (auto expr : arglist) {
+			auto value = eval(expr, e);
+			e.push(e.new_reference(unboxed(value.get())).get());
+		}
+	} else {
+		for (auto expr : arglist) {
+			auto value = eval(expr, e);
+			e.push(value.get());
+		}
 	}
 
-	return eval_call_callable(callee, std::move(args), e);
+	e.start_stack_frame();
+
+	gc_ptr<Value> result = nullptr;
+	if (callee->type() == ValueTag::Function) {
+		result = eval_call_function(static_cast<Function*>(callee), arg_count, e);
+	} else if (callee->type() == ValueTag::NativeFunction) {
+		result = eval_call_native_function(
+		    static_cast<NativeFunction*>(callee), arg_count, e);
+	} else {
+		assert(0);
+	}
+
+	e.end_stack_frame();
+	e.end_stack_region();
+
+	return result;
 };
 
 gc_ptr<Value> eval(TypedAST::IndexExpression* ast, Environment& e) {
@@ -252,7 +248,7 @@ gc_ptr<Value> eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	auto result = e.new_function(ast, {});
 
 	for (auto const& capture : ast->m_captures) {
-		assert(capture.second.outer_frame_offset != -1);
+		assert(capture.second.outer_frame_offset != INT_MIN);
 		result->m_captures[capture.first] =
 		    e.m_stack[e.m_frame_ptr + capture.second.outer_frame_offset];
 	}

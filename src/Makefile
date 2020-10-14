@@ -17,6 +17,7 @@ OBJNAMES := \
 	metacheck.o \
 	parser.o \
 	parse.o \
+	span.o \
 	string_set.o \
 	string_view.o \
 	tarjan_solver.o \

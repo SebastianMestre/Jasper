@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../interned_string.hpp"
+#include "../span.hpp"
 #include "environment_fwd.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
@@ -21,7 +22,7 @@ using ObjectType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Value*>;
 using FunctionType = TypedAST::FunctionLiteral*;
-using NativeFunctionType = auto(ArrayType, Environment&) -> Value*;
+using NativeFunctionType = auto(Span<Value*>, Environment&) -> Value*;
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
