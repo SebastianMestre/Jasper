@@ -76,7 +76,12 @@ struct DeclarationList : public TypedAST {
 // las estructuras como declaration list, index expression, block, if, for no tienen
 // tipo de valor asociado
 struct NumberLiteral : public TypedAST {
+	float m_value;
 	Token const* m_token;
+
+	float value() const {
+		return m_value;
+	}
 
 	std::string const& text() {
 		return m_token->m_text.str();
@@ -87,7 +92,12 @@ struct NumberLiteral : public TypedAST {
 };
 
 struct IntegerLiteral : public TypedAST {
+	int m_value;
 	Token const* m_token;
+
+	int value() const {
+		return m_value;
+	}
 
 	std::string const& text() {
 		return m_token->m_text.str();
