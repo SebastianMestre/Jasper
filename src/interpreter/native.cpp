@@ -59,7 +59,7 @@ Value* size(ArgsType v, Environment& e) {
 	Array* array = static_cast<Array*>(unboxed(v[0]));
 
 	// TODO: don't get()
-	return e.m_gc->new_integer(array->m_value.size()).get();
+	return e.m_gc->new_integer_raw(array->m_value.size());
 }
 
 // array_join(array, string) returns a string with
@@ -112,17 +112,13 @@ Value* value_add(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		//TODO: don't get()
-		return e.m_gc
-		    ->new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value +
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_integer_raw(
+		    static_cast<Integer*>(lhs_val)->m_value +
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_float(
-		        static_cast<Float*>(lhs_val)->m_value +
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_float_raw(
+		    static_cast<Float*>(lhs_val)->m_value +
+		    static_cast<Float*>(rhs_val)->m_value);
 	case ValueTag::String:
 		return e
 		    .new_string(
@@ -146,17 +142,13 @@ Value* value_sub(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e.m_gc
-		    ->new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value -
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_integer_raw(
+		    static_cast<Integer*>(lhs_val)->m_value -
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_float(
-		        static_cast<Float*>(lhs_val)->m_value -
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_float_raw(
+		    static_cast<Float*>(lhs_val)->m_value -
+		    static_cast<Float*>(rhs_val)->m_value);
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs_val->type())];
@@ -174,17 +166,13 @@ Value* value_mul(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e.m_gc
-		    ->new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value *
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_integer_raw(
+		    static_cast<Integer*>(lhs_val)->m_value *
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_float(
-		        static_cast<Float*>(lhs_val)->m_value *
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_float_raw(
+		    static_cast<Float*>(lhs_val)->m_value *
+		    static_cast<Float*>(rhs_val)->m_value);
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
 		          << value_string[static_cast<int>(lhs_val->type())];
@@ -202,17 +190,13 @@ Value* value_div(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e.m_gc
-		    ->new_integer(
-		        static_cast<Integer*>(lhs_val)->m_value /
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_integer_raw(
+		    static_cast<Integer*>(lhs_val)->m_value /
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_float(
-		        static_cast<Float*>(lhs_val)->m_value /
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_float_raw(
+		    static_cast<Float*>(lhs_val)->m_value /
+		    static_cast<Float*>(rhs_val)->m_value);
 	default:
 		std::cerr << "ERROR: can't divide values of type "
 		          << value_string[static_cast<int>(lhs_val->type())];
@@ -227,11 +211,9 @@ Value* value_logicand(ArgsType v, Environment& e) {
 	auto* rhs_val = unboxed(rhs);
 
 	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value and
-		        static_cast<Boolean*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Boolean*>(lhs_val)->m_value and
+		    static_cast<Boolean*>(rhs_val)->m_value);
 	std::cerr << "ERROR: logical and operator not defined for types "
 	          << value_string[static_cast<int>(lhs_val->type())] << " and "
 	          << value_string[static_cast<int>(rhs_val->type())];
@@ -245,11 +227,9 @@ Value* value_logicor(ArgsType v, Environment& e) {
 	auto* rhs_val = unboxed(rhs);
 
 	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value or
-		        static_cast<Boolean*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Boolean*>(lhs_val)->m_value or
+		    static_cast<Boolean*>(rhs_val)->m_value);
 	std::cerr << "ERROR: logical or operator not defined for types "
 	          << value_string[static_cast<int>(lhs_val->type())] << " and "
 	          << value_string[static_cast<int>(rhs_val->type())];
@@ -263,11 +243,9 @@ Value* value_logicxor(ArgsType v, Environment& e) {
 	auto* rhs_val = unboxed(rhs);
 
 	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value !=
-		        static_cast<Boolean*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Boolean*>(lhs_val)->m_value !=
+		    static_cast<Boolean*>(rhs_val)->m_value);
 	std::cerr << "ERROR: exclusive or operator not defined for types "
 	          << value_string[static_cast<int>(lhs_val->type())] << " and "
 	          << value_string[static_cast<int>(rhs_val->type())];
@@ -284,31 +262,23 @@ Value* value_equals(ArgsType v, Environment& e) {
 
 	switch (lhs_val->type()) {
 	case ValueTag::Null:
-		return e.m_gc->new_boolean(true).get();
+		return e.m_gc->new_boolean_raw(true);
 	case ValueTag::Integer:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Integer*>(lhs_val)->m_value ==
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Integer*>(lhs_val)->m_value ==
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Float*>(lhs_val)->m_value ==
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Float*>(lhs_val)->m_value ==
+		    static_cast<Float*>(rhs_val)->m_value);
 	case ValueTag::String:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<String*>(lhs_val)->m_value ==
-		        static_cast<String*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<String*>(lhs_val)->m_value ==
+		    static_cast<String*>(rhs_val)->m_value);
 	case ValueTag::Boolean:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Boolean*>(lhs_val)->m_value ==
-		        static_cast<Boolean*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Boolean*>(lhs_val)->m_value ==
+		    static_cast<Boolean*>(rhs_val)->m_value);
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
 		          << value_string[static_cast<int>(lhs_val->type())] << " and "
@@ -328,23 +298,17 @@ Value* value_less(ArgsType v, Environment& e) {
 
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Integer*>(lhs_val)->m_value <
-		        static_cast<Integer*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Integer*>(lhs_val)->m_value <
+		    static_cast<Integer*>(rhs_val)->m_value);
 	case ValueTag::Float:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<Float*>(lhs_val)->m_value <
-		        static_cast<Float*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<Float*>(lhs_val)->m_value <
+		    static_cast<Float*>(rhs_val)->m_value);
 	case ValueTag::String:
-		return e.m_gc
-		    ->new_boolean(
-		        static_cast<String*>(lhs_val)->m_value <
-		        static_cast<String*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_boolean_raw(
+		    static_cast<String*>(lhs_val)->m_value <
+		    static_cast<String*>(rhs_val)->m_value);
 	default:
 		std::cerr << "ERROR: can't compare values of type "
 		          << value_string[static_cast<int>(lhs_val->type())];
