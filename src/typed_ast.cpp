@@ -10,12 +10,14 @@ namespace TypedAST {
 
 TypedAST* convert_ast(AST::IntegerLiteral* ast, Allocator& alloc) {
 	auto typed_integer = alloc.make<IntegerLiteral>();
+	typed_integer->m_value = std::stoi(ast->text());
 	typed_integer->m_token = ast->m_token;
 	return typed_integer;
 }
 
 TypedAST* convert_ast(AST::NumberLiteral* ast, Allocator& alloc) {
 	auto typed_number = alloc.make<NumberLiteral>();
+	typed_number->m_value = std::stof(ast->text());
 	typed_number->m_token = ast->m_token;
 	return typed_number;
 }
