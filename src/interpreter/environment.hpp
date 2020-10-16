@@ -56,8 +56,8 @@ struct Environment {
 	gc_ptr<Value> pop();
 
 	auto null() -> Null*;
-	auto new_integer(int) -> gc_ptr<Integer>;
-	auto new_float(float) -> gc_ptr<Float>;
+	void push_integer(int);
+	void push_float(float);
 	void push_boolean(bool);
 	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_list(ArrayType) -> gc_ptr<Array>;

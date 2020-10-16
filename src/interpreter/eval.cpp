@@ -40,11 +40,11 @@ void eval(TypedAST::DeclarationList* ast, Environment& e) {
 };
 
 void eval(TypedAST::NumberLiteral* ast, Environment& e) {
-	e.push(e.new_float(std::stof(ast->text())).get());
+	e.push_float(std::stof(ast->text()));
 }
 
 void eval(TypedAST::IntegerLiteral* ast, Environment& e) {
-	e.push(e.new_integer(std::stoi(ast->text())).get());
+	e.push_integer(std::stoi(ast->text()));
 }
 
 void eval(TypedAST::StringLiteral* ast, Environment& e) {

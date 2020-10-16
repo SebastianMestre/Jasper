@@ -59,7 +59,7 @@ Value* size(ArgsType v, Environment& e) {
 	Array* array = static_cast<Array*>(unboxed(v[0]));
 
 	// TODO: don't get()
-	return e.new_integer(array->m_value.size()).get();
+	return e.m_gc->new_integer(array->m_value.size()).get();
 }
 
 // array_join(array, string) returns a string with
@@ -112,14 +112,14 @@ Value* value_add(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		//TODO: don't get()
-		return e
-		    .new_integer(
+		return e.m_gc
+		    ->new_integer(
 		        static_cast<Integer*>(lhs_val)->m_value +
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_float(
+		return e.m_gc
+		    ->new_float(
 		        static_cast<Float*>(lhs_val)->m_value +
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
@@ -146,14 +146,14 @@ Value* value_sub(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e
-		    .new_integer(
+		return e.m_gc
+		    ->new_integer(
 		        static_cast<Integer*>(lhs_val)->m_value -
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_float(
+		return e.m_gc
+		    ->new_float(
 		        static_cast<Float*>(lhs_val)->m_value -
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
@@ -174,14 +174,14 @@ Value* value_mul(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e
-		    .new_integer(
+		return e.m_gc
+		    ->new_integer(
 		        static_cast<Integer*>(lhs_val)->m_value *
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_float(
+		return e.m_gc
+		    ->new_float(
 		        static_cast<Float*>(lhs_val)->m_value *
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
@@ -202,14 +202,14 @@ Value* value_div(ArgsType v, Environment& e) {
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
 		// TODO: don't get()
-		return e
-		    .new_integer(
+		return e.m_gc
+		    ->new_integer(
 		        static_cast<Integer*>(lhs_val)->m_value /
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_float(
+		return e.m_gc
+		    ->new_float(
 		        static_cast<Float*>(lhs_val)->m_value /
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();

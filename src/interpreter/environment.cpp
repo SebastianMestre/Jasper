@@ -117,20 +117,18 @@ Null* Environment::null() {
 	return m_gc->null();
 }
 
-gc_ptr<Integer> Environment::new_integer(int i) {
-	auto result = m_gc->new_integer(i);
+void Environment::push_integer(int i) {
+	push(m_gc->new_integer_raw(i));
 	run_gc_if_needed();
-	return result;
 }
 
-gc_ptr<Float> Environment::new_float(float f) {
-	auto result = m_gc->new_float(f);
+void Environment::push_float(float f) {
+	push(m_gc->new_float_raw(f));
 	run_gc_if_needed();
-	return result;
 }
 
 void Environment::push_boolean(bool b) {
-	m_stack.push_back(m_gc->new_boolean_raw(b));
+	push(m_gc->new_boolean_raw(b));
 	run_gc_if_needed();
 }
 

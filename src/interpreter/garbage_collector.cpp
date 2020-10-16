@@ -82,12 +82,20 @@ gc_ptr<Array> GC::new_list(ArrayType elements) {
 }
 
 gc_ptr<Integer> GC::new_integer(int i) {
+	return new_integer_raw(i);
+}
+
+Integer* GC::new_integer_raw(int i) {
 	auto result = new Integer(i);
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Float> GC::new_float(float f) {
+	return new_float_raw(f);
+}
+
+Float* GC::new_float_raw(float f) {
 	auto result = new Float(f);
 	m_blocks.push_back(result);
 	return result;
