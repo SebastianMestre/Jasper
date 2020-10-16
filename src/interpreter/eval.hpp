@@ -10,6 +10,6 @@ struct TypedAST;
 
 namespace Interpreter {
 
-gc_ptr<Value> eval(TypedAST::TypedAST*, Environment&);
+void eval(TypedAST::TypedAST*, Environment&);
 
 }
