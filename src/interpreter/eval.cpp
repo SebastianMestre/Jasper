@@ -35,11 +35,11 @@ gc_ptr<Value> eval(TypedAST::DeclarationList* ast, Environment& e) {
 };
 
 gc_ptr<Value> eval(TypedAST::NumberLiteral* ast, Environment& e) {
-	return e.new_float(std::stof(ast->text()));
+	return e.new_float(ast->value());
 }
 
 gc_ptr<Value> eval(TypedAST::IntegerLiteral* ast, Environment& e) {
-	return e.new_integer(std::stoi(ast->text()));
+	return e.new_integer(ast->value());
 }
 
 gc_ptr<Value> eval(TypedAST::StringLiteral* ast, Environment& e) {
