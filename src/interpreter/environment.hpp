@@ -59,7 +59,7 @@ struct Environment {
 	void push_integer(int);
 	void push_float(float);
 	void push_boolean(bool);
-	auto new_string(std::string) -> gc_ptr<String>;
+	void push_string(std::string);
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_object(ObjectType) -> gc_ptr<Object>;
 	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;

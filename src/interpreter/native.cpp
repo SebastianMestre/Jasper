@@ -82,7 +82,7 @@ Value* array_join(ArgsType v, Environment& e) {
 		if (i < array->m_value.size() - 1)
 			result << string->m_value;
 	}
-	return e.new_string(result.str()).get();
+	return e.m_gc->new_string_raw(result.str());
 }
 
 // array_at(array, int i) returns the i-th element of the given array
@@ -120,11 +120,9 @@ Value* value_add(ArgsType v, Environment& e) {
 		    static_cast<Float*>(lhs_val)->m_value +
 		    static_cast<Float*>(rhs_val)->m_value);
 	case ValueTag::String:
-		return e
-		    .new_string(
-		        static_cast<String*>(lhs_val)->m_value +
-		        static_cast<String*>(rhs_val)->m_value)
-		    .get();
+		return e.m_gc->new_string_raw(
+		    static_cast<String*>(lhs_val)->m_value +
+		    static_cast<String*>(rhs_val)->m_value);
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs_val->type())];

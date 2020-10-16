@@ -44,6 +44,7 @@ struct GC {
 	auto new_integer_raw(int) -> Integer*;
 	auto new_float_raw(float) -> Float*;
 	auto new_boolean_raw(bool) -> Boolean*;
+	auto new_string_raw(std::string) -> String*;
 };
 
 } // namespace Interpreter

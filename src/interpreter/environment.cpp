@@ -132,10 +132,9 @@ void Environment::push_boolean(bool b) {
 	run_gc_if_needed();
 }
 
-gc_ptr<String> Environment::new_string(std::string s) {
-	auto result = m_gc->new_string(std::move(s));
+void Environment::push_string(std::string s) {
+	push(m_gc->new_string_raw(std::move(s)));
 	run_gc_if_needed();
-	return result;
 }
 
 gc_ptr<Array> Environment::new_list(ArrayType elements) {

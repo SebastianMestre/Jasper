@@ -112,6 +112,10 @@ Boolean* GC::new_boolean_raw(bool b) {
 }
 
 gc_ptr<String> GC::new_string(std::string s) {
+	return new_string_raw(std::move(s));
+}
+
+String* GC::new_string_raw(std::string s) {
 	auto result = new String(std::move(s));
 	m_blocks.push_back(result);
 	return result;

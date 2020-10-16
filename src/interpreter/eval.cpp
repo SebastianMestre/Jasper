@@ -48,7 +48,7 @@ void eval(TypedAST::IntegerLiteral* ast, Environment& e) {
 }
 
 void eval(TypedAST::StringLiteral* ast, Environment& e) {
-	e.push(e.new_string(ast->text()).get());
+	e.push_string(ast->text());
 };
 
 void eval(TypedAST::BooleanLiteral* ast, Environment& e) {
