@@ -13,6 +13,12 @@
 
 namespace Interpreter {
 
+static bool is_expression (TypedAST::TypedAST* ast){
+	auto tag = ast->type();
+	auto tag_idx = static_cast<int>(tag);
+	return tag_idx < static_cast<int>(TypedASTTag::Block);
+}
+
 gc_ptr<Value> eval(TypedAST::Declaration* ast, Environment& e) {
 	auto ref = e.new_reference(e.null());
 	e.push(ref.get());
