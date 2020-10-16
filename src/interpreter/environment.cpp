@@ -129,10 +129,9 @@ gc_ptr<Float> Environment::new_float(float f) {
 	return result;
 }
 
-gc_ptr<Boolean> Environment::new_boolean(bool b) {
-	auto result = m_gc->new_boolean(b);
+void Environment::push_boolean(bool b) {
+	m_stack.push_back(m_gc->new_boolean_raw(b));
 	run_gc_if_needed();
-	return result;
 }
 
 gc_ptr<String> Environment::new_string(std::string s) {

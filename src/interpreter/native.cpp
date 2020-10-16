@@ -1,5 +1,6 @@
 #include "../span.hpp"
 #include "environment.hpp"
+#include "garbage_collector.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 #include "value_tag.hpp"
@@ -93,7 +94,7 @@ Value* array_at(ArgsType v, Environment& e) {
 	Array* array = static_cast<Array*>(unboxed(v[0]));
 	Integer* index = static_cast<Integer*>(unboxed(v[1]));
 	assert(index->m_value >= 0);
-	assert(index->m_value <  array->m_value.size());
+	assert(index->m_value < array->m_value.size());
 	return array->m_value[index->m_value];
 }
 
@@ -225,10 +226,9 @@ Value* value_logicand(ArgsType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == ValueTag::Boolean and
-	    rhs_val->type() == ValueTag::Boolean)
-		return e
-		    .new_boolean(
+	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Boolean*>(lhs_val)->m_value and
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
@@ -244,10 +244,9 @@ Value* value_logicor(ArgsType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == ValueTag::Boolean and
-	    rhs_val->type() == ValueTag::Boolean)
-		return e
-		    .new_boolean(
+	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Boolean*>(lhs_val)->m_value or
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
@@ -263,10 +262,9 @@ Value* value_logicxor(ArgsType v, Environment& e) {
 	auto* lhs_val = unboxed(lhs);
 	auto* rhs_val = unboxed(rhs);
 
-	if (lhs_val->type() == ValueTag::Boolean and
-	    rhs_val->type() == ValueTag::Boolean)
-		return e
-		    .new_boolean(
+	if (lhs_val->type() == ValueTag::Boolean and rhs_val->type() == ValueTag::Boolean)
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Boolean*>(lhs_val)->m_value !=
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
@@ -286,28 +284,28 @@ Value* value_equals(ArgsType v, Environment& e) {
 
 	switch (lhs_val->type()) {
 	case ValueTag::Null:
-		return e.new_boolean(true).get();
+		return e.m_gc->new_boolean(true).get();
 	case ValueTag::Integer:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Integer*>(lhs_val)->m_value ==
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Float*>(lhs_val)->m_value ==
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::String:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<String*>(lhs_val)->m_value ==
 		        static_cast<String*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Boolean:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Boolean*>(lhs_val)->m_value ==
 		        static_cast<Boolean*>(rhs_val)->m_value)
 		    .get();
@@ -330,20 +328,20 @@ Value* value_less(ArgsType v, Environment& e) {
 
 	switch (lhs_val->type()) {
 	case ValueTag::Integer:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Integer*>(lhs_val)->m_value <
 		        static_cast<Integer*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::Float:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<Float*>(lhs_val)->m_value <
 		        static_cast<Float*>(rhs_val)->m_value)
 		    .get();
 	case ValueTag::String:
-		return e
-		    .new_boolean(
+		return e.m_gc
+		    ->new_boolean(
 		        static_cast<String*>(lhs_val)->m_value <
 		        static_cast<String*>(rhs_val)->m_value)
 		    .get();

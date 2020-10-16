@@ -53,7 +53,7 @@ void eval(TypedAST::StringLiteral* ast, Environment& e) {
 
 void eval(TypedAST::BooleanLiteral* ast, Environment& e) {
 	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
-	e.push(e.new_boolean(b).get());
+	e.push_boolean(b);
 };
 
 void eval(TypedAST::NullLiteral* ast, Environment& e) {

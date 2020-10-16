@@ -94,6 +94,10 @@ gc_ptr<Float> GC::new_float(float f) {
 }
 
 gc_ptr<Boolean> GC::new_boolean(bool b) {
+	return new_boolean_raw(b);
+}
+
+Boolean* GC::new_boolean_raw(bool b) {
 	auto result = new Boolean(b);
 	m_blocks.push_back(result);
 	return result;
