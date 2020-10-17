@@ -60,10 +60,10 @@ ifeq ($(MODE),debug)
   LIBS += -lasan
   BUILD_DIR := $(BUILD_BASE_DIR)/debug
 else ifeq ($(MODE),tuning)
-  CXXFLAGS += -g -fno-omit-frame-pointer
+  CXXFLAGS += -O2 -g -fno-omit-frame-pointer
   BUILD_DIR := $(BUILD_BASE_DIR)/tuning
 else
-  CXXFLAGS += -O2
+  CXXFLAGS += -O3
   BUILD_DIR := $(BUILD_BASE_DIR)/release
 endif
 
