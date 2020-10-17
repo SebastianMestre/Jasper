@@ -86,6 +86,13 @@ void Environment::push(Value* ref){
 	m_stack_ptr += 1;
 }
 
+gc_ptr<Value> Environment::pop(){
+	gc_ptr<Value> result = {m_stack.back()};
+	m_stack.pop_back();
+	m_stack_ptr -= 1;
+	return result;
+}
+
 void Environment::run_gc() {
 	m_gc->unmark_all();
 	m_gc->mark_roots();
@@ -110,28 +117,24 @@ Null* Environment::null() {
 	return m_gc->null();
 }
 
-gc_ptr<Integer> Environment::new_integer(int i) {
-	auto result = m_gc->new_integer(i);
+void Environment::push_integer(int i) {
+	push(m_gc->new_integer_raw(i));
 	run_gc_if_needed();
-	return result;
 }
 
-gc_ptr<Float> Environment::new_float(float f) {
-	auto result = m_gc->new_float(f);
+void Environment::push_float(float f) {
+	push(m_gc->new_float_raw(f));
 	run_gc_if_needed();
-	return result;
 }
 
-gc_ptr<Boolean> Environment::new_boolean(bool b) {
-	auto result = m_gc->new_boolean(b);
+void Environment::push_boolean(bool b) {
+	push(m_gc->new_boolean_raw(b));
 	run_gc_if_needed();
-	return result;
 }
 
-gc_ptr<String> Environment::new_string(std::string s) {
-	auto result = m_gc->new_string(std::move(s));
+void Environment::push_string(std::string s) {
+	push(m_gc->new_string_raw(std::move(s)));
 	run_gc_if_needed();
-	return result;
 }
 
 gc_ptr<Array> Environment::new_list(ArrayType elements) {

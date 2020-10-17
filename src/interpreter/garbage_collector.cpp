@@ -82,24 +82,40 @@ gc_ptr<Array> GC::new_list(ArrayType elements) {
 }
 
 gc_ptr<Integer> GC::new_integer(int i) {
+	return new_integer_raw(i);
+}
+
+Integer* GC::new_integer_raw(int i) {
 	auto result = new Integer(i);
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Float> GC::new_float(float f) {
+	return new_float_raw(f);
+}
+
+Float* GC::new_float_raw(float f) {
 	auto result = new Float(f);
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Boolean> GC::new_boolean(bool b) {
+	return new_boolean_raw(b);
+}
+
+Boolean* GC::new_boolean_raw(bool b) {
 	auto result = new Boolean(b);
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<String> GC::new_string(std::string s) {
+	return new_string_raw(std::move(s));
+}
+
+String* GC::new_string_raw(std::string s) {
 	auto result = new String(std::move(s));
 	m_blocks.push_back(result);
 	return result;

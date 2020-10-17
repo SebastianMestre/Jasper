@@ -52,14 +52,14 @@ struct Environment {
 	void start_stack_region();
 	void end_stack_region();
 
-	void push_direct(Reference* ref);
 	void push(Value* val);
+	gc_ptr<Value> pop();
 
 	auto null() -> Null*;
-	auto new_integer(int) -> gc_ptr<Integer>;
-	auto new_float(float) -> gc_ptr<Float>;
-	auto new_boolean(bool) -> gc_ptr<Boolean>;
-	auto new_string(std::string) -> gc_ptr<String>;
+	void push_integer(int);
+	void push_float(float);
+	void push_boolean(bool);
+	void push_string(std::string);
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_object(ObjectType) -> gc_ptr<Object>;
 	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
