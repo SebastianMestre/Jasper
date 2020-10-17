@@ -10,13 +10,13 @@
 	X(ArrayLiteral)                                                            \
 	X(DictionaryLiteral)                                                       \
 	X(FunctionLiteral)                                                         \
-                                                                               \
+	/* All before this point are literals */                                   \
 	X(Identifier)                                                              \
 	X(CallExpression)                                                          \
 	X(IndexExpression)                                                         \
 	X(RecordAccessExpression)                                                  \
 	X(TernaryExpression)                                                       \
-                                                                               \
+	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \

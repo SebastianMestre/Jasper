@@ -81,7 +81,8 @@ Value* eval_expression(const std::string& expr, Environment& env) {
 	auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
 	// TODO: return a gc_ptr
-	auto value = eval(top_level_call, env);
+	eval(top_level_call, env);
+	auto value = env.pop();
 	return unboxed(value.get());
 }
 

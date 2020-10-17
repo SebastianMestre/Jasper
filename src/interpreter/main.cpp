@@ -41,7 +41,8 @@ int main() {
 			    auto top_level_call_ast = parse_expression("__invoke()", ta, ast_allocator);
 			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
-			    auto result = eval(top_level_call, env);
+				eval(top_level_call, env);
+			    auto result = env.pop();
 
 			    if (result)
 				    Interpreter::print(result.get());
