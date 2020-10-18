@@ -62,6 +62,9 @@ ifeq ($(MODE),debug)
 else ifeq ($(MODE),tuning)
   CXXFLAGS += -O2 -g -fno-omit-frame-pointer
   BUILD_DIR := $(BUILD_BASE_DIR)/tuning
+else ifeq ($(MODE),dev)
+  CXXFLAGS += -O0
+  BUILD_DIR := $(BUILD_BASE_DIR)/dev
 else
   CXXFLAGS += -O3
   BUILD_DIR := $(BUILD_BASE_DIR)/release
