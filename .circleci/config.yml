@@ -7,10 +7,10 @@ jobs:
       - checkout
       - run:
           name: Build
-          command: make -C ./src test_program -j
+          command: make MODE=debug tests -j
       - run:
           name: Run
-          command: ./bin/test_program
+          command: ./bin/run_tests
   build_gcc_latest:
     docker:
       - image: gcc:latest
@@ -18,7 +18,7 @@ jobs:
       - checkout
       - run:
           name: Build
-          command: make -C ./src -j
+          command: make MODE=dev -j
 workflows:
   version: 2.1
   build_and_run:
