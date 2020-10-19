@@ -144,6 +144,17 @@ TypedAST* convert_ast(AST::RecordAccessExpression* ast, Allocator& alloc) {
 	return typed_ast;
 }
 
+TypedAST* convert_ast(AST::ConstructorExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<ConstructorExpression>();
+
+	typed_ast->m_constructor = convert_ast(ast->m_constructor, alloc);
+
+	for (auto& arg : ast->m_args)
+		typed_ast->m_args.push_back(convert_ast(arg, alloc));
+
+	return typed_ast;
+}
+
 TypedAST* convert_ast(AST::Block* ast, Allocator& alloc) {
 	auto typed_block = alloc.make<Block>();
 
@@ -245,6 +256,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 		REJECT(BinaryExpression);
 
 		DISPATCH(Block);

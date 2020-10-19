@@ -139,6 +139,14 @@ AST* desugar(TernaryExpression* ast, Allocator& alloc) {
 	return ast;
 }
 
+AST* desugar(ConstructorExpression* ast, Allocator& alloc) {
+	ast->m_constructor = desugar(ast->m_constructor, alloc);
+	for (auto& arg : ast->m_args)
+		arg = desugar(arg, alloc);
+
+	return ast;
+}
+
 AST* desugar(Block* ast, Allocator& alloc) {
 	for (auto& element : ast->m_body) {
 		element = desugar(element, alloc);
@@ -210,6 +218,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
