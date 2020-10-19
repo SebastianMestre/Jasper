@@ -85,6 +85,7 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
+
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
 			int_val := 1 + 2 + 3 + 4;
@@ -455,6 +456,23 @@ void interpreter_tests(Test::Tester& tests) {
 		)",
 	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 0);
+	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+			pair := struct { a : int; b : string; };
+
+			pair_strings := fn(a : pair, b : pair) => a.b + " " + b.b;
+
+			__invoke := fn() {
+				first : pair = pair { 1; "hello"; };
+				second : pair = pair { 2; "world"; };
+
+				return pair_strings(first, second);
+			};
+		)",
+	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), "hello world");
 	    }}));
 }
 
