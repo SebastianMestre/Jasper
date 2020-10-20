@@ -95,9 +95,10 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 		                        ? tc.m_core.inst_fresh(declaration->m_decl_type)
 		                        : declaration->m_value_type;
 	} else if (meta_type == tc.meta_typefunc()) {
-		assert(0 && "Accessed a name of a typefunc (not implemented)");
-		// we are a type function.
-		// TODO: not too sure what needs to be done...
+		// simply match with its declaration
+		// TODO: do 'inst fresh' but for type functions
+		auto handle = static_cast<TypedAST::TypeFunctionHandle*>(declaration->m_value);
+		ast->m_value_type = handle->m_value;
 	} else {
 		assert(0 && "Accessed a name with unknown metatype (not implemented)");
 		// meta type var
@@ -246,6 +247,22 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
+void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_constructor, tc);
+	TypeFunctionId tf = tc.m_core.m_tf_core.find_term(ast->m_constructor->m_value_type);
+	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
+
+	assert(tf_data.fields.size() == ast->m_args.size());
+	for (int i = 0; i < ast->m_args.size(); ++i) {
+		typecheck(ast->m_args[i], tc);
+
+		MonoId field_type = tf_data.structure[tf_data.fields[i]];
+		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
+	}
+
+	ast->m_value_type = ast->m_constructor->m_value_type;
+}
+
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 
 	// two way mapping
@@ -378,6 +395,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
