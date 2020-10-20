@@ -24,7 +24,10 @@ enum class TypeFunctionTag { Builtin, Sum, Product, Record };
 struct TypeFunctionData {
 	TypeFunctionTag tag;
 	int argument_count; // -1 means variadic
-	std::unordered_map<std::string, MonoId> structure; // can be nullptr
+
+	std::vector<std::string> fields;
+	std::unordered_map<std::string, MonoId> structure;
+
 	bool is_dummy {false};
 };
 
@@ -55,8 +58,10 @@ struct TypeSystemCore {
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
-	TypeFunctionId new_dummy_type_function(
-	    TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure);
+	TypeFunctionId new_dummy_type_function
+	    ( TypeFunctionTag type
+	    , std::vector<std::string> fields
+	    , std::unordered_map<std::string, MonoId> structure);
 	
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);

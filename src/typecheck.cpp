@@ -237,7 +237,7 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = member_type;
 
 	TypeFunctionId dummy_tf = tc.m_core.new_dummy_type_function(
-	    TypeFunctionTag::Record, {{ast->m_member->m_text.str(), member_type}});
+	    TypeFunctionTag::Record, {ast->m_member->m_text.str()}, {{ast->m_member->m_text.str(), member_type}});
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);

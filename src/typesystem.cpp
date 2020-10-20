@@ -127,12 +127,14 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 }
 
 TypeFunctionId TypeSystemCore::new_dummy_type_function
-    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
+    ( TypeFunctionTag type
+    , std::vector<std::string> fields
+    , std::unordered_map<std::string
+    , MonoId> structure) {
 	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
-	m_type_functions.push_back({type, 0, structure, true});
+	m_type_functions.push_back({type, 0, fields, structure, true});
 	return id;
 }
-
 
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {

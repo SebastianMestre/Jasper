@@ -131,18 +131,20 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	} else if (ast->type() == TypedASTTag::StructExpression) {
 		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
 
-		std::unordered_map<std::string, MonoId> fields;
+		std::vector<std::string> fields;
+		std::unordered_map<std::string, MonoId> structure;
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
 			std::string name = as_se->m_fields[i].text().str();
-			assert(!fields.count(name));
-			fields[name] = mono;
+			assert(!structure.count(name));
+			structure[name] = mono;
+			fields.push_back(name);
 		}
 
 		// TODO: we create a dummy typefunc then make it non-dummy. SERIOUSLY?
 		TypeFunctionId result = tc.m_core.new_dummy_type_function(
-		    TypeFunctionTag::Record, std::move(fields));
+		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 
 		tc.m_core.m_type_functions[result].is_dummy = false;
 
