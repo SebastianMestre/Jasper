@@ -58,10 +58,11 @@ struct TypeSystemCore {
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
-	TypeFunctionId new_dummy_type_function
+	TypeFunctionId new_type_function
 	    ( TypeFunctionTag type
 	    , std::vector<std::string> fields
-	    , std::unordered_map<std::string, MonoId> structure);
+	    , std::unordered_map<std::string, MonoId> structure
+	    , bool dummy = false);
 	
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);

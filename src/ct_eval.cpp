@@ -142,11 +142,8 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 			fields.push_back(name);
 		}
 
-		// TODO: we create a dummy typefunc then make it non-dummy. SERIOUSLY?
-		TypeFunctionId result = tc.m_core.new_dummy_type_function(
+		TypeFunctionId result = tc.m_core.new_type_function(
 		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
-
-		tc.m_core.m_type_functions[result].is_dummy = false;
 
 		return result;
 	} else {
