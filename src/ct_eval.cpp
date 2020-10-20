@@ -66,6 +66,16 @@ TypedAST::RecordAccessExpression* ct_eval(
 	return ast;
 }
 
+TypedAST::ConstructorExpression* ct_eval(
+    TypedAST::ConstructorExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_constructor = ct_eval(ast->m_constructor, tc, alloc);
+
+	for (auto& arg : ast->m_args)
+		arg = ct_eval(arg, tc, alloc);
+
+	return ast;
+}
+
 // statements
 
 TypedAST::Block* ct_eval(
@@ -238,6 +248,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
