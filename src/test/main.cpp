@@ -5,12 +5,11 @@
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "../tarjan_solver.hpp"
-#include "../node_allocator.hpp"
+#include "../utils/node_allocator.hpp"
+#include "../utils/string_set.hpp"
 #include "test_status_tag.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
-
-#include "../string_set.hpp"
 
 void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;

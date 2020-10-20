@@ -1,4 +1,4 @@
-#include "typedefs.hpp"
+#include "utils/typedefs.hpp"
 #include "typed_ast_allocator.hpp"
 
 namespace TypedAST {

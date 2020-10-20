@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast.hpp"
-#include "node_allocator.hpp"
+#include "utils/node_allocator.hpp"
 
 namespace AST {
 

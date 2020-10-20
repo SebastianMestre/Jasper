@@ -1,8 +1,8 @@
 #include "desugar.hpp"
 
 #include "ast.hpp"
-#include "typedefs.hpp"
 #include "ast_allocator.hpp"
+#include "utils/typedefs.hpp"
 
 #include <cassert>
 #include <iostream>

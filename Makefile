@@ -13,21 +13,21 @@ LIBS :=
 
 COMMON_DIR := .
 COMMON_TARGETS := \
+	utils/interned_string \
+	utils/span \
+	utils/string_set \
+	utils/string_view \
 	ast \
 	compile_time_environment \
 	compute_offsets \
 	ct_eval \
 	desugar \
 	error_report \
-	interned_string \
 	lexer \
 	match_identifiers \
 	metacheck \
 	parse \
 	parser \
-	span \
-	string_set \
-	string_view \
 	tarjan_solver \
 	token \
 	typecheck \

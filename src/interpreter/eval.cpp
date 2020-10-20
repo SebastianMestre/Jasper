@@ -5,7 +5,7 @@
 #include <cassert>
 #include <climits>
 
-#include "../span.hpp"
+#include "../utils/span.hpp"
 #include "../typed_ast.hpp"
 #include "environment.hpp"
 #include "utils.hpp"

@@ -1,4 +1,4 @@
-#include "../span.hpp"
+#include "../utils/span.hpp"
 #include "environment.hpp"
 #include "garbage_collector.hpp"
 #include "utils.hpp"

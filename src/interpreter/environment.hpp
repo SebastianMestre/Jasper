@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interned_string.hpp"
+#include "../utils/interned_string.hpp"
 #include "error.hpp"
 #include "gc_ptr.hpp"
 #include "value.hpp"

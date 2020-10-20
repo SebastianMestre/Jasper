@@ -3,8 +3,8 @@
 
 #include "ast.hpp"
 #include "typed_ast.hpp"
-#include "typedefs.hpp"
 #include "typed_ast_allocator.hpp"
+#include "utils/typedefs.hpp"
 
 namespace TypedAST {
 
