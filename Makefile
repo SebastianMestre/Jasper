@@ -129,6 +129,6 @@ $(BUILD_DIR)/%.d: $(SOURCE_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	@set -e; rm -f $@; \
 	$(CXX) -MM $(CPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($(*F)\)\.o[ :]*,$(OBJDIR)/$*.o $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,\($(*F)\)\.o[ :]*,$(BUILD_DIR)/$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
