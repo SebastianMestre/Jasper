@@ -252,6 +252,9 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	TypeFunctionId tf = tc.m_core.m_tf_core.find_term(ast->m_constructor->m_value_type);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
 
+	// TODO: match type arguments as well, we only support 0 now
+
+	// match value arguments
 	assert(tf_data.fields.size() == ast->m_args.size());
 	for (int i = 0; i < ast->m_args.size(); ++i) {
 		typecheck(ast->m_args[i], tc);
@@ -260,7 +263,11 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 	}
 
-	ast->m_value_type = ast->m_constructor->m_value_type;
+	// NOTE: this is a special case for the `name { }` syntax sugar,
+	// but perhaps the left side should only be a TypeTerm and not possibly an Identifier?
+	if (ast->m_constructor->m_meta_type == tc.meta_typefunc())
+		ast->m_value_type =
+		    tc.m_core.new_term(ast->m_constructor->m_value_type, {}, "record instance");
 }
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {

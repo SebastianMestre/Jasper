@@ -229,7 +229,7 @@ struct TernaryExpression : public TypedAST {
 };
 
 struct ConstructorExpression : public TypedAST {
-	TypedAST* m_constructor;
+	TypedAST* m_constructor; // should this be TypeTerm?
 	std::vector<TypedAST*> m_args;
 
 	ConstructorExpression()
