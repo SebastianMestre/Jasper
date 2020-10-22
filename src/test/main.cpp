@@ -2,9 +2,9 @@
 #include <iostream>
 #include <memory>
 
+#include "../algorithms/tarjan_solver.hpp"
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
-#include "../tarjan_solver.hpp"
 #include "../utils/node_allocator.hpp"
 #include "../utils/string_set.hpp"
 #include "test_status_tag.hpp"

@@ -13,6 +13,8 @@ LIBS :=
 
 COMMON_DIR := .
 COMMON_TARGETS := \
+	algorithms/tarjan_solver \
+	algorithms/unification \
 	utils/interned_string \
 	utils/span \
 	utils/string_set \
@@ -28,13 +30,11 @@ COMMON_TARGETS := \
 	metacheck \
 	parse \
 	parser \
-	tarjan_solver \
 	token \
 	typecheck \
 	typechecker \
 	typed_ast \
-	typesystem \
-	unification
+	typesystem
 
 INTERPRETER_DIR := interpreter
 INTERPRETER_ENTRY := main

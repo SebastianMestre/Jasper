@@ -5,8 +5,8 @@
 #include <vector>
 #include <string>
 
+#include "algorithms/unification.hpp"
 #include "typechecker_types.hpp"
-#include "unification.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;
