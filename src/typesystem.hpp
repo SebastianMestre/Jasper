@@ -3,10 +3,10 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <string>
 
 #include "typechecker_types.hpp"
 #include "unification.hpp"
+#include "interned_string.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;
@@ -25,8 +25,8 @@ struct TypeFunctionData {
 	TypeFunctionTag tag;
 	int argument_count; // -1 means variadic
 
-	std::vector<std::string> fields;
-	std::unordered_map<std::string, MonoId> structure;
+	std::vector<InternedString> fields;
+	std::unordered_map<InternedString, MonoId> structure;
 
 	bool is_dummy {false};
 };
@@ -60,8 +60,8 @@ struct TypeSystemCore {
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function
 	    ( TypeFunctionTag type
-	    , std::vector<std::string> fields
-	    , std::unordered_map<std::string, MonoId> structure
+	    , std::vector<InternedString> fields
+	    , std::unordered_map<InternedString, MonoId> structure
 	    , bool dummy = false);
 	
 	// qualifies all unbound variables in the given monotype

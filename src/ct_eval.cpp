@@ -170,12 +170,12 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	} else if (ast->type() == TypedASTTag::StructExpression) {
 		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
 
-		std::vector<std::string> fields;
-		std::unordered_map<std::string, MonoId> structure;
+		std::vector<InternedString> fields;
+		std::unordered_map<InternedString, MonoId> structure;
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
-			std::string name = as_se->m_fields[i].text().str();
+			InternedString name(as_se->m_fields[i].text().str());
 			assert(!structure.count(name));
 			structure[name] = mono;
 			fields.push_back(name);
@@ -265,6 +265,14 @@ TypedAST::DeclarationList* ct_eval(
 	return ast;
 }
 
+TypedAST::MonoTypeHandle* ct_eval(
+    TypedAST::TypeTerm* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	auto handle = alloc.make<TypedAST::MonoTypeHandle>();
+	handle->m_value = mono_type_from_ast(ast, tc);
+	handle->m_syntax = ast;
+	return handle;
+}
+
 TypedAST::TypedAST* ct_eval(
     TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
@@ -299,6 +307,8 @@ TypedAST::TypedAST* ct_eval(
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
+
+		DISPATCH(TypeTerm);
 	}
 
 	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "

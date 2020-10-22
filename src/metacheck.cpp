@@ -93,7 +93,7 @@ void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
 	metacheck(ast->m_constructor, tc);
-	tc.m_core.m_meta_core.unify(ast->m_constructor->m_meta_type, tc.meta_typefunc());
+	tc.m_core.m_meta_core.unify(ast->m_constructor->m_meta_type, tc.meta_monotype());
 
 	for (auto& arg : ast->m_args) {
 		metacheck(arg, tc);

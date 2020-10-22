@@ -230,8 +230,8 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 
 	TypeFunctionId dummy_tf = tc.m_core.new_type_function
 	    ( TypeFunctionTag::Record
-	    , {ast->m_member->m_text.str()}
-	    , {{ast->m_member->m_text.str(), member_type}}
+	    , {} // we don't care for fields in dummies
+	    , {{InternedString(ast->m_member->m_text.str()), member_type}}
 	    , true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
@@ -240,10 +240,12 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
-	TypeFunctionId tf = tc.m_core.m_tf_core.find_term(ast->m_constructor->m_value_type);
-	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
 
-	// TODO: match type arguments as well, we only support 0 now
+	auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_constructor);
+	assert(handle && "Error: Value constructor was not handled");
+
+	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
+	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
 
 	// match value arguments
 	assert(tf_data.fields.size() == ast->m_args.size());
@@ -254,11 +256,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 	}
 
-	// NOTE: this is a special case for the `name { }` syntax sugar,
-	// but perhaps the left side should only be a TypeTerm and not possibly an Identifier?
-	if (ast->m_constructor->m_meta_type == tc.meta_typefunc())
-		ast->m_value_type =
-		    tc.m_core.new_term(ast->m_constructor->m_value_type, {}, "record instance");
+	ast->m_value_type = handle->m_value;
 }
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
