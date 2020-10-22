@@ -136,7 +136,9 @@ TypedAST::ReturnStatement* ct_eval(
 
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
-	if(ast->type() == TypedASTTag::Identifier){
+	if (ast->type() == TypedASTTag::TypeFunctionHandle) {
+		return static_cast<TypedAST::TypeFunctionHandle*>(ast)->m_value;
+	} else if (ast->type() == TypedASTTag::Identifier) {
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value =
@@ -168,7 +170,9 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
-	if(ast->type() == TypedASTTag::Identifier){
+	if (ast->type() == TypedASTTag::MonoTypeHandle) {
+		return static_cast<TypedAST::MonoTypeHandle*>(ast)->m_value;
+	} else if (ast->type() == TypedASTTag::Identifier) {
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
