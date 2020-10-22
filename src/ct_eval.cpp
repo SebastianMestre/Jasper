@@ -175,7 +175,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
-			InternedString name(as_se->m_fields[i].text().str());
+			InternedString name = as_se->m_fields[i].text();
 			assert(!structure.count(name));
 			structure[name] = mono;
 			fields.push_back(name);

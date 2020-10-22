@@ -230,8 +230,8 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 
 	TypeFunctionId dummy_tf = tc.m_core.new_type_function
 	    ( TypeFunctionTag::Record
-	    , {} // we don't care for fields in dummies
-	    , {{InternedString(ast->m_member->m_text.str()), member_type}}
+	    , {} // we don't care about fields in dummies
+	    , {{ast->m_member->m_text, member_type}}
 	    , true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
@@ -242,7 +242,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
 
 	auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_constructor);
-	assert(handle && "Error: Value constructor was not handled");
+	assert(handle->type() == TypedASTTag::MonoTypeHandle);
 
 	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
