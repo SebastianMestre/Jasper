@@ -33,6 +33,45 @@ TypedAST::FunctionLiteral* ct_eval(
 	return ast;
 }
 
+MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+
+TypedAST::TypedAST* ct_eval(
+    TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	// This does something very similar to what ct_eval(DeclarationList) does.
+	// Maybe it can be de-duplicated?
+
+	assert(ast);
+	assert(ast->m_declaration);
+
+	// TODO: These two lines are fishy; I copied them from
+	// elsewhere, but I don't think we need to go through
+	// the declaration to get the metatype: this is already
+	// done for us by metacheck().
+	MetaTypeId meta_type =
+	    tc.m_core.m_meta_core.find(ast->m_declaration->m_meta_type);
+	ast->m_meta_type = meta_type;
+
+	if (meta_type == tc.meta_value()) {
+		return ast;
+	} else if (meta_type == tc.meta_monotype()) {
+		auto monotype = mono_type_from_ast(ast, tc);
+		auto handle = alloc.make<TypedAST::MonoTypeHandle>();
+		handle->m_value = monotype;
+		handle->m_syntax = ast;
+		return handle;
+	} else if (meta_type == tc.meta_typefunc()) {
+		auto type_func = type_func_from_ast(ast, tc);
+		auto handle = alloc.make<TypedAST::TypeFunctionHandle>();
+		handle->m_value = type_func;
+		handle->m_syntax = ast;
+		return handle;
+	} else {
+		// TODO: error
+		return ast;
+	}
+}
+
 TypedAST::CallExpression* ct_eval(
     TypedAST::CallExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 
@@ -108,11 +147,11 @@ TypedAST::ReturnStatement* ct_eval(
 
 // types
 
-MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
-
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
-	if(ast->type() == TypedASTTag::Identifier){
+	if (ast->type() == TypedASTTag::TypeFunctionHandle) {
+		return static_cast<TypedAST::TypeFunctionHandle*>(ast)->m_value;
+	} else if (ast->type() == TypedASTTag::Identifier) {
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value =
@@ -144,7 +183,9 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
-	if(ast->type() == TypedASTTag::Identifier){
+	if (ast->type() == TypedASTTag::MonoTypeHandle) {
+		return static_cast<TypedAST::MonoTypeHandle*>(ast)->m_value;
+	} else if (ast->type() == TypedASTTag::Identifier) {
 		auto as_id = static_cast<TypedAST::Identifier*>(ast);
 		auto decl = as_id->m_declaration;
 		auto value = static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
@@ -176,6 +217,8 @@ TypedAST::Declaration* ct_eval(
 
 TypedAST::DeclarationList* ct_eval(
     TypedAST::DeclarationList* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	// TODO: we might need to do the SCC decomposition here, too.
+
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
 		// put a dummy var where required.
@@ -213,7 +256,6 @@ TypedAST::DeclarationList* ct_eval(
 	return ast;
 }
 
-
 TypedAST::TypedAST* ct_eval(
     TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
@@ -232,7 +274,7 @@ TypedAST::TypedAST* ct_eval(
 		RETURN(NullLiteral);
 		DISPATCH(ArrayLiteral);
 
-		RETURN(Identifier);
+		DISPATCH(Identifier);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
