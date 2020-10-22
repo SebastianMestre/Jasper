@@ -87,22 +87,13 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	assert(declaration && "accessed an unmatched identifier");
 
 	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
-
 	ast->m_meta_type = meta_type;
-	if (meta_type == tc.meta_value()) {
-		// here we implement the [var] rule
-		ast->m_value_type = declaration->m_is_polymorphic
-		                        ? tc.m_core.inst_fresh(declaration->m_decl_type)
-		                        : declaration->m_value_type;
-	} else if (meta_type == tc.meta_typefunc()) {
-		assert(0 && "Accessed a name of a typefunc (not implemented)");
-		// we are a type function.
-		// TODO: not too sure what needs to be done...
-	} else {
-		assert(0 && "Accessed a name with unknown metatype (not implemented)");
-		// meta type var
-		// TODO: not too sure what needs to be done...
-	}
+	assert(meta_type == tc.meta_value());
+
+	// here we implement the [var] rule
+	ast->m_value_type = declaration->m_is_polymorphic
+	                        ? tc.m_core.inst_fresh(declaration->m_decl_type)
+	                        : declaration->m_value_type;
 }
 
 void typecheck(TypedAST::Block* ast, TypeChecker& tc) {

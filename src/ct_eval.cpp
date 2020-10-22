@@ -36,18 +36,31 @@ TypedAST::FunctionLiteral* ct_eval(
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 
-TypedAST::TypedAST* ct_eval(TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+TypedAST::TypedAST* ct_eval(
+    TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 	// This does something very similar to what ct_eval(DeclarationList) does.
 	// Maybe it can be de-duplicated?
-	if(ast->m_meta_type == tc.meta_value()){
+
+	assert(ast);
+	assert(ast->m_declaration);
+
+	// TODO: These two lines are fishy; I copied them from
+	// elsewhere, but I don't think we need to go through
+	// the declaration to get the metatype: this is already
+	// done for us by metacheck().
+	MetaTypeId meta_type =
+	    tc.m_core.m_meta_core.find(ast->m_declaration->m_meta_type);
+	ast->m_meta_type = meta_type;
+
+	if (meta_type == tc.meta_value()) {
 		return ast;
-	} else if (ast->m_meta_type == tc.meta_monotype()) {
+	} else if (meta_type == tc.meta_monotype()) {
 		auto monotype = mono_type_from_ast(ast, tc);
 		auto handle = alloc.make<TypedAST::MonoTypeHandle>();
 		handle->m_value = monotype;
 		handle->m_syntax = ast;
 		return handle;
-	} else if (ast->m_meta_type == tc.meta_typefunc()) {
+	} else if (meta_type == tc.meta_typefunc()) {
 		auto type_func = type_func_from_ast(ast, tc);
 		auto handle = alloc.make<TypedAST::TypeFunctionHandle>();
 		handle->m_value = type_func;
