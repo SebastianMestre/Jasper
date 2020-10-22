@@ -37,6 +37,8 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 
 TypedAST::TypedAST* ct_eval(TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	// This does something very similar to what ct_eval(DeclarationList) does.
+	// Maybe it can be de-duplicated?
 	if(ast->m_meta_type == tc.meta_value()){
 		return ast;
 	} else if (ast->m_meta_type == tc.meta_monotype()) {
