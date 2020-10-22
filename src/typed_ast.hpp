@@ -228,6 +228,14 @@ struct TernaryExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::TernaryExpression} {}
 };
 
+struct ConstructorExpression : public TypedAST {
+	TypedAST* m_constructor;
+	std::vector<TypedAST*> m_args;
+
+	ConstructorExpression()
+	    : TypedAST {TypedASTTag::ConstructorExpression} {}
+};
+
 struct Block : public TypedAST {
 	std::vector<TypedAST*> m_body;
 

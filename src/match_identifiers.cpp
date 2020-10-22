@@ -178,6 +178,16 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::ConstructorExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	CHECK_AND_RETURN(match_identifiers(ast->m_constructor, env));
+
+	for (auto& arg : ast->m_args)
+		CHECK_AND_RETURN(match_identifiers(arg, env));
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		env.declare(decl.identifier_text(), &decl);
@@ -237,6 +247,7 @@ namespace TypeChecker {
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
 		DISPATCH(ForStatement);

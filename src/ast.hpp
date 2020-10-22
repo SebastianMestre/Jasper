@@ -185,6 +185,14 @@ struct TernaryExpression : public AST {
 	    : AST {ASTTag::TernaryExpression} {}
 };
 
+struct ConstructorExpression : public AST {
+	AST* m_constructor;
+	std::vector<AST*> m_args;
+
+	ConstructorExpression()
+	    : AST {ASTTag::ConstructorExpression} {}
+};
+
 struct Block : public AST {
 	std::vector<AST*> m_body;
 

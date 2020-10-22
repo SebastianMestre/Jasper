@@ -16,6 +16,7 @@
 	X(IndexExpression)                                                         \
 	X(RecordAccessExpression)                                                  \
 	X(TernaryExpression)                                                       \
+	X(ConstructorExpression)                                                   \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \

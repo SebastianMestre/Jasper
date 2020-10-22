@@ -19,6 +19,7 @@
 	X(CallExpression) \
 	X(IndexExpression) \
 	X(RecordAccessExpression) \
+	X(ConstructorExpression) \
 	X(Block) \
 	X(ReturnStatement) \
 	X(IfElseStatement) \

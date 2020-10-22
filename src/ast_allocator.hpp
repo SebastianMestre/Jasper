@@ -24,6 +24,7 @@ struct Allocator : public NodeAllocator<
     CallExpression,
     IndexExpression,
     RecordAccessExpression,
+    ConstructorExpression,
     Block,
     ReturnStatement,
     IfElseStatement,
