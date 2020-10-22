@@ -33,6 +33,30 @@ TypedAST::FunctionLiteral* ct_eval(
 	return ast;
 }
 
+MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+
+TypedAST::TypedAST* ct_eval(TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	if(ast->m_meta_type == tc.meta_value()){
+		return ast;
+	} else if (ast->m_meta_type == tc.meta_monotype()) {
+		auto monotype = mono_type_from_ast(ast, tc);
+		auto handle = alloc.make<TypedAST::MonoTypeHandle>();
+		handle->m_value = monotype;
+		handle->m_syntax = ast;
+		return handle;
+	} else if (ast->m_meta_type == tc.meta_typefunc()) {
+		auto type_func = type_func_from_ast(ast, tc);
+		auto handle = alloc.make<TypedAST::TypeFunctionHandle>();
+		handle->m_value = type_func;
+		handle->m_syntax = ast;
+		return handle;
+	} else {
+		// TODO: error
+		return ast;
+	}
+}
+
 TypedAST::CallExpression* ct_eval(
     TypedAST::CallExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 
@@ -108,8 +132,6 @@ TypedAST::ReturnStatement* ct_eval(
 
 // types
 
-MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
-
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
 	if(ast->type() == TypedASTTag::Identifier){
@@ -176,6 +198,8 @@ TypedAST::Declaration* ct_eval(
 
 TypedAST::DeclarationList* ct_eval(
     TypedAST::DeclarationList* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	// TODO: we might need to do the SCC decomposition here, too.
+
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
 		// put a dummy var where required.
@@ -213,7 +237,6 @@ TypedAST::DeclarationList* ct_eval(
 	return ast;
 }
 
-
 TypedAST::TypedAST* ct_eval(
     TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
@@ -232,7 +255,7 @@ TypedAST::TypedAST* ct_eval(
 		RETURN(NullLiteral);
 		DISPATCH(ArrayLiteral);
 
-		RETURN(Identifier);
+		DISPATCH(Identifier);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
