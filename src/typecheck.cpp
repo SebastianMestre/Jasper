@@ -245,7 +245,8 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	assert(handle->type() == TypedASTTag::MonoTypeHandle);
 
 	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
-	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf];
+	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
+	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
 
 	// match value arguments
 	assert(tf_data.fields.size() == ast->m_args.size());

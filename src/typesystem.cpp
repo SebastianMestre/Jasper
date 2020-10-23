@@ -100,8 +100,9 @@ TypeSystemCore::TypeSystemCore() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = m_tf_core.find_function(tf);
-	int argument_count = m_type_functions[tf].argument_count;
+	tf = m_tf_core.find(tf);
+	int tf_data_idx = m_tf_core.find_function(tf);
+	int argument_count = m_type_functions[tf_data_idx].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size())
 		assert(0 && "instanciating polymorphic type with wrong argument count");
