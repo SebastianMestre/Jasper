@@ -4,9 +4,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "algorithms/unification.hpp"
+#include "utils/interned_string.hpp"
 #include "typechecker_types.hpp"
-#include "unification.hpp"
-#include "interned_string.hpp"
 
 namespace Frontend {
 struct CompileTimeEnvironment;

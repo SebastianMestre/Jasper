@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../interned_string.hpp"
-#include "../span.hpp"
+#include "../utils/interned_string.hpp"
+#include "../utils/span.hpp"
 #include "environment_fwd.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"

@@ -6,7 +6,7 @@
 
 #include "ast_tag.hpp"
 #include "token.hpp"
-#include "typedefs.hpp"
+#include "utils/typedefs.hpp"
 
 namespace AST {
 

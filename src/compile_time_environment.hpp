@@ -5,8 +5,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "interned_string.hpp"
 #include "typechecker_types.hpp"
+#include "utils/interned_string.hpp"
 
 namespace TypedAST {
 

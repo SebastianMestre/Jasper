@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "../utils/typedefs.hpp"
 #include "test_status_tag.hpp"
-#include "../typedefs.hpp"
 
 namespace Test {
 

@@ -3,7 +3,7 @@
 #include <string>
 
 #include "token_tag.hpp"
-#include "interned_string.hpp"
+#include "utils/interned_string.hpp"
 
 struct Token {
 	/* internal representation of token */

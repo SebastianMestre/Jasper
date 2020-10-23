@@ -1,10 +1,10 @@
 #include "typecheck.hpp"
 
+#include "algorithms/tarjan_solver.hpp"
 #include "compile_time_environment.hpp"
-#include "tarjan_solver.hpp"
 #include "typechecker.hpp"
-#include "typed_ast.hpp"
 #include "typechecker_types.hpp"
+#include "typed_ast.hpp"
 
 #include <cassert>
 #include <iostream>

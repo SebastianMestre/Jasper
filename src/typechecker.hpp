@@ -1,10 +1,10 @@
 #pragma once
 
-#include "chunked_array.hpp"
 #include "compile_time_environment.hpp"
-#include "interned_string.hpp"
-#include "typesystem.hpp"
 #include "typed_ast_allocator.hpp"
+#include "typesystem.hpp"
+#include "utils/chunked_array.hpp"
+#include "utils/interned_string.hpp"
 
 namespace TypeChecker {
 
