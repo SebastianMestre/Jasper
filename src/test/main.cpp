@@ -84,6 +84,7 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
+
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
 			int_val := 1 + 2 + 3 + 4;

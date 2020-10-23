@@ -88,6 +88,7 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 
 	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
 	ast->m_meta_type = meta_type;
+
 	assert(meta_type == tc.meta_value());
 
 	// here we implement the [var] rule
@@ -227,11 +228,36 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = tc.m_core.new_dummy_type_function(
-	    TypeFunctionTag::Record, {{ast->m_member->m_text.str(), member_type}});
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function
+	    ( TypeFunctionTag::Record
+	    , {} // we don't care about fields in dummies
+	    , {{ast->m_member->m_text, member_type}}
+	    , true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
+}
+
+void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
+	typecheck(ast->m_constructor, tc);
+
+	auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_constructor);
+	assert(handle->type() == TypedASTTag::MonoTypeHandle);
+
+	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
+	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
+	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
+
+	// match value arguments
+	assert(tf_data.fields.size() == ast->m_args.size());
+	for (int i = 0; i < ast->m_args.size(); ++i) {
+		typecheck(ast->m_args[i], tc);
+
+		MonoId field_type = tf_data.structure[tf_data.fields[i]];
+		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
+	}
+
+	ast->m_value_type = handle->m_value;
 }
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
@@ -366,6 +392,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);

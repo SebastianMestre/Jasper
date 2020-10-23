@@ -121,6 +121,13 @@ void compute_offsets(TypedAST::RecordAccessExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_record, frame_offset);
 }
 
+void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {
+	compute_offsets(ast->m_constructor, frame_offset);
+
+	for (auto& arg : ast->m_args)
+		compute_offsets(arg, frame_offset);
+}
+
 void compute_offsets(TypedAST::DeclarationList* ast, int frame_offset) {
 	for (auto& decl : ast->m_declarations) {
 		if (decl.m_value)
@@ -162,6 +169,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
@@ -174,6 +182,9 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
+
+		DO_NOTHING(TypeFunctionHandle);
+		DO_NOTHING(MonoTypeHandle);
 	}
 
 #undef DO_NOTHING

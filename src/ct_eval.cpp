@@ -105,6 +105,16 @@ TypedAST::RecordAccessExpression* ct_eval(
 	return ast;
 }
 
+TypedAST::ConstructorExpression* ct_eval(
+    TypedAST::ConstructorExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_constructor = ct_eval(ast->m_constructor, tc, alloc);
+
+	for (auto& arg : ast->m_args)
+		arg = ct_eval(arg, tc, alloc);
+
+	return ast;
+}
+
 // statements
 
 TypedAST::Block* ct_eval(
@@ -160,20 +170,19 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	} else if (ast->type() == TypedASTTag::StructExpression) {
 		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
 
-		std::unordered_map<std::string, MonoId> fields;
+		std::vector<InternedString> fields;
+		std::unordered_map<InternedString, MonoId> structure;
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
-			std::string name = as_se->m_fields[i].text().str();
-			assert(!fields.count(name));
-			fields[name] = mono;
+			InternedString name = as_se->m_fields[i].text();
+			assert(!structure.count(name));
+			structure[name] = mono;
+			fields.push_back(name);
 		}
 
-		// TODO: we create a dummy typefunc then make it non-dummy. SERIOUSLY?
-		TypeFunctionId result = tc.m_core.new_dummy_type_function(
-		    TypeFunctionTag::Record, std::move(fields));
-
-		tc.m_core.m_type_functions[result].is_dummy = false;
+		TypeFunctionId result = tc.m_core.new_type_function(
+		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 
 		return result;
 	} else {
@@ -256,6 +265,14 @@ TypedAST::DeclarationList* ct_eval(
 	return ast;
 }
 
+TypedAST::MonoTypeHandle* ct_eval(
+    TypedAST::TypeTerm* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	auto handle = alloc.make<TypedAST::MonoTypeHandle>();
+	handle->m_value = mono_type_from_ast(ast, tc);
+	handle->m_syntax = ast;
+	return handle;
+}
+
 TypedAST::TypedAST* ct_eval(
     TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
@@ -280,6 +297,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
@@ -289,6 +307,8 @@ TypedAST::TypedAST* ct_eval(
 
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
+
+		DISPATCH(TypeTerm);
 	}
 
 	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "

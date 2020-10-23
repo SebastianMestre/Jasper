@@ -100,8 +100,9 @@ TypeSystemCore::TypeSystemCore() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = m_tf_core.find_function(tf);
-	int argument_count = m_type_functions[tf].argument_count;
+	tf = m_tf_core.find(tf);
+	int tf_data_idx = m_tf_core.find_function(tf);
+	int argument_count = m_type_functions[tf_data_idx].argument_count;
 
 	if (argument_count != -1 && argument_count != args.size())
 		assert(0 && "instanciating polymorphic type with wrong argument count");
@@ -126,13 +127,15 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	return id;
 }
 
-TypeFunctionId TypeSystemCore::new_dummy_type_function
-    (TypeFunctionTag type, std::unordered_map<std::string, MonoId> structure) {
+TypeFunctionId TypeSystemCore::new_type_function
+    ( TypeFunctionTag type
+    , std::vector<InternedString> fields
+    , std::unordered_map<InternedString, MonoId> structure
+    , bool dummy) {
 	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
-	m_type_functions.push_back({type, 0, structure, true});
+	m_type_functions.push_back({type, 0, std::move(fields), std::move(structure), dummy});
 	return id;
 }
-
 
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {

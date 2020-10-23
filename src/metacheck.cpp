@@ -89,6 +89,18 @@ void metacheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_meta_core.unify(ast->m_record->m_meta_type, tc.meta_value());
 }
 
+void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_value();
+
+	metacheck(ast->m_constructor, tc);
+	tc.m_core.m_meta_core.unify(ast->m_constructor->m_meta_type, tc.meta_monotype());
+
+	for (auto& arg : ast->m_args) {
+		metacheck(arg, tc);
+		tc.m_core.m_meta_core.unify(arg->m_meta_type, tc.meta_value());
+	}
+}
+
 // statements
 
 void metacheck(TypedAST::Block* ast, TypeChecker& tc) {
@@ -197,6 +209,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
