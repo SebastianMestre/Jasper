@@ -1,4 +1,3 @@
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -6,9 +5,6 @@
 #include "chunked_array.hpp"
 
 #include <cstdint>
-
-struct string_view;
-struct InternedString;
 
 // a flat linear hashing table
 // if rehashing occurs, references are not invalidated

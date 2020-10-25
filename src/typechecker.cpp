@@ -2,8 +2,7 @@
 
 #include "typechecker_types.hpp"
 #include "typed_ast.hpp"
-
-#include <cassert>
+#include "typed_ast_allocator.hpp"
 
 namespace TypeChecker {
 

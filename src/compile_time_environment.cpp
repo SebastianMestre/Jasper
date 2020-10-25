@@ -1,7 +1,5 @@
 #include "compile_time_environment.hpp"
 
-#include "typed_ast.hpp"
-
 #include <cassert>
 
 namespace Frontend {

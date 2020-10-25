@@ -2,11 +2,12 @@
 
 #include <vector>
 
-#include "error.hpp"
 #include "gc_ptr.hpp"
 #include "value.hpp"
 
 namespace Interpreter {
+
+struct Error;
 
 struct GC {
   private:

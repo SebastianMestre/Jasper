@@ -76,7 +76,7 @@ int Core::new_var(char const* debug) {
 
 int Core::new_term(int f, std::vector<int> args, char const* debug) {
 	int id = node_header.size();
-	node_header.push_back({Tag::Term, term_data.size(), debug});
+	node_header.push_back({Tag::Term, static_cast<int>(term_data.size()), debug});
 	term_data.push_back({f, std::move(args)});
 	return id;
 }

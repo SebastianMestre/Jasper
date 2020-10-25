@@ -2,9 +2,6 @@
 
 #include <iostream>
 
-#include <cassert>
-
-#include "environment.hpp"
 #include "error.hpp"
 
 namespace Interpreter {

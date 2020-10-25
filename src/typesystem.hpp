@@ -8,10 +8,6 @@
 #include "utils/interned_string.hpp"
 #include "typechecker_types.hpp"
 
-namespace Frontend {
-struct CompileTimeEnvironment;
-}
-
 enum class TypeFunctionTag { Builtin, Sum, Product, Record };
 // Concrete type function. If it's a built-in, we use argument_count
 // to tell how many arguments it takes. Else, for sum, product and record,

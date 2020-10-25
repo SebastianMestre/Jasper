@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>
-
-#include "ast_allocator.hpp"
-
 namespace AST {
+
+struct AST;
+struct Allocator;
 
 AST* desugar(AST*, Allocator&);
 

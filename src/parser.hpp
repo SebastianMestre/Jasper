@@ -1,13 +1,16 @@
 #pragma once
 
-#include <memory>
-#include <string>
 #include <vector>
 
-#include "ast.hpp"
 #include "error_report.hpp"
 #include "lexer.hpp"
-#include "ast_allocator.hpp"
+
+namespace AST {
+struct AST;
+struct Allocator;
+struct Identifier;
+struct Declaration;
+}
 
 template <typename T>
 struct Writer {

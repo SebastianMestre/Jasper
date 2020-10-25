@@ -1,10 +1,14 @@
 #pragma once
 
 #include "compile_time_environment.hpp"
-#include "typed_ast_allocator.hpp"
 #include "typesystem.hpp"
 #include "utils/chunked_array.hpp"
 #include "utils/interned_string.hpp"
+
+namespace TypedAST {
+struct Allocator;
+struct Declaration;
+}
 
 namespace TypeChecker {
 

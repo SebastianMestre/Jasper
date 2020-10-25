@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "error.hpp"
 #include "garbage_collector.hpp"
 
 namespace Interpreter {

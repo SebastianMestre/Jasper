@@ -1,8 +1,9 @@
 #include "garbage_collector.hpp"
 
+#include "error.hpp"
+
 #include <algorithm>
 #include <string>
-#include <unordered_map>
 
 namespace Interpreter {
 

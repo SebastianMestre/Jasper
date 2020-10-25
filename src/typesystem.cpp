@@ -1,10 +1,6 @@
 #include "typesystem.hpp"
 
-#include <iostream>
-
 #include <cassert>
-
-#include "compile_time_environment.hpp"
 
 TypeSystemCore::TypeSystemCore() {
 	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {

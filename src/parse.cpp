@@ -1,6 +1,5 @@
 #include "parse.hpp"
 
-#include "ast.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
 
