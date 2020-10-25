@@ -2,6 +2,7 @@
 
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
+#include "typed_ast_allocator.hpp"
 
 #include <iostream>
 

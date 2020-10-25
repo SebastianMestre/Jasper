@@ -2,9 +2,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
+#include "../ast_allocator.hpp"
 #include "../parse.hpp"
+#include "../parser.hpp"
 #include "../token_array.hpp"
 #include "../typed_ast.hpp"
 #include "../typed_ast_allocator.hpp"
@@ -12,6 +13,7 @@
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"
+#include "gc_ptr.hpp"
 #include "value.hpp"
 
 int main() {

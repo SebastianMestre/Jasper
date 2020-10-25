@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../utils/interned_string.hpp"
-#include "error.hpp"
 #include "gc_ptr.hpp"
 #include "value.hpp"
 
@@ -10,6 +9,7 @@
 namespace Interpreter {
 
 struct GC;
+struct Error;
 
 struct Scope {
 	std::map<InternedString, Reference*> m_declarations;

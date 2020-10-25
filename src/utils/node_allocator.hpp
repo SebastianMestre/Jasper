@@ -2,8 +2,6 @@
 
 #include "chunked_array.hpp"
 
-#include <iostream>
-
 #include <type_traits>
 
 template <typename T>

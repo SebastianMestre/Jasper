@@ -1,5 +1,6 @@
 #include "execute.hpp"
 
+#include "../ast_allocator.hpp"
 #include "../compute_offsets.hpp"
 #include "../ct_eval.hpp"
 #include "../desugar.hpp"
@@ -10,13 +11,12 @@
 #include "../typecheck.hpp"
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
+#include "../typed_ast_allocator.hpp"
 #include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
 #include "native.hpp"
 #include "utils.hpp"
-
-#include <iostream>
 
 namespace Interpreter {
 

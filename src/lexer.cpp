@@ -1,6 +1,5 @@
 #include "lexer.hpp"
 
-#include <string>
 #include <vector>
 
 #include <cassert>

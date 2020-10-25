@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include "utils/string_view.hpp"
+#include "ast_allocator.hpp"
 
 #include <sstream>
 #include <utility>

@@ -1,12 +1,10 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <vector>
 
 #include "ast_tag.hpp"
 #include "token.hpp"
-#include "utils/typedefs.hpp"
 
 namespace AST {
 

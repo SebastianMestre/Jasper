@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -9,10 +8,8 @@
 #include <climits>
 
 #include "token.hpp"
-#include "token_tag.hpp"
 #include "typechecker_types.hpp"
 #include "typed_ast_tag.hpp"
-#include "utils/typedefs.hpp"
 
 namespace AST {
 struct AST;

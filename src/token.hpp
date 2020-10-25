@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "token_tag.hpp"
 #include "utils/interned_string.hpp"
 

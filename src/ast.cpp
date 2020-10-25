@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include <cassert>
-
 namespace AST {
 
 namespace {

@@ -1,8 +1,8 @@
-#include "utils/typedefs.hpp"
-#include "typed_ast_allocator.hpp"
+#pragma once
 
 namespace TypedAST {
 struct TypedAST;
+struct Allocator;
 }
 
 namespace TypeChecker {

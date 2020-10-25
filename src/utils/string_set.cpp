@@ -1,11 +1,7 @@
 #include "string_set.hpp"
 
-#include "string_view.hpp"
-
 #include <cassert>
 #include <cstring>
-
-#include <iostream>
 
 // compute a 64-bit hash
 static uint64_t compute_hash(unsigned char const* data, size_t length) {

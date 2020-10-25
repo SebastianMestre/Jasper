@@ -2,7 +2,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <unordered_set>
 
 struct StringSet;
 

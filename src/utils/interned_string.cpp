@@ -1,7 +1,5 @@
 #include "interned_string.hpp"
 
-#include <iostream>
-
 #include "string_set.hpp"
 
 #include <cassert>
