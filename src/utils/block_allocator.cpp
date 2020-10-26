@@ -1,1 +1,46 @@
 #include "block_allocator.hpp"
+
+#include <algorithm>
+
+#include <cassert>
+#include <cstdio>
+#include <cstring>
+
+BlockAllocator::BlockAllocator(int bytes_per_slot, int target_bytes_per_block)
+    : m_bytes_per_slot {bytes_per_slot}
+    , m_data {nullptr} {
+
+	// we assume no alignment requirements
+	constexpr int bytes_per_block_header = 8;
+	int const target_bytes_per_block_body = target_bytes_per_block - bytes_per_block_header;
+
+	// ensure we allocate at least 1 object
+	// otherwise, don't go over the target block size
+	int const slot_count = std::max(1, target_bytes_per_block_body / bytes_per_slot);
+
+	m_bytes_per_block = bytes_per_block_header + slot_count * bytes_per_slot;
+
+	new_block();
+}
+
+void BlockAllocator::new_block() {
+	auto const old_data = m_data;
+	m_data = new uint8_t[m_bytes_per_block];
+	memset(m_data, 0, m_bytes_per_block);
+	memcpy(m_data, &old_data, 8); // assume a pointer is 8 bytes
+	m_bytes_used_in_block = 8;
+}
+
+bool BlockAllocator::block_is_full() const {
+	assert(m_bytes_used_in_block <= m_bytes_per_block);
+	return m_bytes_used_in_block == m_bytes_per_block;
+}
+
+uint8_t* BlockAllocator::allocate(int bytes) {
+	assert(bytes <= m_bytes_per_slot);
+	if (block_is_full())
+		new_block();
+	auto const result = m_data + m_bytes_used_in_block;
+	m_bytes_used_in_block += m_bytes_per_slot;
+	return result;
+}
