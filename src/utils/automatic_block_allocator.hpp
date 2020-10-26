@@ -11,7 +11,7 @@ struct AutomaticBlockAllocator {
 
 	AutomaticBlockAllocator(int bytes_per_object, int target_bytes_per_block);
 
-	template<typename T>
+	template <typename T>
 	T* make() {
 		// fprintf(stderr, "%s -- %lu\n", __PRETTY_FUNCTION__, sizeof(T));
 
@@ -28,11 +28,9 @@ struct AutomaticBlockAllocator {
 		return new (data) T;
 	}
 
-  private:
-	// a slot header contains a function pointer.
-	// we assume that an fptr takes up 8 bytes.
-	static constexpr int bytes_per_slot_header = 8;
+	~AutomaticBlockAllocator();
 
+  private:
 	static constexpr int bytes_per_slot_from_bytes_per_object(int bytes_per_object) {
 		// round up to multiple of 8
 		int rounded_bytes_per_object =
@@ -40,6 +38,10 @@ struct AutomaticBlockAllocator {
 		int slot_size = rounded_bytes_per_object + bytes_per_slot_header;
 		return slot_size;
 	}
+
+	// a slot header contains a function pointer.
+	// we assume that an fptr takes up 8 bytes.
+	static constexpr int bytes_per_slot_header = 8;
 
 	using Destructor = void(void*);
 	BlockAllocator m_allocator;
