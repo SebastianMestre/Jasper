@@ -40,8 +40,23 @@ struct Allocator : public NodeAllocator<
     StructExpression> {};
 	*/
 
-struct Allocator : public AutomaticBlockAllocator {
-	Allocator() : AutomaticBlockAllocator(120, 4096) {}
+struct Allocator {
+	// static constexpr int small_size = 0;
+	static constexpr int small_size = 40;
+	AutomaticBlockAllocator m_small;
+
+	Allocator() : m_small(small_size, 4*4096) {}
+
+	template<typename T>
+	T* make() {
+		if (small_size < sizeof(T)) {
+			// fprintf(stderr, "big allocation %s\n", __PRETTY_FUNCTION__);
+			return new T;
+		} else {
+			return m_small.make<T>();
+		}
+	}
+
 };
 
 } // namespace AST

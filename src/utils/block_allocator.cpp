@@ -24,23 +24,13 @@ BlockAllocator::BlockAllocator(int bytes_per_slot, int target_bytes_per_block)
 }
 
 void BlockAllocator::new_block() {
+	// fprintf(stderr, "allocating new block\n");
 	auto const old_data = m_data;
 	m_data = new uint8_t[m_bytes_per_block];
-	memset(m_data, 0, m_bytes_per_block);
 	memcpy(m_data, &old_data, 8); // assume a pointer is 8 bytes
 	m_bytes_used_in_block = 8;
 }
 
-bool BlockAllocator::block_is_full() const {
-	assert(m_bytes_used_in_block <= m_bytes_per_block);
-	return m_bytes_used_in_block == m_bytes_per_block;
-}
+// bool BlockAllocator::block_is_full() const { }
 
-uint8_t* BlockAllocator::allocate(int bytes) {
-	assert(bytes <= m_bytes_per_slot);
-	if (block_is_full())
-		new_block();
-	auto const result = m_data + m_bytes_used_in_block;
-	m_bytes_used_in_block += m_bytes_per_slot;
-	return result;
-}
+// uint8_t* BlockAllocator::allocate(int bytes) { }

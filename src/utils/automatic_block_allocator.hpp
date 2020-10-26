@@ -25,7 +25,7 @@ struct AutomaticBlockAllocator {
 		memcpy(data, &dtor, bytes_per_slot_header);
 		data += bytes_per_slot_header;
 
-		return new(data) T;
+		return new (data) T;
 	}
 
   private:
@@ -33,7 +33,13 @@ struct AutomaticBlockAllocator {
 	// we assume that an fptr takes up 8 bytes.
 	static constexpr int bytes_per_slot_header = 8;
 
-  	static int bytes_per_slot_from_bytes_per_object(int bytes_per_object);
+	static constexpr int bytes_per_slot_from_bytes_per_object(int bytes_per_object) {
+		// round up to multiple of 8
+		int rounded_bytes_per_object =
+		    (bytes_per_object - 1) + 8 - ((bytes_per_object - 1) % 8);
+		int slot_size = rounded_bytes_per_object + bytes_per_slot_header;
+		return slot_size;
+	}
 
 	using Destructor = void(void*);
 	BlockAllocator m_allocator;
