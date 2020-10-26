@@ -16,6 +16,8 @@ struct BlockAllocator {
 		return result;
 	}
 
+	~BlockAllocator();
+
   private:
 	void new_block();
 	bool block_is_full() const {

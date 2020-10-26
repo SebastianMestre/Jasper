@@ -23,6 +23,14 @@ BlockAllocator::BlockAllocator(int bytes_per_slot, int target_bytes_per_block)
 	new_block();
 }
 
+BlockAllocator::~BlockAllocator() {
+	while (m_data) {
+		auto to_delete = m_data;
+		memcpy(&m_data, m_data, 8);
+		delete[] to_delete;
+	}
+}
+
 void BlockAllocator::new_block() {
 	// fprintf(stderr, "allocating new block\n");
 	auto const old_data = m_data;
