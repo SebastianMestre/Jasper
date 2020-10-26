@@ -1,10 +1,12 @@
 #pragma once
 
 #include "ast.hpp"
-#include "utils/node_allocator.hpp"
+// #include "utils/node_allocator.hpp"
+#include "utils/automatic_block_allocator.hpp"
 
 namespace AST {
 
+/*
 // TODO: could we use the AST_TAGS macro here?
 struct Allocator : public NodeAllocator<
     NumberLiteral,
@@ -36,5 +38,10 @@ struct Allocator : public NodeAllocator<
     UnionExpression,
     TupleExpression,
     StructExpression> {};
+	*/
+
+struct Allocator : public AutomaticBlockAllocator {
+	Allocator() : AutomaticBlockAllocator(120, 4096) {}
+};
 
 } // namespace AST
