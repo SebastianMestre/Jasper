@@ -6,6 +6,9 @@
 struct BlockAllocator {
 	friend struct AutomaticBlockAllocator;
 
+	template<typename T>
+	friend struct PolymorphicBlockAllocator;
+
 	BlockAllocator(int bytes_per_slot, int target_bytes_per_block);
 	uint8_t* allocate(int bytes) {
 		assert(bytes <= m_bytes_per_slot);
