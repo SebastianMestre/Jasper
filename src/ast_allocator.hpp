@@ -2,7 +2,8 @@
 
 #include "ast.hpp"
 // #include "utils/node_allocator.hpp"
-#include "utils/automatic_block_allocator.hpp"
+// #include "utils/automatic_block_allocator.hpp"
+#include "utils/polymorphic_block_allocator.hpp"
 
 namespace AST {
 
@@ -43,7 +44,9 @@ struct Allocator : public NodeAllocator<
 struct Allocator {
 	// static constexpr int small_size = 0;
 	static constexpr int small_size = 40;
-	AutomaticBlockAllocator m_small;
+	// static constexpr int small_size = 64 - 8;
+	// AutomaticBlockAllocator m_small;
+	PolymorphicBlockAllocator<AST> m_small;
 
 	Allocator() : m_small(small_size, 4*4096) {}
 
