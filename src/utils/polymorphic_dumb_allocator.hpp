@@ -13,12 +13,16 @@
 // using virtual destructors
 template<typename Base>
 struct PolymorphicDumbAllocator {
+	static_assert(
+	    std::has_virtual_destructor<Base>::value,
+	    "Base must have a virtual destructor");
+
 	BlockAllocator m_allocator;
 
 	PolymorphicDumbAllocator(int target_bytes_per_block)
 	    : m_allocator {8, target_bytes_per_block} {}
 
-	template<typename T>
+	template <typename T>
 	T* make() {
 		static_assert(
 		    std::is_base_of<Base, T>::value, "T must be a subtype of Base");

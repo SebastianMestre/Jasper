@@ -8,14 +8,20 @@
 
 template<typename Base>
 struct PolymorphicBlockAllocator {
+	static_assert(
+	    std::has_virtual_destructor<Base>::value,
+	    "Base must have a virtual destructor");
+
 	BlockAllocator m_allocator;
 
 	PolymorphicBlockAllocator(int bytes_per_slot, int target_bytes_per_block)
 	    : m_allocator {bytes_per_slot, target_bytes_per_block} {}
 
-	template<typename T>
+	template <typename T>
 	T* make() {
-		static_assert(std::is_base_of<Base,T>::value, "this allocator can only allocate objects of subtype of the base type");
+		static_assert(
+		    std::is_base_of<Base, T>::value, "T must be a subtype of Base");
+
 		auto data = m_allocator.allocate(sizeof(T));
 		return new(data) T();
 	}
