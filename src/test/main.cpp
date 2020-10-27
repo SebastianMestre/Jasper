@@ -5,7 +5,6 @@
 #include "../algorithms/tarjan_solver.hpp"
 #include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
-#include "../utils/node_allocator.hpp"
 #include "../utils/string_set.hpp"
 #include "test_status_tag.hpp"
 #include "test_utils.hpp"
@@ -496,24 +495,7 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 }
 
 void allocator_tests(Test::Tester& tests) {
-	tests.add_test(std::make_unique<Test::NormalTestSet>(
-		+[]() -> TestReport {
-			NodeAllocator<int, float> test_allocator;
-
-			int* integer = test_allocator.make<int>();
-			*integer = 1;
-
-			float* floating = test_allocator.make<float>();
-			*floating = 1.0f;
-
-			for(int i = 1e3; i--;)
-				test_allocator.make<float>();
-
-			*floating = 2.0f;
-
-			return {TestStatusTag::Ok};
-		}
-	));
+	// TODO
 }
 
 void string_set_tests(Test::Tester& tester) {
