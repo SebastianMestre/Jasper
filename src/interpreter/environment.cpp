@@ -138,6 +138,11 @@ void Environment::push_string(std::string s) {
 	run_gc_if_needed();
 }
 
+void Environment::push_struct_constructor(std::vector<InternedString> keys) {
+	push(m_gc->new_struct_constructor_raw(std::move(keys)));
+	run_gc_if_needed();
+}
+
 gc_ptr<Array> Environment::new_list(ArrayType elements) {
 	auto result = m_gc->new_list(std::move(elements));
 	run_gc_if_needed();

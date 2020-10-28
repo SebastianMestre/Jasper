@@ -110,6 +110,10 @@ Reference::Reference(Value* value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
+StructConstructor::StructConstructor(std::vector<InternedString> keys)
+    : Value {ValueTag::Reference}
+    , m_keys {std::move(keys)} {}
+
 void gc_visit(Null* v) {
 	v->m_visited = true;
 }
@@ -129,6 +133,9 @@ void gc_visit(Error* v) {
 	v->m_visited = true;
 }
 void gc_visit(NativeFunction* v) {
+	v->m_visited = true;
+}
+void gc_visit(StructConstructor* v) {
 	v->m_visited = true;
 }
 
@@ -204,6 +211,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<NativeFunction*>(v));
 	case ValueTag::Reference:
 		return gc_visit(static_cast<Reference*>(v));
+	case ValueTag::StructConstructor:
+		return gc_visit(static_cast<StructConstructor*>(v));
 	}
 }
 
@@ -284,6 +293,11 @@ void print(Reference* l, int d) {
 	print(l->m_value, d + 1);
 }
 
+void print(StructConstructor* l, int d) {
+	print_spaces(d);
+	std::cout << "StructConstructor\n";
+}
+
 void print(Value* v, int d) {
 
 	switch (v->type()) {
@@ -311,6 +325,8 @@ void print(Value* v, int d) {
 		return print(static_cast<NativeFunction*>(v), d);
 	case ValueTag::Reference:
 		return print(static_cast<Reference*>(v), d);
+	case ValueTag::StructConstructor:
+		return print(static_cast<StructConstructor*>(v), d);
 	}
 }
 

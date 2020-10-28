@@ -146,4 +146,10 @@ gc_ptr<Reference> GC::new_reference(Value* v) {
 	return result;
 }
 
+StructConstructor* GC::new_struct_constructor_raw(std::vector<InternedString> keys){
+	auto result = new StructConstructor(std::move(keys));
+	m_blocks.push_back(result);
+	return result;
+}
+
 } // namespace Interpreter

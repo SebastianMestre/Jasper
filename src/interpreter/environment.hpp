@@ -60,6 +60,7 @@ struct Environment {
 	void push_float(float);
 	void push_boolean(bool);
 	void push_string(std::string);
+	void push_struct_constructor(std::vector<InternedString>);
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_object(ObjectType) -> gc_ptr<Object>;
 	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
