@@ -7,13 +7,16 @@ TypeSystemCore::TypeSystemCore() {
 		if (core.find_term(a) == core.find_term(b))
 			return;
 	
-		TypeFunctionData& a_data = m_type_functions[core.find_function(a)];
-		TypeFunctionData& b_data = m_type_functions[core.find_function(b)];
+		int fa = core.find_function(a);
+		int fb = core.find_function(b);
 
-		if (b_data.is_dummy) {
+		if (m_type_functions[fb].is_dummy) {
 			std::swap(a, b);
-			std::swap(a_data, b_data);
+			std::swap(fa, fb);
 		}
+
+		TypeFunctionData& a_data = m_type_functions[fa];
+		TypeFunctionData& b_data = m_type_functions[fb];
 
 		if (a_data.is_dummy) {
 			for (auto& kv_a : a_data.structure) {
@@ -123,13 +126,14 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	return id;
 }
 
-TypeFunctionId TypeSystemCore::new_type_function
-    ( TypeFunctionTag type
-    , std::vector<InternedString> fields
-    , std::unordered_map<InternedString, MonoId> structure
-    , bool dummy) {
+TypeFunctionId TypeSystemCore::new_type_function(
+    TypeFunctionTag type,
+    std::vector<InternedString> fields,
+    std::unordered_map<InternedString, MonoId> structure,
+    bool dummy) {
 	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
-	m_type_functions.push_back({type, 0, std::move(fields), std::move(structure), dummy});
+	m_type_functions.push_back(
+	    {type, 0, std::move(fields), std::move(structure), dummy});
 	return id;
 }
 
