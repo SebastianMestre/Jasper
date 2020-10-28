@@ -6,6 +6,10 @@
 
 #include <map>
 
+namespace TypeChecker {
+struct TypeChecker;
+}
+
 namespace Interpreter {
 
 struct GC;
@@ -19,6 +23,7 @@ struct Scope {
 };
 
 struct Environment {
+	TypeChecker::TypeChecker* m_tc;
 	GC* m_gc;
 	int m_gc_size_on_last_pass {64};
 
@@ -32,8 +37,9 @@ struct Environment {
 	std::vector<int> m_fp_stack;
 	std::vector<int> m_sp_stack;
 
-	Environment(GC* gc)
-	    : m_gc {gc} {}
+	Environment(TypeChecker::TypeChecker* tc, GC* gc)
+	    : m_tc {tc}
+	    , m_gc {gc} {}
 
 	void save_return_value(Value*);
 	Value* fetch_return_value();
