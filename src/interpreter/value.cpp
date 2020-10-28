@@ -111,7 +111,7 @@ Reference::Reference(Value* value)
     , m_value {value} {}
 
 StructConstructor::StructConstructor(std::vector<InternedString> keys)
-    : Value {ValueTag::Reference}
+    : Value {ValueTag::StructConstructor}
     , m_keys {std::move(keys)} {}
 
 void gc_visit(Null* v) {
@@ -256,9 +256,13 @@ void print(Error* v, int d) {
 }
 
 void print(Object* o, int d) {
-	// TODO
 	print_spaces(d);
 	std::cout << value_string[int(o->type())] << '\n';
+	for (auto& kv : o->m_value){
+		print_spaces(d+1);
+		std::cerr << kv.first << " := \n";
+		print(kv.second, d+1);
+	}
 }
 
 void print(Dictionary* m, int d) {
