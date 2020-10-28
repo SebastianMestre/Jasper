@@ -261,7 +261,12 @@ void eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 };
 
 void eval(TypedAST::RecordAccessExpression* ast, Environment& e) {
-	assert(false && "not implemented");
+	eval(ast->m_record, e);
+	auto rec = e.pop();
+	auto rec_val = unboxed(rec.get());
+	assert(rec_val->type() == ValueTag::Object);
+	auto rec_actually = static_cast<Object*>(rec_val);
+	e.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
 void eval(TypedAST::ConstructorExpression* ast, Environment& e) {
@@ -272,14 +277,16 @@ void eval(TypedAST::ConstructorExpression* ast, Environment& e) {
 
 	auto constructor_actually = static_cast<StructConstructor*>(constructor_value);
 
-	int storage_point = e.m_stack_ptr;
+	assert(ast->m_args.size() == constructor_actually->m_keys.size());
 
+	int storage_point = e.m_stack_ptr;
 	ObjectType record;
 	for (int i = 0; i < ast->m_args.size(); ++i)
 		eval(ast->m_args[i], e);
 
-	for (int i = 0; i < ast->m_args.size(); ++i)
+	for (int i = 0; i < ast->m_args.size(); ++i) {
 		record[constructor_actually->m_keys[i]] = e.m_stack[storage_point + i];
+	}
 	
 	auto result = e.m_gc->new_object(std::move(record));
 
