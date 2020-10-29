@@ -15,6 +15,9 @@ COMMON_DIR := .
 COMMON_TARGETS := \
 	algorithms/tarjan_solver \
 	algorithms/unification \
+	utils/polymorphic_block_allocator \
+	utils/polymorphic_dumb_allocator \
+	utils/block_allocator \
 	utils/interned_string \
 	utils/span \
 	utils/string_set \
