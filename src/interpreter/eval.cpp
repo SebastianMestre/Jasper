@@ -150,10 +150,17 @@ void eval_call_function(
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
+	// TODO: This is a big hack. pushing nullptr into the
+	// stack should actually never happen.
+	for (int i = callee->m_captures.size(); i--;)
+		e.push(nullptr);
+
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
-		e.push(kv.second);
+		auto capture_value = unboxed(kv.second);
+		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
+		e.m_stack[e.m_frame_ptr + offset] = kv.second;
 	}
 
 	assert(callee->m_def->m_body->type() == TypedASTTag::Block);
