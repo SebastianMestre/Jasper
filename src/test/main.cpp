@@ -455,6 +455,18 @@ void interpreter_tests(Test::Tester& tests) {
 	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 0);
 	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+			cat := fn(a,c,d) => fn(b) =>
+				a + b + c + d;
+
+			__invoke := fn() =>
+				cat("A","C","D")("B");
+		)",
+	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), "ABCD");
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
