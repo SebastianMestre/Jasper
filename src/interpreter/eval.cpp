@@ -5,9 +5,11 @@
 #include <cassert>
 #include <climits>
 
-#include "../utils/span.hpp"
+#include "../typechecker.hpp"
 #include "../typed_ast.hpp"
+#include "../utils/span.hpp"
 #include "environment.hpp"
+#include "garbage_collector.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
@@ -265,6 +267,44 @@ void eval(TypedAST::FunctionLiteral* ast, Environment& e) {
 	e.push(result.get());
 };
 
+void eval(TypedAST::RecordAccessExpression* ast, Environment& e) {
+	eval(ast->m_record, e);
+	auto rec = e.pop();
+	auto rec_val = unboxed(rec.get());
+	assert(rec_val->type() == ValueTag::Object);
+	auto rec_actually = static_cast<Object*>(rec_val);
+	e.push(rec_actually->m_value[ast->m_member->m_text]);
+}
+
+void eval(TypedAST::ConstructorExpression* ast, Environment& e) {
+	eval(ast->m_constructor, e);
+	auto constructor = e.pop();
+	auto constructor_value = unboxed(constructor.get());
+	assert(constructor_value->type() == ValueTag::StructConstructor);
+
+	auto constructor_actually = static_cast<StructConstructor*>(constructor_value);
+
+	assert(ast->m_args.size() == constructor_actually->m_keys.size());
+
+	int storage_point = e.m_stack_ptr;
+	ObjectType record;
+	for (int i = 0; i < ast->m_args.size(); ++i)
+		eval(ast->m_args[i], e);
+
+	for (int i = 0; i < ast->m_args.size(); ++i) {
+		record[constructor_actually->m_keys[i]] = e.m_stack[storage_point + i];
+	}
+	
+	auto result = e.m_gc->new_object(std::move(record));
+
+	while (e.m_stack_ptr > storage_point)
+		e.pop();
+
+	// e.pop();
+
+	e.push(result.get());
+}
+
 void eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	eval(ast->m_condition, e);
 	auto condition_result = e.pop();
@@ -336,6 +376,20 @@ void eval(TypedAST::WhileStatement* ast, Environment& e) {
 	}
 };
 
+void eval(TypedAST::TypeFunctionHandle* ast, Environment& e) {
+	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
+	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
+	e.push_struct_constructor(type_function_data.fields);
+}
+
+void eval(TypedAST::MonoTypeHandle* ast, Environment& e) {
+	TypeFunctionId type_function_header =
+	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
+	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
+	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
+	e.push_struct_constructor(type_function_data.fields);
+}
+
 void eval(TypedAST::TypedAST* ast, Environment& e) {
 
 #define DISPATCH(type)                                                         \
@@ -352,17 +406,25 @@ void eval(TypedAST::TypedAST* ast, Environment& e) {
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
-		DISPATCH(DeclarationList);
-		DISPATCH(Declaration);
+
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
+		DISPATCH(RecordAccessExpression);
+		DISPATCH(ConstructorExpression);
+
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
+
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+
+		DISPATCH(TypeFunctionHandle);
+		DISPATCH(MonoTypeHandle);
 	}
 
 	std::cerr << "@ Internal Error: unhandled case in eval:\n";

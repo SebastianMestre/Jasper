@@ -129,4 +129,10 @@ struct Reference : Value {
 	Reference(Value* value);
 };
 
+struct StructConstructor : Value {
+	std::vector<InternedString> m_keys;
+
+	StructConstructor(std::vector<InternedString> keys);
+};
+
 } // namespace Interpreter

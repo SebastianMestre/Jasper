@@ -59,7 +59,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 	TypeChecker::compute_offsets(top_level, 0);
 
 	GC gc;
-	Environment env = {&gc};
+	Environment env = {&tc, &gc};
 	declare_native_functions(env);
 	eval(top_level, env);
 

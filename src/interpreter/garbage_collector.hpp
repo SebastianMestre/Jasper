@@ -46,6 +46,7 @@ struct GC {
 	auto new_float_raw(float) -> Float*;
 	auto new_boolean_raw(bool) -> Boolean*;
 	auto new_string_raw(std::string) -> String*;
+	auto new_struct_constructor_raw(std::vector<InternedString>) -> StructConstructor*;
 };
 
 } // namespace Interpreter
