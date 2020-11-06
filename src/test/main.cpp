@@ -497,10 +497,12 @@ void interpreter_tests(Test::Tester& tests) {
 			a : int(<>) = 1;
 			b : string(<>) = "hello";
 			c : array(< int(<>) >) = array { 1; 2; };
-			d : array(< string(<>) >) = array { "hello"; ","; "world"; };
-			e : boolean(<>) = true;
 
-			__invoke := fn() => e;
+			__invoke := fn() {
+				d : array(< string(<>) >) = array { "hello"; ","; "world"; };
+				e : boolean(<>) = true;
+				return d;
+			};
 		)",
 	    Testers {
 	        +[](Interpreter::Environment& env) -> ExitStatusTag {
@@ -513,10 +515,7 @@ void interpreter_tests(Test::Tester& tests) {
 	                return Assert::array_of_size(eval_expression("c", env), 2);
 	        },
 	        +[](Interpreter::Environment& env) -> ExitStatusTag {
-	                return Assert::array_of_size(eval_expression("d", env), 3);
-	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
-	                return Assert::is_true(eval_expression("__invoke()", env));
+	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
 	        },
 	        }));
 }
