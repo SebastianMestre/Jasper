@@ -12,9 +12,9 @@
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "../typed_ast_allocator.hpp"
-#include "environment.hpp"
 #include "eval.hpp"
 #include "garbage_collector.hpp"
+#include "interpreter.hpp"
 #include "native.hpp"
 #include "utils.hpp"
 
@@ -59,7 +59,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 	TypeChecker::compute_offsets(top_level, 0);
 
 	GC gc;
-	Environment env = {&tc, &gc};
+	Interpreter env = {&tc, &gc};
 	declare_native_functions(env);
 	eval(top_level, env);
 
@@ -72,7 +72,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 // this means we need to create a call expression node to run the program.
 // Having the TokenArray die here is not good, as it takes ownership of the tokens
 // TODO: We need to clean this up
-Value* eval_expression(const std::string& expr, Environment& env) {
+Value* eval_expression(const std::string& expr, Interpreter& env) {
 	TokenArray ta;
 	AST::Allocator ast_allocator;
 	TypedAST::Allocator typed_ast_allocator;
@@ -82,7 +82,7 @@ Value* eval_expression(const std::string& expr, Environment& env) {
 
 	// TODO: return a gc_ptr
 	eval(top_level_call, env);
-	auto value = env.pop();
+	auto value = env.m_env.pop();
 	return unboxed(value.get());
 }
 

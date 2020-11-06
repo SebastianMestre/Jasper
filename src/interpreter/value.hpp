@@ -6,7 +6,6 @@
 
 #include "../utils/interned_string.hpp"
 #include "../utils/span.hpp"
-#include "environment_fwd.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
 
@@ -16,13 +15,15 @@ struct FunctionLiteral;
 
 namespace Interpreter {
 
+struct Interpreter;
+
 using Identifier = InternedString;
 using StringType = std::string;
 using ObjectType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Value*>;
 using FunctionType = TypedAST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Value*>, Environment&) -> Value*;
+using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
