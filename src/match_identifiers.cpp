@@ -7,8 +7,6 @@
 #include "error_report.hpp"
 #include "typed_ast.hpp"
 
-#include "ast_tag.hpp"
-
 #include <cassert>
 
 namespace TypeChecker {

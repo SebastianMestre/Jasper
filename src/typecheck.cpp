@@ -10,8 +10,6 @@
 #include <iostream>
 #include <unordered_set>
 
-#include "typed_ast_tag.hpp"
-
 namespace TypeChecker {
 
 // NOTE: This file duplicates a bit of what match_identifiers does.
