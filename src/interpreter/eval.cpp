@@ -8,8 +8,8 @@
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "../utils/span.hpp"
-#include "environment.hpp"
 #include "garbage_collector.hpp"
+#include "interpreter.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
@@ -21,54 +21,54 @@ static bool is_expression (TypedAST::TypedAST* ast){
 	return tag_idx < static_cast<int>(TypedASTTag::Block);
 }
 
-void eval(TypedAST::Declaration* ast, Environment& e) {
+void eval(TypedAST::Declaration* ast, Interpreter& e) {
 	auto ref = e.new_reference(e.null());
-	e.push(ref.get());
+	e.m_env.push(ref.get());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
-		auto value = e.pop();
+		auto value = e.m_env.pop();
 		ref->m_value = unboxed(value.get());
 	}
 };
 
-void eval(TypedAST::DeclarationList* ast, Environment& e) {
+void eval(TypedAST::DeclarationList* ast, Interpreter& e) {
 	for (auto& decl : ast->m_declarations) {
 		auto ref = e.new_reference(e.null());
 		e.global_declare_direct(decl.identifier_text(), ref.get());
 		eval(decl.m_value, e);
-		auto value = e.pop();
+		auto value = e.m_env.pop();
 		ref->m_value = value.get();
 	}
 };
 
-void eval(TypedAST::NumberLiteral* ast, Environment& e) {
+void eval(TypedAST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
 }
 
-void eval(TypedAST::IntegerLiteral* ast, Environment& e) {
+void eval(TypedAST::IntegerLiteral* ast, Interpreter& e) {
 	e.push_integer(ast->value());
 }
 
-void eval(TypedAST::StringLiteral* ast, Environment& e) {
+void eval(TypedAST::StringLiteral* ast, Interpreter& e) {
 	e.push_string(ast->text());
 };
 
-void eval(TypedAST::BooleanLiteral* ast, Environment& e) {
+void eval(TypedAST::BooleanLiteral* ast, Interpreter& e) {
 	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	e.push_boolean(b);
 };
 
-void eval(TypedAST::NullLiteral* ast, Environment& e) {
-	e.push(e.null());
+void eval(TypedAST::NullLiteral* ast, Interpreter& e) {
+	e.m_env.push(e.null());
 };
 
-void eval(TypedAST::ObjectLiteral* ast, Environment& e) {
+void eval(TypedAST::ObjectLiteral* ast, Interpreter& e) {
 	auto result = e.new_object({});
 
 	for (auto& decl : ast->m_body) {
 		if (decl.m_value) {
 			eval(decl.m_value, e);
-			auto value = e.pop();
+			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in object must have a value";
@@ -76,16 +76,16 @@ void eval(TypedAST::ObjectLiteral* ast, Environment& e) {
 		}
 	}
 
-	e.push(result.get());
+	e.m_env.push(result.get());
 }
 
-void eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
+void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& decl : ast->m_body) {
 		if (decl.m_value) {
 			eval(decl.m_value, e);
-			auto value = e.pop();
+			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
 			std::cerr << "ERROR: declaration in dictionary must have value";
@@ -93,49 +93,49 @@ void eval(TypedAST::DictionaryLiteral* ast, Environment& e) {
 		}
 	}
 
-	e.push(result.get());
+	e.m_env.push(result.get());
 }
 
-void eval(TypedAST::ArrayLiteral* ast, Environment& e) {
+void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	auto result = e.new_list({});
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto value = e.pop();
+		auto value = e.m_env.pop();
 		result->m_value.push_back(unboxed(value.get()));
 	}
-	e.push(result.get());
+	e.m_env.push(result.get());
 }
 
-void eval(TypedAST::Identifier* ast, Environment& e) {
+void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
 			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
 			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
 		}
-		e.push(e.m_stack[e.m_frame_ptr + ast->m_frame_offset]);
+		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
 	} else {
-		e.push(e.global_access(ast->text()));
+		e.m_env.push(e.global_access(ast->text()));
 	}
 };
 
-void eval(TypedAST::Block* ast, Environment& e) {
-	e.start_stack_region();
+void eval(TypedAST::Block* ast, Interpreter& e) {
+	e.m_env.start_stack_region();
 	for (auto stmt : ast->m_body) {
 		eval(stmt, e);
 		if (is_expression(stmt))
-			e.pop();
+			e.m_env.pop();
 		if (e.m_return_value)
 			break;
 	}
-	e.end_stack_region();
+	e.m_env.end_stack_region();
 };
 
-void eval(TypedAST::ReturnStatement* ast, Environment& e) {
+void eval(TypedAST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
-	auto value = e.pop();
+	auto value = e.m_env.pop();
 	e.save_return_value(unboxed(value.get()));
 };
 
@@ -147,7 +147,7 @@ auto is_callable_value(Value* v) -> bool {
 }
 
 void eval_call_function(
-    gc_ptr<Function> callee, int arg_count, Environment& e) {
+    gc_ptr<Function> callee, int arg_count, Interpreter& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
@@ -155,14 +155,14 @@ void eval_call_function(
 	// TODO: This is a big hack. pushing nullptr into the
 	// stack should actually never happen.
 	for (int i = callee->m_captures.size(); i--;)
-		e.push(nullptr);
+		e.m_env.push(nullptr);
 
 	for (auto& kv : callee->m_captures) {
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
 		auto capture_value = unboxed(kv.second);
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_stack[e.m_frame_ptr + offset] = kv.second;
+		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
 	}
 
 	assert(callee->m_def->m_body->type() == TypedASTTag::Block);
@@ -171,16 +171,16 @@ void eval_call_function(
 }
 
 void eval_call_native_function(
-    gc_ptr<NativeFunction> callee, int arg_count, Environment& e) {
+    gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
 	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_stack[e.m_frame_ptr - arg_count], arg_count};
+	Span<Value*> args = {&e.m_env.m_stack[e.m_env.m_frame_ptr - arg_count], arg_count};
 	e.save_return_value(callee->m_fptr(args, e));
 }
 
-void eval(TypedAST::CallExpression* ast, Environment& e) {
+void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> value = e.pop();
+	gc_ptr<Value> value = e.m_env.pop();
 	auto* callee = unboxed(value.get());
 	assert(callee);
 	assert(is_callable_value(callee));
@@ -188,13 +188,13 @@ void eval(TypedAST::CallExpression* ast, Environment& e) {
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	e.start_stack_region();
+	e.m_env.start_stack_region();
 
 	// arguments go before the frame pointer
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
-			e.m_stack.back() = e.new_reference(unboxed(e.m_stack.back())).get();
+			e.m_env.m_stack.back() = e.new_reference(unboxed(e.m_env.m_stack.back())).get();
 		}
 	} else {
 		for (auto expr : arglist) {
@@ -202,7 +202,7 @@ void eval(TypedAST::CallExpression* ast, Environment& e) {
 		}
 	}
 
-	e.start_stack_frame();
+	e.m_env.start_stack_frame();
 
 	if (callee->type() == ValueTag::Function) {
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
@@ -213,23 +213,23 @@ void eval(TypedAST::CallExpression* ast, Environment& e) {
 		assert(0);
 	}
 
-	e.end_stack_frame();
-	e.end_stack_region();
+	e.m_env.end_stack_frame();
+	e.m_env.end_stack_region();
 
-	e.push(e.fetch_return_value());
+	e.m_env.push(e.fetch_return_value());
 };
 
-void eval(TypedAST::IndexExpression* ast, Environment& e) {
+void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
-	auto callee_value = e.pop();
+	auto callee_value = e.m_env.pop();
 	auto* callee = unboxed(callee_value.get());
 	assert(callee);
 	assert(callee->type() == ValueTag::Array);
 
 	eval(ast->m_index, e);
-	auto index_value = e.pop();
+	auto index_value = e.m_env.pop();
 	auto* index = unboxed(index_value.get());
 	assert(index);
 	assert(index->type() == ValueTag::Integer);
@@ -237,14 +237,14 @@ void eval(TypedAST::IndexExpression* ast, Environment& e) {
 	auto* array_callee = static_cast<Array*>(callee);
 	auto* int_index = static_cast<Integer*>(index);
 
-	e.push(array_callee->at(int_index->m_value));
+	e.m_env.push(array_callee->at(int_index->m_value));
 };
 
-void eval(TypedAST::TernaryExpression* ast, Environment& e) {
+void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition = e.pop();
+	auto condition = e.m_env.pop();
 	auto* condition_value = unboxed(condition.get());
 	assert(condition_value);
 	assert(condition_value->type() == ValueTag::Boolean);
@@ -255,30 +255,30 @@ void eval(TypedAST::TernaryExpression* ast, Environment& e) {
 		eval(ast->m_else_expr, e);
 };
 
-void eval(TypedAST::FunctionLiteral* ast, Environment& e) {
+void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 	auto result = e.new_function(ast, {});
 
 	for (auto const& capture : ast->m_captures) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		result->m_captures[capture.first] =
-		    e.m_stack[e.m_frame_ptr + capture.second.outer_frame_offset];
+		    e.m_env.m_stack[e.m_env.m_frame_ptr + capture.second.outer_frame_offset];
 	}
 
-	e.push(result.get());
+	e.m_env.push(result.get());
 };
 
-void eval(TypedAST::RecordAccessExpression* ast, Environment& e) {
+void eval(TypedAST::RecordAccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
-	auto rec = e.pop();
+	auto rec = e.m_env.pop();
 	auto rec_val = unboxed(rec.get());
 	assert(rec_val->type() == ValueTag::Object);
 	auto rec_actually = static_cast<Object*>(rec_val);
-	e.push(rec_actually->m_value[ast->m_member->m_text]);
+	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
-void eval(TypedAST::ConstructorExpression* ast, Environment& e) {
+void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
-	auto constructor = e.pop();
+	auto constructor = e.m_env.pop();
 	auto constructor_value = unboxed(constructor.get());
 	assert(constructor_value->type() == ValueTag::StructConstructor);
 
@@ -286,28 +286,28 @@ void eval(TypedAST::ConstructorExpression* ast, Environment& e) {
 
 	assert(ast->m_args.size() == constructor_actually->m_keys.size());
 
-	int storage_point = e.m_stack_ptr;
+	int storage_point = e.m_env.m_stack_ptr;
 	ObjectType record;
 	for (int i = 0; i < ast->m_args.size(); ++i)
 		eval(ast->m_args[i], e);
 
 	for (int i = 0; i < ast->m_args.size(); ++i) {
-		record[constructor_actually->m_keys[i]] = e.m_stack[storage_point + i];
+		record[constructor_actually->m_keys[i]] = e.m_env.m_stack[storage_point + i];
 	}
 	
 	auto result = e.m_gc->new_object(std::move(record));
 
-	while (e.m_stack_ptr > storage_point)
-		e.pop();
+	while (e.m_env.m_stack_ptr > storage_point)
+		e.m_env.pop();
 
-	// e.pop();
+	// e.m_env.pop();
 
-	e.push(result.get());
+	e.m_env.push(result.get());
 }
 
-void eval(TypedAST::IfElseStatement* ast, Environment& e) {
+void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	eval(ast->m_condition, e);
-	auto condition_result = e.pop();
+	auto condition_result = e.m_env.pop();
 	assert(condition_result);
 
 	assert(condition_result->type() == ValueTag::Boolean);
@@ -316,23 +316,23 @@ void eval(TypedAST::IfElseStatement* ast, Environment& e) {
 	if (condition_result_b->m_value) {
 		eval(ast->m_body, e);
 		if (is_expression(ast->m_body))
-			e.pop();
+			e.m_env.pop();
 	} else if (ast->m_else_body) {
 		eval(ast->m_else_body, e);
 		if (is_expression(ast->m_else_body))
-			e.pop();
+			e.m_env.pop();
 	}
 };
 
-void eval(TypedAST::ForStatement* ast, Environment& e) {
-	e.start_stack_region();
+void eval(TypedAST::ForStatement* ast, Interpreter& e) {
+	e.m_env.start_stack_region();
 
 	// NOTE: this is kinda fishy. why do we assert here?
 	eval(&ast->m_declaration, e);
 
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.pop();
+		auto condition_result = e.m_env.pop();
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
@@ -350,16 +350,16 @@ void eval(TypedAST::ForStatement* ast, Environment& e) {
 		eval(ast->m_action, e);
 		// i think this check is always true...
 		if (is_expression(ast->m_action))
-			e.pop();
+			e.m_env.pop();
 	}
 
-	e.end_stack_region();
+	e.m_env.end_stack_region();
 };
 
-void eval(TypedAST::WhileStatement* ast, Environment& e) {
+void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.pop();
+		auto condition_result = e.m_env.pop();
 		auto unboxed_condition_result = unboxed(condition_result.get());
 		assert(unboxed_condition_result);
 
@@ -376,13 +376,13 @@ void eval(TypedAST::WhileStatement* ast, Environment& e) {
 	}
 };
 
-void eval(TypedAST::TypeFunctionHandle* ast, Environment& e) {
+void eval(TypedAST::TypeFunctionHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
 	e.push_struct_constructor(type_function_data.fields);
 }
 
-void eval(TypedAST::MonoTypeHandle* ast, Environment& e) {
+void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
 	TypeFunctionId type_function_header =
 	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
@@ -390,7 +390,7 @@ void eval(TypedAST::MonoTypeHandle* ast, Environment& e) {
 	e.push_struct_constructor(type_function_data.fields);
 }
 
-void eval(TypedAST::TypedAST* ast, Environment& e) {
+void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
 	case TypedASTTag::type:                                                    \

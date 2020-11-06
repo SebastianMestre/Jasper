@@ -1,9 +1,9 @@
 #pragma once
 
-#include "environment_fwd.hpp"
-
 namespace Interpreter {
 
-void declare_native_functions(Environment& env);
+struct Interpreter;
+
+void declare_native_functions(Interpreter& env);
 
 }

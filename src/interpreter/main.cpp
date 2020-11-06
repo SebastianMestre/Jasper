@@ -9,11 +9,11 @@
 #include "../token_array.hpp"
 #include "../typed_ast.hpp"
 #include "../typed_ast_allocator.hpp"
-#include "environment.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"
 #include "gc_ptr.hpp"
+#include "interpreter.hpp"
 #include "value.hpp"
 
 int main() {
@@ -30,7 +30,7 @@ int main() {
 	std::string source = file_content.str();
 
 	ExitStatusTag exit_code = execute(
-	    source, false, +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    source, false, +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		    // this means we need to create a call expression node to run the program.
 		    // TODO: We need to clean this up
@@ -44,7 +44,7 @@ int main() {
 			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
 				eval(top_level_call, env);
-			    auto result = env.pop();
+			    auto result = env.m_env.pop();
 
 			    if (result)
 				    Interpreter::print(result.get());
