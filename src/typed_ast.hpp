@@ -42,6 +42,7 @@ struct FunctionLiteral;
 
 struct Declaration : public TypedAST {
 	Token const* m_identifier_token;
+	TypedAST* m_type {nullptr};  // can be nullptr
 	TypedAST* m_value {nullptr}; // can be nullptr
 
 	std::unordered_set<Declaration*> m_references;
