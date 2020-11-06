@@ -525,11 +525,18 @@ void constructive_tests(Test::Tester& tests) {
 	using Testers = std::vector<Test::Interpret>;
 
 	for (int i = 0; i < 100; ++i) {
+		auto gen = Test::generate();
+
+		std::cout << gen << std::endl;
+
 		tests.add_test(std::make_unique<TestCase>(
-			Test::generate(),
-			+[](Interpreter::Environment& env) -> ExitStatusTag {
-			  return Assert::is_true(eval_expression("__invoke()", env));
-			}));
+		    gen, +[](Interpreter::Environment& env) -> ExitStatusTag {
+			    auto ret = Assert::is_true(eval_expression("__invoke()", env));
+			    if (ret != ExitStatusTag::Ok) {
+				    //TODO print
+			    }
+			    return ret;
+		    }));
 	}
 }
 
