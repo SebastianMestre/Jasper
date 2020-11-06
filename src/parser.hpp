@@ -37,7 +37,7 @@ struct Parser {
 	parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<AST::AST*> parse_top_level();
-	Writer<AST::Identifier*> parse_identifier();
+	Writer<AST::Identifier*> parse_identifier(bool types_allowed = false);
 	Writer<AST::Declaration*> parse_declaration();
 	Writer<AST::AST*> parse_expression(int bp = 0);
 	Writer<AST::AST*> parse_terminal();
