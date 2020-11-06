@@ -56,7 +56,8 @@ TEST_DIR := test
 TEST_ENTRY := main
 TEST_TARGETS := \
 	test_set \
-	tester
+	tester  \
+	constructive_test
 
 ifeq ($(MODE),debug)
   CXXFLAGS += -g -fsanitize=address

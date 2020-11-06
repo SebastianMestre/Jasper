@@ -9,6 +9,7 @@
 #include "test_status_tag.hpp"
 #include "test_utils.hpp"
 #include "tester.hpp"
+#include "constructive_test.hpp"
 
 void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
@@ -519,11 +520,25 @@ void string_set_tests(Test::Tester& tester) {
 	    }}));
 }
 
+void constructive_tests(Test::Tester& tests) {
+	using TestCase = Test::InterpreterTestSet;
+	using Testers = std::vector<Test::Interpret>;
+
+	for (int i = 0; i < 100; ++i) {
+		tests.add_test(std::make_unique<TestCase>(
+			Test::generate(),
+			+[](Interpreter::Environment& env) -> ExitStatusTag {
+			  return Assert::is_true(eval_expression("__invoke()", env));
+			}));
+	}
+}
+
 int main() {
 	Test::Tester tests;
 	tarjan_algorithm_tests(tests);
 	allocator_tests(tests);
 	string_set_tests(tests);
 	interpreter_tests(tests);
+	constructive_tests(tests);
 	tests.execute();
 }
