@@ -7,6 +7,8 @@
 #include "error_report.hpp"
 #include "typed_ast.hpp"
 
+#include "ast_tag.hpp"
+
 #include <cassert>
 
 namespace TypeChecker {
@@ -23,6 +25,9 @@ namespace TypeChecker {
 
 	ast->m_surrounding_function = env.current_function();
 	env.declare(ast->identifier_text(), ast);
+
+	if (ast->m_type)
+		CHECK_AND_RETURN(match_identifiers(ast->m_type, env));
 
 	if (ast->m_value)
 		CHECK_AND_RETURN(match_identifiers(ast->m_value, env));
@@ -196,6 +201,9 @@ namespace TypeChecker {
 
 	for (auto& decl : ast->m_declarations) {
 		env.enter_top_level_decl(&decl);
+
+		if (decl.m_type)
+			CHECK_AND_RETURN(match_identifiers(decl.m_type, env));
 
 		if (decl.m_value)
 			CHECK_AND_RETURN(match_identifiers(decl.m_value, env));
