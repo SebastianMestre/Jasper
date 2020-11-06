@@ -10,6 +10,8 @@
 #include <iostream>
 #include <unordered_set>
 
+#include "typed_ast_tag.hpp"
+
 namespace TypeChecker {
 
 // NOTE: This file duplicates a bit of what match_identifiers does.
@@ -56,6 +58,17 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 
 	ast->m_value_type = tc.new_var();
+
+	if (ast->m_type) {
+		if (ast->m_type->type() == TypedASTTag::MonoTypeHandle) {
+			auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type);
+			tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
+		}
+		else {
+			auto handle = static_cast<TypedAST::TypeFunctionHandle*>(ast->m_type);
+			tc.m_core.m_tf_core.unify(ast->m_value_type, handle->m_value);
+		}
+	}
 
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
@@ -335,6 +348,17 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// decl equal to the type of their value
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
+
+			if (decl->m_type) {
+				if (decl->m_type->type() == TypedASTTag::MonoTypeHandle) {
+					auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type);
+					tc.m_core.m_mono_core.unify(decl->m_value_type, handle->m_value);
+				}
+				else {
+					auto handle = static_cast<TypedAST::TypeFunctionHandle*>(decl->m_type);
+					tc.m_core.m_tf_core.unify(decl->m_value_type, handle->m_value);
+				}
+			}
 
 			if (decl->m_value) {
 				typecheck(decl->m_value, tc);
