@@ -12,8 +12,10 @@ Scope& CompileTimeEnvironment::current_scope() {
 
 void CompileTimeEnvironment::declare(
     InternedString const& name, TypedAST::Declaration* decl) {
-	// current_scope().m_vars[name] = decl;
-	current_scope().m_vars.insert({name, decl});
+	auto insert_result = current_scope().m_vars.insert({name, decl});
+
+	// TODO: do proper error handling
+	assert(insert_result.second && "redeclaration");
 }
 
 TypedAST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
