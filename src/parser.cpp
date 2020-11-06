@@ -210,7 +210,7 @@ Writer<AST::Declaration*> Parser::parse_declaration() {
 	auto p = m_ast_allocator->make<AST::Declaration>();
 
 	p->m_identifier_token = name.m_result;
-	p->m_type = type.m_result;
+	p->m_type_hint = type.m_result;
 	p->m_value = value.m_result;
 
 	return make_writer<AST::Declaration*>(p);
@@ -735,7 +735,7 @@ Writer<AST::AST*> Parser::parse_function() {
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-				arg.m_type = type.m_result;
+				arg.m_type_hint = type.m_result;
 			}
 
 			args.push_back(std::move(arg));

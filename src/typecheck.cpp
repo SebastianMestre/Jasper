@@ -59,13 +59,13 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 	ast->m_value_type = tc.new_var();
 
-	if (ast->m_type) {
-		if (ast->m_type->type() == TypedASTTag::MonoTypeHandle) {
-			auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type);
+	if (ast->m_type_hint) {
+		if (ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle) {
+			auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
 			tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 		}
 		else {
-			auto handle = static_cast<TypedAST::TypeFunctionHandle*>(ast->m_type);
+			auto handle = static_cast<TypedAST::TypeFunctionHandle*>(ast->m_type_hint);
 			tc.m_core.m_tf_core.unify(ast->m_value_type, handle->m_value);
 		}
 	}
@@ -349,13 +349,13 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 
-			if (decl->m_type) {
-				if (decl->m_type->type() == TypedASTTag::MonoTypeHandle) {
-					auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type);
+			if (decl->m_type_hint) {
+				if (decl->m_type_hint->type() == TypedASTTag::MonoTypeHandle) {
+					auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type_hint);
 					tc.m_core.m_mono_core.unify(decl->m_value_type, handle->m_value);
 				}
 				else {
-					auto handle = static_cast<TypedAST::TypeFunctionHandle*>(decl->m_type);
+					auto handle = static_cast<TypedAST::TypeFunctionHandle*>(decl->m_type_hint);
 					tc.m_core.m_tf_core.unify(decl->m_value_type, handle->m_value);
 				}
 			}

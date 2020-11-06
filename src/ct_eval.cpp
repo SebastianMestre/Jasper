@@ -221,8 +221,8 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 
 TypedAST::Declaration* ct_eval(
     TypedAST::Declaration* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	if (ast->m_type)
-		ast->m_type = ct_eval(ast->m_type, tc, alloc);
+	if (ast->m_type_hint)
+		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
 
 	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 	return ast;
@@ -264,8 +264,8 @@ TypedAST::DeclarationList* ct_eval(
 			MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_mono_core.unify(mt, handle->m_value);
 		} else {
-			if (decl.m_type)
-				decl.m_type = ct_eval(decl.m_type, tc, alloc);
+			if (decl.m_type_hint)
+				decl.m_type_hint = ct_eval(decl.m_type_hint, tc, alloc);
 			decl.m_value = ct_eval(decl.m_value, tc, alloc);
 		}
 	}

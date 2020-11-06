@@ -9,8 +9,8 @@
 namespace AST {
 
 Declaration* desugar(Declaration* ast, Allocator& alloc) {
-	if (ast->m_type)
-		ast->m_type = desugar(ast->m_type, alloc);
+	if (ast->m_type_hint)
+		ast->m_type_hint = desugar(ast->m_type_hint, alloc);
 
 	if (ast->m_value)
 		ast->m_value = desugar(ast->m_value, alloc);

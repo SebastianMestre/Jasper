@@ -80,8 +80,8 @@ TypedAST* convert_ast(AST::Declaration* ast, Allocator& alloc) {
 
 	typed_dec->m_identifier_token = ast->m_identifier_token;
 
-	if (ast->m_type)
-		typed_dec->m_type = convert_ast(ast->m_type, alloc);
+	if (ast->m_type_hint)
+		typed_dec->m_type_hint = convert_ast(ast->m_type_hint, alloc);
 
 	if (ast->m_value)
 		typed_dec->m_value = convert_ast(ast->m_value, alloc);
