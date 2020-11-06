@@ -29,7 +29,7 @@ enum Simbol {
 	true_val, false_val
 };
 
-const std::set<Simbol> terminalSimbols {
+static const std::set<Simbol> terminalSimbols {
 	fn, assign, invoke, end,
 	unrepeatable_name,
     number,
@@ -39,7 +39,7 @@ const std::set<Simbol> terminalSimbols {
 	true_val, false_val
 };
 
-const std::unordered_map<Simbol, std::string> finalReplacement {
+static const std::unordered_map<Simbol, std::string> finalReplacement {
     {fn, "fn"},
     {assign, " := "},
     {invoke, "__invoke"},
@@ -53,7 +53,7 @@ const std::unordered_map<Simbol, std::string> finalReplacement {
     {false_val, "false"}
 };
 
-const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> intermidiateReplacement {
+static const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> intermidiateReplacement {
     {SIGMA, {{DECLARATION, INVOKE}}},
     {INVOKE, {{invoke, assign, fn, paren_open, paren_close, open_brackets, BODY, return_val, true_val, end, close_brackets, end}}},//Always return true
 	{BODY, {{DECLARATION}}},
@@ -63,7 +63,7 @@ const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> intermidiateR
     {NUMBER, {{number}}}
 };
 
-const std::unordered_map<Simbol, std::discrete_distribution<int>> intermidiateReplacementDist {
+static const std::unordered_map<Simbol, std::discrete_distribution<int>> intermidiateReplacementDist {
     {SIGMA, {1}},
     {INVOKE, {1}},
 	{BODY, {1}},
@@ -71,9 +71,9 @@ const std::unordered_map<Simbol, std::discrete_distribution<int>> intermidiateRe
     {VAR_NAME, {1}},
     {NUMBER, {1}}};
 
-const std::vector<char> allowedChars = {'a', 'b'};
+static const std::vector<char> allowedChars = {'a', 'b'};
 
-std::string generateRandomName(std::mt19937& gen) {
+static std::string generateRandomName(std::mt19937& gen) {
 	static std::uniform_int_distribution<int> nameLengthDistribution(1, 25);
 	static std::uniform_int_distribution<int> characterPositionDistribution(0, allowedChars.size()-1);
 
@@ -89,7 +89,7 @@ std::string generateRandomName(std::mt19937& gen) {
 	return s;
 }
 
-std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, const Simbol simbol) {
+static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, const Simbol simbol) {
 	switch (simbol) {
 	case number:
 		return "12";
