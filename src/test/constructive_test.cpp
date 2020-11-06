@@ -55,8 +55,8 @@ const std::unordered_map<Simbol, std::string> finalReplacement {
 
 const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> intermidiateReplacement {
     {SIGMA, {{DECLARATION, INVOKE}}},
-    {INVOKE, {{invoke, assign, fn, paren_open, paren_close, open_brackets, return_val, true_val, end, close_brackets, end}}},//Always return true
-	{BODY, {{}}},
+    {INVOKE, {{invoke, assign, fn, paren_open, paren_close, open_brackets, BODY, return_val, true_val, end, close_brackets, end}}},//Always return true
+	{BODY, {{DECLARATION}}},
     {DECLARATION,
         {{VAR_NAME, assign, NUMBER, end}, {DECLARATION, DECLARATION}}},
     {VAR_NAME, {{unrepeatable_name}}},
