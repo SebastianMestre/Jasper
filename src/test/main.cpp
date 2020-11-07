@@ -505,16 +505,16 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::equals(eval_expression("a", env), 1);
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::equals(eval_expression("b", env), "hello");
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::array_of_size(eval_expression("c", env), 2);
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
 	        },
 	        }));
