@@ -23,7 +23,7 @@ TestReport InterpreterTestSet::execute() {
 			ExitStatusTag answer = Interpreter::execute(m_source, m_dump, f);
 
 			if (ExitStatusTag::Ok != answer)
-				return { .m_code = TestStatusTag::Fail, .m_msg = "Error in: " + m_source };
+				return { TestStatusTag::Fail,"Error in: " + m_source };
 		}
 	} catch (const std::exception& e) {
 		return {TestStatusTag::Error, e.what()};

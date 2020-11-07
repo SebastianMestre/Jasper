@@ -1,5 +1,6 @@
 #include "constructive_test.hpp"
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <list>
 #include <unordered_map>
@@ -29,17 +30,17 @@ enum Simbol {
 	true_val, false_val
 };
 
-static const std::set<Simbol> terminalSimbols {
+static std::set<Simbol> const terminalSimbols {
 	fn, assign, invoke, end,
 	unrepeatable_name,
-    number,
+	number,
 	paren_open, paren_close,
-    open_brackets, close_brackets,
+	open_brackets, close_brackets,
 	return_val,
 	true_val, false_val
 };
 
-static const std::unordered_map<Simbol, std::string> finalReplacement {
+static std::unordered_map<Simbol, std::string> const finalReplacement {
     {fn, "fn"},
     {assign, " := "},
     {invoke, "__invoke"},
@@ -53,7 +54,7 @@ static const std::unordered_map<Simbol, std::string> finalReplacement {
     {false_val, "false"}
 };
 
-static const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> intermidiateReplacement {
+static std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> const intermidiateReplacement {
     {SIGMA, {{DECLARATION, INVOKE}}},
     {INVOKE, {{invoke, assign, fn, paren_open, paren_close, open_brackets, BODY, return_val, true_val, end, close_brackets, end}}},//Always return true
 	{BODY, {{DECLARATION}}},
@@ -63,7 +64,7 @@ static const std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> interm
     {NUMBER, {{number}}}
 };
 
-static const std::unordered_map<Simbol, std::discrete_distribution<int>> intermidiateReplacementDist {
+static std::unordered_map<Simbol, std::discrete_distribution<int>> const intermidiateReplacementDist {
     {SIGMA, {1}},
     {INVOKE, {1}},
 	{BODY, {1}},
@@ -71,7 +72,7 @@ static const std::unordered_map<Simbol, std::discrete_distribution<int>> intermi
     {VAR_NAME, {1}},
     {NUMBER, {1}}};
 
-static const std::vector<char> allowedChars = {'a', 'b'};
+static std::vector<char> const allowedChars = {'a', 'b'};
 
 static std::string generateRandomName(std::mt19937& gen) {
 	static std::uniform_int_distribution<int> nameLengthDistribution(1, 25);
@@ -89,7 +90,7 @@ static std::string generateRandomName(std::mt19937& gen) {
 	return s;
 }
 
-static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, const Simbol simbol) {
+static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, Simbol const simbol) {
 	switch (simbol) {
 	case number:
 		return "12";
@@ -149,14 +150,14 @@ std::string generate() {
 		}
 	}
 
-	std::string finalExpression = "";
+	std::ostringstream finalExpression;
 	std::set<std::string> usedNames;
 
 	for (auto v : list) {
-		finalExpression += replacement(gen, usedNames, v);
+		finalExpression << replacement(gen, usedNames, v);
 	}
 
-	return finalExpression;
+	return finalExpression.str();
 }
 
 }
