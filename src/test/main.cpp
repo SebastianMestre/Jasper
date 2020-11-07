@@ -76,7 +76,7 @@ void interpreter_tests(Test::Tester& tests) {
 				user2 := "anne";
 			};
 		)",
-		+[](Interpreter::Environment& env) -> ExitStatusTag {
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 			eval_expression("__invoke()", env);
 			return ExitStatusTag::Ok;
 		})
@@ -93,24 +93,24 @@ void interpreter_tests(Test::Tester& tests) {
 			float_div := 1.0 / 2.0;
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_val", env), 10);
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_val", env), 3.5);
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(
 		            eval_expression("string_val", env), "testing.");
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_div", env), 0);
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_div", env), 0.5);
 	        },
 	    }));
@@ -123,7 +123,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return a + b;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("f()", env), 3);
 	    }));
 
@@ -136,7 +136,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return K(a)(b);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("f()", env), 42);
 	    }));
 
@@ -150,7 +150,7 @@ void interpreter_tests(Test::Tester& tests) {
 			I := S(K)(K);
 			__invoke := fn () => I(42);
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }));
 
@@ -174,7 +174,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return car(cdr(cdr(a)));
 			};
 		)",
-		+[](Interpreter::Environment& env) -> ExitStatusTag {
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), 2);
 		})
 	);
@@ -215,7 +215,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return print_inorder(t7);
 			};
 		)",
-		+[](Interpreter::Environment& env) -> ExitStatusTag {
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
 		})
 	);
@@ -228,15 +228,15 @@ void interpreter_tests(Test::Tester& tests) {
 			nullv := fn () { return null; };
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("litt()", env));
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("litf()", env));
 	        },
 
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_null(eval_expression("nullv()", env));
 	        }}));
 
@@ -248,7 +248,7 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 			__invoke := fn() => fib(6);
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 8);
 	    }));
 
@@ -263,7 +263,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 120);
 	    }));
 
@@ -276,10 +276,10 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 	        }}));
 
@@ -292,10 +292,10 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
 	        }}));
 
@@ -306,7 +306,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return size(A);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }));
 
@@ -317,7 +317,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return array_join(A, ",");
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), "10,10");
 	    }));
 
@@ -338,7 +338,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return val;
 			};
 		)",
-		+[](Interpreter::Environment& env) -> ExitStatusTag {
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 			return Assert::equals(eval_expression("__invoke()", env), 4);
 		})
 	);
@@ -349,7 +349,7 @@ void interpreter_tests(Test::Tester& tests) {
 			f := fn(x) => x + 7;
 			__invoke := fn() => 6 |> f();
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 13);
 	    }));
 
@@ -366,7 +366,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return sum;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 120);
 	    }));
 
@@ -387,16 +387,16 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("__invoke()", env));
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("odd(15)", env));
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_true(eval_expression("even(80)", env));
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_false(eval_expression("odd(18)", env));
 	        }}));
 
@@ -413,7 +413,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return false;
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::is_true(eval_expression("__invoke()", env));
 	    }));
 
@@ -425,7 +425,7 @@ void interpreter_tests(Test::Tester& tests) {
 				       (if i == 0 then i + 1 else 0);
 			};
 		)",
-	    +[](Interpreter::Environment& env) -> ExitStatusTag {
+	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }));
 
@@ -440,7 +440,7 @@ void interpreter_tests(Test::Tester& tests) {
 				return fib(3);
 			};
 		)",
-	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 2);
 	    }}));
 
@@ -452,7 +452,7 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 			__invoke := fn() => 0;
 		)",
-	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 0);
 	    }}));
 
@@ -464,7 +464,7 @@ void interpreter_tests(Test::Tester& tests) {
 			__invoke := fn() =>
 				cat("A","C","D")("B");
 		)",
-	    Testers {+[](Interpreter::Environment& env) -> ExitStatusTag {
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), "ABCD");
 	    }}));
 
@@ -485,10 +485,10 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 		)",
 	    Testers {
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("test1()", env), "ABC");
 	        },
-	        +[](Interpreter::Environment& env) -> ExitStatusTag {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("test2()", env), "ABA");
 		}}));
 

@@ -6,8 +6,8 @@ struct TypedAST;
 
 namespace Interpreter {
 
-struct Environment;
+struct Interpreter;
 
-void eval(TypedAST::TypedAST*, Environment&);
+void eval(TypedAST::TypedAST*, Interpreter&);
 
 }

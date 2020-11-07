@@ -1,6 +1,6 @@
 #include "../utils/span.hpp"
-#include "environment.hpp"
 #include "garbage_collector.hpp"
+#include "interpreter.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 #include "value_tag.hpp"
@@ -17,7 +17,7 @@ namespace Interpreter {
 using ArgsType = Span<Value*>;
 
 // print(...) prints the values or references in ...
-Value* print(ArgsType v, Environment& e) {
+Value* print(ArgsType v, Interpreter& e) {
 	for (auto value : v) {
 		print(value);
 	}
@@ -26,7 +26,7 @@ Value* print(ArgsType v, Environment& e) {
 
 // array_append(arr, ...) appends the values or references
 // in ... to the array
-Value* array_append(ArgsType v, Environment& e) {
+Value* array_append(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -39,7 +39,7 @@ Value* array_append(ArgsType v, Environment& e) {
 
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
-Value* array_extend(ArgsType v, Environment& e) {
+Value* array_extend(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -52,7 +52,7 @@ Value* array_extend(ArgsType v, Environment& e) {
 }
 
 // size(array) returns the size of the array
-Value* size(ArgsType v, Environment& e) {
+Value* size(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -64,7 +64,7 @@ Value* size(ArgsType v, Environment& e) {
 
 // array_join(array, string) returns a string with
 // the array values separated by the string element
-Value* array_join(ArgsType v, Environment& e) {
+Value* array_join(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -86,7 +86,7 @@ Value* array_join(ArgsType v, Environment& e) {
 }
 
 // array_at(array, int i) returns the i-th element of the given array
-Value* array_at(ArgsType v, Environment& e) {
+Value* array_at(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	assert(unboxed(v[0])->type() == ValueTag::Array);
@@ -98,11 +98,11 @@ Value* array_at(ArgsType v, Environment& e) {
 	return array->m_value[index->m_value];
 }
 
-Value* dummy(ArgsType v, Environment& e) {
+Value* dummy(ArgsType v, Interpreter& e) {
 	return e.null();
 }
 
-Value* value_add(ArgsType v, Environment& e) {
+Value* value_add(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -130,7 +130,7 @@ Value* value_add(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_sub(ArgsType v, Environment& e) {
+Value* value_sub(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -154,7 +154,7 @@ Value* value_sub(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_mul(ArgsType v, Environment& e) {
+Value* value_mul(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -178,7 +178,7 @@ Value* value_mul(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_div(ArgsType v, Environment& e) {
+Value* value_div(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -202,7 +202,7 @@ Value* value_div(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_logicand(ArgsType v, Environment& e) {
+Value* value_logicand(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -218,7 +218,7 @@ Value* value_logicand(ArgsType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_logicor(ArgsType v, Environment& e) {
+Value* value_logicor(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -234,7 +234,7 @@ Value* value_logicor(ArgsType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_logicxor(ArgsType v, Environment& e) {
+Value* value_logicxor(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -250,7 +250,7 @@ Value* value_logicxor(ArgsType v, Environment& e) {
 	assert(0);
 }
 
-Value* value_equals(ArgsType v, Environment& e) {
+Value* value_equals(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -286,7 +286,7 @@ Value* value_equals(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_less(ArgsType v, Environment& e) {
+Value* value_less(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -314,7 +314,7 @@ Value* value_less(ArgsType v, Environment& e) {
 	}
 }
 
-Value* value_assign(ArgsType v, Environment& e) {
+Value* value_assign(ArgsType v, Interpreter& e) {
 	auto* lhs = v[0];
 	auto* rhs = v[1];
 	auto* lhs_val = unboxed(lhs);
@@ -323,12 +323,12 @@ Value* value_assign(ArgsType v, Environment& e) {
 	// TODO: proper error handling
 	assert(lhs->type() == ValueTag::Reference);
 	// NOTE: copied by reference, matters if rhs is actually a reference
-	// TODO: change in another pr, perhaps adding Environment::copy_value?
+	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
 	static_cast<Reference*>(lhs)->m_value = rhs_val;
 	return e.null();
 }
 
-void declare_native_functions(Environment& env) {
+void declare_native_functions(Interpreter& env) {
 	env.global_declare(
 	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
 

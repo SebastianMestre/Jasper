@@ -48,6 +48,7 @@ INTERPRETER_TARGETS := \
 	execute \
 	garbage_collector \
 	gc_ptr \
+	interpreter \
 	native \
 	utils \
 	value
