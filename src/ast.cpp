@@ -28,9 +28,9 @@ void print(Declaration* ast, int d) {
 	std::cout << stab << "[ Declaration\n"
 	          << tab << "Name: " << ast->identifier_text() << '\n';
 
-	if (ast->m_type) {
+	if (ast->m_type_hint) {
 		std::cout << tab << "Type:\n";
-		print(ast->m_type, d + 1);
+		print(ast->m_type_hint, d + 1);
 	}
 
 	if (ast->m_value) {

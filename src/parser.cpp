@@ -210,7 +210,7 @@ Writer<AST::Declaration*> Parser::parse_declaration() {
 	auto p = m_ast_allocator->make<AST::Declaration>();
 
 	p->m_identifier_token = name.m_result;
-	p->m_type = type.m_result;
+	p->m_type_hint = type.m_result;
 	p->m_value = value.m_result;
 
 	return make_writer<AST::Declaration*>(p);
@@ -597,16 +597,27 @@ Writer<AST::AST*> Parser::parse_ternary_expression() {
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<AST::Identifier*> Parser::parse_identifier() {
+Writer<AST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 	Writer<AST::Identifier*> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
-	auto token = require(TokenTag::IDENTIFIER);
-	if (handle_error(result, token))
-		return result;
+	Token const* token;
+
+	if (types_allowed and
+	   (match(TokenTag::KEYWORD_DICT) or
+	    match(TokenTag::KEYWORD_OBJECT) or
+	    match(TokenTag::KEYWORD_ARRAY))) {
+		token = peek();
+		m_lexer->advance();
+	} else {
+		auto identifier = require(TokenTag::IDENTIFIER);
+		if (handle_error(result, identifier))
+			return result;
+		token = identifier.m_result;
+	}
 
 	auto e = m_ast_allocator->make<AST::Identifier>();
-	e->m_token = token.m_result;
+	e->m_token = token;
 	return make_writer<AST::Identifier*>(e);
 }
 
@@ -724,7 +735,7 @@ Writer<AST::AST*> Parser::parse_function() {
 				auto type = parse_type_term();
 				if (handle_error(result, type))
 					return result;
-				arg.m_type = type.m_result;
+				arg.m_type_hint = type.m_result;
 			}
 
 			args.push_back(std::move(arg));
@@ -1065,7 +1076,7 @@ Writer<AST::AST*> Parser::parse_type_term() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse type"}};
 
-	auto callee = parse_identifier();
+	auto callee = parse_identifier(true);
 	if (handle_error(result, callee))
 		return result;
 

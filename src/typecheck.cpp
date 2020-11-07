@@ -57,6 +57,12 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 	ast->m_value_type = tc.new_var();
 
+	if (ast->m_type_hint) {
+		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
+		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
+	}
+
 	// this is where we implement rec-polymorphism.
 	// TODO: refactor (duplication).
 	if (ast->m_value) {
@@ -335,6 +341,12 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// decl equal to the type of their value
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
+
+			if (decl->m_type_hint) {
+				assert(decl->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
+				auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type_hint);
+				tc.m_core.m_mono_core.unify(decl->m_value_type, handle->m_value);
+			}
 
 			if (decl->m_value) {
 				typecheck(decl->m_value, tc);

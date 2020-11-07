@@ -25,7 +25,7 @@ struct AST {
 
 struct Declaration : public AST {
 	Token const* m_identifier_token;
-	AST* m_type {nullptr};  // can be nullptr
+	AST* m_type_hint {nullptr};  // can be nullptr
 	AST* m_value {nullptr}; // can be nullptr
 
 	std::string const& identifier_text() const {

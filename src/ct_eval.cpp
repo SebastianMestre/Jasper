@@ -221,6 +221,9 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 
 TypedAST::Declaration* ct_eval(
     TypedAST::Declaration* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	if (ast->m_type_hint)
+		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
+
 	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 	return ast;
 }
@@ -237,7 +240,7 @@ TypedAST::DeclarationList* ct_eval(
 			handle->m_value = tc.m_core.m_tf_core.new_var();
 			handle->m_syntax = decl.m_value;
 			decl.m_value = handle;
-		} else if(meta_type == tc.meta_monotype()) {
+		} else if (meta_type == tc.meta_monotype()) {
 			auto handle = alloc.make<TypedAST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
 			handle->m_syntax = decl.m_value;
@@ -248,17 +251,22 @@ TypedAST::DeclarationList* ct_eval(
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
 		if (meta_type == tc.meta_typefunc()) {
+			assert(!decl.m_type_hint && "type hint not allowed in type function declaration");
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl.m_value);
+
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else if (meta_type == tc.meta_monotype()) {
+			assert(!decl.m_type_hint && "type hint not allowed in monotype declaration");
 			auto handle =
 			    static_cast<TypedAST::MonoTypeHandle*>(decl.m_value);
 
 			MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_mono_core.unify(mt, handle->m_value);
 		} else {
+			if (decl.m_type_hint)
+				decl.m_type_hint = ct_eval(decl.m_type_hint, tc, alloc);
 			decl.m_value = ct_eval(decl.m_value, tc, alloc);
 		}
 	}

@@ -144,6 +144,12 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.new_meta_var();
+
+	if (ast->m_type_hint) {
+		metacheck(ast->m_type_hint, tc);
+		tc.m_core.m_meta_core.unify(ast->m_type_hint->m_meta_type, tc.meta_monotype());
+	}
+
 	metacheck(ast->m_value, tc);
 	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
@@ -152,8 +158,13 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
 		decl.m_meta_type = tc.new_meta_var();
 
-	for (auto& decl : ast->m_declarations)
+	for (auto& decl : ast->m_declarations) {
+		if (decl.m_type_hint) {
+			metacheck(decl.m_type_hint, tc);
+			tc.m_core.m_meta_core.unify(decl.m_type_hint->m_meta_type, tc.meta_monotype());
+		}
 		metacheck(decl.m_value, tc);
+	}
 
 	for (auto& decl : ast->m_declarations)
 		tc.m_core.m_meta_core.unify(decl.m_meta_type, decl.m_value->m_meta_type);

@@ -127,6 +127,7 @@ TypeChecker::TypeChecker(TypedAST::Allocator& allocator) : m_typed_ast_allocator
 	declare_builtin("float", meta_typefunc(), BuiltinType::Float);
 	declare_builtin("string", meta_typefunc(), BuiltinType::String);
 	declare_builtin("boolean", meta_typefunc(), BuiltinType::Boolean);
+	declare_builtin("array", meta_typefunc(), BuiltinType::Array);
 }
 
 MonoId TypeChecker::new_hidden_var() {
