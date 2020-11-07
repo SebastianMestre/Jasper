@@ -29,7 +29,7 @@ enum class Symbol {
 	true_val, false_val
 };
 
-static std::set<Symbol> const terminalSymbols {
+static std::set<Symbol> const terminal_symbols {
 	Symbol::fn, Symbol::assign, Symbol::invoke, Symbol::end,
 	Symbol::unrepeatable_name,
 	Symbol::number,
@@ -39,7 +39,7 @@ static std::set<Symbol> const terminalSymbols {
 	Symbol::true_val, Symbol::false_val
 };
 
-static std::unordered_map<Symbol, std::string> const finalReplacement {
+static std::unordered_map<Symbol, std::string> const final_replacement {
     {Symbol::fn, "fn"},
     {Symbol::assign, " := "},
     {Symbol::invoke, "__invoke"},
@@ -53,7 +53,7 @@ static std::unordered_map<Symbol, std::string> const finalReplacement {
     {Symbol::false_val, "false"}
 };
 
-static std::unordered_map<Symbol, std::vector<std::vector<Symbol>>> const intermidiateReplacement {
+static std::unordered_map<Symbol, std::vector<std::vector<Symbol>>> const intermidiate_replacement {
     {Symbol::SIGMA, {{Symbol::DECLARATION, Symbol::INVOKE}}},
     {Symbol::INVOKE,
      {{
@@ -72,7 +72,7 @@ static std::unordered_map<Symbol, std::vector<std::vector<Symbol>>> const interm
     {Symbol::NUMBER, {{Symbol::number}}}
 };
 
-static std::unordered_map<Symbol, std::discrete_distribution<int>> const intermidiateReplacementDist {
+static std::unordered_map<Symbol, std::discrete_distribution<int>> const intermidiate_replacementDist {
     {Symbol::SIGMA, {1}},
     {Symbol::INVOKE, {1}},
 	{Symbol::BODY, {1}},
@@ -80,25 +80,26 @@ static std::unordered_map<Symbol, std::discrete_distribution<int>> const intermi
     {Symbol::VAR_NAME, {1}},
     {Symbol::NUMBER, {1}}};
 
-static std::vector<char> const allowedChars = {'a', 'b'};
+static std::vector<char> const allowed_chars = {'a', 'b'};
 
-static std::string generateRandomName(std::mt19937& gen) {
-	static std::uniform_int_distribution<int> nameLengthDistribution(1, 25);
-	static std::uniform_int_distribution<int> characterPositionDistribution(0, allowedChars.size()-1);
+static std::string generate_random_name(std::mt19937& gen) {
+	static std::uniform_int_distribution<int> name_len_dist(1, 25);
+	static std::uniform_int_distribution<int> char_pos_dist(0, allowed_chars.size()-1);
 
-	int length = nameLengthDistribution(gen);
+	int length = name_len_dist(gen);
 
-	std::string s;
-	s.reserve(length);
+	std::string name;
+	name.reserve(length);
 
 	for (int i = 0; i < length; ++i) {
-		s += allowedChars[characterPositionDistribution(gen)];
+		name += allowed_chars[char_pos_dist(gen)];
 	}
 
-	return s;
+	return name;
 }
 
-static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, Symbol const symbol) {
+static std::string replacement(std::mt19937& rg,
+    std::set<std::string>& used_names, Symbol const symbol) {
 	switch (symbol) {
 	case Symbol::number:
 		return "12";
@@ -106,16 +107,16 @@ static std::string replacement(std::mt19937& rg, std::set<std::string>& usedName
 		std::string name;
 
 		do {
-			name = generateRandomName(rg);
-		} while (usedNames.find(name) != usedNames.end());
+			name = generate_random_name(rg);
+		} while (used_names.find(name) != used_names.end());
 
-		usedNames.emplace(name);
+		used_names.emplace(name);
 
 		return name;
 	}
 	default:
-		assert(terminalSymbols.find(symbol) != terminalSymbols.end());
-		return finalReplacement.at(symbol);
+		assert(terminal_symbols.find(symbol) != terminal_symbols.end());
+		return final_replacement.at(symbol);
 	}
 }
 
@@ -133,12 +134,12 @@ std::string generate() {
 			terminalsInList = 0;
 		}
 
-		bool terminal = terminalSymbols.find(*i) != terminalSymbols.end();
+		bool terminal = terminal_symbols.find(*i) != terminal_symbols.end();
 
 		if (!terminal) {
-			auto replacementDistribution = intermidiateReplacementDist.at(*i);
+			auto replacementDistribution = intermidiate_replacementDist.at(*i);
 			std::vector<std::vector<Symbol>> currentReplacementPossibilities =
-			    intermidiateReplacement.at(*i);
+			    intermidiate_replacement.at(*i);
 			assert(
 			    currentReplacementPossibilities.size() ==
 			    replacementDistribution.probabilities().size());
@@ -158,14 +159,14 @@ std::string generate() {
 		}
 	}
 
-	std::ostringstream finalExpression;
-	std::set<std::string> usedNames;
+	std::ostringstream final_expression;
+	std::set<std::string> used_names;
 
 	for (auto v : list) {
-		finalExpression << replacement(gen, usedNames, v);
+		final_expression << replacement(gen, used_names, v);
 	}
 
-	return finalExpression.str();
+	return final_expression.str();
 }
 
 }
