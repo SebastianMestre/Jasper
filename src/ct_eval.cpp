@@ -250,14 +250,15 @@ TypedAST::DeclarationList* ct_eval(
 
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
-		// TODO: ban type hints from type function and mono type declarations?
 		if (meta_type == tc.meta_typefunc()) {
+			assert(!decl.m_type_hint && "type hint not allowed in type function declaration");
 			auto handle =
 			    static_cast<TypedAST::TypeFunctionHandle*>(decl.m_value);
 
 			TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
 			tc.m_core.m_tf_core.unify(tf, handle->m_value);
 		} else if (meta_type == tc.meta_monotype()) {
+			assert(!decl.m_type_hint && "type hint not allowed in monotype declaration");
 			auto handle =
 			    static_cast<TypedAST::MonoTypeHandle*>(decl.m_value);
 
