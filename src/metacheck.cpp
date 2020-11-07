@@ -147,7 +147,7 @@ void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 	if (ast->m_type_hint) {
 		metacheck(ast->m_type_hint, tc);
-		assert(ast->m_type_hint->m_meta_type == tc.meta_monotype() && "Type hint must be a monotype");
+		tc.m_core.m_meta_core.unify(ast->m_type_hint->m_meta_type, tc.meta_monotype());
 	}
 
 	metacheck(ast->m_value, tc);
@@ -161,7 +161,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations) {
 		if (decl.m_type_hint) {
 			metacheck(decl.m_type_hint, tc);
-			assert(decl.m_type_hint->m_meta_type == tc.meta_monotype() && "Type hint must be a monotype");
+			tc.m_core.m_meta_core.unify(decl.m_type_hint->m_meta_type, tc.meta_monotype());
 		}
 		metacheck(decl.m_value, tc);
 	}
