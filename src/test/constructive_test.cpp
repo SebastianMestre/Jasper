@@ -10,7 +10,7 @@
 
 namespace Test {
 
-enum Simbol {
+enum class Symbol {
 	SIGMA,
 	DECLARATION,
 	INVOKE,
@@ -20,57 +20,65 @@ enum Simbol {
 	fn,
 	assign,
 	invoke,
-	paren,
 	end,
 	unrepeatable_name,
 	number,
 	paren_open, paren_close,
-	open_brackets, close_brackets,
+	brackets_open, brackets_close,
 	return_val,
 	true_val, false_val
 };
 
-static std::set<Simbol> const terminalSimbols {
-	fn, assign, invoke, end,
-	unrepeatable_name,
-	number,
-	paren_open, paren_close,
-	open_brackets, close_brackets,
-	return_val,
-	true_val, false_val
+static std::set<Symbol> const terminalSymbols {
+	Symbol::fn, Symbol::assign, Symbol::invoke, Symbol::end,
+	Symbol::unrepeatable_name,
+	Symbol::number,
+	Symbol::paren_open, Symbol::paren_close,
+	Symbol::brackets_open, Symbol::brackets_close,
+	Symbol::return_val,
+	Symbol::true_val, Symbol::false_val
 };
 
-static std::unordered_map<Simbol, std::string> const finalReplacement {
-    {fn, "fn"},
-    {assign, " := "},
-    {invoke, "__invoke"},
-    {paren_open, "("},
-    {paren_close, ")"},
-    {end, ";"},
-    {open_brackets, "{"},
-    {close_brackets, "}"},
-    {return_val, "return "},
-    {true_val, "true"},
-    {false_val, "false"}
+static std::unordered_map<Symbol, std::string> const finalReplacement {
+    {Symbol::fn, "fn"},
+    {Symbol::assign, " := "},
+    {Symbol::invoke, "__invoke"},
+    {Symbol::paren_open, "("},
+    {Symbol::paren_close, ")"},
+    {Symbol::end, ";"},
+    {Symbol::brackets_open, "{"},
+    {Symbol::brackets_close, "}"},
+    {Symbol::return_val, "return "},
+    {Symbol::true_val, "true"},
+    {Symbol::false_val, "false"}
 };
 
-static std::unordered_map<Simbol, std::vector<std::vector<Simbol>>> const intermidiateReplacement {
-    {SIGMA, {{DECLARATION, INVOKE}}},
-    {INVOKE, {{invoke, assign, fn, paren_open, paren_close, open_brackets, BODY, return_val, true_val, end, close_brackets, end}}},//Always return true
-	{BODY, {{DECLARATION}}},
-    {DECLARATION,
-        {{VAR_NAME, assign, NUMBER, end}, {DECLARATION, DECLARATION}}},
-    {VAR_NAME, {{unrepeatable_name}}},
-    {NUMBER, {{number}}}
+static std::unordered_map<Symbol, std::vector<std::vector<Symbol>>> const intermidiateReplacement {
+    {Symbol::SIGMA, {{Symbol::DECLARATION, Symbol::INVOKE}}},
+    {Symbol::INVOKE,
+     {{
+         Symbol::invoke, Symbol::assign, Symbol::fn, Symbol::paren_open,
+         Symbol::paren_close, Symbol::brackets_open, Symbol::BODY,
+         Symbol::return_val,Symbol::true_val, Symbol::end, Symbol::brackets_close, Symbol::end //Always return true
+         }}
+    },
+	{Symbol::BODY, {{Symbol::DECLARATION}}},
+    {Symbol::DECLARATION,
+     {
+         {Symbol::VAR_NAME, Symbol::assign, Symbol::NUMBER, Symbol::end},
+         {Symbol::DECLARATION, Symbol::DECLARATION}
+     }},
+    {Symbol::VAR_NAME, {{Symbol::unrepeatable_name}}},
+    {Symbol::NUMBER, {{Symbol::number}}}
 };
 
-static std::unordered_map<Simbol, std::discrete_distribution<int>> const intermidiateReplacementDist {
-    {SIGMA, {1}},
-    {INVOKE, {1}},
-	{BODY, {1}},
-    {DECLARATION, {1, 0.5}},
-    {VAR_NAME, {1}},
-    {NUMBER, {1}}};
+static std::unordered_map<Symbol, std::discrete_distribution<int>> const intermidiateReplacementDist {
+    {Symbol::SIGMA, {1}},
+    {Symbol::INVOKE, {1}},
+	{Symbol::BODY, {1}},
+    {Symbol::DECLARATION, {1, 0.5}},
+    {Symbol::VAR_NAME, {1}},
+    {Symbol::NUMBER, {1}}};
 
 static std::vector<char> const allowedChars = {'a', 'b'};
 
@@ -90,11 +98,11 @@ static std::string generateRandomName(std::mt19937& gen) {
 	return s;
 }
 
-static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, Simbol const simbol) {
-	switch (simbol) {
-	case number:
+static std::string replacement(std::mt19937& rg, std::set<std::string>& usedNames, Symbol const symbol) {
+	switch (symbol) {
+	case Symbol::number:
 		return "12";
-	case unrepeatable_name: {
+	case Symbol::unrepeatable_name: {
 		std::string name;
 
 		do {
@@ -106,16 +114,16 @@ static std::string replacement(std::mt19937& rg, std::set<std::string>& usedName
 		return name;
 	}
 	default:
-		assert(terminalSimbols.find(simbol) != terminalSimbols.end());
-		return finalReplacement.at(simbol);
+		assert(terminalSymbols.find(symbol) != terminalSymbols.end());
+		return finalReplacement.at(symbol);
 	}
 }
 
 std::string generate() {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::list<Simbol> list;
-	list.push_back(SIGMA);
+	std::list<Symbol> list;
+	list.push_back(Symbol::SIGMA);
 
 	uint terminalsInList = 0;
 
@@ -125,11 +133,11 @@ std::string generate() {
 			terminalsInList = 0;
 		}
 
-		bool terminal = terminalSimbols.find(*i) != terminalSimbols.end();
+		bool terminal = terminalSymbols.find(*i) != terminalSymbols.end();
 
 		if (!terminal) {
 			auto replacementDistribution = intermidiateReplacementDist.at(*i);
-			std::vector<std::vector<Simbol>> currentReplacementPossibilities =
+			std::vector<std::vector<Symbol>> currentReplacementPossibilities =
 			    intermidiateReplacement.at(*i);
 			assert(
 			    currentReplacementPossibilities.size() ==
