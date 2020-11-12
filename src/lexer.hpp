@@ -33,9 +33,11 @@ struct Lexer {
 
 	bool consume_comment();
 	void consume_token();
-	bool consume_keyword();
+	bool consume_identifier_or_keyword();
 	bool consume_number();
 	void push_token(TokenTag, int);
+
+	std::pair<bool, TokenTag> is_keyword(InternedString const&);
 
 	void advance();
 	void regress();
