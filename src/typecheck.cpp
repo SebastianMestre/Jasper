@@ -12,9 +12,10 @@
 
 namespace TypeChecker {
 
-// NOTE: This file duplicates a bit of what match_identifiers does.
-// however, I think that's the right thing to do.
-// At least, the alternative just sucks.
+// NOTE(SMestre): This file duplicates a bit of what
+// match_identifiers does. However, I think that's the right
+// thing to do. At least, the alternatives I came up with
+// are quite a bit worse.
 
 void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_float();
