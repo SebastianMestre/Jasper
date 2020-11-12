@@ -38,125 +38,67 @@ void Lexer::push_token(TokenTag tt, int width) {
 	m_current_column += width;
 }
 
-bool Lexer::consume_keyword() {
-	// TODO: make table based?
-	char c0 = peek_char(0);
-	switch (c0) {
-	case 'a': {
-		if (peek_char(1) == 'r' && peek_char(2) == 'r' && peek_char(3) == 'a' &&
-		    peek_char(4) == 'y' && not is_identifier_char(peek_char(5))) {
-			push_token(TokenTag::KEYWORD_ARRAY, 5);
-			return true;
-		}
-	} break;
-	case 'f': {
-		char c1 = peek_char(1);
-		if (c1 == 'n') {
-			if (not is_identifier_char(peek_char(2))) {
-				push_token(TokenTag::KEYWORD_FN, 2);
-				return true;
-			}
-		} else if (c1 == 'o') {
-			char c2 = peek_char(2);
-			if (c2 == 'r') {
-				if (not is_identifier_char(peek_char(3))) {
-					push_token(TokenTag::KEYWORD_FOR, 3);
-					return true;
-				}
-			}
-		} else if (
-		    peek_char(1) == 'a' && peek_char(2) == 'l' && peek_char(3) == 's' &&
-		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
-			push_token(TokenTag::KEYWORD_FALSE, 5);
-			return true;
-		}
-	} break;
-	case 'i': {
-		char c1 = peek_char(1);
-		if (c1 == 'f') {
-			if (not is_identifier_char(peek_char(2))) {
-				push_token(TokenTag::KEYWORD_IF, 2);
-				return true;
-			}
-		}
-	} break;
-	case 'r':
-		if (peek_char(1) == 'e' && peek_char(2) == 't' && peek_char(3) == 'u' &&
-		    peek_char(4) == 'r' && peek_char(5) == 'n' &&
-		    not is_identifier_char(peek_char(6))) {
-			push_token(TokenTag::KEYWORD_RETURN, 6);
-			return true;
-		}
-		break;
-	case 'd':
-		if (peek_char(1) == 'i' && peek_char(2) == 'c' && peek_char(3) == 't' &&
-		    not is_identifier_char(peek_char(4))) {
-			push_token(TokenTag::KEYWORD_DICT, 4);
-			return true;
-		}
-		break;
-	case 'o':
-		if (peek_char(1) == 'b' && peek_char(2) == 't' &&
-		    not is_identifier_char(peek_char(3))) {
-			push_token(TokenTag::KEYWORD_OBJECT, 3);
-			return true;
-		}
-		break;
-	case 't':
-		if (peek_char(1) == 'r' && peek_char(2) == 'u' && peek_char(3) == 'e' &&
-		    not is_identifier_char(peek_char(4))) {
-			push_token(TokenTag::KEYWORD_TRUE, 4);
-			return true;
-		} else if (
-		    peek_char(1) == 'h' && peek_char(2) == 'e' && peek_char(3) == 'n' &&
-		    not is_identifier_char(peek_char(4))) {
-			push_token(TokenTag::KEYWORD_THEN, 4);
-			return true;
-		} else if (
-		    peek_char(1) == 'u' && peek_char(2) == 'p' && peek_char(3) == 'l' &&
-		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
-			push_token(TokenTag::KEYWORD_TUPLE, 5);
-			return true;
-		}
-		break;
-	case 'n':
-		if (peek_char(1) == 'u' && peek_char(2) == 'l' && peek_char(3) == 'l' &&
-		    not is_identifier_char(peek_char(4))) {
-			push_token(TokenTag::KEYWORD_NULL, 4);
-			return true;
-		}
-		break;
-	case 'w':
-		if (peek_char(1) == 'h' && peek_char(2) == 'i' && peek_char(3) == 'l' &&
-		    peek_char(4) == 'e' && not is_identifier_char(peek_char(5))) {
-			push_token(TokenTag::KEYWORD_WHILE, 5);
-			return true;
-		}
-		break;
-	case 'e':
-		if (peek_char(1) == 'l' && peek_char(2) == 's' && peek_char(3) == 'e' &&
-		    not is_identifier_char(peek_char(4))) {
-			push_token(TokenTag::KEYWORD_ELSE, 4);
-			return true;
-		}
-		break;
-	case 'u':
-		if (peek_char(1) == 'n' && peek_char(2) == 'i' && peek_char(3) == 'o' &&
-		    peek_char(4) == 'n' && not is_identifier_char(peek_char(5))) {
-			push_token(TokenTag::KEYWORD_UNION, 5);
-			return true;
-		}
-		break;
-	case 's':
-		if (peek_char(1) == 't' && peek_char(2) == 'r' && peek_char(3) == 'u' &&
-		    peek_char(4) == 'c' && peek_char(5) == 't' &&
-		    not is_identifier_char(peek_char(6))) {
-			push_token(TokenTag::KEYWORD_STRUCT, 6);
-			return true;
-		}
-		break;
+bool Lexer::consume_identifier_or_keyword() {
+	if (!is_identifier_start_char(current_char()))
+		return false;
+
+	char const* base_ptr = m_source.data() + m_source_index;
+	size_t len = 1;
+
+	while (is_identifier_char(next_char())) {
+		len += 1;
+		m_source_index += 1;
 	}
-	return false;
+
+	m_source_index += 1;
+	m_current_column += len;
+
+	auto tag = TokenTag::IDENTIFIER;
+	auto text = InternedString {base_ptr, len};
+
+	auto keyword_lookup = is_keyword(text);
+	if (keyword_lookup.first)
+		tag = keyword_lookup.second;
+
+	m_tokens.push_back(
+	    {tag,
+	     std::move(text),
+	     m_current_line,
+	     m_current_column - int(len),
+	     m_current_line,
+	     m_current_column});
+
+	return true;
+}
+
+std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
+	// sorted by commonness (off the top of my head, probably inaccurate)
+	static std::pair<InternedString, TokenTag> const keywords[] = {
+		{{"if"}, TokenTag::KEYWORD_IF},
+		{{"for"}, TokenTag::KEYWORD_FOR},
+		{{"else"}, TokenTag::KEYWORD_ELSE},
+		{{"fn"}, TokenTag::KEYWORD_FN},
+		{{"then"}, TokenTag::KEYWORD_THEN},
+		{{"return"}, TokenTag::KEYWORD_RETURN},
+		{{"while"}, TokenTag::KEYWORD_WHILE},
+		{{"true"}, TokenTag::KEYWORD_TRUE},
+		{{"false"}, TokenTag::KEYWORD_FALSE},
+		{{"array"}, TokenTag::KEYWORD_ARRAY},
+		{{"dict"}, TokenTag::KEYWORD_DICT},
+		{{"null"}, TokenTag::KEYWORD_NULL},
+		{{"obt"}, TokenTag::KEYWORD_OBJECT},
+		{{"tuple"}, TokenTag::KEYWORD_TUPLE},
+		{{"struct"}, TokenTag::KEYWORD_STRUCT},
+		{{"union"}, TokenTag::KEYWORD_UNION},
+	};
+
+	// The strings are interned, so the check is an O(1) pointer comparison.
+	// Still, it can be sped up by splitting based on first character or length.
+	for (auto const& keyword : keywords)
+		if (keyword.first == str)
+			return {true, keyword.second};
+
+	return {false, TokenTag::END};
 }
 
 void Lexer::consume_token() {
@@ -383,30 +325,8 @@ void Lexer::consume_token() {
 	} break;
 
 	default:
-		if (consume_keyword())
+		if (consume_identifier_or_keyword()) {
 			return;
-
-		if (is_identifier_start_char(current_char())) {
-
-			char const* base_ptr = m_source.data() + m_source_index;
-			size_t len = 1;
-
-			while (is_identifier_char(next_char())) {
-				len += 1;
-				m_source_index += 1;
-			}
-
-			m_source_index += 1;
-			m_current_column += len;
-
-			m_tokens.push_back(
-			    {TokenTag::IDENTIFIER,
-			     InternedString {base_ptr, len},
-			     m_current_line,
-			     m_current_column - int(len),
-			     m_current_line,
-			     m_current_column});
-
 		} else if (consume_number()) {
 			return;
 		} else {
