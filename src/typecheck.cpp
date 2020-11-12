@@ -49,43 +49,34 @@ void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = array_type;
 }
 
-void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
-#if DEBUG
-	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
-#endif
+void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
+	assert(!ast->m_is_polymorphic);
 
+	ast->m_is_polymorphic = true;
+	ast->m_decl_type = tc.generalize(ast->m_value_type);
+}
 
-	ast->m_value_type = tc.new_var();
-
+// typecheck the value and make the type of the decl equal
+// to its type
+// apply typehints if available
+void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
 		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
 		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 	}
 
-	// this is where we implement rec-polymorphism.
-	// TODO: refactor (duplication).
-	if (ast->m_value) {
-		typecheck(ast->m_value, tc);
-		// unify instead of assign. This way, we can do recursion.
-		tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
-	} else {
-		// NOTE: this should be an error at an earlier stage...
-	}
+	// it would be nicer to check this at an earlier stage
+	assert(ast->m_value);
+	typecheck(ast->m_value, tc);
+	tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
+}
 
-	ast->m_is_polymorphic = true;
-	ast->m_decl_type = tc.generalize(ast->m_value_type);
-
-#if DEBUG
-	{
-		auto poly = ast->m_decl_type;
-		auto& poly_data = tc.m_core.poly_data[poly];
-		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
-		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-		std::cerr << "@@ It is equal to:\n";
-		tc.m_core.m_mono_core.print_node(poly_data.base);
-	}
-#endif
+void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+	// put a dummy type in the decl to allow recursive definitions
+	ast->m_value_type = tc.new_var();
+	process_contents(ast, tc);
+	generalize(ast, tc);
 }
 
 void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
