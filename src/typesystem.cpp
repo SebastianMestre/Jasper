@@ -19,6 +19,16 @@ TypeSystemCore::TypeSystemCore() {
 		TypeFunctionData& b_data = m_type_functions[fb];
 
 		if (a_data.is_dummy) {
+
+			int new_argument_count = [&] {
+				if (a_data.argument_count == b_data.argument_count)
+					return a_data.argument_count;
+				else if (b_data.is_dummy || b_data.argument_count == -1)
+					return -1;
+				else
+					assert(0 && "Incompatible typefunc argument counts");
+			}();
+
 			for (auto& kv_a : a_data.structure) {
 				auto kv_b = b_data.structure.find(kv_a.first);
 
@@ -46,11 +56,11 @@ TypeSystemCore::TypeSystemCore() {
 			// NOTE: this makes the unify_function need to access node_header
 			core.node_header[a].tag = Unification::Core::Tag::Var;
 			core.node_header[a].data_idx = b;
+			b_data.argument_count = new_argument_count;
 
 		} else {
 			assert(0 and "unifying two different known type functions");
 		}
-
 	};
 
 	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
@@ -100,11 +110,20 @@ TypeSystemCore::TypeSystemCore() {
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
 	tf = m_tf_core.find(tf);
-	int tf_data_idx = m_tf_core.find_function(tf);
-	int argument_count = m_type_functions[tf_data_idx].argument_count;
 
-	if (argument_count != -1 && argument_count != args.size())
-		assert(0 && "instanciating polymorphic type with wrong argument count");
+	{
+		// TODO: add a TypeFunctionTag::Unkown tag, to express
+		// that it's a dummy of unknown characteristics
+
+		// TODO: add some APIs to make this less jarring
+		TypeFunctionId dummy_tf =
+		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
+
+		int dummy_tf_data_id = m_tf_core.find_function(dummy_tf);
+		m_type_functions[dummy_tf_data_id].argument_count = args.size();
+
+		m_tf_core.unify(tf, dummy_tf);
+	}
 
 	return m_mono_core.new_term(tf, std::move(args), tag);
 }

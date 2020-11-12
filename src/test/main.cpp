@@ -518,6 +518,33 @@ void interpreter_tests(Test::Tester& tests) {
 	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
 	        },
 	        }));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+			typefunc := struct { x : int(<>); };
+			other_typefunc := typefunc;
+			other_other_typefunc := other_typefunc;
+
+			mono := other_other_typefunc(<>);
+			other_mono := mono;
+			other_other_mono := other_mono;
+
+			__invoke := fn() => other_other_mono { 10 };
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return ExitStatusTag::Ok;
+	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		list := struct {
+			load : int(<>);
+			next : list(<>);
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return ExitStatusTag::Ok;
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

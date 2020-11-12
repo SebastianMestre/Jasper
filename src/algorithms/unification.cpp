@@ -33,7 +33,7 @@ int Core::find(int i) {
 
 int Core::find_term(int i) {
 	i = find(i);
-	return node_header[i].tag == Tag::Term ? node_header[i].data_idx : -1;
+	return is_term(i) ? node_header[i].data_idx : -1;
 }
 
 int Core::find_function(int i) {
@@ -79,6 +79,10 @@ int Core::new_term(int f, std::vector<int> args, char const* debug) {
 	node_header.push_back({Tag::Term, static_cast<int>(term_data.size()), debug});
 	term_data.push_back({f, std::move(args)});
 	return id;
+}
+
+bool Core::is_term(int i) {
+	return node_header[i].tag == Tag::Term;
 }
 
 void Core::print_node(int header, int d) {

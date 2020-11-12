@@ -12,9 +12,10 @@
 
 namespace TypeChecker {
 
-// NOTE: This file duplicates a bit of what match_identifiers does.
-// however, I think that's the right thing to do.
-// At least, the alternative just sucks.
+// NOTE(SMestre): This file duplicates a bit of what
+// match_identifiers does. However, I think that's the right
+// thing to do. At least, the alternatives I came up with
+// are quite a bit worse.
 
 void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_float();
@@ -47,45 +48,6 @@ void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 	    tc.m_core.new_term(BuiltinType::Array, {element_type}, "Array Literal");
 
 	ast->m_value_type = array_type;
-}
-
-void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
-#if DEBUG
-	std::cerr << "Typechecking " << ast->identifier_text() << '\n';
-#endif
-
-
-	ast->m_value_type = tc.new_var();
-
-	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
-		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
-	}
-
-	// this is where we implement rec-polymorphism.
-	// TODO: refactor (duplication).
-	if (ast->m_value) {
-		typecheck(ast->m_value, tc);
-		// unify instead of assign. This way, we can do recursion.
-		tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
-	} else {
-		// NOTE: this should be an error at an earlier stage...
-	}
-
-	ast->m_is_polymorphic = true;
-	ast->m_decl_type = tc.generalize(ast->m_value_type);
-
-#if DEBUG
-	{
-		auto poly = ast->m_decl_type;
-		auto& poly_data = tc.m_core.poly_data[poly];
-		std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
-		std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-		std::cerr << "@@ It is equal to:\n";
-		tc.m_core.m_mono_core.print_node(poly_data.base);
-	}
-#endif
 }
 
 void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
@@ -234,11 +196,12 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = tc.m_core.new_type_function
-	    ( TypeFunctionTag::Record
-	    , {} // we don't care about fields in dummies
-	    , {{ast->m_member->m_text, member_type}}
-	    , true);
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+	    TypeFunctionTag::Record,
+	    // we don't care about field order in dummies
+	    {},
+	    {{ast->m_member->m_text, member_type}},
+	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
@@ -264,6 +227,49 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	}
 
 	ast->m_value_type = handle->m_value;
+}
+
+void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
+#if DEBUG
+	auto poly = ast->m_decl_type;
+	auto& poly_data = tc.m_core.poly_data[poly];
+	std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
+	std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
+	std::cerr << "@@ It is equal to:\n";
+	tc.m_core.m_mono_core.print_node(poly_data.base);
+#endif
+}
+
+void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
+	assert(!ast->m_is_polymorphic);
+
+	ast->m_is_polymorphic = true;
+	ast->m_decl_type = tc.generalize(ast->m_value_type);
+
+	print_information(ast, tc);
+}
+
+// typecheck the value and make the type of the decl equal
+// to its type
+// apply typehints if available
+void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
+	if (ast->m_type_hint) {
+		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
+		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
+	}
+
+	// it would be nicer to check this at an earlier stage
+	assert(ast->m_value);
+	typecheck(ast->m_value, tc);
+	tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
+}
+
+void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+	// put a dummy type in the decl to allow recursive definitions
+	ast->m_value_type = tc.new_var();
+	process_contents(ast, tc);
+	generalize(ast, tc);
 }
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
@@ -309,13 +315,20 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto const& verts : comps) {
 
 		bool type_in_component = false;
+		bool non_type_in_component = false;
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 
 			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
 				type_in_component = true;
+
+			if (meta_type == tc.meta_value())
+				non_type_in_component = true;
 		}
+
+		// we don't deal with types and non-types in the same component.
+		assert(!(type_in_component && non_type_in_component));
 
 		if (type_in_component)
 			continue;
@@ -333,49 +346,20 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// set up some dummy types on every decl
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			// FIXME: we should get our metatype from decl->m_value
 			decl->m_value_type = tc.new_hidden_var();
 		}
 
-		// typecheck all the values and make the type of the
-		// decl equal to the type of their value
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-
-			if (decl->m_type_hint) {
-				assert(decl->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
-				auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type_hint);
-				tc.m_core.m_mono_core.unify(decl->m_value_type, handle->m_value);
-			}
-
-			if (decl->m_value) {
-				typecheck(decl->m_value, tc);
-				tc.m_core.m_mono_core.unify(
-				    decl->m_value_type, decl->m_value->m_value_type);
-			} else {
-				// this should be an error...
-			}
+			process_contents(decl, tc);
 		}
 
 		// generalize all the decl types, so that they are
 		// identified as polymorphic in the next rec-block
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			decl->m_is_polymorphic = true;
-			decl->m_decl_type =
-			    tc.generalize(decl->m_value_type);
-
-#if DEBUG
-			{
-				auto poly = decl->m_decl_type;
-				auto& poly_data = tc.m_core.poly_data[poly];
-
-				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
-				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-				std::cerr << "@@ It is equal to:\n";
-				tc.m_core.m_mono_core.print_node(poly_data.base);
-			}
-#endif
+			generalize(decl, tc);
+			print_information(decl, tc);
 		}
 	}
 }
