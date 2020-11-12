@@ -313,13 +313,20 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto const& verts : comps) {
 
 		bool type_in_component = false;
+		bool non_type_in_component = false;
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
 
 			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
 				type_in_component = true;
+
+			if (meta_type == tc.meta_value())
+				non_type_in_component = true;
 		}
+
+		// we don't deal with types and non-types in the same component.
+		assert(!(type_in_component && non_type_in_component));
 
 		if (type_in_component)
 			continue;
