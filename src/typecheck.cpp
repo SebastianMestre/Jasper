@@ -341,45 +341,17 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 			decl->m_value_type = tc.new_hidden_var();
 		}
 
-		// typecheck all the values and make the type of the
-		// decl equal to the type of their value
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-
-			if (decl->m_type_hint) {
-				assert(decl->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
-				auto handle = static_cast<TypedAST::MonoTypeHandle*>(decl->m_type_hint);
-				tc.m_core.m_mono_core.unify(decl->m_value_type, handle->m_value);
-			}
-
-			if (decl->m_value) {
-				typecheck(decl->m_value, tc);
-				tc.m_core.m_mono_core.unify(
-				    decl->m_value_type, decl->m_value->m_value_type);
-			} else {
-				// this should be an error...
-			}
+			process_contents(decl, tc);
 		}
 
 		// generalize all the decl types, so that they are
 		// identified as polymorphic in the next rec-block
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			decl->m_is_polymorphic = true;
-			decl->m_decl_type =
-			    tc.generalize(decl->m_value_type);
-
-#if DEBUG
-			{
-				auto poly = decl->m_decl_type;
-				auto& poly_data = tc.m_core.poly_data[poly];
-
-				std::cerr << "@@ Type of " << decl->identifier_text() << '\n';
-				std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-				std::cerr << "@@ It is equal to:\n";
-				tc.m_core.m_mono_core.print_node(poly_data.base);
-			}
-#endif
+			generalize(decl, tc);
+			print_information(decl, tc);
 		}
 	}
 }
