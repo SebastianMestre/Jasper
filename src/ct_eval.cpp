@@ -45,13 +45,7 @@ TypedAST::TypedAST* ct_eval(
 	assert(ast);
 	assert(ast->m_declaration);
 
-	// TODO: These two lines are fishy; I copied them from
-	// elsewhere, but I don't think we need to go through
-	// the declaration to get the metatype: this is already
-	// done for us by metacheck().
-	MetaTypeId meta_type =
-	    tc.m_core.m_meta_core.find(ast->m_declaration->m_meta_type);
-	ast->m_meta_type = meta_type;
+	MetaTypeId meta_type = tc.m_core.m_meta_core.find(ast->m_meta_type);
 
 	if (meta_type == tc.meta_value()) {
 		return ast;
