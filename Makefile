@@ -24,6 +24,7 @@ COMMON_TARGETS := \
 	utils/string_view \
 	ast \
 	compile_time_environment \
+	compile_time_value \
 	compute_offsets \
 	ct_eval \
 	desugar \
