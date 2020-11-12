@@ -19,6 +19,12 @@ TypeSystemCore::TypeSystemCore() {
 		TypeFunctionData& b_data = m_type_functions[fb];
 
 		if (a_data.is_dummy) {
+
+			// TODO: handle variadic arguments properly
+			// for example: we should be able to unify a dummy with 5
+			// arguments with a non dummy with variadic arguments
+			assert(a_data.argument_count == b_data.argument_count);
+
 			for (auto& kv_a : a_data.structure) {
 				auto kv_b = b_data.structure.find(kv_a.first);
 
@@ -50,7 +56,6 @@ TypeSystemCore::TypeSystemCore() {
 		} else {
 			assert(0 and "unifying two different known type functions");
 		}
-
 	};
 
 	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
@@ -108,11 +113,17 @@ MonoId TypeSystemCore::new_term(
 		if (argument_count != -1 && argument_count != args.size())
 			assert(0 && "instanciating polymorphic type with wrong argument count");
 	} else {
-		// TODO
-		// We do nothing, but we may end up with unsound
-		// type inference. After inference is done, we
-		// should come back and check that argument counts
-		// match.
+		// TODO: add a TypeFunctionTag::Unkown tag, to express
+		// that it's a dummy of unknown characteristics
+
+		// TODO: add some APIs to make this less jarring
+		TypeFunctionId dummy_tf = new_type_function(
+		    TypeFunctionTag::Builtin, {}, {}, true);
+
+		int dummy_tf_data_id = m_tf_core.find_function(dummy_tf);
+		m_type_functions[dummy_tf_data_id].argument_count = args.size();
+
+		m_tf_core.unify(tf, dummy_tf);
 	}
 
 	return m_mono_core.new_term(tf, std::move(args), tag);
