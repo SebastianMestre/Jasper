@@ -238,11 +238,12 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = tc.m_core.new_type_function
-	    ( TypeFunctionTag::Record
-	    , {} // we don't care about fields in dummies
-	    , {{ast->m_member->m_text, member_type}}
-	    , true);
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+	    TypeFunctionTag::Record,
+	    // we don't care about field order in dummies
+	    {},
+	    {{ast->m_member->m_text, member_type}},
+	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
@@ -344,7 +345,6 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// set up some dummy types on every decl
 		for (int u : verts) {
 			auto decl = index_to_decl[u];
-			// FIXME: we should get our metatype from decl->m_value
 			decl->m_value_type = tc.new_hidden_var();
 		}
 
