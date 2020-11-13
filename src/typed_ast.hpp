@@ -275,6 +275,14 @@ struct WhileStatement : public TypedAST {
 	    : TypedAST {TypedASTTag::WhileStatement} {}
 };
 
+struct UnionExpression : public TypedAST {
+	std::vector<Identifier> m_constructors;
+	std::vector<TypedAST*> m_types;
+
+	UnionExpression()
+	    : TypedAST {TypedASTTag::UnionExpression} {}
+};
+
 struct StructExpression : public TypedAST {
 	std::vector<Identifier> m_fields;
 	std::vector<TypedAST*> m_types;

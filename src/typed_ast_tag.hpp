@@ -27,6 +27,7 @@
 	X(DeclarationList)                                                         \
 	X(Declaration)                                                             \
                                                                                \
+	X(UnionExpression)                                                         \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
 	X(TypeFunctionHandle)                                                      \
