@@ -545,6 +545,21 @@ void interpreter_tests(Test::Tester& tests) {
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return ExitStatusTag::Ok;
 	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		either := union {
+			left : string(<>);
+			right : int(<>);
+		};
+
+		__invoke := fn() {
+			either;
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return ExitStatusTag::Ok;
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
