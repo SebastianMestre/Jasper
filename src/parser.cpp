@@ -543,7 +543,8 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return array;
 	}
 
-	if (token->m_type == TokenTag::KEYWORD_STRUCT) {
+	if (token->m_type == TokenTag::KEYWORD_UNION ||
+	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
 		auto type = parse_type_function();
 		if (handle_error(result, type))
