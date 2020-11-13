@@ -213,6 +213,15 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::UnionExpression* ast, Frontend::CompileTimeEnvironment& env) {
+
+	for (auto& type : ast->m_types)
+		CHECK_AND_RETURN(match_identifiers(type, env));
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::StructExpression* ast, Frontend::CompileTimeEnvironment& env) {
 
 	for (auto& type : ast->m_types)
@@ -264,6 +273,7 @@ namespace TypeChecker {
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
 
+		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
 	}

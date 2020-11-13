@@ -176,6 +176,15 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 					assert(0 && "value referenced in a type definition");
 }
 
+void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_typefunc();
+
+	for (auto& type : ast->m_types) {
+		metacheck(type, tc);
+		tc.m_core.m_meta_core.unify(type->m_meta_type, tc.meta_monotype());
+	}
+}
+
 void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_typefunc();
 
@@ -231,6 +240,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
 
+		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
 	}
