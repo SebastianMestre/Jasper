@@ -97,6 +97,15 @@ void Dictionary::removeMember(StringType const& id) {
 	m_value.erase(id);
 }
 
+Union::Union(InternedString constructor)
+    : Value(ValueTag::Dictionary)
+    , m_constructor(constructor) {}
+
+Union::Union(InternedString constructor, Value* v)
+    : Value(ValueTag::Dictionary)
+    , m_constructor(constructor)
+    , m_inner_value(v) {}
+
 Function::Function(FunctionType def, ObjectType captures)
     : Value(ValueTag::Function)
     , m_def(def)
@@ -167,6 +176,14 @@ void gc_visit(Dictionary* d) {
 		gc_visit(child.second);
 }
 
+void gc_visit(Union* u) {
+	if (u->m_visited)
+		return;
+
+	u->m_visited = true;
+	gc_visit(u->m_inner_value);
+}
+
 void gc_visit(Function* f) {
 	if (f->m_visited)
 		return;
@@ -205,6 +222,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Object*>(v));
 	case ValueTag::Dictionary:
 		return gc_visit(static_cast<Dictionary*>(v));
+	case ValueTag::Union:
+		return gc_visit(static_cast<Union*>(v));
 	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
 	case ValueTag::NativeFunction:
@@ -271,6 +290,12 @@ void print(Dictionary* m, int d) {
 	std::cout << value_string[int(m->type())] << '\n';
 }
 
+void print(Union* m, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_string[int(m->type())] << '\n';
+}
+
 void print(Function* f, int d) {
 	// TODO
 	print_spaces(d);
@@ -323,6 +348,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Object*>(v), d);
 	case ValueTag::Dictionary:
 		return print(static_cast<Dictionary*>(v), d);
+	case ValueTag::Union:
+		return print(static_cast<Union*>(v), d);
 	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
 	case ValueTag::NativeFunction:

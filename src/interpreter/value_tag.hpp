@@ -12,6 +12,7 @@
 	X(Array)                                                                   \
 	X(Object)                                                                  \
 	X(Dictionary)                                                              \
+	X(Union)                                                                   \
                                                                                \
 	X(Function)                                                                \
 	X(NativeFunction)                                                          \
