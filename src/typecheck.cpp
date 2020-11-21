@@ -210,20 +210,32 @@ void typecheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
 void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
 
-	auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_constructor);
-	assert(handle->type() == TypedASTTag::MonoTypeHandle);
+	auto constructor = static_cast<TypedAST::Constructor*>(ast->m_constructor);
+	assert(constructor->type() == TypedASTTag::Constructor);
+
+	auto handle = constructor->m_mono;
 
 	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
 	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
 
 	// match value arguments
-	assert(tf_data.fields.size() == ast->m_args.size());
-	for (int i = 0; i < ast->m_args.size(); ++i) {
-		typecheck(ast->m_args[i], tc);
+	if (tf_data.tag == TypeFunctionTag::Record) {
+		assert(tf_data.fields.size() == ast->m_args.size());
+		for (int i = 0; i < ast->m_args.size(); ++i) {
+			typecheck(ast->m_args[i], tc);
+			MonoId field_type = tf_data.structure[tf_data.fields[i]];
+			tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
+		}
+	// match the argument type with the constructor used
+	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+		assert(ast->m_args.size() == 1);
 
-		MonoId field_type = tf_data.structure[tf_data.fields[i]];
-		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
+		typecheck(ast->m_args[0], tc);
+		InternedString id = constructor->m_id->m_text;
+		MonoId constructor_type = tf_data.structure[id];
+
+		tc.m_core.m_mono_core.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
 	ast->m_value_type = handle->m_value;
@@ -401,6 +413,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 
 		IGNORE(TypeFunctionHandle);
 		IGNORE(MonoTypeHandle);
+		IGNORE(Constructor);
 	}
 
 	std::cerr << "Error: AST type not handled in typecheck: "

@@ -185,6 +185,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 
 		DO_NOTHING(TypeFunctionHandle);
 		DO_NOTHING(MonoTypeHandle);
+		DO_NOTHING(Constructor);
 	}
 
 #undef DO_NOTHING

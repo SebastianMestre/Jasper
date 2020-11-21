@@ -36,6 +36,8 @@ TypedAST::FunctionLiteral* ct_eval(
 
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+TypedAST::Constructor* constructor_from_ast(
+    TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc);
 
 TypedAST::TypedAST* ct_eval(
     TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
@@ -102,7 +104,7 @@ TypedAST::RecordAccessExpression* ct_eval(
 
 TypedAST::ConstructorExpression* ct_eval(
     TypedAST::ConstructorExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	ast->m_constructor = ct_eval(ast->m_constructor, tc, alloc);
+	ast->m_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
 
 	for (auto& arg : ast->m_args)
 		arg = ct_eval(arg, tc, alloc);
@@ -228,6 +230,32 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 	} else {
 		assert(0);
 	}
+}
+
+TypedAST::Constructor* constructor_from_ast(
+    TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	MetaTypeId meta = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	auto constructor = alloc.make<TypedAST::Constructor>();
+	constructor->m_syntax = ast;
+
+	if (meta == tc.meta_monotype()) {
+		auto mono_handle = static_cast<TypedAST::MonoTypeHandle*>(
+		    ct_eval(ast, tc, alloc));
+		constructor->m_mono = mono_handle;
+	} else if (meta == tc.meta_constructor()) {
+		assert(ast->type() == TypedASTTag::RecordAccessExpression);
+
+		auto access = static_cast<TypedAST::RecordAccessExpression*>(ast);
+		auto mono_handle = static_cast<TypedAST::MonoTypeHandle*>(
+		    ct_eval(access->m_record, tc, alloc));
+
+		constructor->m_mono = mono_handle;
+		constructor->m_id = access->m_member;
+	} else {
+		assert(0 && "wrong constructor metatype");
+	}
+
+	return constructor;
 }
 
 // declarations

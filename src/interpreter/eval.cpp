@@ -280,29 +280,40 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
 	auto constructor = e.m_env.pop();
 	auto constructor_value = unboxed(constructor.get());
-	assert(constructor_value->type() == ValueTag::StructConstructor);
 
-	auto constructor_actually = static_cast<StructConstructor*>(constructor_value);
+	if (constructor_value->type() == ValueTag::StructConstructor) {
+		auto constructor_actually = static_cast<StructConstructor*>(constructor_value);
 
-	assert(ast->m_args.size() == constructor_actually->m_keys.size());
+		assert(ast->m_args.size() == constructor_actually->m_keys.size());
 
-	int storage_point = e.m_env.m_stack_ptr;
-	ObjectType record;
-	for (int i = 0; i < ast->m_args.size(); ++i)
-		eval(ast->m_args[i], e);
+		int storage_point = e.m_env.m_stack_ptr;
+		ObjectType record;
+		for (int i = 0; i < ast->m_args.size(); ++i)
+			eval(ast->m_args[i], e);
 
-	for (int i = 0; i < ast->m_args.size(); ++i) {
-		record[constructor_actually->m_keys[i]] = e.m_env.m_stack[storage_point + i];
-	}
-	
-	auto result = e.m_gc->new_object(std::move(record));
+		for (int i = 0; i < ast->m_args.size(); ++i) {
+			record[constructor_actually->m_keys[i]] =
+			    e.m_env.m_stack[storage_point + i];
+		}
+		
+		auto result = e.m_gc->new_object(std::move(record));
 
-	while (e.m_env.m_stack_ptr > storage_point)
+		while (e.m_env.m_stack_ptr > storage_point)
+			e.m_env.pop();
+
+		e.m_env.push(result.get());
+	} else if (constructor_value->type() == ValueTag::UnionConstructor) {
+		auto constructor_actually = static_cast<UnionConstructor*>(constructor_value);
+
+		assert(ast->m_args.size() == 1);
+
+		eval(ast->m_args[0], e);
+		auto result = e.m_gc->new_union(
+		    constructor_actually->m_constructor, e.m_env.m_stack.back());
 		e.m_env.pop();
 
-	// e.m_env.pop();
-
-	e.m_env.push(result.get());
+		e.m_env.push(result.get());
+	}
 }
 
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
@@ -376,6 +387,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
+// TODO: include union implementations? if so, remove duplication
 void eval(TypedAST::TypeFunctionHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
@@ -388,6 +400,21 @@ void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
 	e.push_struct_constructor(type_function_data.fields);
+}
+
+void eval(TypedAST::Constructor* ast, Interpreter& e) {
+	TypeFunctionId tf_header =
+	    e.m_tc->m_core.m_mono_core.find_function(ast->m_mono->m_value);
+	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
+	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
+
+	if (tf_data.tag == TypeFunctionTag::Record) {
+		e.push_struct_constructor(tf_data.fields);
+	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+		e.push_union_constructor(ast->m_id->m_text);
+	} else {
+		assert(0 && "not implemented this type function for construction");
+	}
 }
 
 void eval(TypedAST::TypedAST* ast, Interpreter& e) {
@@ -425,6 +452,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 
 		DISPATCH(TypeFunctionHandle);
 		DISPATCH(MonoTypeHandle);
+		DISPATCH(Constructor);
 	}
 
 	std::cerr << "@ Internal Error: unhandled case in eval:\n";
