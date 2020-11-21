@@ -267,8 +267,8 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 	e.m_env.push(result.get());
 };
 
-void eval(TypedAST::RecordAccessExpression* ast, Interpreter& e) {
-	eval(ast->m_record, e);
+void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
+	eval(ast->m_object, e);
 	auto rec = e.m_env.pop();
 	auto rec_val = unboxed(rec.get());
 	assert(rec_val->type() == ValueTag::Object);
@@ -438,7 +438,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(DeclarationList);

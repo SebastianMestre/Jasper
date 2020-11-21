@@ -176,8 +176,8 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_record, env);
+    TypedAST::AccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	return match_identifiers(ast->m_object, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
@@ -261,7 +261,7 @@ namespace TypeChecker {
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);

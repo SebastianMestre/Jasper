@@ -14,7 +14,7 @@
 	X(Identifier)                                                              \
 	X(CallExpression)                                                          \
 	X(IndexExpression)                                                         \
-	X(RecordAccessExpression)                                                  \
+	X(AccessExpression)                                                        \
 	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
 	/* All before this point are expressions */                                \

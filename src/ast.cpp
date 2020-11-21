@@ -153,13 +153,13 @@ void print(IndexExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
-void print(RecordAccessExpression* ast, int d) {
+void print(AccessExpression* ast, int d) {
 	print_indentation(d - 1);
-	std::cout << "[ RecordAccessExpression\n";
+	std::cout << "[ AccessExpression\n";
 
 	print_indentation(d);
-	std::cout << "Record:\n";
-	print(ast->m_record, d + 1);
+	std::cout << "Object:\n";
+	print(ast->m_object, d + 1);
 
 	print_indentation(d);
 	std::cout << "Member: " << ast->m_member->m_text << "\n";
@@ -265,8 +265,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<IndexExpression*>(ast), d);
 	case ASTTag::TernaryExpression:
 		return print(static_cast<TernaryExpression*>(ast), d);
-	case ASTTag::RecordAccessExpression:
-		return print(static_cast<RecordAccessExpression*>(ast), d);
+	case ASTTag::AccessExpression:
+		return print(static_cast<AccessExpression*>(ast), d);
 
 	case ASTTag::DeclarationList:
 		return print(static_cast<DeclarationList*>(ast), d);

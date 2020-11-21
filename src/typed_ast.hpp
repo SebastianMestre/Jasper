@@ -209,12 +209,12 @@ struct IndexExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::IndexExpression} {}
 };
 
-struct RecordAccessExpression : public TypedAST {
-	TypedAST* m_record;
+struct AccessExpression : public TypedAST {
+	TypedAST* m_object;
 	Token const* m_member;
 
-	RecordAccessExpression()
-	    : TypedAST {TypedASTTag::RecordAccessExpression} {}
+	AccessExpression()
+	    : TypedAST {TypedASTTag::AccessExpression} {}
 };
 
 struct TernaryExpression : public TypedAST {

@@ -137,11 +137,11 @@ TypedAST* convert_ast(AST::TernaryExpression* ast, Allocator& alloc) {
 	return typed_ternary;
 }
 
-TypedAST* convert_ast(AST::RecordAccessExpression* ast, Allocator& alloc) {
-	auto typed_ast = alloc.make<RecordAccessExpression>();
+TypedAST* convert_ast(AST::AccessExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<AccessExpression>();
 
 	typed_ast->m_member = ast->m_member;
-	typed_ast->m_record = convert_ast(ast->m_record, alloc);
+	typed_ast->m_object = convert_ast(ast->m_object, alloc);
 
 	return typed_ast;
 }
@@ -272,7 +272,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 		REJECT(BinaryExpression);
 

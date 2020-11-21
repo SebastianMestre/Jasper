@@ -89,8 +89,8 @@ AST* desugarPizza(BinaryExpression* ast, Allocator& alloc) {
 	return rhs;
 }
 
-AST* desugar(RecordAccessExpression* ast, Allocator& alloc) {
-	ast->m_record = desugar(ast->m_record, alloc);
+AST* desugar(AccessExpression* ast, Allocator& alloc) {
+	ast->m_object = desugar(ast->m_object, alloc);
 	return ast;
 }
 
@@ -218,7 +218,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		DISPATCH(TernaryExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(DeclarationList);

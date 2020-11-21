@@ -166,12 +166,12 @@ struct IndexExpression : public AST {
 	    : AST {ASTTag::IndexExpression} {}
 };
 
-struct RecordAccessExpression : public AST {
-	AST* m_record;
+struct AccessExpression : public AST {
+	AST* m_object;
 	Token const* m_member;
 
-	RecordAccessExpression()
-	    : AST {ASTTag::RecordAccessExpression} {}
+	AccessExpression()
+	    : AST {ASTTag::AccessExpression} {}
 };
 
 struct TernaryExpression : public AST {

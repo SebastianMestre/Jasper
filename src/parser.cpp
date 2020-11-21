@@ -398,8 +398,8 @@ Writer<AST::AST*> Parser::parse_expression(int bp) {
 			if (handle_error(result, member))
 				return result;
 
-			auto e = m_ast_allocator->make<AST::RecordAccessExpression>();
-			e->m_record = lhs.m_result;
+			auto e = m_ast_allocator->make<AST::AccessExpression>();
+			e->m_object = lhs.m_result;
 			e->m_member = member.m_result;
 			lhs.m_result = e;
 

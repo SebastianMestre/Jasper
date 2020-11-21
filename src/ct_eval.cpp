@@ -96,9 +96,9 @@ TypedAST::TernaryExpression* ct_eval(
 	return ast;
 }
 
-TypedAST::RecordAccessExpression* ct_eval(
-    TypedAST::RecordAccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	ast->m_record = ct_eval(ast->m_record, tc, alloc);
+TypedAST::AccessExpression* ct_eval(
+    TypedAST::AccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_object = ct_eval(ast->m_object, tc, alloc);
 	return ast;
 }
 
@@ -243,11 +243,11 @@ TypedAST::Constructor* constructor_from_ast(
 		    ct_eval(ast, tc, alloc));
 		constructor->m_mono = mono_handle;
 	} else if (meta == tc.meta_constructor()) {
-		assert(ast->type() == TypedASTTag::RecordAccessExpression);
+		assert(ast->type() == TypedASTTag::AccessExpression);
 
-		auto access = static_cast<TypedAST::RecordAccessExpression*>(ast);
+		auto access = static_cast<TypedAST::AccessExpression*>(ast);
 		auto mono_handle = static_cast<TypedAST::MonoTypeHandle*>(
-		    ct_eval(access->m_record, tc, alloc));
+		    ct_eval(access->m_object, tc, alloc));
 
 		constructor->m_mono = mono_handle;
 		constructor->m_id = access->m_member;
@@ -346,7 +346,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);

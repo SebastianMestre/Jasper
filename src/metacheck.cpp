@@ -80,13 +80,13 @@ void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_meta_core.unify(ast->m_else_expr->m_meta_type, tc.meta_value());
 }
 
-void metacheck(TypedAST::RecordAccessExpression* ast, TypeChecker& tc) {
+void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.new_meta_var();
 
 	// TODO: we would like to support static records with
 	// typefunc members in the future
-	metacheck(ast->m_record, tc);
-	if (ast->m_record->m_meta_type == tc.meta_monotype())
+	metacheck(ast->m_object, tc);
+	if (ast->m_object->m_meta_type == tc.meta_monotype())
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_constructor());
 	else
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
@@ -230,7 +230,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
