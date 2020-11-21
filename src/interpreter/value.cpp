@@ -98,11 +98,11 @@ void Dictionary::removeMember(StringType const& id) {
 }
 
 Union::Union(InternedString constructor)
-    : Value(ValueTag::Dictionary)
+    : Value(ValueTag::Union)
     , m_constructor(constructor) {}
 
 Union::Union(InternedString constructor, Value* v)
-    : Value(ValueTag::Dictionary)
+    : Value(ValueTag::Union)
     , m_constructor(constructor)
     , m_inner_value(v) {}
 
@@ -237,6 +237,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<NativeFunction*>(v));
 	case ValueTag::Reference:
 		return gc_visit(static_cast<Reference*>(v));
+	case ValueTag::UnionConstructor:
+		return gc_visit(static_cast<UnionConstructor*>(v));
 	case ValueTag::StructConstructor:
 		return gc_visit(static_cast<StructConstructor*>(v));
 	}
@@ -363,6 +365,8 @@ void print(Value* v, int d) {
 		return print(static_cast<NativeFunction*>(v), d);
 	case ValueTag::Reference:
 		return print(static_cast<Reference*>(v), d);
+	case ValueTag::UnionConstructor:
+		return print(static_cast<UnionConstructor*>(v), d);
 	case ValueTag::StructConstructor:
 		return print(static_cast<StructConstructor*>(v), d);
 	}

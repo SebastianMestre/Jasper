@@ -558,10 +558,11 @@ void interpreter_tests(Test::Tester& tests) {
 			y : either(<>) = either(<>).left {"error"};
 
 			x = y;
+			return 0;
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return ExitStatusTag::Ok;
+		    return Assert::equals(eval_expression("__invoke()", env), 0);
 	    }}));
 }
 
