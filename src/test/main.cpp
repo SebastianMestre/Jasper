@@ -554,7 +554,10 @@ void interpreter_tests(Test::Tester& tests) {
 		};
 
 		__invoke := fn() {
-			either;
+			x : either(<>) = either(<>).right {1};
+			y : either(<>) = either(<>).left {"error"};
+
+			x = y;
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
