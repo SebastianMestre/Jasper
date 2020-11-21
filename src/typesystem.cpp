@@ -77,8 +77,8 @@ TypeSystemCore::TypeSystemCore() {
 	};
 
 	m_meta_core.unify_function = [this](Unification::Core& core, int a, int b) {
-		a = m_mono_core.find_term(a);
-		b = m_mono_core.find_term(b);
+		a = core.find_term(a);
+		b = core.find_term(b);
 
 		if (a == b)
 			return;
