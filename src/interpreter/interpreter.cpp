@@ -101,6 +101,11 @@ void Interpreter::push_string(std::string s) {
 	run_gc_if_needed();
 }
 
+void Interpreter::push_union_constructor(InternedString constructor) {
+	m_env.push(m_gc->new_union_constructor_raw(constructor));
+	run_gc_if_needed();
+}
+
 void Interpreter::push_struct_constructor(std::vector<InternedString> keys) {
 	m_env.push(m_gc->new_struct_constructor_raw(std::move(keys)));
 	run_gc_if_needed();

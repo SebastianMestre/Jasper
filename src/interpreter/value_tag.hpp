@@ -19,6 +19,7 @@
                                                                                \
 	X(Reference)                                                               \
                                                                                \
+	X(UnionConstructor)                                                        \
 	X(StructConstructor)
 
 #define X(name) #name,

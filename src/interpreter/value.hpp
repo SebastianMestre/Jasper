@@ -138,6 +138,12 @@ struct Reference : Value {
 	Reference(Value* value);
 };
 
+struct UnionConstructor : Value {
+	InternedString m_constructor;
+
+	UnionConstructor(InternedString constructor);
+};
+
 struct StructConstructor : Value {
 	std::vector<InternedString> m_keys;
 

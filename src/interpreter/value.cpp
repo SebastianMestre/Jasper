@@ -119,6 +119,10 @@ Reference::Reference(Value* value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
+UnionConstructor::UnionConstructor(InternedString constructor)
+    : Value {ValueTag::UnionConstructor}
+    , m_constructor {constructor} {}
+
 StructConstructor::StructConstructor(std::vector<InternedString> keys)
     : Value {ValueTag::StructConstructor}
     , m_keys {std::move(keys)} {}
@@ -142,6 +146,9 @@ void gc_visit(Error* v) {
 	v->m_visited = true;
 }
 void gc_visit(NativeFunction* v) {
+	v->m_visited = true;
+}
+void gc_visit(UnionConstructor* v) {
 	v->m_visited = true;
 }
 void gc_visit(StructConstructor* v) {
