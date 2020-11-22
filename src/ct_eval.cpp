@@ -247,7 +247,19 @@ TypedAST::Constructor* constructor_from_ast(
 		assert(ast->type() == TypedASTTag::AccessExpression);
 
 		auto access = static_cast<TypedAST::AccessExpression*>(ast);
-		constructor->m_mono = mono_type_from_ast(access->m_object, tc);
+
+		// dummy with one constructor, the one used
+		std::unordered_map<InternedString, MonoId> structure;
+		structure[access->m_member->m_text] = tc.new_var();
+		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+		    TypeFunctionTag::Sum, {}, std::move(structure), true);
+
+		MonoId monotype = mono_type_from_ast(access->m_object, tc);
+		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);
+
+		tc.m_core.m_tf_core.unify(dummy_tf, tf);
+
+		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
 	} else {
 		assert(0 && "wrong constructor metatype");
