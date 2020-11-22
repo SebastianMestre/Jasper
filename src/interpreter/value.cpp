@@ -300,9 +300,9 @@ void print(Dictionary* m, int d) {
 }
 
 void print(Union* m, int d) {
-	// TODO
 	print_spaces(d);
-	std::cout << value_string[int(m->type())] << '\n';
+	std::cout << value_string[int(m->type())] << " " << m->m_constructor << '\n';
+	print(m->m_inner_value, d);
 }
 
 void print(Function* f, int d) {
