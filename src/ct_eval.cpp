@@ -173,7 +173,6 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	} else if (ast->type() == TypedASTTag::UnionExpression) {
 		auto as_ue = static_cast<TypedAST::UnionExpression*>(ast);
 
-		std::vector<InternedString> constructors;
 		std::unordered_map<InternedString, MonoId> structure;
 		int constructor_count = as_ue->m_constructors.size();
 		for (int i = 0; i < constructor_count; ++i){
@@ -181,11 +180,10 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 			InternedString name = as_ue->m_constructors[i].text();
 			assert(!structure.count(name));
 			structure[name] = mono;
-			constructors.push_back(name);
 		}
 
 		TypeFunctionId result = tc.m_core.new_type_function(
-		    TypeFunctionTag::Sum, std::move(constructors), std::move(structure));
+		    TypeFunctionTag::Sum, {}, std::move(structure));
 
 		return result;
 	} else if (ast->type() == TypedASTTag::StructExpression) {
