@@ -96,8 +96,13 @@ TypedAST::TernaryExpression* ct_eval(
 	return ast;
 }
 
-TypedAST::AccessExpression* ct_eval(
+TypedAST::TypedAST* ct_eval(
     TypedAST::AccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	// TODO: support vars
+	if (metatype == tc.meta_constructor())
+		return constructor_from_ast(ast, tc, alloc);
+
 	ast->m_object = ct_eval(ast->m_object, tc, alloc);
 	return ast;
 }
