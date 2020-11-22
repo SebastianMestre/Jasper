@@ -14,7 +14,7 @@
 	X(Identifier)                                                              \
 	X(CallExpression)                                                          \
 	X(IndexExpression)                                                         \
-	X(RecordAccessExpression)                                                  \
+	X(AccessExpression)                                                        \
 	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
 	/* All before this point are expressions */                                \
@@ -27,10 +27,12 @@
 	X(DeclarationList)                                                         \
 	X(Declaration)                                                             \
                                                                                \
+	X(UnionExpression)                                                         \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
 	X(TypeFunctionHandle)                                                      \
-	X(MonoTypeHandle)
+	X(MonoTypeHandle)                                                          \
+	X(Constructor)
 
 #define X(name) #name,
 constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};

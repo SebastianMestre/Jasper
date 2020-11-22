@@ -398,8 +398,8 @@ Writer<AST::AST*> Parser::parse_expression(int bp) {
 			if (handle_error(result, member))
 				return result;
 
-			auto e = m_ast_allocator->make<AST::RecordAccessExpression>();
-			e->m_record = lhs.m_result;
+			auto e = m_ast_allocator->make<AST::AccessExpression>();
+			e->m_object = lhs.m_result;
 			e->m_member = member.m_result;
 			lhs.m_result = e;
 
@@ -543,7 +543,8 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return array;
 	}
 
-	if (token->m_type == TokenTag::KEYWORD_STRUCT) {
+	if (token->m_type == TokenTag::KEYWORD_UNION ||
+	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
 		auto type = parse_type_function();
 		if (handle_error(result, type))

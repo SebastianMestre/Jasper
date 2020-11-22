@@ -61,6 +61,12 @@ Null* GC::null() {
 	return m_null;
 }
 
+gc_ptr<Union> GC::new_union(InternedString constructor, Value* v) {
+	auto result = new Union(constructor, v);
+	m_blocks.push_back(result);
+	return result;
+}
+
 gc_ptr<Object> GC::new_object(ObjectType declarations) {
 	auto result = new Object;
 	result->m_value = std::move(declarations);
@@ -146,7 +152,13 @@ gc_ptr<Reference> GC::new_reference(Value* v) {
 	return result;
 }
 
-StructConstructor* GC::new_struct_constructor_raw(std::vector<InternedString> keys){
+UnionConstructor* GC::new_union_constructor_raw(InternedString constructor) {
+	auto result = new UnionConstructor(constructor);
+	m_blocks.push_back(result);
+	return result;
+}
+
+StructConstructor* GC::new_struct_constructor_raw(std::vector<InternedString> keys) {
 	auto result = new StructConstructor(std::move(keys));
 	m_blocks.push_back(result);
 	return result;

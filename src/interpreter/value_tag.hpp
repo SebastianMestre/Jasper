@@ -12,12 +12,14 @@
 	X(Array)                                                                   \
 	X(Object)                                                                  \
 	X(Dictionary)                                                              \
+	X(Union)                                                                   \
                                                                                \
 	X(Function)                                                                \
 	X(NativeFunction)                                                          \
                                                                                \
 	X(Reference)                                                               \
                                                                                \
+	X(UnionConstructor)                                                        \
 	X(StructConstructor)
 
 #define X(name) #name,

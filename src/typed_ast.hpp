@@ -209,12 +209,12 @@ struct IndexExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::IndexExpression} {}
 };
 
-struct RecordAccessExpression : public TypedAST {
-	TypedAST* m_record;
+struct AccessExpression : public TypedAST {
+	TypedAST* m_object;
 	Token const* m_member;
 
-	RecordAccessExpression()
-	    : TypedAST {TypedASTTag::RecordAccessExpression} {}
+	AccessExpression()
+	    : TypedAST {TypedASTTag::AccessExpression} {}
 };
 
 struct TernaryExpression : public TypedAST {
@@ -275,6 +275,14 @@ struct WhileStatement : public TypedAST {
 	    : TypedAST {TypedASTTag::WhileStatement} {}
 };
 
+struct UnionExpression : public TypedAST {
+	std::vector<Identifier> m_constructors;
+	std::vector<TypedAST*> m_types;
+
+	UnionExpression()
+	    : TypedAST {TypedASTTag::UnionExpression} {}
+};
+
 struct StructExpression : public TypedAST {
 	std::vector<Identifier> m_fields;
 	std::vector<TypedAST*> m_types;
@@ -307,6 +315,16 @@ struct MonoTypeHandle : public TypedAST {
 
 	MonoTypeHandle()
 	    : TypedAST {TypedASTTag::MonoTypeHandle} {}
+};
+
+struct Constructor : public TypedAST {
+	MonoId m_mono;
+	Token const* m_id;
+	// points to the ast node this one was made from
+	TypedAST* m_syntax;
+
+	Constructor()
+	    : TypedAST {TypedASTTag::Constructor} {}
 };
 
 } // namespace TypedAST

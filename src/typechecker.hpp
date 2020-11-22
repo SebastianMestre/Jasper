@@ -40,6 +40,7 @@ struct TypeChecker {
 	MetaTypeId meta_value();
 	MetaTypeId meta_typefunc();
 	MetaTypeId meta_monotype();
+	MetaTypeId meta_constructor();
 };
 
 } // namespace TypeChecker

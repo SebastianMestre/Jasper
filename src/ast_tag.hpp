@@ -18,7 +18,7 @@
 	X(BinaryExpression) \
 	X(CallExpression) \
 	X(IndexExpression) \
-	X(RecordAccessExpression) \
+	X(AccessExpression) \
 	X(ConstructorExpression) \
 	X(Block) \
 	X(ReturnStatement) \

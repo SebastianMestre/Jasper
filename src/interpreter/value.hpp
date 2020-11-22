@@ -110,6 +110,14 @@ struct Dictionary : Value {
 	void removeMember(StringType const& id);
 };
 
+struct Union : Value {
+	InternedString m_constructor;
+	Value* m_inner_value {nullptr}; // empty constructor
+
+	Union(InternedString constructor);
+	Union(InternedString constructor, Value* v);
+};
+
 struct Function : Value {
 	FunctionType m_def;
 	// TODO: store references instead of values
@@ -128,6 +136,12 @@ struct Reference : Value {
 	Value* m_value;
 
 	Reference(Value* value);
+};
+
+struct UnionConstructor : Value {
+	InternedString m_constructor;
+
+	UnionConstructor(InternedString constructor);
 };
 
 struct StructConstructor : Value {

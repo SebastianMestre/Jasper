@@ -12,6 +12,7 @@ TypeChecker::TypeChecker(TypedAST::Allocator& allocator) : m_typed_ast_allocator
 	m_core.m_meta_core.new_term(-1); // 0 | value
 	m_core.m_meta_core.new_term(-1); // 1 | type func
 	m_core.m_meta_core.new_term(-1); // 2 | mono type
+	m_core.m_meta_core.new_term(-1); // 3 | constructor
 
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
@@ -224,6 +225,10 @@ MetaTypeId TypeChecker::meta_typefunc() {
 
 MetaTypeId TypeChecker::meta_monotype() {
 	return 2;
+}
+
+MetaTypeId TypeChecker::meta_constructor() {
+	return 3;
 }
 
 } // namespace TypeChecker

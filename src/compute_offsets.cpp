@@ -117,8 +117,8 @@ void compute_offsets(TypedAST::TernaryExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_else_expr, frame_offset);
 }
 
-void compute_offsets(TypedAST::RecordAccessExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_record, frame_offset);
+void compute_offsets(TypedAST::AccessExpression* ast, int frame_offset) {
+	compute_offsets(ast->m_object, frame_offset);
 }
 
 void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {
@@ -168,7 +168,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
@@ -185,6 +185,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 
 		DO_NOTHING(TypeFunctionHandle);
 		DO_NOTHING(MonoTypeHandle);
+		DO_NOTHING(Constructor);
 	}
 
 #undef DO_NOTHING

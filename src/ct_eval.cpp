@@ -36,6 +36,8 @@ TypedAST::FunctionLiteral* ct_eval(
 
 MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
 TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc);
+TypedAST::Constructor* constructor_from_ast(
+    TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc);
 
 TypedAST::TypedAST* ct_eval(
     TypedAST::Identifier* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
@@ -94,15 +96,20 @@ TypedAST::TernaryExpression* ct_eval(
 	return ast;
 }
 
-TypedAST::RecordAccessExpression* ct_eval(
-    TypedAST::RecordAccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	ast->m_record = ct_eval(ast->m_record, tc, alloc);
+TypedAST::TypedAST* ct_eval(
+    TypedAST::AccessExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	// TODO: support vars
+	if (metatype == tc.meta_constructor())
+		return constructor_from_ast(ast, tc, alloc);
+
+	ast->m_object = ct_eval(ast->m_object, tc, alloc);
 	return ast;
 }
 
 TypedAST::ConstructorExpression* ct_eval(
     TypedAST::ConstructorExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	ast->m_constructor = ct_eval(ast->m_constructor, tc, alloc);
+	ast->m_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
 
 	for (auto& arg : ast->m_args)
 		arg = ct_eval(arg, tc, alloc);
@@ -162,6 +169,23 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		auto value =
 		    static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value);
 		return value->m_value;
+	// TODO: handle duplication better
+	} else if (ast->type() == TypedASTTag::UnionExpression) {
+		auto as_ue = static_cast<TypedAST::UnionExpression*>(ast);
+
+		std::unordered_map<InternedString, MonoId> structure;
+		int constructor_count = as_ue->m_constructors.size();
+		for (int i = 0; i < constructor_count; ++i){
+			MonoId mono = mono_type_from_ast(as_ue->m_types[i], tc);
+			InternedString name = as_ue->m_constructors[i].text();
+			assert(!structure.count(name));
+			structure[name] = mono;
+		}
+
+		TypeFunctionId result = tc.m_core.new_type_function(
+		    TypeFunctionTag::Sum, {}, std::move(structure));
+
+		return result;
 	} else if (ast->type() == TypedASTTag::StructExpression) {
 		auto as_se = static_cast<TypedAST::StructExpression*>(ast);
 
@@ -209,6 +233,39 @@ MonoId mono_type_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc){
 	} else {
 		assert(0);
 	}
+}
+
+TypedAST::Constructor* constructor_from_ast(
+    TypedAST::TypedAST* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	MetaTypeId meta = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	auto constructor = alloc.make<TypedAST::Constructor>();
+	constructor->m_syntax = ast;
+
+	if (meta == tc.meta_monotype()) {
+		constructor->m_mono = mono_type_from_ast(ast, tc);
+	} else if (meta == tc.meta_constructor()) {
+		assert(ast->type() == TypedASTTag::AccessExpression);
+
+		auto access = static_cast<TypedAST::AccessExpression*>(ast);
+
+		// dummy with one constructor, the one used
+		std::unordered_map<InternedString, MonoId> structure;
+		structure[access->m_member->m_text] = tc.new_var();
+		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+		    TypeFunctionTag::Sum, {}, std::move(structure), true);
+
+		MonoId monotype = mono_type_from_ast(access->m_object, tc);
+		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);
+
+		tc.m_core.m_tf_core.unify(dummy_tf, tf);
+
+		constructor->m_mono = monotype;
+		constructor->m_id = access->m_member;
+	} else {
+		assert(0 && "wrong constructor metatype");
+	}
+
+	return constructor;
 }
 
 // declarations
@@ -299,7 +356,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);

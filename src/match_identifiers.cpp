@@ -176,8 +176,8 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::RecordAccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_record, env);
+    TypedAST::AccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	return match_identifiers(ast->m_object, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
@@ -208,6 +208,15 @@ namespace TypeChecker {
 
 		env.exit_top_level_decl();
 	}
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::UnionExpression* ast, Frontend::CompileTimeEnvironment& env) {
+
+	for (auto& type : ast->m_types)
+		CHECK_AND_RETURN(match_identifiers(type, env));
 
 	return {};
 }
@@ -252,7 +261,7 @@ namespace TypeChecker {
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
@@ -264,6 +273,7 @@ namespace TypeChecker {
 		DISPATCH(Declaration);
 		DISPATCH(DeclarationList);
 
+		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
 	}

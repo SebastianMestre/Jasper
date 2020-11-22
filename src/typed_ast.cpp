@@ -137,11 +137,11 @@ TypedAST* convert_ast(AST::TernaryExpression* ast, Allocator& alloc) {
 	return typed_ternary;
 }
 
-TypedAST* convert_ast(AST::RecordAccessExpression* ast, Allocator& alloc) {
-	auto typed_ast = alloc.make<RecordAccessExpression>();
+TypedAST* convert_ast(AST::AccessExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<AccessExpression>();
 
 	typed_ast->m_member = ast->m_member;
-	typed_ast->m_record = convert_ast(ast->m_record, alloc);
+	typed_ast->m_object = convert_ast(ast->m_object, alloc);
 
 	return typed_ast;
 }
@@ -208,15 +208,30 @@ TypedAST* convert_ast(AST::WhileStatement* ast, Allocator& alloc) {
 	return typed_while;
 }
 
+TypedAST* convert_ast(AST::UnionExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<UnionExpression>();
+
+	for (auto& constructor : ast->m_constructors) {
+		auto typed_field = static_cast<Identifier*>(convert_ast(&constructor, alloc));
+		typed_ast->m_constructors.push_back(std::move(*typed_field));
+	}
+
+	for (auto type : ast->m_types) {
+		typed_ast->m_types.push_back(convert_ast(type, alloc));
+	}
+
+	return typed_ast;
+};
+
 TypedAST* convert_ast(AST::StructExpression* ast, Allocator& alloc) {
 	auto typed_ast = alloc.make<StructExpression>();
 
-	for (auto& field : ast->m_fields){
+	for (auto& field : ast->m_fields) {
 		auto typed_field = static_cast<Identifier*>(convert_ast(&field, alloc));
 		typed_ast->m_fields.push_back(std::move(*typed_field));
 	}
 
-	for (auto type : ast->m_types){
+	for (auto type : ast->m_types) {
 		typed_ast->m_types.push_back(convert_ast(type, alloc));
 	}
 
@@ -257,7 +272,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
-		DISPATCH(RecordAccessExpression);
+		DISPATCH(AccessExpression);
 		DISPATCH(ConstructorExpression);
 		REJECT(BinaryExpression);
 
@@ -270,9 +285,11 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
 
+		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
 	}
+
 	std::cerr << "Error: AST type not handled in convert_ast: "
 	          << ast_string[(int)ast->type()] << std::endl;
 	assert(0);
