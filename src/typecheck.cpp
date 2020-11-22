@@ -213,9 +213,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	auto constructor = static_cast<TypedAST::Constructor*>(ast->m_constructor);
 	assert(constructor->type() == TypedASTTag::Constructor);
 
-	auto handle = constructor->m_mono;
-
-	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(handle->m_value);
+	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(constructor->m_mono);
 	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
 
@@ -238,7 +236,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 		tc.m_core.m_mono_core.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
-	ast->m_value_type = handle->m_value;
+	ast->m_value_type = constructor->m_mono;
 }
 
 void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {

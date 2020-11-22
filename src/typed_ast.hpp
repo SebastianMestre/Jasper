@@ -318,7 +318,7 @@ struct MonoTypeHandle : public TypedAST {
 };
 
 struct Constructor : public TypedAST {
-	MonoTypeHandle* m_mono;
+	MonoId m_mono;
 	Token const* m_id;
 	// points to the ast node this one was made from
 	TypedAST* m_syntax;

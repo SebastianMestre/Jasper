@@ -239,17 +239,12 @@ TypedAST::Constructor* constructor_from_ast(
 	constructor->m_syntax = ast;
 
 	if (meta == tc.meta_monotype()) {
-		auto mono_handle = static_cast<TypedAST::MonoTypeHandle*>(
-		    ct_eval(ast, tc, alloc));
-		constructor->m_mono = mono_handle;
+		constructor->m_mono = mono_type_from_ast(ast, tc);
 	} else if (meta == tc.meta_constructor()) {
 		assert(ast->type() == TypedASTTag::AccessExpression);
 
 		auto access = static_cast<TypedAST::AccessExpression*>(ast);
-		auto mono_handle = static_cast<TypedAST::MonoTypeHandle*>(
-		    ct_eval(access->m_object, tc, alloc));
-
-		constructor->m_mono = mono_handle;
+		constructor->m_mono = mono_type_from_ast(access->m_object, tc);
 		constructor->m_id = access->m_member;
 	} else {
 		assert(0 && "wrong constructor metatype");

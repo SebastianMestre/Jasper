@@ -403,8 +403,7 @@ void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
 }
 
 void eval(TypedAST::Constructor* ast, Interpreter& e) {
-	TypeFunctionId tf_header =
-	    e.m_tc->m_core.m_mono_core.find_function(ast->m_mono->m_value);
+	TypeFunctionId tf_header = e.m_tc->m_core.m_mono_core.find_function(ast->m_mono);
 	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
 	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
 
