@@ -548,16 +548,22 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
-		either := union {
-			left : string(<>);
-			right : int(<>);
+		tree := union {
+			leaf : int(<>);
+			node : tree_node(<>);
+		};
+
+		tree_node := struct {
+			left : tree(<>);
+			value : int(<>);
+			right : tree(<>);
 		};
 
 		__invoke := fn() {
-			x : either(<>) = either(<>).right {1};
-			y : either(<>) = either(<>).left {"error"};
-
-			x = y;
+			x : tree(<>) = tree(<>).leaf {1};
+			y : tree(<>) = tree(<>).node {
+				tree_node(<>) {x; 1; x}
+			};
 			return 0;
 		};
 		)",
