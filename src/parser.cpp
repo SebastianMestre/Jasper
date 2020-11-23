@@ -552,6 +552,13 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return type;
 	}
 
+	if (token->m_type == TokenTag::KEYWORD_MATCH) {
+		auto type = parse_match_expression();
+		if (handle_error(result, type))
+			return result;
+		return type;
+	}
+
 	result.m_error.m_sub_errors.push_back({make_expected_error(
 	    token_string[int(TokenTag::KEYWORD_FN)], token)});
 
@@ -971,6 +978,99 @@ Writer<AST::AST*> Parser::parse_while_statement() {
 	e->m_body = body.m_result;
 
 	return make_writer<AST::AST*>(e);
+}
+
+Writer<AST::AST*> Parser::parse_match_expression() {
+	Writer<AST::AST*> result = {
+	    {"Parse Error: Failed to parse match expression"}};
+
+	if (handle_error(result, require(TokenTag::KEYWORD_MATCH)))
+		return result;
+
+	if (handle_error(result, require(TokenTag::PAREN_OPEN)))
+		return result;
+
+	auto matchee_and_hint = parse_name_and_type();
+	if (handle_error(result, matchee_and_hint))
+		return result;
+
+	if (handle_error(result, require(TokenTag::PAREN_CLOSE)))
+		return result;
+
+	if (handle_error(result, require(TokenTag::BRACE_OPEN)))
+		return result;
+
+	std::vector<Token const*> cases;
+	std::vector<AST::AST*> expressions;
+	while(!consume(TokenTag::BRACE_CLOSE)) {
+		Writer<Token const*> case_name = require(TokenTag::IDENTIFIER);
+		if (handle_error(result, case_name))
+			return result;
+
+		if (handle_error(result, require(TokenTag::BRACE_OPEN)))
+			return result;
+
+		auto name_and_type = parse_name_and_type();
+		if (handle_error(result, name_and_type))
+			return result;
+
+		if (handle_error(result, require(TokenTag::BRACE_CLOSE)))
+			return result;
+
+		if (handle_error(result, require(TokenTag::ARROW)))
+			return result;
+
+		auto expression = parse_expression();
+		if (handle_error(result, expression))
+			return result;
+
+		if (handle_error(result, require(TokenTag::SEMICOLON)))
+			return result;
+
+		AST::Declaration inner_value;
+		inner_value.m_identifier_token = name_and_type.m_result.first;
+		inner_value.m_type_hint = name_and_type.m_result.second;
+
+		auto function = m_ast_allocator->make<AST::ShortFunctionLiteral>();
+		function->m_args.push_back(std::move(inner_value));
+		function->m_body = expression.m_result;
+
+		cases.push_back(case_name.m_result);
+		expressions.push_back(function);
+	}
+
+	AST::Identifier matchee;
+	matchee.m_token = matchee_and_hint.m_result.first;
+
+	auto match = m_ast_allocator->make<AST::MatchExpression>();
+	match->m_matchee = matchee;
+	match->m_type_hint = matchee_and_hint.m_result.second;
+	match->m_cases = std::move(cases);
+	match->m_expressions = std::move(expressions);
+
+	return make_writer<AST::AST*>(match);
+}
+
+Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool required_type) {
+	Writer<std::pair<Token const*, AST::AST*>> result = {
+	    {"Parse Error: Failed to parse name and type"}};
+
+	auto name = require(TokenTag::IDENTIFIER);
+	if (handle_error(result, name))
+		return result;
+
+	Writer<AST::AST*> type;
+	if (required_type or match(TokenTag::DECLARE)) {
+		if (handle_error(result, require(TokenTag::DECLARE)))
+			return result;
+
+		type = parse_type_term();
+		if (handle_error(result, type))
+			return result;
+	}
+
+	return make_writer<std::pair<Token const*, AST::AST*>>(
+	    {name.m_result, type.m_result});
 }
 
 /*
