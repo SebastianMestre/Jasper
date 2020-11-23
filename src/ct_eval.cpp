@@ -107,6 +107,19 @@ TypedAST::TypedAST* ct_eval(
 	return ast;
 }
 
+TypedAST::TypedAST* ct_eval(
+    TypedAST::MatchExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	// NOTE: no need to ct_eval the identifier, because it is guaranteed
+	// to be of metatype value, thus nothing needs to be done
+	if (ast->m_type_hint)
+		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
+
+	for (auto& expr : ast->m_expressions)
+		expr.second = ct_eval(expr.second, tc, alloc);
+
+	return ast;
+}
+
 TypedAST::ConstructorExpression* ct_eval(
     TypedAST::ConstructorExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 	ast->m_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
@@ -357,6 +370,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
