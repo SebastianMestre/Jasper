@@ -183,6 +183,18 @@ struct TernaryExpression : public AST {
 	    : AST {ASTTag::TernaryExpression} {}
 };
 
+struct MatchExpression : public AST {
+	// NOTE: I'm avoiding using Declaration for this
+	// because it will generate confusion
+	Identifier m_matchee;
+	AST* m_type_hint {nullptr};
+	std::vector<Token const*> m_cases;
+	std::vector<AST*> m_expressions;
+
+	MatchExpression()
+	    : AST {ASTTag::MatchExpression} {}
+};
+
 struct ConstructorExpression : public AST {
 	AST* m_constructor;
 	std::vector<AST*> m_args;

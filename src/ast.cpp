@@ -180,6 +180,23 @@ void print(TernaryExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(MatchExpression* ast, int d) {
+	std::string stab(d - 1, tabc);
+	std::string tab(d, tabc);
+	std::cout << stab << "[ MatchExpression\n" << tab << "Matchee:\n";
+	print(&ast->m_matchee, d + 1);
+	if (ast->m_type_hint) {
+		std::cout << tab << "Type:\n";
+		print(ast->m_type_hint, d + 1);
+	}
+	std::cout << tab << "Cases:\n";
+	for (int i = 0; i < ast->m_cases.size(); ++i) {
+		std::cout << tab << "Case " << ast->m_cases[0]->m_text.str() << ":\n";
+		print(ast->m_expressions[0], d + 1);
+	}
+	std::cout << stab << "]\n";
+}
+
 void print(ReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
