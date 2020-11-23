@@ -226,6 +226,17 @@ struct TernaryExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::TernaryExpression} {}
 };
 
+struct MatchExpression : public TypedAST {
+	// NOTE: I'm avoiding using Declaration for this
+	// because it will generate confusion
+	Identifier m_matchee;
+	TypedAST* m_type_hint {nullptr};
+	std::unordered_map<InternedString, FunctionLiteral*> m_expressions;
+
+	MatchExpression()
+	    : TypedAST {TypedASTTag::MatchExpression} {}
+};
+
 struct ConstructorExpression : public TypedAST {
 	TypedAST* m_constructor;
 	std::vector<TypedAST*> m_args;

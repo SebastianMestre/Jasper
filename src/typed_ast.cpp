@@ -146,6 +146,29 @@ TypedAST* convert_ast(AST::AccessExpression* ast, Allocator& alloc) {
 	return typed_ast;
 }
 
+TypedAST* convert_ast(AST::MatchExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<MatchExpression>();
+
+	auto matchee = static_cast<Identifier*>(convert_ast(&ast->m_matchee, alloc));
+	typed_ast->m_matchee = std::move(*matchee);
+	if (ast->m_type_hint)
+		typed_ast->m_type_hint = convert_ast(ast->m_type_hint, alloc);
+
+	std::unordered_map<InternedString, FunctionLiteral*> expressions;
+	for (int i = 0; i < ast->m_cases.size(); ++i) {
+		InternedString case_name = ast->m_cases[i]->m_text;
+		assert(expressions.find(case_name) == expressions.end());
+
+		auto typed_function = convert_ast(ast->m_expressions[i], alloc);
+		assert(typed_function->type() == TypedASTTag::FunctionLiteral);
+		expressions[case_name] = static_cast<FunctionLiteral*>(typed_function);
+	}
+
+	typed_ast->m_expressions = std::move(expressions);
+
+	return typed_ast;
+}
+
 TypedAST* convert_ast(AST::ConstructorExpression* ast, Allocator& alloc) {
 	auto typed_ast = alloc.make<ConstructorExpression>();
 
@@ -273,6 +296,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		REJECT(BinaryExpression);
 
