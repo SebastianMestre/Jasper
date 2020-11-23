@@ -207,6 +207,40 @@ void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_object->m_value_type, term_type);
 }
 
+void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+	typecheck(&ast->m_matchee, tc);
+	if (ast->m_type_hint) {
+		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
+		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, handle->m_value);
+	}
+
+	ast->m_value_type = tc.new_var();
+
+	std::unordered_map<InternedString, MonoId> dummy_structure;
+	for (auto& expr : ast->m_expressions) {
+		// unify return of match with return of functions
+		typecheck(expr.second, tc);
+		tc.m_core.m_mono_core.unify(ast->m_value_type, expr.second->m_return_type);
+
+		// get the structure of the match expression for a dummy
+		auto inner_value_declaration = expr.second->m_args.begin();
+		dummy_structure[expr.first] = inner_value_declaration->m_value_type;
+	}
+
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+	    TypeFunctionTag::Sum,
+	    // we don't care about field order in dummies
+	    {},
+	    std::move(dummy_structure),
+	    true);
+
+	// NOTE: is it okay to assume 0 arguments?
+	// is f(a,b,c) === f'() possible?
+	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match sum dummy");
+	tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, term_type);
+}
+
 void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
 
@@ -398,6 +432,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Declaration);
