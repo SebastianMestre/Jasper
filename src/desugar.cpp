@@ -188,6 +188,16 @@ AST* desugar(WhileStatement* ast, Allocator& alloc) {
 	return ast;
 }
 
+AST* desugar(MatchExpression* ast, Allocator& alloc) {
+	if (ast->m_type_hint)
+		ast->m_type_hint = desugar(ast->m_type_hint, alloc);
+
+	for (auto &expr : ast->m_expressions)
+		expr = desugar(expr, alloc);
+
+	return ast;
+}
+
 AST* desugar(AST* ast, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
@@ -229,6 +239,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+		DISPATCH(MatchExpression);
 
 		RETURN(TypeTerm);
 		RETURN(TypeVar);
