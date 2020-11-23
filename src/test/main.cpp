@@ -564,11 +564,17 @@ void interpreter_tests(Test::Tester& tests) {
 			y : tree(<>) = tree(<>).node {
 				tree_node(<>) {x; 1; x}
 			};
-			return 0;
+
+			a := match(x : tree(<>)) {
+				leaf { i : int(<>) } => i;
+				node { n : tree_node(<>) } => n.value;
+			};
+
+			return a;
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 0);
+		    return Assert::equals(eval_expression("__invoke()", env), 1);
 	    }}));
 }
 
