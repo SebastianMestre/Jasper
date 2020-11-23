@@ -94,6 +94,22 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
 }
 
+void metacheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_value();
+
+	metacheck(&ast->m_matchee, tc);
+	tc.m_core.m_meta_core.unify(ast->m_matchee.m_meta_type, tc.meta_value());
+
+	if (ast->m_type_hint) {
+		metacheck(ast->m_type_hint, tc);
+		tc.m_core.m_meta_core.unify(
+		    ast->m_type_hint->m_meta_type, tc.meta_monotype());
+	}
+
+	for (auto& expr : ast->m_expressions)
+		metacheck(expr.second, tc);
+}
+
 void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 
@@ -233,6 +249,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
