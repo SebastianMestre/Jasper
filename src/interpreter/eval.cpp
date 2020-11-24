@@ -63,7 +63,7 @@ void eval(TypedAST::NullLiteral* ast, Interpreter& e) {
 };
 
 void eval(TypedAST::ObjectLiteral* ast, Interpreter& e) {
-	auto result = e.new_object({});
+	auto result = e.new_record({});
 
 	for (auto& decl : ast->m_body) {
 		if (decl.m_value) {
@@ -268,11 +268,11 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 };
 
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
-	eval(ast->m_object, e);
+	eval(ast->m_record, e);
 	auto rec = e.m_env.pop();
 	auto rec_val = unboxed(rec.get());
-	assert(rec_val->type() == ValueTag::Object);
-	auto rec_actually = static_cast<Object*>(rec_val);
+	assert(rec_val->type() == ValueTag::Record);
+	auto rec_actually = static_cast<Record*>(rec_val);
 	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
@@ -281,13 +281,13 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	auto constructor = e.m_env.pop();
 	auto constructor_value = unboxed(constructor.get());
 
-	if (constructor_value->type() == ValueTag::StructConstructor) {
-		auto constructor_actually = static_cast<StructConstructor*>(constructor_value);
+	if (constructor_value->type() == ValueTag::RecordConstructor) {
+		auto constructor_actually = static_cast<RecordConstructor*>(constructor_value);
 
 		assert(ast->m_args.size() == constructor_actually->m_keys.size());
 
 		int storage_point = e.m_env.m_stack_ptr;
-		ObjectType record;
+		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i)
 			eval(ast->m_args[i], e);
 
@@ -296,19 +296,19 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			    e.m_env.m_stack[storage_point + i];
 		}
 		
-		auto result = e.m_gc->new_object(std::move(record));
+		auto result = e.m_gc->new_record(std::move(record));
 
 		while (e.m_env.m_stack_ptr > storage_point)
 			e.m_env.pop();
 
 		e.m_env.push(result.get());
-	} else if (constructor_value->type() == ValueTag::UnionConstructor) {
-		auto constructor_actually = static_cast<UnionConstructor*>(constructor_value);
+	} else if (constructor_value->type() == ValueTag::VariantConstructor) {
+		auto constructor_actually = static_cast<VariantConstructor*>(constructor_value);
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
-		auto result = e.m_gc->new_union(
+		auto result = e.m_gc->new_variant(
 		    constructor_actually->m_constructor, e.m_env.m_stack.back());
 		e.m_env.pop();
 
@@ -387,11 +387,11 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
-// TODO: include union implementations? if so, remove duplication
+// TODO: include variant implementations? if so, remove duplication
 void eval(TypedAST::TypeFunctionHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_struct_constructor(type_function_data.fields);
+	e.push_record_constructor(type_function_data.fields);
 }
 
 void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
@@ -399,7 +399,7 @@ void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
 	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_struct_constructor(type_function_data.fields);
+	e.push_record_constructor(type_function_data.fields);
 }
 
 void eval(TypedAST::Constructor* ast, Interpreter& e) {
@@ -408,9 +408,9 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
 
 	if (tf_data.tag == TypeFunctionTag::Record) {
-		e.push_struct_constructor(tf_data.fields);
-	} else if (tf_data.tag == TypeFunctionTag::Sum) {
-		e.push_union_constructor(ast->m_id->m_text);
+		e.push_record_constructor(tf_data.fields);
+	} else if (tf_data.tag == TypeFunctionTag::Variant) {
+		e.push_variant_constructor(ast->m_id->m_text);
 	} else {
 		assert(0 && "not implemented this type function for construction");
 	}

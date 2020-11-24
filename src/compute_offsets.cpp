@@ -118,7 +118,7 @@ void compute_offsets(TypedAST::TernaryExpression* ast, int frame_offset) {
 }
 
 void compute_offsets(TypedAST::AccessExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_object, frame_offset);
+	compute_offsets(ast->m_record, frame_offset);
 }
 
 void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {

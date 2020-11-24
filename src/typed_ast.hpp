@@ -210,7 +210,7 @@ struct IndexExpression : public TypedAST {
 };
 
 struct AccessExpression : public TypedAST {
-	TypedAST* m_object;
+	TypedAST* m_record;
 	Token const* m_member;
 
 	AccessExpression()

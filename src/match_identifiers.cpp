@@ -177,7 +177,7 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::AccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_object, env);
+	return match_identifiers(ast->m_record, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(

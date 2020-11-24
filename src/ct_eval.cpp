@@ -103,7 +103,7 @@ TypedAST::TypedAST* ct_eval(
 	if (metatype == tc.meta_constructor())
 		return constructor_from_ast(ast, tc, alloc);
 
-	ast->m_object = ct_eval(ast->m_object, tc, alloc);
+	ast->m_record = ct_eval(ast->m_record, tc, alloc);
 	return ast;
 }
 
@@ -183,7 +183,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		}
 
 		TypeFunctionId result = tc.m_core.new_type_function(
-		    TypeFunctionTag::Sum, {}, std::move(structure));
+		    TypeFunctionTag::Variant, {}, std::move(structure));
 
 		return result;
 	} else if (ast->type() == TypedASTTag::StructExpression) {
@@ -252,11 +252,11 @@ TypedAST::Constructor* constructor_from_ast(
 		std::unordered_map<InternedString, MonoId> structure;
 		structure[access->m_member->m_text] = tc.new_var();
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-		    TypeFunctionTag::Sum, {}, std::move(structure), true);
+		    TypeFunctionTag::Variant, {}, std::move(structure), true);
 		MonoId dummy_monotype =
 		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
 
-		MonoId monotype = mono_type_from_ast(access->m_object, tc);
+		MonoId monotype = mono_type_from_ast(access->m_record, tc);
 
 		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
 

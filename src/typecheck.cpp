@@ -189,7 +189,7 @@ void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_object, tc);
+	typecheck(ast->m_record, tc);
 
 	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
@@ -203,7 +203,7 @@ void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
-	tc.m_core.m_mono_core.unify(ast->m_object->m_value_type, term_type);
+	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
 void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
@@ -225,7 +225,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 			tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
-	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		assert(ast->m_args.size() == 1);
 
 		typecheck(ast->m_args[0], tc);

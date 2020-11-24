@@ -101,13 +101,13 @@ void Interpreter::push_string(std::string s) {
 	run_gc_if_needed();
 }
 
-void Interpreter::push_union_constructor(InternedString constructor) {
-	m_env.push(m_gc->new_union_constructor_raw(constructor));
+void Interpreter::push_variant_constructor(InternedString constructor) {
+	m_env.push(m_gc->new_variant_constructor_raw(constructor));
 	run_gc_if_needed();
 }
 
-void Interpreter::push_struct_constructor(std::vector<InternedString> keys) {
-	m_env.push(m_gc->new_struct_constructor_raw(std::move(keys)));
+void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
+	m_env.push(m_gc->new_record_constructor_raw(std::move(keys)));
 	run_gc_if_needed();
 }
 
@@ -117,8 +117,8 @@ gc_ptr<Array> Interpreter::new_list(ArrayType elements) {
 	return result;
 }
 
-gc_ptr<Object> Interpreter::new_object(ObjectType declarations) {
-	auto result = m_gc->new_object(std::move(declarations));
+gc_ptr<Record> Interpreter::new_record(RecordType declarations) {
+	auto result = m_gc->new_record(std::move(declarations));
 	run_gc_if_needed();
 	return result;
 }
@@ -129,7 +129,7 @@ gc_ptr<Dictionary> Interpreter::new_dictionary(DictionaryType declarations) {
 	return result;
 }
 
-gc_ptr<Function> Interpreter::new_function(FunctionType def, ObjectType s) {
+gc_ptr<Function> Interpreter::new_function(FunctionType def, RecordType s) {
 	auto result = m_gc->new_function(def, std::move(s));
 	run_gc_if_needed();
 	return result;

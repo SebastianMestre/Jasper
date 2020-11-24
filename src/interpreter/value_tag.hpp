@@ -10,17 +10,17 @@
 	X(Error)                                                                   \
                                                                                \
 	X(Array)                                                                   \
-	X(Object)                                                                  \
+	X(Record)                                                                  \
 	X(Dictionary)                                                              \
-	X(Union)                                                                   \
+	X(Variant)                                                                 \
                                                                                \
 	X(Function)                                                                \
 	X(NativeFunction)                                                          \
                                                                                \
 	X(Reference)                                                               \
                                                                                \
-	X(UnionConstructor)                                                        \
-	X(StructConstructor)
+	X(VariantConstructor)                                                      \
+	X(RecordConstructor)
 
 #define X(name) #name,
 constexpr const char* value_string[] = {
