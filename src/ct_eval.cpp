@@ -254,6 +254,7 @@ TypedAST::Constructor* constructor_from_ast(
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
 		    TypeFunctionTag::Sum, {}, std::move(structure), true);
 
+		// TODO: handle monotype being a var
 		MonoId monotype = mono_type_from_ast(access->m_object, tc);
 		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);
 
@@ -299,26 +300,29 @@ TypedAST::DeclarationList* ct_eval(
 		}
 	}
 
-	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
-		if (meta_type == tc.meta_typefunc()) {
-			assert(!decl.m_type_hint && "type hint not allowed in type function declaration");
-			auto handle =
-			    static_cast<TypedAST::TypeFunctionHandle*>(decl.m_value);
+	auto const& comps = tc.m_env.declaration_components;
+	for (auto const& decls : comps) {
+		for (auto decl : decls) {
+			int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+			if (meta_type == tc.meta_typefunc()) {
+				assert(!decl->m_type_hint && "type hint not allowed in type function declaration");
+				auto handle =
+					static_cast<TypedAST::TypeFunctionHandle*>(decl->m_value);
 
-			TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
-			tc.m_core.m_tf_core.unify(tf, handle->m_value);
-		} else if (meta_type == tc.meta_monotype()) {
-			assert(!decl.m_type_hint && "type hint not allowed in monotype declaration");
-			auto handle =
-			    static_cast<TypedAST::MonoTypeHandle*>(decl.m_value);
+				TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
+				tc.m_core.m_tf_core.unify(tf, handle->m_value);
+			} else if (meta_type == tc.meta_monotype()) {
+				assert(!decl->m_type_hint && "type hint not allowed in monotype declaration");
+				auto handle =
+					static_cast<TypedAST::MonoTypeHandle*>(decl->m_value);
 
-			MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
-			tc.m_core.m_mono_core.unify(mt, handle->m_value);
-		} else {
-			if (decl.m_type_hint)
-				decl.m_type_hint = ct_eval(decl.m_type_hint, tc, alloc);
-			decl.m_value = ct_eval(decl.m_value, tc, alloc);
+				MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
+				tc.m_core.m_mono_core.unify(mt, handle->m_value);
+			} else {
+				if (decl->m_type_hint)
+					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);
+				decl->m_value = ct_eval(decl->m_value, tc, alloc);
+			}
 		}
 	}
 
