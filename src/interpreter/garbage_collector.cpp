@@ -61,8 +61,8 @@ Null* GC::null() {
 	return m_null;
 }
 
-gc_ptr<Union> GC::new_union(InternedString constructor, Value* v) {
-	auto result = new Union(constructor, v);
+gc_ptr<Variant> GC::new_variant(InternedString constructor, Value* v) {
+	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
 	return result;
 }
@@ -152,8 +152,8 @@ gc_ptr<Reference> GC::new_reference(Value* v) {
 	return result;
 }
 
-UnionConstructor* GC::new_union_constructor_raw(InternedString constructor) {
-	auto result = new UnionConstructor(constructor);
+VariantConstructor* GC::new_variant_constructor_raw(InternedString constructor) {
+	auto result = new VariantConstructor(constructor);
 	m_blocks.push_back(result);
 	return result;
 }

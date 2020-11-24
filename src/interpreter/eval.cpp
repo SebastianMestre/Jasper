@@ -302,13 +302,13 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_env.pop();
 
 		e.m_env.push(result.get());
-	} else if (constructor_value->type() == ValueTag::UnionConstructor) {
-		auto constructor_actually = static_cast<UnionConstructor*>(constructor_value);
+	} else if (constructor_value->type() == ValueTag::VariantConstructor) {
+		auto constructor_actually = static_cast<VariantConstructor*>(constructor_value);
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
-		auto result = e.m_gc->new_union(
+		auto result = e.m_gc->new_variant(
 		    constructor_actually->m_constructor, e.m_env.m_stack.back());
 		e.m_env.pop();
 
@@ -387,7 +387,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
-// TODO: include union implementations? if so, remove duplication
+// TODO: include variant implementations? if so, remove duplication
 void eval(TypedAST::TypeFunctionHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
@@ -410,7 +410,7 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 	if (tf_data.tag == TypeFunctionTag::Record) {
 		e.push_struct_constructor(tf_data.fields);
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		e.push_union_constructor(ast->m_id->m_text);
+		e.push_variant_constructor(ast->m_id->m_text);
 	} else {
 		assert(0 && "not implemented this type function for construction");
 	}

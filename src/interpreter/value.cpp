@@ -97,12 +97,12 @@ void Dictionary::removeMember(StringType const& id) {
 	m_value.erase(id);
 }
 
-Union::Union(InternedString constructor)
-    : Value(ValueTag::Union)
+Variant::Variant(InternedString constructor)
+    : Value(ValueTag::Variant)
     , m_constructor(constructor) {}
 
-Union::Union(InternedString constructor, Value* v)
-    : Value(ValueTag::Union)
+Variant::Variant(InternedString constructor, Value* v)
+    : Value(ValueTag::Variant)
     , m_constructor(constructor)
     , m_inner_value(v) {}
 
@@ -119,8 +119,8 @@ Reference::Reference(Value* value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
-UnionConstructor::UnionConstructor(InternedString constructor)
-    : Value {ValueTag::UnionConstructor}
+VariantConstructor::VariantConstructor(InternedString constructor)
+    : Value {ValueTag::VariantConstructor}
     , m_constructor {constructor} {}
 
 StructConstructor::StructConstructor(std::vector<InternedString> keys)
@@ -148,7 +148,7 @@ void gc_visit(Error* v) {
 void gc_visit(NativeFunction* v) {
 	v->m_visited = true;
 }
-void gc_visit(UnionConstructor* v) {
+void gc_visit(VariantConstructor* v) {
 	v->m_visited = true;
 }
 void gc_visit(StructConstructor* v) {
@@ -183,7 +183,7 @@ void gc_visit(Dictionary* d) {
 		gc_visit(child.second);
 }
 
-void gc_visit(Union* u) {
+void gc_visit(Variant* u) {
 	if (u->m_visited)
 		return;
 
@@ -229,16 +229,16 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Object*>(v));
 	case ValueTag::Dictionary:
 		return gc_visit(static_cast<Dictionary*>(v));
-	case ValueTag::Union:
-		return gc_visit(static_cast<Union*>(v));
+	case ValueTag::Variant:
+		return gc_visit(static_cast<Variant*>(v));
 	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
 	case ValueTag::NativeFunction:
 		return gc_visit(static_cast<NativeFunction*>(v));
 	case ValueTag::Reference:
 		return gc_visit(static_cast<Reference*>(v));
-	case ValueTag::UnionConstructor:
-		return gc_visit(static_cast<UnionConstructor*>(v));
+	case ValueTag::VariantConstructor:
+		return gc_visit(static_cast<VariantConstructor*>(v));
 	case ValueTag::StructConstructor:
 		return gc_visit(static_cast<StructConstructor*>(v));
 	}
@@ -299,7 +299,7 @@ void print(Dictionary* m, int d) {
 	std::cout << value_string[int(m->type())] << '\n';
 }
 
-void print(Union* m, int d) {
+void print(Variant* m, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(m->type())] << " " << m->m_constructor << '\n';
 	print(m->m_inner_value, d);
@@ -357,16 +357,16 @@ void print(Value* v, int d) {
 		return print(static_cast<Object*>(v), d);
 	case ValueTag::Dictionary:
 		return print(static_cast<Dictionary*>(v), d);
-	case ValueTag::Union:
-		return print(static_cast<Union*>(v), d);
+	case ValueTag::Variant:
+		return print(static_cast<Variant*>(v), d);
 	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
 	case ValueTag::NativeFunction:
 		return print(static_cast<NativeFunction*>(v), d);
 	case ValueTag::Reference:
 		return print(static_cast<Reference*>(v), d);
-	case ValueTag::UnionConstructor:
-		return print(static_cast<UnionConstructor*>(v), d);
+	case ValueTag::VariantConstructor:
+		return print(static_cast<VariantConstructor*>(v), d);
 	case ValueTag::StructConstructor:
 		return print(static_cast<StructConstructor*>(v), d);
 	}

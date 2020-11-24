@@ -110,12 +110,12 @@ struct Dictionary : Value {
 	void removeMember(StringType const& id);
 };
 
-struct Union : Value {
+struct Variant : Value {
 	InternedString m_constructor;
 	Value* m_inner_value {nullptr}; // empty constructor
 
-	Union(InternedString constructor);
-	Union(InternedString constructor, Value* v);
+	Variant(InternedString constructor);
+	Variant(InternedString constructor, Value* v);
 };
 
 struct Function : Value {
@@ -138,10 +138,10 @@ struct Reference : Value {
 	Reference(Value* value);
 };
 
-struct UnionConstructor : Value {
+struct VariantConstructor : Value {
 	InternedString m_constructor;
 
-	UnionConstructor(InternedString constructor);
+	VariantConstructor(InternedString constructor);
 };
 
 struct StructConstructor : Value {
