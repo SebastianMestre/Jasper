@@ -170,7 +170,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 				metacheck(decl->m_type_hint, tc);
 				tc.m_core.m_meta_core.unify(
 				    decl->m_type_hint->m_meta_type, tc.meta_monotype());
-				// TODO? unify ( decl->metatype, value )
+				tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
 			}
 			metacheck(decl->m_value, tc);
 			tc.m_core.m_meta_core.unify(
