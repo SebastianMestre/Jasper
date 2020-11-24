@@ -226,7 +226,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 			tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
-	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		assert(ast->m_args.size() == 1);
 
 		typecheck(ast->m_args[0], tc);

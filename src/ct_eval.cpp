@@ -183,7 +183,7 @@ TypeFunctionId type_func_from_ast(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		}
 
 		TypeFunctionId result = tc.m_core.new_type_function(
-		    TypeFunctionTag::Sum, {}, std::move(structure));
+		    TypeFunctionTag::Variant, {}, std::move(structure));
 
 		return result;
 	} else if (ast->type() == TypedASTTag::StructExpression) {
@@ -252,7 +252,7 @@ TypedAST::Constructor* constructor_from_ast(
 		std::unordered_map<InternedString, MonoId> structure;
 		structure[access->m_member->m_text] = tc.new_var();
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-		    TypeFunctionTag::Sum, {}, std::move(structure), true);
+		    TypeFunctionTag::Variant, {}, std::move(structure), true);
 
 		MonoId monotype = mono_type_from_ast(access->m_object, tc);
 		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);

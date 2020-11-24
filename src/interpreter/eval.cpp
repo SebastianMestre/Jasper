@@ -409,7 +409,7 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 
 	if (tf_data.tag == TypeFunctionTag::Record) {
 		e.push_struct_constructor(tf_data.fields);
-	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		e.push_union_constructor(ast->m_id->m_text);
 	} else {
 		assert(0 && "not implemented this type function for construction");
