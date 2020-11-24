@@ -162,22 +162,28 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
 		decl.m_meta_type = tc.new_meta_var();
 
-	for (auto& decl : ast->m_declarations) {
-		if (decl.m_type_hint) {
-			metacheck(decl.m_type_hint, tc);
-			tc.m_core.m_meta_core.unify(decl.m_type_hint->m_meta_type, tc.meta_monotype());
+	auto const& comps = tc.m_env.declaration_components;
+	for (auto const& comp : comps) {
+
+		for (auto decl : comp) {
+			if (decl->m_type_hint) {
+				metacheck(decl->m_type_hint, tc);
+				tc.m_core.m_meta_core.unify(
+				    decl->m_type_hint->m_meta_type, tc.meta_monotype());
+				tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
+			}
+			metacheck(decl->m_value, tc);
+			tc.m_core.m_meta_core.unify(
+			    decl->m_meta_type, decl->m_value->m_meta_type);
 		}
-		metacheck(decl.m_value, tc);
+
+		for (auto decl : comp)
+			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
+				for (auto other : decl->m_references)
+					if (tc.m_core.m_meta_core.find(other->m_meta_type) ==
+					    tc.meta_value())
+						assert(0 && "value referenced in a type definition");
 	}
-
-	for (auto& decl : ast->m_declarations)
-		tc.m_core.m_meta_core.unify(decl.m_meta_type, decl.m_value->m_meta_type);
-
-	for (auto& decl : ast->m_declarations)
-		if (tc.m_core.m_meta_core.find(decl.m_meta_type) == tc.meta_typefunc())
-			for (auto other : decl.m_references)
-				if (tc.m_core.m_meta_core.find(other->m_meta_type) == tc.meta_value())
-					assert(0 && "value referenced in a type definition");
 }
 
 void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
@@ -219,6 +225,10 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	case TypedASTTag::type:                                                    \
 		return void(metacheck_literal(ast, tc))
 
+#define REJECT(type)                                                          \
+	case TypedASTTag::type:                                                    \
+		assert(0);
+
 	switch (ast->type()) {
 		LITERAL(IntegerLiteral);
 		LITERAL(NumberLiteral);
@@ -247,6 +257,10 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
+
+		REJECT(TypeFunctionHandle);
+		REJECT(MonoTypeHandle);
+		REJECT(Constructor);
 	}
 
 	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "

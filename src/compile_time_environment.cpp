@@ -1,5 +1,8 @@
 #include "compile_time_environment.hpp"
 
+#include "algorithms/tarjan_solver.hpp"
+#include "typed_ast.hpp"
+
 #include <cassert>
 
 namespace Frontend {
@@ -95,6 +98,48 @@ void CompileTimeEnvironment::enter_top_level_decl(TypedAST::Declaration* decl) {
 void CompileTimeEnvironment::exit_top_level_decl() {
 	assert(m_current_decl);
 	m_current_decl = nullptr;
+}
+
+void CompileTimeEnvironment::compute_declaration_order(TypedAST::DeclarationList* ast) {
+
+	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
+	std::vector<TypedAST::Declaration*> index_to_decl;
+
+	// assign a unique int to every top level declaration
+	int i = 0;
+	for (auto& decl : ast->m_declarations) {
+		index_to_decl.push_back(&decl);
+		decl_to_index.insert({&decl, i});
+		++i;
+	}
+
+	// build up the explicit declaration graph
+	TarjanSolver solver(index_to_decl.size());
+	for (auto kv : decl_to_index) {
+		auto decl = kv.first;
+		auto u = kv.second;
+		for (auto other : decl->m_references) {
+			auto it = decl_to_index.find(other);
+			if (it != decl_to_index.end()) {
+				int v = it->second;
+				solver.add_edge(u, v);
+			}
+		}
+	}
+
+	// compute strongly connected components
+	solver.solve();
+
+	auto const& comps = solver.vertices_of_components();
+	std::vector<TypedAST::Declaration*> decl_comp;
+	for (auto const& comp : comps) {
+		decl_comp.clear();
+		decl_comp.reserve(comp.size());
+		for (int u : comp)
+			decl_comp.push_back(index_to_decl[u]);
+
+		declaration_components.push_back(std::move(decl_comp));
+	}
 }
 
 } // namespace Frontend
