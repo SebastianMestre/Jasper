@@ -10,6 +10,7 @@
 namespace TypedAST {
 
 struct Declaration;
+struct DeclarationList;
 struct FunctionLiteral;
 
 } // namespace TypedAST
@@ -27,6 +28,9 @@ struct CompileTimeEnvironment {
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
 	TypedAST::Declaration* m_current_decl {nullptr};
+
+	// TODO: is this a good place to put this?
+	std::vector<std::vector<TypedAST::Declaration*>> declaration_components;
 
 	CompileTimeEnvironment();
 
@@ -48,6 +52,9 @@ struct CompileTimeEnvironment {
 	void end_scope();
 
 	bool has_type_var(MonoId);
+
+	void compute_declaration_order(TypedAST::DeclarationList* ast);
 };
 
 } // namespace Frontend
+

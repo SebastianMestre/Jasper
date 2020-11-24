@@ -52,6 +52,7 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 			return ExitStatusTag::StaticError;
 		}
 	}
+	tc.m_env.compute_declaration_order(static_cast<TypedAST::DeclarationList*>(top_level));
 
 	TypeChecker::metacheck(top_level, tc);
 	top_level = TypeChecker::ct_eval(top_level, tc, typed_ast_allocator);
