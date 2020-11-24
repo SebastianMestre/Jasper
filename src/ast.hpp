@@ -167,7 +167,7 @@ struct IndexExpression : public AST {
 };
 
 struct AccessExpression : public AST {
-	AST* m_object;
+	AST* m_record;
 	Token const* m_member;
 
 	AccessExpression()

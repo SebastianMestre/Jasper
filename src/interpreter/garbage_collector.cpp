@@ -67,8 +67,8 @@ gc_ptr<Variant> GC::new_variant(InternedString constructor, Value* v) {
 	return result;
 }
 
-gc_ptr<Object> GC::new_object(ObjectType declarations) {
-	auto result = new Object;
+gc_ptr<Record> GC::new_record(RecordType declarations) {
+	auto result = new Record;
 	result->m_value = std::move(declarations);
 	m_blocks.push_back(result);
 	return result;
@@ -128,7 +128,7 @@ String* GC::new_string_raw(std::string s) {
 	return result;
 }
 
-gc_ptr<Function> GC::new_function(FunctionType def, ObjectType captures) {
+gc_ptr<Function> GC::new_function(FunctionType def, RecordType captures) {
 	auto result = new Function(std::move(def), std::move(captures));
 	m_blocks.push_back(result);
 	return result;
@@ -158,8 +158,8 @@ VariantConstructor* GC::new_variant_constructor_raw(InternedString constructor) 
 	return result;
 }
 
-StructConstructor* GC::new_struct_constructor_raw(std::vector<InternedString> keys) {
-	auto result = new StructConstructor(std::move(keys));
+RecordConstructor* GC::new_record_constructor_raw(std::vector<InternedString> keys) {
+	auto result = new RecordConstructor(std::move(keys));
 	m_blocks.push_back(result);
 	return result;
 }

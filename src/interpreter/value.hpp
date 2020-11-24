@@ -19,7 +19,7 @@ struct Interpreter;
 
 using Identifier = InternedString;
 using StringType = std::string;
-using ObjectType = std::unordered_map<Identifier, Value*>;
+using RecordType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Value*>;
 using FunctionType = TypedAST::FunctionLiteral*;
@@ -89,11 +89,11 @@ struct Array : Value {
 	Value* at(int position);
 };
 
-struct Object : Value {
-	ObjectType m_value;
+struct Record : Value {
+	RecordType m_value;
 
-	Object();
-	Object(ObjectType);
+	Record();
+	Record(RecordType);
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
@@ -121,9 +121,9 @@ struct Variant : Value {
 struct Function : Value {
 	FunctionType m_def;
 	// TODO: store references instead of values
-	ObjectType m_captures;
+	RecordType m_captures;
 
-	Function(FunctionType, ObjectType);
+	Function(FunctionType, RecordType);
 };
 
 struct NativeFunction : Value {
@@ -144,10 +144,10 @@ struct VariantConstructor : Value {
 	VariantConstructor(InternedString constructor);
 };
 
-struct StructConstructor : Value {
+struct RecordConstructor : Value {
 	std::vector<InternedString> m_keys;
 
-	StructConstructor(std::vector<InternedString> keys);
+	RecordConstructor(std::vector<InternedString> keys);
 };
 
 } // namespace Interpreter

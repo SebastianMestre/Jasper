@@ -52,17 +52,17 @@ Value* Array::at(int position) {
 	}
 }
 
-Object::Object()
-    : Value(ValueTag::Object) {}
-Object::Object(ObjectType o)
-    : Value(ValueTag::Object)
+Record::Record()
+    : Value(ValueTag::Record) {}
+Record::Record(RecordType o)
+    : Value(ValueTag::Record)
     , m_value(std::move(o)) {}
 
-void Object::addMember(Identifier const& id, Value* v) {
+void Record::addMember(Identifier const& id, Value* v) {
 	m_value[id] = v;
 }
 
-Value* Object::getMember(Identifier const& id) {
+Value* Record::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
 		// TODO: return RangeError
@@ -106,7 +106,7 @@ Variant::Variant(InternedString constructor, Value* v)
     , m_constructor(constructor)
     , m_inner_value(v) {}
 
-Function::Function(FunctionType def, ObjectType captures)
+Function::Function(FunctionType def, RecordType captures)
     : Value(ValueTag::Function)
     , m_def(def)
     , m_captures(std::move(captures)) {}
@@ -123,8 +123,8 @@ VariantConstructor::VariantConstructor(InternedString constructor)
     : Value {ValueTag::VariantConstructor}
     , m_constructor {constructor} {}
 
-StructConstructor::StructConstructor(std::vector<InternedString> keys)
-    : Value {ValueTag::StructConstructor}
+RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
+    : Value {ValueTag::RecordConstructor}
     , m_keys {std::move(keys)} {}
 
 void gc_visit(Null* v) {
@@ -151,7 +151,7 @@ void gc_visit(NativeFunction* v) {
 void gc_visit(VariantConstructor* v) {
 	v->m_visited = true;
 }
-void gc_visit(StructConstructor* v) {
+void gc_visit(RecordConstructor* v) {
 	v->m_visited = true;
 }
 
@@ -165,7 +165,7 @@ void gc_visit(Array* l) {
 	}
 }
 
-void gc_visit(Object* o) {
+void gc_visit(Record* o) {
 	if (o->m_visited)
 		return;
 
@@ -225,8 +225,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Error*>(v));
 	case ValueTag::Array:
 		return gc_visit(static_cast<Array*>(v));
-	case ValueTag::Object:
-		return gc_visit(static_cast<Object*>(v));
+	case ValueTag::Record:
+		return gc_visit(static_cast<Record*>(v));
 	case ValueTag::Dictionary:
 		return gc_visit(static_cast<Dictionary*>(v));
 	case ValueTag::Variant:
@@ -239,8 +239,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Reference*>(v));
 	case ValueTag::VariantConstructor:
 		return gc_visit(static_cast<VariantConstructor*>(v));
-	case ValueTag::StructConstructor:
-		return gc_visit(static_cast<StructConstructor*>(v));
+	case ValueTag::RecordConstructor:
+		return gc_visit(static_cast<RecordConstructor*>(v));
 	}
 }
 
@@ -283,7 +283,7 @@ void print(Error* v, int d) {
 	std::cout << value_string[int(v->type())] << '\n';
 }
 
-void print(Object* o, int d) {
+void print(Record* o, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(o->type())] << '\n';
 	for (auto& kv : o->m_value){
@@ -331,9 +331,9 @@ void print(Reference* l, int d) {
 	print(l->m_value, d + 1);
 }
 
-void print(StructConstructor* l, int d) {
+void print(RecordConstructor* l, int d) {
 	print_spaces(d);
-	std::cout << "StructConstructor\n";
+	std::cout << "RecordConstructor\n";
 }
 
 void print(Value* v, int d) {
@@ -353,8 +353,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Error*>(v), d);
 	case ValueTag::Array:
 		return print(static_cast<Array*>(v), d);
-	case ValueTag::Object:
-		return print(static_cast<Object*>(v), d);
+	case ValueTag::Record:
+		return print(static_cast<Record*>(v), d);
 	case ValueTag::Dictionary:
 		return print(static_cast<Dictionary*>(v), d);
 	case ValueTag::Variant:
@@ -367,8 +367,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Reference*>(v), d);
 	case ValueTag::VariantConstructor:
 		return print(static_cast<VariantConstructor*>(v), d);
-	case ValueTag::StructConstructor:
-		return print(static_cast<StructConstructor*>(v), d);
+	case ValueTag::RecordConstructor:
+		return print(static_cast<RecordConstructor*>(v), d);
 	}
 }
 

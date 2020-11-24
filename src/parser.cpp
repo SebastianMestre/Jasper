@@ -399,7 +399,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp) {
 				return result;
 
 			auto e = m_ast_allocator->make<AST::AccessExpression>();
-			e->m_object = lhs.m_result;
+			e->m_record = lhs.m_result;
 			e->m_member = member.m_result;
 			lhs.m_result = e;
 

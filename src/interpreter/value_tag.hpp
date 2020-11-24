@@ -10,7 +10,7 @@
 	X(Error)                                                                   \
                                                                                \
 	X(Array)                                                                   \
-	X(Object)                                                                  \
+	X(Record)                                                                  \
 	X(Dictionary)                                                              \
 	X(Variant)                                                                 \
                                                                                \
@@ -20,7 +20,7 @@
 	X(Reference)                                                               \
                                                                                \
 	X(VariantConstructor)                                                      \
-	X(StructConstructor)
+	X(RecordConstructor)
 
 #define X(name) #name,
 constexpr const char* value_string[] = {

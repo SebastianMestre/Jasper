@@ -53,11 +53,11 @@ struct Interpreter {
 	void push_boolean(bool);
 	void push_string(std::string);
 	void push_variant_constructor(InternedString constructor);
-	void push_struct_constructor(std::vector<InternedString>);
+	void push_record_constructor(std::vector<InternedString>);
 	auto new_list(ArrayType) -> gc_ptr<Array>;
-	auto new_object(ObjectType) -> gc_ptr<Object>;
+	auto new_record(RecordType) -> gc_ptr<Record>;
 	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
-	auto new_function(FunctionType, ObjectType) -> gc_ptr<Function>;
+	auto new_function(FunctionType, RecordType) -> gc_ptr<Function>;
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_reference(Value*) -> gc_ptr<Reference>;

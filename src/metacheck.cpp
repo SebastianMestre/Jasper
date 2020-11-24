@@ -85,8 +85,8 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 
 	// TODO: we would like to support static records with
 	// typefunc members in the future
-	metacheck(ast->m_object, tc);
-	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_object->m_meta_type);
+	metacheck(ast->m_record, tc);
+	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_record->m_meta_type);
 	// TODO: support vars
 	if (metatype == tc.meta_monotype())
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_constructor());

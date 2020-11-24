@@ -103,7 +103,7 @@ TypedAST::TypedAST* ct_eval(
 	if (metatype == tc.meta_constructor())
 		return constructor_from_ast(ast, tc, alloc);
 
-	ast->m_object = ct_eval(ast->m_object, tc, alloc);
+	ast->m_record = ct_eval(ast->m_record, tc, alloc);
 	return ast;
 }
 
@@ -254,7 +254,7 @@ TypedAST::Constructor* constructor_from_ast(
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
 		    TypeFunctionTag::Variant, {}, std::move(structure), true);
 
-		MonoId monotype = mono_type_from_ast(access->m_object, tc);
+		MonoId monotype = mono_type_from_ast(access->m_record, tc);
 		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);
 
 		tc.m_core.m_tf_core.unify(dummy_tf, tf);
