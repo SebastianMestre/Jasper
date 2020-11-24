@@ -253,12 +253,12 @@ TypedAST::Constructor* constructor_from_ast(
 		structure[access->m_member->m_text] = tc.new_var();
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
 		    TypeFunctionTag::Sum, {}, std::move(structure), true);
+		MonoId dummy_monotype =
+		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
 
-		// TODO: handle monotype being a var
 		MonoId monotype = mono_type_from_ast(access->m_object, tc);
-		TypeFunctionId tf = tc.m_core.m_mono_core.find_function(monotype);
 
-		tc.m_core.m_tf_core.unify(dummy_tf, tf);
+		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
 
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
@@ -282,7 +282,6 @@ TypedAST::Declaration* ct_eval(
 
 TypedAST::DeclarationList* ct_eval(
     TypedAST::DeclarationList* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-	// TODO: we might need to do the SCC decomposition here, too.
 
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
