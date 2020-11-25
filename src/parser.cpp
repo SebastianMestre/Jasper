@@ -68,9 +68,7 @@ bool Parser::consume(TokenTag expected_type) {
 
 bool Parser::match(TokenTag expected_type) {
 	Token const* current_token = &m_lexer->current_token();
-	if (current_token->m_type != expected_type)
-		return false;
-	return true;
+	return current_token->m_type == expected_type;
 }
 
 Writer<AST::AST*> Parser::parse_top_level() {
