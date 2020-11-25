@@ -8,11 +8,11 @@
 
 #include <cassert>
 
-#define HANDLE(result, writer)                                                 \
+#define HANDLE(writer)                                                         \
 	if (handle_error(result, writer))                                      \
 		return result;
 
-#define REQUIRE(result, token)                                                 \
+#define REQUIRE(token)                                                         \
 	if (handle_error(result, require(TokenTag::token)))                    \
 		return result;
 
