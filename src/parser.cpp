@@ -8,6 +8,14 @@
 
 #include <cassert>
 
+#define HANDLE(result, writer)                                                 \
+	if (handle_error(result, writer))                                      \
+		return result;
+
+#define REQUIRE(result, token)                                                 \
+	if (handle_error(result, require(TokenTag::token)))                    \
+		return result;
+
 // WHY DO I HAVE TO TYPE THIS TWICE!?
 template <typename T, typename U>
 bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
@@ -1187,3 +1195,6 @@ Writer<AST::AST*> Parser::parse_type_function() {
 
 	return result;
 }
+
+#undef HANDLE
+#undef REQUIRE
