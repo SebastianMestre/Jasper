@@ -87,11 +87,15 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	// typefunc members in the future
 	metacheck(ast->m_record, tc);
 	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_record->m_meta_type);
-	// TODO: support vars
-	if (metatype == tc.meta_monotype())
-		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_constructor());
-	else
-		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
+
+	// TODO: support vars correctly
+	if (!tc.m_core.m_meta_core.is_var(metatype)) {
+		auto correct_metatype = metatype == tc.meta_monotype()
+		                            ? tc.meta_constructor()
+		                            : tc.meta_value();
+
+		tc.m_core.m_meta_core.unify(ast->m_meta_type, correct_metatype);
+	}
 }
 
 void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {

@@ -85,6 +85,10 @@ bool Core::is_term(int i) {
 	return node_header[i].tag == Tag::Term;
 }
 
+bool Core::is_var(int i) {
+	return node_header[i].tag == Tag::Var;
+}
+
 void Core::print_node(int header, int d) {
 	Core::NodeHeader& node = node_header[find(header)];
 
