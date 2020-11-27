@@ -81,15 +81,17 @@ void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.new_meta_var();
+	if (ast->m_meta_type == -1)
+		// first time through metacheck
+		ast->m_meta_type = tc.new_meta_var();
 
-	// TODO: we would like to support static records with
-	// typefunc members in the future
 	metacheck(ast->m_record, tc);
 	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_record->m_meta_type);
 
 	// TODO: support vars correctly
 	if (!tc.m_core.m_meta_core.is_var(metatype)) {
+		// TODO: we would like to support static records with
+		// typefunc members in the future
 		auto correct_metatype = metatype == tc.meta_monotype()
 		                            ? tc.meta_constructor()
 		                            : tc.meta_value();
@@ -151,11 +153,13 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 // declarations
 
 void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.new_meta_var();
+	if (ast->m_meta_type == -1)
+		ast->m_meta_type = tc.new_meta_var();
 
 	if (ast->m_type_hint) {
 		metacheck(ast->m_type_hint, tc);
 		tc.m_core.m_meta_core.unify(ast->m_type_hint->m_meta_type, tc.meta_monotype());
+		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
 	}
 
 	metacheck(ast->m_value, tc);
@@ -169,16 +173,22 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& comp : comps) {
 
-		for (auto decl : comp) {
-			if (decl->m_type_hint) {
-				metacheck(decl->m_type_hint, tc);
+		//   Because we do branching in some of the metachecks, we
+		// end up with some extra ordering constrains.
+		//   We don't do anything to deal with that, so let's try
+		// doing a few passes, and hope it converges.
+		for (int passes = 3; passes--;) {
+			for (auto decl : comp) {
+				if (decl->m_type_hint) {
+					metacheck(decl->m_type_hint, tc);
+					tc.m_core.m_meta_core.unify(
+					    decl->m_type_hint->m_meta_type, tc.meta_monotype());
+					tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
+				}
+				metacheck(decl->m_value, tc);
 				tc.m_core.m_meta_core.unify(
-				    decl->m_type_hint->m_meta_type, tc.meta_monotype());
-				tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
+				    decl->m_meta_type, decl->m_value->m_meta_type);
 			}
-			metacheck(decl->m_value, tc);
-			tc.m_core.m_meta_core.unify(
-			    decl->m_meta_type, decl->m_value->m_meta_type);
 		}
 
 		for (auto decl : comp)
