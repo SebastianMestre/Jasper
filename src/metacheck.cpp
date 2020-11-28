@@ -164,18 +164,24 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 // declarations
 
-void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
-	if (ast->m_meta_type == -1)
-		ast->m_meta_type = tc.new_meta_var();
+void process_declaration(TypedAST::Declaration* ast, TypeChecker& tc) {
 
-	if (ast->m_type_hint) {
-		metacheck(ast->m_type_hint, tc);
-		tc.m_core.m_meta_core.unify(ast->m_type_hint->m_meta_type, tc.meta_monotype());
+	auto* type_hint = ast->m_type_hint;
+	if (type_hint) {
+		metacheck(type_hint, tc);
+		tc.m_core.m_meta_core.unify(type_hint->m_meta_type, tc.meta_monotype());
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
 	}
 
 	metacheck(ast->m_value, tc);
 	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
+}
+
+void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+	if (ast->m_meta_type == -1)
+		ast->m_meta_type = tc.new_meta_var();
+
+	process_declaration(ast, tc);
 }
 
 void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
@@ -190,21 +196,9 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// we end up with some extra ordering constrains.
 		// Since we don't do anything to deal with that, we
 		// do a few passes, and hope it converges.
-		for (int passes = 3; passes--;) {
-			for (auto decl : comp) {
-				// @Speed: we can probably pull some of this
-				// out of the passes loop
-				if (decl->m_type_hint) {
-					metacheck(decl->m_type_hint, tc);
-					tc.m_core.m_meta_core.unify(
-					    decl->m_type_hint->m_meta_type, tc.meta_monotype());
-					tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
-				}
-				metacheck(decl->m_value, tc);
-				tc.m_core.m_meta_core.unify(
-				    decl->m_meta_type, decl->m_value->m_meta_type);
-			}
-		}
+		for (int passes = 3; passes--;)
+			for (auto decl : comp)
+				process_declaration(decl, tc);
 
 		for (auto decl : comp)
 			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
