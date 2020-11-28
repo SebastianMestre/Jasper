@@ -10,6 +10,14 @@ namespace TypeChecker {
 
 // literals
 
+void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
+	if (target == -1) {
+		target = value;
+	} else {
+		tc.m_core.m_meta_core.unify(target, value);
+	}
+}
+
 void metacheck_literal(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	ast->m_meta_type = tc.meta_value();
 }
