@@ -10,6 +10,10 @@ namespace TypeChecker {
 
 // literals
 
+void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
+	target = value;
+}
+
 void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
 	if (target == -1) {
 		target = value;
@@ -19,11 +23,11 @@ void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
 }
 
 void metacheck_literal(TypedAST::TypedAST* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 }
 
 void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	for (auto& element : ast->m_elements) {
 		metacheck(element, tc);
@@ -35,16 +39,16 @@ void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
-	ast->m_meta_type = ast->m_declaration->m_meta_type;
+	assign_meta_type(ast->m_meta_type, ast->m_declaration->m_meta_type, tc);
 }
 
 void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	int arg_count = ast->m_args.size();
 	for (int i = 0; i < arg_count; ++i)
 		// TODO: metacheck type hints
-		ast->m_args[i].m_meta_type = tc.meta_value();
+		assign_meta_type(ast->m_args[i].m_meta_type, tc.meta_value(), tc);
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);
@@ -54,7 +58,7 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 	// TODO? maybe we would like to support compile time functions that return types eventually?
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
@@ -66,7 +70,7 @@ void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
@@ -76,7 +80,7 @@ void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
@@ -89,8 +93,8 @@ void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
+	// first time through metacheck
 	if (ast->m_meta_type == -1)
-		// first time through metacheck
 		ast->m_meta_type = tc.new_meta_var();
 
 	metacheck(ast->m_record, tc);
@@ -109,7 +113,7 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_constructor, tc);
 
@@ -176,17 +180,20 @@ void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
-		decl.m_meta_type = tc.new_meta_var();
+		// this is OK because we haven't done any metachecking yet.
+		unsafe_assign_meta_type(decl.m_meta_type, tc.new_meta_var());
 
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& comp : comps) {
 
-		//   Because we do branching in some of the metachecks, we
-		// end up with some extra ordering constrains.
-		//   We don't do anything to deal with that, so let's try
-		// doing a few passes, and hope it converges.
+		// Because we do branching in some of the metachecks,
+		// we end up with some extra ordering constrains.
+		// Since we don't do anything to deal with that, we
+		// do a few passes, and hope it converges.
 		for (int passes = 3; passes--;) {
 			for (auto decl : comp) {
+				// @Speed: we can probably pull some of this
+				// out of the passes loop
 				if (decl->m_type_hint) {
 					metacheck(decl->m_type_hint, tc);
 					tc.m_core.m_meta_core.unify(
@@ -209,7 +216,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_typefunc();
+	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
 		metacheck(type, tc);
@@ -218,7 +225,7 @@ void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_typefunc();
+	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
 		metacheck(type, tc);
@@ -227,7 +234,7 @@ void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_monotype();
+	assign_meta_type(ast->m_meta_type, tc.meta_monotype(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_typefunc());
