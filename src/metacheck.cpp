@@ -100,13 +100,26 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	metacheck(ast->m_record, tc);
 	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_record->m_meta_type);
 
-	// TODO: support vars correctly
-	if (!tc.m_core.m_meta_core.is_var(metatype)) {
+	if (tc.m_core.m_meta_core.is_var(metatype)) {
+		if (tc.m_in_last_metacheck_pass) {
+			// The only way to get a var is if it's in the same SCC
+			// (because we process in topological order). If it's in the
+			// same SCC, then there are cyclic references. If there are
+			// cyclic references, then either both are type-ey things, or
+			// both are values. Both being type-ey things makes no sense,
+			// so they must both be values.
+			tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
+		}
+	} else  {
 		// TODO: we would like to support static records with
 		// typefunc members in the future
-		auto correct_metatype = metatype == tc.meta_monotype()
-		                            ? tc.meta_constructor()
-		                            : tc.meta_value();
+		auto correct_metatype = -1;
+		if (metatype == tc.meta_monotype())
+			correct_metatype = tc.meta_constructor();
+		else if (metatype == tc.meta_value())
+			correct_metatype = tc.meta_value();
+		else
+			assert(0);
 
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, correct_metatype);
 	}
@@ -196,9 +209,16 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// we end up with some extra ordering constrains.
 		// Since we don't do anything to deal with that, we
 		// do a few passes, and hope it converges.
-		for (int passes = 3; passes--;)
+		for (int passes = 2; passes--;)
 			for (auto decl : comp)
 				process_declaration(decl, tc);
+
+		tc.m_in_last_metacheck_pass = true;
+
+		for (auto decl : comp)
+			process_declaration(decl, tc);
+
+		tc.m_in_last_metacheck_pass = false;
 
 		for (auto decl : comp)
 			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
