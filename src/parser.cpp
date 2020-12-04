@@ -13,7 +13,7 @@
 		return result;
 
 #define REQUIRE(token)                                                         \
-	if (handle_error(result, require(TokenTag::token)))                    \
+	if (handle_error(result, require(token)))                              \
 		return result;
 
 // WHY DO I HAVE TO TYPE THIS TWICE!?
@@ -185,7 +185,7 @@ Writer<AST::Declaration*> Parser::parse_declaration() {
 	} else if (consume(TokenTag::DECLARE)) {
 		type = parse_type_term();
 		CHECK_AND_RETURN(type);
-		REQUIRE(ASSIGN);
+		REQUIRE(TokenTag::ASSIGN);
 	} else {
 		result.m_error.m_sub_errors.push_back(
 		    make_expected_error("':' or ':='", peek()));
@@ -193,7 +193,7 @@ Writer<AST::Declaration*> Parser::parse_declaration() {
 
 	auto value = parse_expression();
 	CHECK_AND_RETURN(value);
-	REQUIRE(SEMICOLON);
+	REQUIRE(TokenTag::SEMICOLON);
 
 	auto p = m_ast_allocator->make<AST::Declaration>();
 	p->m_identifier_token = name.m_result;
@@ -273,7 +273,7 @@ Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
 	Writer<std::vector<AST::AST*>> result = {
 	    {"Parse Error: Failed to argument list"}};
 
-	REQUIRE(PAREN_OPEN);
+	REQUIRE(TokenTag::PAREN_OPEN);
 	auto args =
 	    parse_expression_list(TokenTag::COMMA, TokenTag::PAREN_CLOSE, false);
 	CHECK_AND_RETURN(args);
@@ -338,7 +338,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp) {
 
 			auto index = parse_expression();
 			CHECK_AND_RETURN(index);
-			REQUIRE(BRACKET_CLOSE);
+			REQUIRE(TokenTag::BRACKET_CLOSE);
 
 			auto e = m_ast_allocator->make<AST::IndexExpression>();
 			e->m_callee = lhs.m_result;
@@ -467,7 +467,7 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		m_lexer->advance();
 		auto ternary = parse_ternary_expression();
 		CHECK_AND_RETURN(ternary);
-		REQUIRE(PAREN_CLOSE);
+		REQUIRE(TokenTag::PAREN_CLOSE);
 		return ternary;
 	}
 
@@ -476,7 +476,7 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		m_lexer->advance();
 		auto expr = parse_expression();
 		CHECK_AND_RETURN(expr);
-		REQUIRE(PAREN_CLOSE);
+		REQUIRE(TokenTag::PAREN_CLOSE);
 		return expr;
 	}
 
@@ -522,15 +522,15 @@ Writer<AST::AST*> Parser::parse_ternary_expression() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
-	REQUIRE(KEYWORD_IF);
+	REQUIRE(TokenTag::KEYWORD_IF);
 
 	auto condition = parse_expression();
 	CHECK_AND_RETURN(condition);
-	REQUIRE(KEYWORD_THEN);
+	REQUIRE(TokenTag::KEYWORD_THEN);
 
 	auto then_expr = parse_expression();
 	CHECK_AND_RETURN(then_expr);
-	REQUIRE(KEYWORD_ELSE);
+	REQUIRE(TokenTag::KEYWORD_ELSE);
 
 	auto else_expr = parse_expression();
 	CHECK_AND_RETURN(else_expr);
@@ -571,8 +571,8 @@ Writer<AST::AST*> Parser::parse_array_literal() {
 	Writer<AST::AST*> result = {
 	    {"Failed to parse array literal"}};
 
-	REQUIRE(KEYWORD_ARRAY);
-	REQUIRE(BRACE_OPEN);
+	REQUIRE(TokenTag::KEYWORD_ARRAY);
+	REQUIRE(TokenTag::BRACE_OPEN);
 
 	auto elements = parse_expression_list(
 	    TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
@@ -588,12 +588,12 @@ Writer<AST::AST*> Parser::parse_object_literal() {
 	Writer<AST::AST*> result = {
 	    {"Failed to parse object literal"}};
 
-	REQUIRE(KEYWORD_OBJECT);
-	REQUIRE(BRACE_OPEN);
+	REQUIRE(TokenTag::KEYWORD_OBJECT);
+	REQUIRE(TokenTag::BRACE_OPEN);
 
 	auto declarations = parse_declaration_list(TokenTag::BRACE_CLOSE);
 	CHECK_AND_RETURN(declarations);
-	REQUIRE(BRACE_CLOSE);
+	REQUIRE(TokenTag::BRACE_CLOSE);
 
 	auto e = m_ast_allocator->make<AST::ObjectLiteral>();
 	e->m_body = std::move(declarations.m_result);
@@ -605,12 +605,12 @@ Writer<AST::AST*> Parser::parse_dictionary_literal() {
 	Writer<AST::AST*> result = {
 	    {"Failed to parse dictionary literal"}};
 
-	REQUIRE(KEYWORD_DICT);
-	REQUIRE(BRACE_OPEN);
+	REQUIRE(TokenTag::KEYWORD_DICT);
+	REQUIRE(TokenTag::BRACE_OPEN);
 
 	auto declarations = parse_declaration_list(TokenTag::BRACE_CLOSE);
 	CHECK_AND_RETURN(declarations);
-	REQUIRE(BRACE_CLOSE);
+	REQUIRE(TokenTag::BRACE_CLOSE);
 
 	auto e = m_ast_allocator->make<AST::DictionaryLiteral>();
 	e->m_body = std::move(declarations.m_result);
@@ -628,8 +628,8 @@ Writer<AST::AST*> Parser::parse_function() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse function"}};
 
-	REQUIRE(KEYWORD_FN);
-	REQUIRE(PAREN_OPEN);
+	REQUIRE(TokenTag::KEYWORD_FN);
+	REQUIRE(TokenTag::PAREN_OPEN);
 
 	std::vector<AST::Declaration> args;
 	while (1) {
@@ -699,7 +699,7 @@ Writer<AST::AST*> Parser::parse_block() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse block statement"}};
 
-	REQUIRE(BRACE_OPEN);
+	REQUIRE(TokenTag::BRACE_OPEN);
 
 	std::vector<AST::AST*> statements;
 
@@ -733,11 +733,11 @@ Writer<AST::AST*> Parser::parse_return_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse return statement"}};
 
-	REQUIRE(KEYWORD_RETURN);
+	REQUIRE(TokenTag::KEYWORD_RETURN);
 
 	auto value = parse_expression();
 	CHECK_AND_RETURN(value);
-	REQUIRE(SEMICOLON);
+	REQUIRE(TokenTag::SEMICOLON);
 
 	auto e = m_ast_allocator->make<AST::ReturnStatement>();
 	e->m_value = value.m_result;
@@ -749,12 +749,12 @@ Writer<AST::AST*> Parser::parse_if_else_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse if-else statement"}};
 
-	REQUIRE(KEYWORD_IF);
-	REQUIRE(PAREN_OPEN);
+	REQUIRE(TokenTag::KEYWORD_IF);
+	REQUIRE(TokenTag::PAREN_OPEN);
 
 	auto condition = parse_expression();
 	CHECK_AND_RETURN(condition);
-	REQUIRE(PAREN_CLOSE);
+	REQUIRE(TokenTag::PAREN_CLOSE);
 
 	auto body = parse_statement();
 	CHECK_AND_RETURN(body);
@@ -777,8 +777,8 @@ Writer<AST::AST*> Parser::parse_for_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse for statement"}};
 
-	REQUIRE(KEYWORD_FOR);
-	REQUIRE(PAREN_OPEN);
+	REQUIRE(TokenTag::KEYWORD_FOR);
+	REQUIRE(TokenTag::PAREN_OPEN);
 
 	// NOTE: handles semicolon already
 	auto declaration = parse_declaration();
@@ -786,11 +786,11 @@ Writer<AST::AST*> Parser::parse_for_statement() {
 
 	auto condition = parse_expression();
 	CHECK_AND_RETURN(condition);
-	REQUIRE(SEMICOLON);
+	REQUIRE(TokenTag::SEMICOLON);
 
 	auto action = parse_expression();
 	CHECK_AND_RETURN(action);
-	REQUIRE(PAREN_CLOSE);
+	REQUIRE(TokenTag::PAREN_CLOSE);
 
 	auto body = parse_statement();
 	CHECK_AND_RETURN(body);
@@ -808,12 +808,12 @@ Writer<AST::AST*> Parser::parse_while_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse while statement"}};
 
-	REQUIRE(KEYWORD_WHILE);
-	REQUIRE(PAREN_OPEN);
+	REQUIRE(TokenTag::KEYWORD_WHILE);
+	REQUIRE(TokenTag::PAREN_OPEN);
 
 	auto condition = parse_expression();
 	CHECK_AND_RETURN(condition);
-	REQUIRE(PAREN_CLOSE);
+	REQUIRE(TokenTag::PAREN_CLOSE);
 
 	auto body = parse_statement();
 	CHECK_AND_RETURN(body);
@@ -851,7 +851,7 @@ Writer<AST::AST*> Parser::parse_statement() {
 			// TODO: wrap in an ExpressionStatement ?
 			auto expression = parse_expression();
 			CHECK_AND_RETURN(expression);
-			REQUIRE(SEMICOLON);
+			REQUIRE(TokenTag::SEMICOLON);
 
 			return expression;
 		}
@@ -889,7 +889,7 @@ Writer<std::vector<AST::AST*>> Parser::parse_type_term_arguments() {
 	Writer<std::vector<AST::AST*>> result = {
 	    {"Parse Error: Failed to parse type arguments"}};
 
-	REQUIRE(POLY_OPEN);
+	REQUIRE(TokenTag::POLY_OPEN);
 
 	std::vector<AST::AST*> args;
 
@@ -931,20 +931,20 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> Parser::
 	std::vector<AST::Identifier> identifiers;
 	std::vector<AST::AST*> types;
 
-	REQUIRE(BRACE_OPEN);
+	REQUIRE(TokenTag::BRACE_OPEN);
 
 	while(!consume(TokenTag::BRACE_CLOSE)) {
 		if (with_identifiers) {
 			auto cons = parse_identifier();
 			CHECK_AND_RETURN(cons);
-			REQUIRE(DECLARE);
+			REQUIRE(TokenTag::DECLARE);
 
 			identifiers.push_back(std::move(*cons.m_result));
 		}
 
 		auto type = parse_type_term();
 		CHECK_AND_RETURN(type);
-		REQUIRE(SEMICOLON);
+		REQUIRE(TokenTag::SEMICOLON);
 
 		types.push_back(type.m_result);
 	}
@@ -958,7 +958,7 @@ Writer<AST::AST*> Parser::parse_type_var() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse type var"}};
 
-	REQUIRE(AT);
+	REQUIRE(TokenTag::AT);
 
 	auto token = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(token);
