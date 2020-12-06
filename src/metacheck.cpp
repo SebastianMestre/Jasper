@@ -8,8 +8,6 @@
 
 namespace TypeChecker {
 
-// literals
-
 void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
 	target = value;
 }
@@ -21,6 +19,8 @@ void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
 		tc.m_core.m_meta_core.unify(target, value);
 	}
 }
+
+// literals
 
 void metacheck_literal(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
@@ -205,13 +205,12 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& comp : comps) {
 
-		// Because we do branching in some of the metachecks,
-		// we end up with some extra ordering constrains.
-		// Since we don't do anything to deal with that, we
-		// do a few passes, and hope it converges.
-		for (int passes = 2; passes--;)
-			for (auto decl : comp)
-				process_declaration(decl, tc);
+		// We do a first pass to get some information off of the ASTs.
+		// After that, most things should be inferable during the second pass,
+		// but we will set a flag to activate a special behavior in case some
+		// things aren't.
+		for (auto decl : comp)
+			process_declaration(decl, tc);
 
 		tc.m_in_last_metacheck_pass = true;
 
