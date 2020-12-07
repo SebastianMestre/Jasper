@@ -19,6 +19,7 @@ struct TypeChecker {
 	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
 
 	TypedAST::Allocator* m_typed_ast_allocator;
+	bool m_in_last_metacheck_pass {false};
 
 	TypeChecker(TypedAST::Allocator& allocator);
 

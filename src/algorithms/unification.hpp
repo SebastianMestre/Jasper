@@ -35,6 +35,7 @@ struct Core {
 	int new_var(const char* debug = nullptr);
 	int new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
 
+	bool is_var(int i);
 	bool is_term(int i);
 
 	void print_node(int node_header, int d = 0);

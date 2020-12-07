@@ -8,14 +8,26 @@
 
 namespace TypeChecker {
 
+void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
+	target = value;
+}
+
+void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
+	if (target == -1) {
+		target = value;
+	} else {
+		tc.m_core.m_meta_core.unify(target, value);
+	}
+}
+
 // literals
 
 void metacheck_literal(TypedAST::TypedAST* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 }
 
 void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	for (auto& element : ast->m_elements) {
 		metacheck(element, tc);
@@ -27,16 +39,16 @@ void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
-	ast->m_meta_type = ast->m_declaration->m_meta_type;
+	assign_meta_type(ast->m_meta_type, ast->m_declaration->m_meta_type, tc);
 }
 
 void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	int arg_count = ast->m_args.size();
 	for (int i = 0; i < arg_count; ++i)
 		// TODO: metacheck type hints
-		ast->m_args[i].m_meta_type = tc.meta_value();
+		assign_meta_type(ast->m_args[i].m_meta_type, tc.meta_value(), tc);
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);
@@ -46,7 +58,7 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 
 void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 	// TODO? maybe we would like to support compile time functions that return types eventually?
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
@@ -58,7 +70,7 @@ void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_value());
@@ -68,7 +80,7 @@ void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
@@ -81,21 +93,40 @@ void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.new_meta_var();
+	// first time through metacheck
+	if (ast->m_meta_type == -1)
+		ast->m_meta_type = tc.new_meta_var();
 
-	// TODO: we would like to support static records with
-	// typefunc members in the future
 	metacheck(ast->m_record, tc);
 	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_record->m_meta_type);
-	// TODO: support vars
-	if (metatype == tc.meta_monotype())
-		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_constructor());
-	else
-		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
+
+	if (tc.m_core.m_meta_core.is_var(metatype)) {
+		if (tc.m_in_last_metacheck_pass) {
+			// The only way to get a var is if it's in the same SCC
+			// (because we process in topological order). If it's in the
+			// same SCC, then there are cyclic references. If there are
+			// cyclic references, then either both are type-ey things, or
+			// both are values. Both being type-ey things makes no sense,
+			// so they must both be values.
+			tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
+		}
+	} else  {
+		// TODO: we would like to support static records with
+		// typefunc members in the future
+		auto correct_metatype = -1;
+		if (metatype == tc.meta_monotype())
+			correct_metatype = tc.meta_constructor();
+		else if (metatype == tc.meta_value())
+			correct_metatype = tc.meta_value();
+		else
+			assert(0);
+
+		tc.m_core.m_meta_core.unify(ast->m_meta_type, correct_metatype);
+	}
 }
 
 void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_constructor, tc);
 
@@ -146,36 +177,47 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 // declarations
 
-void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.new_meta_var();
+void process_declaration(TypedAST::Declaration* ast, TypeChecker& tc) {
 
-	if (ast->m_type_hint) {
-		metacheck(ast->m_type_hint, tc);
-		tc.m_core.m_meta_core.unify(ast->m_type_hint->m_meta_type, tc.meta_monotype());
+	auto* type_hint = ast->m_type_hint;
+	if (type_hint) {
+		metacheck(type_hint, tc);
+		tc.m_core.m_meta_core.unify(type_hint->m_meta_type, tc.meta_monotype());
+		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
 	}
 
 	metacheck(ast->m_value, tc);
 	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
 
+void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+	if (ast->m_meta_type == -1)
+		ast->m_meta_type = tc.new_meta_var();
+
+	process_declaration(ast, tc);
+}
+
 void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
-		decl.m_meta_type = tc.new_meta_var();
+		// this is OK because we haven't done any metachecking yet.
+		unsafe_assign_meta_type(decl.m_meta_type, tc.new_meta_var());
 
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& comp : comps) {
 
-		for (auto decl : comp) {
-			if (decl->m_type_hint) {
-				metacheck(decl->m_type_hint, tc);
-				tc.m_core.m_meta_core.unify(
-				    decl->m_type_hint->m_meta_type, tc.meta_monotype());
-				tc.m_core.m_meta_core.unify(decl->m_meta_type, tc.meta_value());
-			}
-			metacheck(decl->m_value, tc);
-			tc.m_core.m_meta_core.unify(
-			    decl->m_meta_type, decl->m_value->m_meta_type);
-		}
+		// We do a first pass to get some information off of the ASTs.
+		// After that, most things should be inferable during the second pass,
+		// but we will set a flag to activate a special behavior in case some
+		// things aren't.
+		for (auto decl : comp)
+			process_declaration(decl, tc);
+
+		tc.m_in_last_metacheck_pass = true;
+
+		for (auto decl : comp)
+			process_declaration(decl, tc);
+
+		tc.m_in_last_metacheck_pass = false;
 
 		for (auto decl : comp)
 			if (tc.m_core.m_meta_core.find(decl->m_meta_type) == tc.meta_typefunc())
@@ -187,7 +229,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_typefunc();
+	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
 		metacheck(type, tc);
@@ -196,7 +238,7 @@ void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_typefunc();
+	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
 		metacheck(type, tc);
@@ -205,7 +247,7 @@ void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_monotype();
+	assign_meta_type(ast->m_meta_type, tc.meta_monotype(), tc);
 
 	metacheck(ast->m_callee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_callee->m_meta_type, tc.meta_typefunc());
