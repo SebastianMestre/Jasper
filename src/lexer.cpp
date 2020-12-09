@@ -81,6 +81,7 @@ std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
 		{{"then"}, TokenTag::KEYWORD_THEN},
 		{{"return"}, TokenTag::KEYWORD_RETURN},
 		{{"while"}, TokenTag::KEYWORD_WHILE},
+		{{"match"}, TokenTag::KEYWORD_MATCH},
 		{{"true"}, TokenTag::KEYWORD_TRUE},
 		{{"false"}, TokenTag::KEYWORD_FALSE},
 		{{"array"}, TokenTag::KEYWORD_ARRAY},

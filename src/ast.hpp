@@ -183,6 +183,23 @@ struct TernaryExpression : public AST {
 	    : AST {ASTTag::TernaryExpression} {}
 };
 
+struct MatchExpression : public AST {
+	struct CaseData {
+		Token const* m_name;
+		Token const* m_identifier;
+		AST* m_type_hint {nullptr};
+		AST* m_expression;
+	};
+
+	// TODO: allow matching on arbitrary expressions
+	Identifier m_matchee;
+	AST* m_type_hint {nullptr};
+	std::vector<CaseData> m_cases;
+
+	MatchExpression()
+	    : AST {ASTTag::MatchExpression} {}
+};
+
 struct ConstructorExpression : public AST {
 	AST* m_constructor;
 	std::vector<AST*> m_args;

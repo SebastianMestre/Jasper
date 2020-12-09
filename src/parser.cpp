@@ -506,6 +506,13 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return type;
 	}
 
+	if (token->m_type == TokenTag::KEYWORD_MATCH) {
+		auto type = parse_match_expression();
+		if (handle_error(result, type))
+			return result;
+		return type;
+	}
+
 	result.m_error.m_sub_errors.push_back({make_expected_error(
 	    token_string[int(TokenTag::KEYWORD_FN)], token)});
 
@@ -823,6 +830,70 @@ Writer<AST::AST*> Parser::parse_while_statement() {
 	e->m_body = body.m_result;
 
 	return make_writer<AST::AST*>(e);
+}
+
+Writer<AST::AST*> Parser::parse_match_expression() {
+	Writer<AST::AST*> result = {
+	    {"Parse Error: Failed to parse match expression"}};
+
+	REQUIRE(result, TokenTag::KEYWORD_MATCH);
+	REQUIRE(result, TokenTag::PAREN_OPEN);
+
+	auto matchee_and_hint = parse_name_and_type();
+	CHECK_AND_RETURN(result, matchee_and_hint);
+	REQUIRE(result, TokenTag::PAREN_CLOSE);
+	REQUIRE(result, TokenTag::BRACE_CLOSE);
+
+	std::vector<AST::MatchExpression::CaseData> cases;
+	while (!consume(TokenTag::BRACE_CLOSE)) {
+		auto case_name = require(TokenTag::IDENTIFIER);
+		CHECK_AND_RETURN(result, case_name);
+		REQUIRE(result, TokenTag::BRACE_OPEN);
+
+		auto name_and_type = parse_name_and_type();
+		CHECK_AND_RETURN(result, name_and_type);
+		REQUIRE(result, TokenTag::BRACE_CLOSE);
+		REQUIRE(result, TokenTag::ARROW);
+
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		cases.push_back(
+		    {case_name.m_result,
+		     name_and_type.m_result.first,
+		     name_and_type.m_result.second,
+		     expression.m_result});
+	}
+
+	AST::Identifier matchee;
+	matchee.m_token = matchee_and_hint.m_result.first;
+
+	auto match = m_ast_allocator->make<AST::MatchExpression>();
+	match->m_matchee = std::move(matchee);
+	match->m_type_hint = matchee_and_hint.m_result.second;
+	match->m_cases = std::move(cases);
+
+	return make_writer<AST::AST*>(match);
+}
+
+Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool required_type) {
+	Writer<std::pair<Token const*, AST::AST*>> result = {
+	    {"Parse Error: Failed to parse name and type"}};
+
+	auto name = require(TokenTag::IDENTIFIER);
+	CHECK_AND_RETURN(result, name);
+
+	Writer<AST::AST*> type;
+	if (required_type or match(TokenTag::DECLARE)) {
+		REQUIRE(result, TokenTag::DECLARE);
+
+		type = parse_type_term();
+		CHECK_AND_RETURN(result, type);
+	}
+
+	return make_writer<std::pair<Token const*, AST::AST*>>(
+	    {name.m_result, type.m_result});
 }
 
 /*
