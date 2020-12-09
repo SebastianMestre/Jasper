@@ -566,7 +566,7 @@ void interpreter_tests(Test::Tester& tests) {
 			};
 
 			node_value := fn(node) => match(node) {
-				leaf { i : int(<>) } => i;
+				leaf { i : string(<>) } => i;
 				node { n : tree_node(<>) } => n.value;
 			};
 
