@@ -228,13 +228,10 @@ struct TernaryExpression : public TypedAST {
 
 struct MatchExpression : public TypedAST {
 	struct CaseData {
-		InternedString m_identifier;
-		TypedAST* m_type_hint {nullptr};
+		Declaration m_declaration;
 		TypedAST* m_expression;
 	};
 
-	// NOTE: I'm avoiding using Declaration for this
-	// because it will generate confusion
 	Identifier m_matchee;
 	TypedAST* m_type_hint {nullptr};
 	std::unordered_map<InternedString, CaseData> m_cases;

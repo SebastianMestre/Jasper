@@ -159,16 +159,17 @@ TypedAST* convert_ast(AST::MatchExpression* ast, Allocator& alloc) {
 	for (auto& case_data : ast->m_cases) {
 		auto case_name = case_data.m_name->m_text;
 
-		auto type_hint = case_data.m_type_hint
-		                     ? convert_ast(case_data.m_type_hint, alloc)
-		                     : nullptr;
+		Declaration declaration;
+		declaration.m_identifier_token = case_data.m_identifier;
+
+		if (case_data.m_type_hint)
+			declaration.m_type_hint = convert_ast(case_data.m_type_hint, alloc);
 
 		auto expression = convert_ast(case_data.m_expression, alloc);
 
 		auto insertion_result = cases.insert(
 		    {case_name,
-		     MatchExpression::CaseData {
-		         case_data.m_identifier->m_text, type_hint, expression}});
+		     MatchExpression::CaseData {std::move(declaration), expression}});
 
 		assert(insertion_result.second);
 	}
