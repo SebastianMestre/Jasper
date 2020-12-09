@@ -146,6 +146,38 @@ TypedAST* convert_ast(AST::AccessExpression* ast, Allocator& alloc) {
 	return typed_ast;
 }
 
+TypedAST* convert_ast(AST::MatchExpression* ast, Allocator& alloc) {
+	auto typed_ast = alloc.make<MatchExpression>();
+
+	auto matchee = static_cast<Identifier*>(convert_ast(&ast->m_matchee, alloc));
+	typed_ast->m_matchee = std::move(*matchee);
+
+	if (ast->m_type_hint)
+		typed_ast->m_type_hint = convert_ast(ast->m_type_hint, alloc);
+
+	std::unordered_map<InternedString, MatchExpression::CaseData> cases;
+	for (auto& case_data : ast->m_cases) {
+		auto case_name = case_data.m_name->m_text;
+
+		auto type_hint = case_data.m_type_hint
+		                     ? convert_ast(case_data.m_type_hint, alloc)
+		                     : nullptr;
+
+		auto expression = convert_ast(case_data.m_expression, alloc);
+
+		auto insertion_result = cases.insert(
+		    {case_name,
+		     MatchExpression::CaseData {
+		         case_data.m_identifier->m_text, type_hint, expression}});
+
+		assert(insertion_result.second);
+	}
+
+	typed_ast->m_cases = std::move(cases);
+
+	return typed_ast;
+}
+
 TypedAST* convert_ast(AST::ConstructorExpression* ast, Allocator& alloc) {
 	auto typed_ast = alloc.make<ConstructorExpression>();
 
@@ -273,6 +305,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		REJECT(BinaryExpression);
 
