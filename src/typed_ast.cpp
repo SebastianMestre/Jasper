@@ -141,7 +141,7 @@ TypedAST* convert_ast(AST::AccessExpression* ast, Allocator& alloc) {
 	auto typed_ast = alloc.make<AccessExpression>();
 
 	typed_ast->m_member = ast->m_member;
-	typed_ast->m_object = convert_ast(ast->m_object, alloc);
+	typed_ast->m_record = convert_ast(ast->m_record, alloc);
 
 	return typed_ast;
 }

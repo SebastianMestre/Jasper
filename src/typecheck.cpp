@@ -1,6 +1,5 @@
 #include "typecheck.hpp"
 
-#include "algorithms/tarjan_solver.hpp"
 #include "compile_time_environment.hpp"
 #include "typechecker.hpp"
 #include "typechecker_types.hpp"
@@ -190,7 +189,7 @@ void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_object, tc);
+	typecheck(ast->m_record, tc);
 
 	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
@@ -204,7 +203,7 @@ void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
-	tc.m_core.m_mono_core.unify(ast->m_object->m_value_type, term_type);
+	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
 void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
@@ -229,7 +228,7 @@ void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
 	}
 
 	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-	    TypeFunctionTag::Sum,
+	    TypeFunctionTag::Variant,
 	    // we don't care about field order in dummies
 	    {},
 	    std::move(dummy_structure),
@@ -260,7 +259,7 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 			tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
-	} else if (tf_data.tag == TypeFunctionTag::Sum) {
+	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		assert(ast->m_args.size() == 1);
 
 		typecheck(ast->m_args[0], tc);
@@ -318,50 +317,12 @@ void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 
-	// two way mapping
-	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
-	std::vector<TypedAST::Declaration*> index_to_decl;
-
-	// assign a unique int to every top level declaration
-	int i = 0;
-	for (auto& decl : ast->m_declarations) {
-		index_to_decl.push_back(&decl);
-		decl_to_index.insert({&decl, i});
-		++i;
-	}
-
-	// build up the explicit declaration graph
-	TarjanSolver solver(index_to_decl.size());
-	for (auto kv : decl_to_index) {
-		auto decl = kv.first;
-#if DEBUG
-		std::cerr << "@@ " << decl->identifier_text() << " -- (" << kv.second
-		          << ")\n";
-#endif
-		auto u = kv.second;
-		for (auto other : decl->m_references) {
-			auto it = decl_to_index.find(other);
-			if (it != decl_to_index.end()) {
-				int v = it->second;
-#if DEBUG
-				std::cerr << "@@   " << other->identifier_text()
-				          << " -- add_edge(" << u << ", " << v << ")\n";
-#endif
-				solver.add_edge(u, v);
-			}
-		}
-	}
-
-	// compute strongly connected components
-	solver.solve();
-
-	auto const& comps = solver.vertices_of_components();
-	for (auto const& verts : comps) {
+	auto const& comps = tc.m_env.declaration_components;
+	for (auto const& decls : comps) {
 
 		bool type_in_component = false;
 		bool non_type_in_component = false;
-		for (int u : verts) {
-			auto decl = index_to_decl[u];
+		for (auto decl : decls) {
 
 			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
@@ -377,31 +338,18 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		if (type_in_component)
 			continue;
 
-#if DEBUG
-		std::cerr << "@@@@ TYPECHECKING COMPONENT @@@@\n";
-		std::cerr << "@@@@ MEMBER LIST START @@@@\n";
-		for (int u : verts) {
-			auto decl = index_to_decl[u];
-			std::cerr << "  MEMBER: " << decl->identifier_text() << '\n';
-		}
-		std::cerr << "@@@@ MEMBER LIST END @@@@\n";
-#endif
-
 		// set up some dummy types on every decl
-		for (int u : verts) {
-			auto decl = index_to_decl[u];
+		for (auto decl : decls) {
 			decl->m_value_type = tc.new_hidden_var();
 		}
 
-		for (int u : verts) {
-			auto decl = index_to_decl[u];
+		for (auto decl : decls) {
 			process_contents(decl, tc);
 		}
 
 		// generalize all the decl types, so that they are
 		// identified as polymorphic in the next rec-block
-		for (int u : verts) {
-			auto decl = index_to_decl[u];
+		for (auto decl : decls) {
 			generalize(decl, tc);
 			print_information(decl, tc);
 		}

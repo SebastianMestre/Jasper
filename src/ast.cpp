@@ -159,7 +159,7 @@ void print(AccessExpression* ast, int d) {
 
 	print_indentation(d);
 	std::cout << "Object:\n";
-	print(ast->m_object, d + 1);
+	print(ast->m_record, d + 1);
 
 	print_indentation(d);
 	std::cout << "Member: " << ast->m_member->m_text << "\n";

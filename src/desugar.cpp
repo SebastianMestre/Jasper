@@ -90,7 +90,7 @@ AST* desugarPizza(BinaryExpression* ast, Allocator& alloc) {
 }
 
 AST* desugar(AccessExpression* ast, Allocator& alloc) {
-	ast->m_object = desugar(ast->m_object, alloc);
+	ast->m_record = desugar(ast->m_record, alloc);
 	return ast;
 }
 
