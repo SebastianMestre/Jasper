@@ -562,19 +562,19 @@ void interpreter_tests(Test::Tester& tests) {
 		__invoke := fn() {
 			x : tree(<>) = tree(<>).leaf {1};
 			y : tree(<>) = tree(<>).node {
-				tree_node(<>) {x; 1; x}
+				tree_node(<>) {x; 2; x}
 			};
 
-			a := match(x : tree(<>)) {
+			node_value := fn(node) => match(node) {
 				leaf { i : int(<>) } => i;
 				node { n : tree_node(<>) } => n.value;
 			};
 
-			return a;
+			return node_value(x) + node_value(y);
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 1);
+		    return Assert::equals(eval_expression("__invoke()", env), 3);
 	    }}));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(

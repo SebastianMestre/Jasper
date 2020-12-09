@@ -276,6 +276,33 @@ void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
+void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
+	eval(&ast->m_matchee, e);
+	auto variant = e.m_env.pop();
+	auto variant_val = unboxed(variant.get());
+	assert(variant_val->type() == ValueTag::Variant);
+	auto variant_actually = static_cast<Variant*>(variant_val);
+	
+	auto function_it = ast->m_expressions.find(variant_actually->m_constructor);
+	assert(function_it != ast->m_expressions.end());
+
+	eval(function_it->second, e);
+	auto function = e.m_env.pop();
+	auto function_val = unboxed(function.get());
+	assert(function->type() == ValueTag::Function);
+
+	e.m_env.start_stack_region();
+	e.m_env.push(variant_actually->m_inner_value);
+
+	e.m_env.start_stack_frame();
+	eval_call_function(static_cast<Function*>(function_val), 1, e);
+	e.m_env.end_stack_frame();
+
+	e.m_env.end_stack_region();
+
+	e.m_env.push(e.fetch_return_value());
+}
+
 void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
 	auto constructor = e.m_env.pop();
@@ -438,6 +465,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(DeclarationList);

@@ -121,6 +121,13 @@ void compute_offsets(TypedAST::AccessExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_record, frame_offset);
 }
 
+void compute_offsets(TypedAST::MatchExpression* ast, int frame_offset) {
+	compute_offsets(&ast->m_matchee, frame_offset);
+
+	for (auto& expr : ast->m_expressions)
+		compute_offsets(expr.second, frame_offset);
+}
+
 void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_constructor, frame_offset);
 
@@ -169,6 +176,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
