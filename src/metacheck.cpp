@@ -8,6 +8,8 @@
 
 namespace TypeChecker {
 
+void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+
 void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
 	target = value;
 }
@@ -125,6 +127,29 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	}
 }
 
+void metacheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+	ast->m_meta_type = tc.meta_value();
+
+	metacheck(&ast->m_matchee, tc);
+	tc.m_core.m_meta_core.unify(ast->m_matchee.m_meta_type, tc.meta_value());
+
+	if (ast->m_type_hint) {
+		metacheck(ast->m_type_hint, tc);
+		tc.m_core.m_meta_core.unify(
+		    ast->m_type_hint->m_meta_type, tc.meta_monotype());
+	}
+
+	for (auto& kv : ast->m_cases) {
+		auto& case_data = kv.second;
+
+		assign_meta_type(case_data.m_declaration.m_meta_type, tc.meta_value(), tc);
+		process_declaration_type_hint(&case_data.m_declaration, tc);
+
+		metacheck(case_data.m_expression, tc);
+		tc.m_core.m_meta_core.unify(case_data.m_expression->m_meta_type, tc.meta_value());
+	}
+}
+
 void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
@@ -177,15 +202,17 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 // declarations
 
-void process_declaration(TypedAST::Declaration* ast, TypeChecker& tc) {
-
+void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
 	auto* type_hint = ast->m_type_hint;
 	if (type_hint) {
 		metacheck(type_hint, tc);
 		tc.m_core.m_meta_core.unify(type_hint->m_meta_type, tc.meta_monotype());
 		tc.m_core.m_meta_core.unify(ast->m_meta_type, tc.meta_value());
 	}
+}
 
+void process_declaration(TypedAST::Declaration* ast, TypeChecker& tc) {
+	process_declaration_type_hint(ast, tc);
 	metacheck(ast->m_value, tc);
 	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
@@ -285,6 +312,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
