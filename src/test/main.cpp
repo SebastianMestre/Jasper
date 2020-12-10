@@ -560,26 +560,32 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"jp(
 			b := union {
-				id : string(<>);
+				str : string(<>);
 				num : int(<>);
 			}(<>);
 
 			serialize := fn ( x ) {
 				y := match(x) {
-					id { s } => s;
+					str { s } => s;
 					num { n } => "(number)";
 				};
 				return y;
 			};
 
+			from_string := fn(str) => b.str { str };
+			from_number := fn(num) => b.num { num };
 			__invoke := fn() {
-				print(serialize(b.id { "xxx" }));
-				print(serialize(b.num { 4242 }));
 			};
 		)jp",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 3);
-	    }}));
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(
+		            eval_expression("serialize(from_number(10))", env), "(number)");
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(
+		            eval_expression("serialize(from_string(\"xxx\"))", env), "xxx");
+	        }}));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
