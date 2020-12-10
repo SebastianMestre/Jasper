@@ -19,6 +19,7 @@ struct Environment {
 	void end_stack_region();
 
 	void push(Value* val);
+	Value* pop_unsafe();
 	gc_ptr<Value> pop();
 };
 

@@ -276,6 +276,28 @@ void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
+void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
+	// put the matchee on the top of the stack
+	eval(&ast->m_matchee, e);
+
+	// Don't pop it, because it is already lined up for the later expressions
+	auto variant_val = unboxed(e.m_env.m_stack.back());
+	assert(variant_val->type() == ValueTag::Variant);
+	auto variant_actually = static_cast<Variant*>(variant_val);
+	
+	auto case_it = ast->m_cases.find(variant_actually->m_constructor);
+	// TODO: proper error handling
+	assert(case_it != ast->m_cases.end());
+
+	// put the result on the top of the stack
+	eval(case_it->second.m_expression, e);
+
+	// evil tinkering with the stack internals
+	// (we just delete the matchee from behind the result)
+	e.m_env.m_stack[e.m_env.m_stack.size() - 2] = e.m_env.m_stack.back();
+	e.m_env.pop_unsafe();
+}
+
 void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
 	auto constructor = e.m_env.pop();
@@ -438,6 +460,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(DeclarationList);
