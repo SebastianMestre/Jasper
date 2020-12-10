@@ -548,24 +548,10 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
-		tree := union {
-			leaf : int(<>);
-			node : tree_node(<>);
-		};
-
-		tree_node := struct {
-			left : tree(<>);
-			value : int(<>);
-			right : tree(<>);
-		};
-
-		__invoke := fn() {
-			x : tree(<>) = tree(<>).leaf {1};
-			y : tree(<>) = tree(<>).node {
-				tree_node(<>) {x; 1; x}
-			};
-			return 0;
-		};
+			a := c;
+			b := a.id { 10 };
+			c := union { id : int(<>); }(<>);
+			__invoke := fn() => 0;
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 0);
@@ -581,6 +567,62 @@ void interpreter_tests(Test::Tester& tests) {
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 0);
 	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"jp(
+			b := union {
+				id : string(<>);
+				num : int(<>);
+			}(<>);
+
+			serialize := fn ( x ) {
+				y := match(x) {
+					id { s } => s;
+					num { n } => "(number)";
+				};
+				return y;
+			};
+
+			__invoke := fn() {
+				print(serialize(b.id { "xxx" }));
+				print(serialize(b.num { 4242 }));
+			};
+		)jp",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 3);
+	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		tree := union {
+			leaf : int(<>);
+			node : tree_node(<>);
+		};
+
+		tree_node := struct {
+			left : tree(<>);
+			value : int(<>);
+			right : tree(<>);
+		};
+
+		__invoke := fn() {
+			x : tree(<>) = tree(<>).leaf {1};
+			y : tree(<>) = tree(<>).node {
+				tree_node(<>) {x; 2; x}
+			};
+
+			node_value := fn(node) => match(node) {
+				leaf { i : int(<>) } => i;
+				node { n : tree_node(<>) } => n.value;
+			};
+
+			return node_value(x) + node_value(y);
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 3);
+	    }}));
+
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
