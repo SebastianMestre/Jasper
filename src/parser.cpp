@@ -507,10 +507,9 @@ Writer<AST::AST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_MATCH) {
-		auto type = parse_match_expression();
-		if (handle_error(result, type))
-			return result;
-		return type;
+		auto match_expr = parse_match_expression();
+		CHECK_AND_RETURN(result, match_expr);
+		return match_expr;
 	}
 
 	result.m_error.m_sub_errors.push_back({make_expected_error(
