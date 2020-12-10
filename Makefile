@@ -56,6 +56,7 @@ INTERPRETER_TARGETS := \
 TEST_DIR := test
 TEST_ENTRY := main
 TEST_TARGETS := \
+	constructive_test \
 	test_set \
 	tester
 
