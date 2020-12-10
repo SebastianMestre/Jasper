@@ -121,6 +121,22 @@ void compute_offsets(TypedAST::AccessExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_record, frame_offset);
 }
 
+void compute_offsets(TypedAST::MatchExpression* ast, int frame_offset) {
+	compute_offsets(&ast->m_matchee, frame_offset);
+
+	for (auto& kv : ast->m_cases) {
+		auto& case_data = kv.second;
+
+		// Declarations never have values: no need to compute_offsets() on them
+		case_data.m_declaration.m_frame_offset = frame_offset;
+
+		// We put the identifier that's bound to the matched value in the first
+		// position, so when we recurse on the children, we add 1 to the offset
+
+		compute_offsets(case_data.m_expression, frame_offset+1);
+	}
+}
+
 void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_constructor, frame_offset);
 
@@ -169,6 +185,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);
