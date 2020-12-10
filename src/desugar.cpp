@@ -194,7 +194,8 @@ AST* desugar(MatchExpression* ast, Allocator& alloc) {
 
 	for (auto& case_data : ast->m_cases) {
 		case_data.m_expression = desugar(case_data.m_expression, alloc);
-		case_data.m_type_hint = desugar(case_data.m_type_hint, alloc);
+		if (case_data.m_type_hint)
+			case_data.m_type_hint = desugar(case_data.m_type_hint, alloc);
 	}
 
 	return ast;
