@@ -842,7 +842,7 @@ Writer<AST::AST*> Parser::parse_match_expression() {
 	auto matchee_and_hint = parse_name_and_type();
 	CHECK_AND_RETURN(result, matchee_and_hint);
 	REQUIRE(result, TokenTag::PAREN_CLOSE);
-	REQUIRE(result, TokenTag::BRACE_CLOSE);
+	REQUIRE(result, TokenTag::BRACE_OPEN);
 
 	std::vector<AST::MatchExpression::CaseData> cases;
 	while (!consume(TokenTag::BRACE_CLOSE)) {
