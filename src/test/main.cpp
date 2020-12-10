@@ -682,5 +682,8 @@ int main() {
 	allocator_tests(tests);
 	string_set_tests(tests);
 	interpreter_tests(tests);
-	tests.execute();
+	auto test_result = tests.execute();
+	if (test_result.m_code != TestStatusTag::Ok)
+		return 1;
+	return 0;
 }
