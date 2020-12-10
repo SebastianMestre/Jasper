@@ -16,7 +16,7 @@ namespace TypeChecker {
 // thing to do. At least, the alternatives I came up with
 // are quite a bit worse.
 
-void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
 
 // Literals
 
@@ -305,7 +305,7 @@ void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
 	print_information(ast, tc);
 }
 
-void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
+static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
 		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);

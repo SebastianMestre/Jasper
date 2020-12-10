@@ -8,7 +8,7 @@
 
 namespace TypeChecker {
 
-void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
 
 void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
 	target = value;
@@ -202,7 +202,7 @@ void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 
 // declarations
 
-void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
+static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
 	auto* type_hint = ast->m_type_hint;
 	if (type_hint) {
 		metacheck(type_hint, tc);
