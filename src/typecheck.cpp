@@ -249,7 +249,7 @@ void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
 
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
-	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match sum dummy");
+	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match variant dummy");
 	tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, term_type);
 }
 
