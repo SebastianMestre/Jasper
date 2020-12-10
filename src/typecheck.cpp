@@ -368,7 +368,6 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 		// identified as polymorphic in the next rec-block
 		for (auto decl : decls) {
 			generalize(decl, tc);
-			print_information(decl, tc);
 		}
 	}
 }

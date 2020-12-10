@@ -277,15 +277,21 @@ void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 }
 
 void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
-	// put the matchee on the top of the stack
+	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	// Don't pop it, because it is already lined up for the later expressions
 	auto variant_val = unboxed(e.m_env.m_stack.back());
 	assert(variant_val->type() == ValueTag::Variant);
 	auto variant_actually = static_cast<Variant*>(variant_val);
+
+	auto constructor = variant_actually->m_constructor;
+	auto variant_inner = variant_actually->m_inner_value;
+
+	// We won't pop it, because it is already lined up for the later
+	// expressions. Instead, replace the variant with its inner value.
+	e.m_env.m_stack.back() = variant_inner;
 	
-	auto case_it = ast->m_cases.find(variant_actually->m_constructor);
+	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
 	assert(case_it != ast->m_cases.end());
 
@@ -293,7 +299,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	eval(case_it->second.m_expression, e);
 
 	// evil tinkering with the stack internals
-	// (we just delete the matchee from behind the result)
+	// (we just delete the variant value from behind the result)
 	e.m_env.m_stack[e.m_env.m_stack.size() - 2] = e.m_env.m_stack.back();
 	e.m_env.pop_unsafe();
 }
