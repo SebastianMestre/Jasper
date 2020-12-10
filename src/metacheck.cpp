@@ -128,7 +128,7 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 }
 
 void metacheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
-	ast->m_meta_type = tc.meta_value();
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(&ast->m_matchee, tc);
 	tc.m_core.m_meta_core.unify(ast->m_matchee.m_meta_type, tc.meta_value());

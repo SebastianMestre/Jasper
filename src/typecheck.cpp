@@ -16,6 +16,10 @@ namespace TypeChecker {
 // thing to do. At least, the alternatives I came up with
 // are quite a bit worse.
 
+void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+
+// Literals
+
 void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_float();
 }
@@ -206,6 +210,49 @@ void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
+void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+	typecheck(&ast->m_matchee, tc);
+	if (ast->m_type_hint) {
+		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
+		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, handle->m_value);
+	}
+
+	ast->m_value_type = tc.new_var();
+
+	std::unordered_map<InternedString, MonoId> dummy_structure;
+	for (auto& kv : ast->m_cases) {
+		auto& case_data = kv.second;
+
+		// deduce type of each declaration
+		// NOTE(SMestre): this tc.new_var() worries me. Since we are putting it
+		// a typefunc, it should not ever get generalized. But we don't really
+		// do anything to prevent it.
+		case_data.m_declaration.m_value_type = tc.new_var();
+		process_declaration_type_hint(&case_data.m_declaration, tc);
+
+		// unify type of match with type of cases
+		typecheck(case_data.m_expression, tc);
+		tc.m_core.m_mono_core.unify(
+		    ast->m_value_type, case_data.m_expression->m_value_type);
+
+		// get the structure of the match expression for a dummy
+		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
+	}
+
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+	    TypeFunctionTag::Variant,
+	    // we don't care about field order in dummies
+	    {},
+	    std::move(dummy_structure),
+	    true);
+
+	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
+	// knowing' the arguments to a typefunc.
+	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match sum dummy");
+	tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, term_type);
+}
+
 void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
 
@@ -258,15 +305,19 @@ void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
 	print_information(ast, tc);
 }
 
-// typecheck the value and make the type of the decl equal
-// to its type
-// apply typehints if available
-void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
+void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
 		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
 		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 	}
+}
+
+// typecheck the value and make the type of the decl equal
+// to its type
+// apply typehints if available
+void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
+	process_declaration_type_hint(ast, tc);
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
@@ -346,6 +397,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Declaration);
