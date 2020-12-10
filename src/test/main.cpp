@@ -548,6 +548,47 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
+			a := c;
+			b := a.id { 10 };
+			c := union { id : int(<>); }(<>);
+			__invoke := fn() => 0;
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 0);
+	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"jp(
+			b := union {
+				str : string(<>);
+				num : int(<>);
+			}(<>);
+
+			serialize := fn ( x ) {
+				y := match(x) {
+					str { s } => s;
+					num { n } => "(number)";
+				};
+				return y;
+			};
+
+			from_string := fn(str) => b.str { str };
+			from_number := fn(num) => b.num { num };
+			__invoke := fn() {
+			};
+		)jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(
+		            eval_expression("serialize(from_number(10))", env), "(number)");
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(
+		            eval_expression("serialize(from_string(\"xxx\"))", env), "xxx");
+	        }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
 		tree := union {
 			leaf : int(<>);
 			node : tree_node(<>);
@@ -562,25 +603,21 @@ void interpreter_tests(Test::Tester& tests) {
 		__invoke := fn() {
 			x : tree(<>) = tree(<>).leaf {1};
 			y : tree(<>) = tree(<>).node {
-				tree_node(<>) {x; 1; x}
+				tree_node(<>) {x; 2; x}
 			};
-			return 0;
+
+			node_value := fn(node) => match(node) {
+				leaf { i : int(<>) } => i;
+				node { n : tree_node(<>) } => n.value;
+			};
+
+			return node_value(x) + node_value(y);
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 0);
+		    return Assert::equals(eval_expression("__invoke()", env), 3);
 	    }}));
 
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			a := c;
-			b := a.id { 10 };
-			c := union { id : int(<>); }(<>);
-			__invoke := fn() => 0;
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 0);
-	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
@@ -651,5 +688,8 @@ int main() {
 	allocator_tests(tests);
 	string_set_tests(tests);
 	interpreter_tests(tests);
-	tests.execute();
+	auto test_result = tests.execute();
+	if (test_result.m_code != TestStatusTag::Ok)
+		return 1;
+	return 0;
 }

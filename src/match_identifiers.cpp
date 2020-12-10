@@ -181,6 +181,28 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::MatchExpression* ast, Frontend::CompileTimeEnvironment& env) {
+
+	CHECK_AND_RETURN(match_identifiers(&ast->m_matchee, env));
+
+	if (ast->m_type_hint)
+		CHECK_AND_RETURN(match_identifiers(ast->m_type_hint, env));
+
+	for (auto& kv : ast->m_cases) {
+		auto& case_data = kv.second;
+
+		env.new_nested_scope();
+
+		CHECK_AND_RETURN(match_identifiers(&case_data.m_declaration, env));
+		CHECK_AND_RETURN(match_identifiers(case_data.m_expression, env));
+
+		env.end_scope();
+	}
+
+	return {};
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ConstructorExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_constructor, env));
 
@@ -262,6 +284,7 @@ namespace TypeChecker {
 		DISPATCH(CallExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 
 		DISPATCH(Block);

@@ -53,6 +53,9 @@ struct Parser {
 	Writer<AST::AST*> parse_if_else_statement();
 	Writer<AST::AST*> parse_for_statement();
 	Writer<AST::AST*> parse_while_statement();
+	Writer<AST::AST*> parse_match_expression();
+	Writer<std::pair<Token const*, AST::AST*>>
+	    parse_name_and_type(bool required_type = false);
 	Writer<AST::AST*> parse_type_term();
 	Writer<std::vector<AST::AST*>> parse_type_term_arguments();
 	Writer<std::pair<std::vector<AST::Identifier>,std::vector<AST::AST*>>>

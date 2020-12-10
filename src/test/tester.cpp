@@ -26,8 +26,10 @@ void Tester::add_tests(std::vector<Own<TestSet>> tss) {
 		m_test_sets.push_back(std::move(tss[i]));
 }
 
-void Tester::execute() {
+TestReport Tester::execute() {
 	std::vector<std::string> reports;
+
+	auto veredict = TestStatusTag::Ok;
 
 	for (int i = 0; i < m_test_sets.size(); ++i) {
 		TestReport ts_answer = m_test_sets[i]->execute();
@@ -37,12 +39,17 @@ void Tester::execute() {
 			std::cout << '.';
 			break;
 		case TestStatusTag::Error:
+			veredict = TestStatusTag::Error;
 			std::cout << 'E';
 			break;
 		case TestStatusTag::Fail:
+			if (veredict != TestStatusTag::Error)
+				veredict = TestStatusTag::Fail;
 			std::cout << 'F';
 			break;
 		case TestStatusTag::Empty:
+			if (veredict != TestStatusTag::Error && veredict != TestStatusTag::Fail)
+				veredict = TestStatusTag::Empty;
 			std::cout << 'R';
 			break;
 		default:
@@ -56,6 +63,9 @@ void Tester::execute() {
 	std::cout << std::endl;
 	for (const auto& r : reports)
 		std::cout << r << std::endl;
+	
+	// TODO: put some text in the report
+	return {veredict, ""};
 }
 
 } // namespace Test

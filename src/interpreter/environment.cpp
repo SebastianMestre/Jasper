@@ -36,7 +36,14 @@ void Environment::push(Value* ref){
 	m_stack_ptr += 1;
 }
 
-gc_ptr<Value> Environment::pop(){
+Value* Environment::pop_unsafe() {
+	Value* result = m_stack.back();
+	m_stack.pop_back();
+	m_stack_ptr -= 1;
+	return result;
+}
+
+gc_ptr<Value> Environment::pop() {
 	gc_ptr<Value> result = {m_stack.back()};
 	m_stack.pop_back();
 	m_stack_ptr -= 1;

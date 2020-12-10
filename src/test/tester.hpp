@@ -18,7 +18,7 @@ struct Tester {
 
 	void add_test(std::unique_ptr<TestSet>);
 	void add_tests(std::vector<std::unique_ptr<TestSet>>);
-	void execute();
+	TestReport execute();
 };
 
 } // namespace Test
