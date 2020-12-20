@@ -65,6 +65,8 @@ TypedAST* convert_ast(AST::FunctionLiteral* ast, Allocator& alloc) {
 		Declaration typed_decl;
 
 		typed_decl.m_identifier_token = arg.m_identifier_token;
+		if (arg.m_type_hint)
+			typed_decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
 		typed_decl.m_surrounding_function = typed_function;
 
 		typed_function->m_args.push_back(std::move(typed_decl));
