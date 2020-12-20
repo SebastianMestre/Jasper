@@ -618,6 +618,30 @@ void interpreter_tests(Test::Tester& tests) {
 		    return Assert::equals(eval_expression("__invoke()", env), 3);
 	    }}));
 
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		f := fn (error_number : int(<>)) =>
+			fn(x : either(<>)) => match(x) {
+				left { i } => i;
+				right { s } => error_number;
+			};
+
+		either := union {
+			left : int(<>);
+			right : string(<>);
+		};
+
+		__invoke := fn() {
+			x := either(<>).left{ 1 };
+			y := either(<>).right{ "error" };
+
+			def := f(10);
+			return def(x) + def(y);
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 11);
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
