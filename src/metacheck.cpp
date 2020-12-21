@@ -48,8 +48,10 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	for (auto& arg : ast->m_args) {
-		if (arg.m_type_hint)
+		if (arg.m_type_hint) {
 			metacheck(arg.m_type_hint, tc);
+			assign_meta_type(arg.m_type_hint, tc.meta_monotype(), tc);
+		}
 		assign_meta_type(arg.m_meta_type, tc.meta_value(), tc);
 	}
 
