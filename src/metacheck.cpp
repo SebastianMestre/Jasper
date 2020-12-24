@@ -47,10 +47,13 @@ void metacheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
-	int arg_count = ast->m_args.size();
-	for (int i = 0; i < arg_count; ++i)
-		// TODO: metacheck type hints
-		assign_meta_type(ast->m_args[i].m_meta_type, tc.meta_value(), tc);
+	for (auto& arg : ast->m_args) {
+		if (arg.m_type_hint) {
+			metacheck(arg.m_type_hint, tc);
+			assign_meta_type(arg.m_type_hint->m_meta_type, tc.meta_monotype(), tc);
+		}
+		assign_meta_type(arg.m_meta_type, tc.meta_value(), tc);
+	}
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);

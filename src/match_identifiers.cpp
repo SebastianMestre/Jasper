@@ -106,10 +106,11 @@ namespace TypeChecker {
 	env.enter_function(ast);
 	env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
-	int arg_count = ast->m_args.size();
-
-	for (int i = 0; i < arg_count; ++i)
-		env.declare(ast->m_args[i].identifier_text(), &ast->m_args[i]);
+	for (auto& arg : ast->m_args) {
+		if (arg.m_type_hint)
+			CHECK_AND_RETURN(match_identifiers(arg.m_type_hint, env));
+		env.declare(arg.identifier_text(), &arg);
+	}
 
 	// scan body
 	assert(ast->m_body->type() == TypedASTTag::Block);

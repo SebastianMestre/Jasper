@@ -23,8 +23,9 @@ TypedAST::ArrayLiteral* ct_eval(
 
 TypedAST::FunctionLiteral* ct_eval(
     TypedAST::FunctionLiteral* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
-
-	// TODO: type hints
+	for (auto& arg : ast->m_args)
+		if (arg.m_type_hint)
+			arg.m_type_hint = ct_eval(arg.m_type_hint, tc, alloc);
 
 	assert(ast->m_body->type() == TypedASTTag::Block);
 	auto body = static_cast<TypedAST::Block*>(ast->m_body);

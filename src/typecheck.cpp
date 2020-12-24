@@ -107,13 +107,12 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 		// TODO: do something better, use the type hints
 		ast->m_return_type = tc.new_var();
 
-		int arg_count = ast->m_args.size();
 		std::vector<MonoId> arg_types;
 
-		for (int i = 0; i < arg_count; ++i) {
-			int mono = tc.new_var();
-			arg_types.push_back(mono);
-			ast->m_args[i].m_value_type = mono;
+		for (auto& arg : ast->m_args) {
+			arg.m_value_type = tc.new_var();
+			process_declaration_type_hint(&arg, tc);
+			arg_types.push_back(arg.m_value_type);
 		}
 
 		// return type
