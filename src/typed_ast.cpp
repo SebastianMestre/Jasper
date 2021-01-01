@@ -11,7 +11,8 @@ namespace TypedAST {
 InternedString const& Declaration::identifier_text() const {
 	if (m_identifier.is_null()) {
 		if (m_identifier_token) {
-			Log::warning("No identifier on declaration: using token data as fallback");
+			auto str = "No identifier on declaration " + m_identifier_token->m_text.str() + ": using token data as fallback";
+			Log::warning(str.c_str());
 			return m_identifier_token->m_text;
 		} else {
 			assert(0 && "no identifier on declaration, no fallback.");
@@ -78,6 +79,7 @@ TypedAST* convert_ast(AST::FunctionLiteral* ast, Allocator& alloc) {
 		Declaration typed_decl;
 
 		typed_decl.m_identifier_token = arg.m_identifier_token;
+		typed_decl.m_identifier = arg.m_identifier_token->m_text;
 		if (arg.m_type_hint)
 			typed_decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
 		typed_decl.m_surrounding_function = typed_function;
@@ -94,6 +96,7 @@ TypedAST* convert_ast(AST::Declaration* ast, Allocator& alloc) {
 	auto typed_dec = alloc.make<Declaration>();
 
 	typed_dec->m_identifier_token = ast->m_identifier_token;
+	typed_dec->m_identifier = ast->m_identifier_token->m_text;
 
 	if (ast->m_type_hint)
 		typed_dec->m_type_hint = convert_ast(ast->m_type_hint, alloc);
@@ -176,6 +179,7 @@ TypedAST* convert_ast(AST::MatchExpression* ast, Allocator& alloc) {
 
 		Declaration declaration;
 		declaration.m_identifier_token = case_data.m_identifier;
+		declaration.m_identifier = case_data.m_identifier->m_text;
 
 		if (case_data.m_type_hint)
 			declaration.m_type_hint = convert_ast(case_data.m_type_hint, alloc);
