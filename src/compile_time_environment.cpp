@@ -13,9 +13,8 @@ Scope& CompileTimeEnvironment::current_scope() {
 	return m_scopes.empty() ? m_global_scope : m_scopes.back();
 }
 
-void CompileTimeEnvironment::declare(
-    InternedString const& name, TypedAST::Declaration* decl) {
-	auto insert_result = current_scope().m_vars.insert({name, decl});
+void CompileTimeEnvironment::declare(TypedAST::Declaration* decl) {
+	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
 
 	// TODO: do proper error handling
 	assert(insert_result.second && "redeclaration");

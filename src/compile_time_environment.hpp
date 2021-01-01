@@ -34,7 +34,7 @@ struct CompileTimeEnvironment {
 
 	CompileTimeEnvironment();
 
-	void declare(InternedString const&, TypedAST::Declaration*);
+	void declare(TypedAST::Declaration*);
 
 	TypedAST::Declaration* access(InternedString const&);
 

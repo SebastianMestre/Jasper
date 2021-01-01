@@ -182,7 +182,7 @@ TypedAST::Declaration* TypeChecker::new_builtin_declaration(InternedString const
 	m_builtin_declarations.push_back({});
 	auto result = &m_builtin_declarations.back();
 	result->m_identifier = name;
-	m_env.declare(name, result);
+	m_env.declare(result);
 	return result;
 }
 
