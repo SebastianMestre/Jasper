@@ -10,13 +10,16 @@ namespace TypedAST {
 
 InternedString const& Declaration::identifier_text() const {
 	if (m_identifier.is_null()) {
-		if (m_identifier_token) {
-			auto str = "No identifier on declaration " + m_identifier_token->m_text.str() + ": using token data as fallback";
+		if (!m_identifier_token) {
+			auto str = "No identifier or fallback on declaration " + m_identifier_token->m_text.str() + ": aborting";
 			Log::warning(str.c_str());
-			return m_identifier_token->m_text;
-		} else {
 			assert(0 && "no identifier on declaration, no fallback.");
 		}
+
+		auto str = "No identifier on declaration " + m_identifier_token->m_text.str() + ": using token data as fallback";
+		Log::warning(str.c_str());
+
+		return m_identifier_token->m_text;
 	}
 	return m_identifier;
 }
