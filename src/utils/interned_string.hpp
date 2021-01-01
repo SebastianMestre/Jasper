@@ -15,6 +15,10 @@ struct InternedString {
 	explicit InternedString(std::string const& other);
 	explicit InternedString(std::string&& other);
 
+	bool is_null() const {
+		return !m_data;
+	}
+
 	bool operator==(InternedString const& other) const {
 		return m_data == other.m_data;
 	}

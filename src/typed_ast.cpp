@@ -1,11 +1,24 @@
 #include <cassert>
 #include <iostream>
 
+#include "./log/log.hpp"
 #include "ast.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_allocator.hpp"
 
 namespace TypedAST {
+
+InternedString const& Declaration::identifier_text() const {
+	if (m_identifier.is_null()) {
+		if (m_identifier_token) {
+			Log::warning("No identifier on declaration: using token data as fallback");
+			return m_identifier_token->m_text;
+		} else {
+			assert(0 && "no identifier on declaration, no fallback.");
+		}
+	}
+	return m_identifier;
+}
 
 TypedAST* convert_ast(AST::IntegerLiteral* ast, Allocator& alloc) {
 	auto typed_integer = alloc.make<IntegerLiteral>();
