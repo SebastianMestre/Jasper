@@ -148,6 +148,45 @@ std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
 	return {false, TokenTag::END};
 }
 
+bool Lexer::consume_string() {
+	if (current_char() != '"')
+		return false;
+
+	m_source_index += 1;
+	m_current_column += 1;
+
+	int i0 = m_source_index;
+	int c0 = m_current_column;
+	int l0 = m_current_line;
+
+	// TODO: support escape sequences
+	size_t len = 0;
+	while ((not done()) && current_char() != '"') {
+		len += 1;
+		m_source_index += 1;
+		if (current_char() == '\n') {
+			m_current_line += 1;
+			m_current_column = 0;
+		} else {
+			m_current_column += 1;
+		}
+	}
+
+	if (current_char() != '"') {
+		// TODO: report unmatched quote
+		assert(0);
+	}
+
+	char const* base_ptr = m_source.data() + i0;
+	m_tokens.push_back(
+			{TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
+
+	m_current_column += 1;
+	m_source_index += 1;
+
+	return true;
+}
+
 bool Lexer::consume_symbol() {
 	auto entry = m_symbols_trie.longest_prefix_of(string_view {
 	    m_source.data() + m_source_index, m_source.size() - m_source_index});
@@ -169,37 +208,7 @@ void Lexer::consume_token() {
 	}
 
 	if (current_char() == '"') {
-		m_source_index += 1;
-		m_current_column += 1;
-
-		int i0 = m_source_index;
-		int c0 = m_current_column;
-		int l0 = m_current_line;
-
-		// TODO: support escape sequences
-		size_t len = 0;
-		while ((not done()) && current_char() != '"') {
-			len += 1;
-			m_source_index += 1;
-			if (current_char() == '\n') {
-				m_current_line += 1;
-				m_current_column = 0;
-			} else {
-				m_current_column += 1;
-			}
-		}
-
-		if (current_char() != '"') {
-			// TODO: report unmatched quote
-			assert(0);
-		}
-
-		char const* base_ptr = m_source.data() + i0;
-		m_tokens.push_back(
-				{TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
-
-		m_current_column += 1;
-		m_source_index += 1;
+		assert(consume_string());
 		return;
 	}
 

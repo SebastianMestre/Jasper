@@ -26,6 +26,7 @@ struct Lexer {
 	}
 
 	bool consume_symbol();
+	bool consume_string();
 	bool consume_comment();
 	bool consume_identifier_or_keyword();
 	bool consume_number();
