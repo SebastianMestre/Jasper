@@ -8,6 +8,52 @@
 
 #include "token_array.hpp"
 
+Lexer::Lexer(std::vector<char> source, TokenArray& tokens)
+    : m_source {std::move(source)}
+    , m_tokens {tokens}
+    , m_symbols_trie {build_trie({{"+", int(TokenTag::ADD)},
+                                  {"+=", int(TokenTag::ADD_TO)},
+                                  {"-", int(TokenTag::SUB)},
+                                  {"-=", int(TokenTag::SUB_TO)},
+                                  {"*", int(TokenTag::MUL)},
+                                  {"*=", int(TokenTag::MUL_TO)},
+                                  {"/", int(TokenTag::DIV)},
+                                  {"/=", int(TokenTag::DIV_TO)},
+                                  {"&", int(TokenTag::AND)},
+                                  {"&=", int(TokenTag::AND_TO)},
+                                  {"|", int(TokenTag::IOR)},
+                                  {"|=", int(TokenTag::IOR_TO)},
+                                  {"^", int(TokenTag::XOR)},
+                                  {"^=", int(TokenTag::XOR_TO)},
+                                  {"++", int(TokenTag::INCREMENT)},
+                                  {"--", int(TokenTag::DECREMENT)},
+                                  {"&&", int(TokenTag::LOGIC_AND)},
+                                  {"||", int(TokenTag::LOGIC_IOR)},
+                                  {"~", int(TokenTag::COMPL)},
+                                  {"!", int(TokenTag::LOGIC_COMPL)},
+                                  {":", int(TokenTag::DECLARE)},
+                                  {":=", int(TokenTag::DECLARE_ASSIGN)},
+                                  {"=", int(TokenTag::ASSIGN)},
+                                  {"=>", int(TokenTag::ARROW)},
+                                  {"==", int(TokenTag::EQUAL)},
+                                  {"!=", int(TokenTag::NOT_EQUAL)},
+                                  {"<", int(TokenTag::LT)},
+                                  {"<=", int(TokenTag::LTE)},
+                                  {">", int(TokenTag::GT)},
+                                  {">=", int(TokenTag::GTE)},
+                                  {"(<", int(TokenTag::POLY_OPEN)},
+                                  {">)", int(TokenTag::POLY_CLOSE)},
+                                  {"(", int(TokenTag::PAREN_OPEN)},
+                                  {")", int(TokenTag::PAREN_CLOSE)},
+                                  {"{", int(TokenTag::BRACE_OPEN)},
+                                  {"}", int(TokenTag::BRACE_CLOSE)},
+                                  {"[", int(TokenTag::BRACKET_OPEN)},
+                                  {"]", int(TokenTag::BRACKET_CLOSE)},
+                                  {";", int(TokenTag::SEMICOLON)},
+                                  {",", int(TokenTag::COMMA)},
+                                  {".", int(TokenTag::DOT)},
+                                  {"|>", int(TokenTag::PIZZA)}})} {}
+
 bool is_identifier_start_char(char c) {
 	return isalpha(c) || c == '_';
 }
@@ -102,196 +148,27 @@ std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
 	return {false, TokenTag::END};
 }
 
+bool Lexer::consume_symbol() {
+	auto entry = m_symbols_trie.longest_prefix_of(string_view {
+	    m_source.data() + m_source_index, m_source.size() - m_source_index});
+	if (entry.text.begin() == nullptr)
+		return false;
+	push_token(TokenTag(entry.data), entry.text.size());
+	return true;
+}
+
 void Lexer::consume_token() {
 
-	switch (current_char()) {
+	if (current_char() == '/' && next_char() == '/') {
+		assert(consume_comment());
+		return;
+	}
 
-	case '+':
-		switch (next_char()) {
-		case '+':
-			push_token(TokenTag::INCREMENT, 2);
-			break;
-		case '=':
-			push_token(TokenTag::ADD_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::ADD, 1);
-		}
-		break;
+	if (consume_symbol()) {
+		return;
+	}
 
-	case '-':
-		switch (next_char()) {
-		case '-':
-			push_token(TokenTag::DECREMENT, 2);
-			break;
-		case '=':
-			push_token(TokenTag::SUB_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::SUB, 1);
-		}
-		break;
-
-	case '*':
-		switch (next_char()) {
-		case '=':
-			push_token(TokenTag::MUL_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::MUL, 1);
-		}
-		break;
-
-	case '/':
-		switch (next_char()) {
-		case '/':
-			assert(consume_comment());
-			break;
-		case '=':
-			push_token(TokenTag::DIV_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::DIV, 1);
-		}
-		break;
-
-	case '&':
-		switch (next_char()) {
-		case '&':
-			push_token(TokenTag::LOGIC_AND, 2);
-			break;
-		case '=':
-			push_token(TokenTag::AND_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::AND, 1);
-		}
-		break;
-
-	case '|':
-		switch (next_char()) {
-		case '|':
-			push_token(TokenTag::LOGIC_IOR, 2);
-			break;
-		case '>':
-			push_token(TokenTag::PIZZA, 2);
-			break;
-		case '=':
-			push_token(TokenTag::IOR_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::IOR, 1);
-		}
-		break;
-
-	case '^':
-		switch (next_char()) {
-		/* case '^': push_token(TokenTag::LOGIC_XOR, 2); break; */
-		case '=':
-			push_token(TokenTag::XOR_TO, 2);
-			break;
-		default:
-			push_token(TokenTag::XOR, 1);
-		}
-		break;
-
-	case ':':
-		switch (next_char()) {
-		case '=':
-			push_token(TokenTag::DECLARE_ASSIGN, 2);
-			break;
-		default:
-			push_token(TokenTag::DECLARE, 1);
-		}
-		break;
-
-	case '=':
-		switch (next_char()) {
-		case '=':
-			push_token(TokenTag::EQUAL, 2);
-			break;
-		case '>':
-			push_token(TokenTag::ARROW, 2);
-			break;
-		default:
-			push_token(TokenTag::ASSIGN, 1);
-		}
-		break;
-
-	case '<':
-		switch (next_char()) {
-		case '=':
-			push_token(TokenTag::LTE, 2);
-			break;
-		default:
-			push_token(TokenTag::LT, 1);
-		}
-		break;
-
-	case '>':
-		switch (next_char()) {
-		case ')':
-			push_token(TokenTag::POLY_CLOSE, 2);
-			break;
-		case '=':
-			push_token(TokenTag::GTE, 2);
-			break;
-		default:
-			push_token(TokenTag::GT, 1);
-		}
-		break;
-
-	case '!':
-		switch (next_char()) {
-		case '=':
-			push_token(TokenTag::NOT_EQUAL, 2);
-			break;
-		default:
-			push_token(TokenTag::LOGIC_COMPL, 1);
-		}
-		break;
-
-	case '(':
-		switch (next_char()) {
-		case '<':
-			push_token(TokenTag::POLY_OPEN, 2);
-			break;
-		default:
-			push_token(TokenTag::PAREN_OPEN, 1);
-		}
-		break;
-
-	case ')':
-		push_token(TokenTag::PAREN_CLOSE, 1);
-		break;
-	case '{':
-		push_token(TokenTag::BRACE_OPEN, 1);
-		break;
-	case '}':
-		push_token(TokenTag::BRACE_CLOSE, 1);
-		break;
-	case '[':
-		push_token(TokenTag::BRACKET_OPEN, 1);
-		break;
-	case ']':
-		push_token(TokenTag::BRACKET_CLOSE, 1);
-		break;
-	case '~':
-		push_token(TokenTag::COMPL, 1);
-		break;
-	case ';':
-		push_token(TokenTag::SEMICOLON, 1);
-		break;
-	case '.':
-		push_token(TokenTag::DOT, 1);
-		break;
-	case ',':
-		push_token(TokenTag::COMMA, 1);
-		break;
-	case '@':
-		push_token(TokenTag::AT, 1);
-		break;
-	case '"': {
+	if (current_char() == '"') {
 		m_source_index += 1;
 		m_current_column += 1;
 
@@ -319,27 +196,27 @@ void Lexer::consume_token() {
 
 		char const* base_ptr = m_source.data() + i0;
 		m_tokens.push_back(
-		    {TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
+				{TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
 
 		m_current_column += 1;
 		m_source_index += 1;
-	} break;
-
-	default:
-		if (consume_identifier_or_keyword()) {
-			return;
-		} else if (consume_number()) {
-			return;
-		} else {
-			if (current_char() == '\n') {
-				m_current_line += 1;
-				m_current_column = 0;
-			} else {
-				m_current_column += 1;
-			}
-			m_source_index += 1;
-		}
+		return;
 	}
+
+	if (consume_identifier_or_keyword())
+		return;
+
+	if (consume_number())
+		return;
+
+	if (current_char() == '\n') {
+		m_current_line += 1;
+		m_current_column = 0;
+	} else {
+		m_current_column += 1;
+	}
+
+	m_source_index += 1;
 }
 
 bool Lexer::consume_number() {
