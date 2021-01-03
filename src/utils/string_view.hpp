@@ -3,11 +3,13 @@
 #include <iosfwd>
 
 struct string_view {
-	char const* m_data;
-	size_t m_size;
+	char const* m_data {nullptr};
+	size_t m_size {0};
 
+	string_view() = default;
 	string_view(char const*);
 	string_view(const std::string&);
+	string_view(char const*, size_t size);
 
 	int size() {
 		return m_size;
