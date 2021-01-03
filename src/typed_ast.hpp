@@ -7,6 +7,7 @@
 
 #include <climits>
 
+#include "./utils/interned_string.hpp"
 #include "token.hpp"
 #include "typechecker_types.hpp"
 #include "typed_ast_tag.hpp"
@@ -41,7 +42,9 @@ TypedAST* convert_ast(AST::AST*, Allocator& alloc);
 struct FunctionLiteral;
 
 struct Declaration : public TypedAST {
-	Token const* m_identifier_token;
+	InternedString m_identifier;
+	Token const* m_identifier_token {nullptr}; // used for error reports only. Is nullptr if the declaration doesn't come from parsing a source file
+
 	TypedAST* m_type_hint {nullptr};  // can be nullptr
 	TypedAST* m_value {nullptr}; // can be nullptr
 
@@ -55,9 +58,7 @@ struct Declaration : public TypedAST {
 	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
 
-	InternedString const& identifier_text() const {
-		return m_identifier_token->m_text;
-	}
+	InternedString const& identifier_text() const;
 
 	Declaration()
 	    : TypedAST {TypedASTTag::Declaration} {}

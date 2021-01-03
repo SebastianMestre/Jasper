@@ -20,13 +20,13 @@ int main(int argc, char** argv) {
 
 	if (argc < 2) {
 		std::cout << "Argument missing: source file" << std::endl;
-		return 0;
+		return 1;
 	}
 
 	std::ifstream in_fs(argv[1]);
 	if (!in_fs.good()) {
 		std::cout << "Failed to open '" << argv[1] << "'" << std::endl;
-		return 0;
+		return 1;
 	}
 
 	std::stringstream file_content;
