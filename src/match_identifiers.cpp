@@ -22,7 +22,7 @@ namespace TypeChecker {
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
-	env.declare(ast->identifier_text(), ast);
+	env.declare(ast);
 
 	if (ast->m_type_hint)
 		CHECK_AND_RETURN(match_identifiers(ast->m_type_hint, env));
@@ -109,7 +109,7 @@ namespace TypeChecker {
 	for (auto& arg : ast->m_args) {
 		if (arg.m_type_hint)
 			CHECK_AND_RETURN(match_identifiers(arg.m_type_hint, env));
-		env.declare(arg.identifier_text(), &arg);
+		env.declare(&arg);
 	}
 
 	// scan body
@@ -216,7 +216,7 @@ namespace TypeChecker {
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
-		env.declare(decl.identifier_text(), &decl);
+		env.declare(&decl);
 		decl.m_surrounding_function = env.current_function();
 	}
 

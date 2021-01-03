@@ -161,6 +161,7 @@ void eval_call_function(
 		assert(kv.second);
 		assert(kv.second->type() == ValueTag::Reference);
 		auto capture_value = unboxed(kv.second);
+		// TODO: I would like to get rid of this hash table access
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
 		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
 	}
@@ -256,14 +257,17 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 };
 
 void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
-	auto result = e.new_function(ast, {});
 
+	CapturesType captures;
+	captures.reserve(ast->m_captures.size());
 	for (auto const& capture : ast->m_captures) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
-		result->m_captures[capture.first] =
-		    e.m_env.m_stack[e.m_env.m_frame_ptr + capture.second.outer_frame_offset];
+		captures.push_back({
+			capture.first,
+			e.m_env.m_stack[e.m_env.m_frame_ptr + capture.second.outer_frame_offset]});
 	}
 
+	auto result = e.new_function(ast, std::move(captures));
 	e.m_env.push(result.get());
 };
 
