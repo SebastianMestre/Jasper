@@ -129,7 +129,7 @@ gc_ptr<Dictionary> Interpreter::new_dictionary(DictionaryType declarations) {
 	return result;
 }
 
-gc_ptr<Function> Interpreter::new_function(FunctionType def, RecordType s) {
+gc_ptr<Function> Interpreter::new_function(FunctionType def, CapturesType s) {
 	auto result = m_gc->new_function(def, std::move(s));
 	run_gc_if_needed();
 	return result;

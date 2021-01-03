@@ -106,7 +106,7 @@ Variant::Variant(InternedString constructor, Value* v)
     , m_constructor(constructor)
     , m_inner_value(v) {}
 
-Function::Function(FunctionType def, RecordType captures)
+Function::Function(FunctionType def, CapturesType captures)
     : Value(ValueTag::Function)
     , m_def(def)
     , m_captures(std::move(captures)) {}
