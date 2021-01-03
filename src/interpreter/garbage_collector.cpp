@@ -128,7 +128,7 @@ String* GC::new_string_raw(std::string s) {
 	return result;
 }
 
-gc_ptr<Function> GC::new_function(FunctionType def, RecordType captures) {
+gc_ptr<Function> GC::new_function(FunctionType def, CapturesType captures) {
 	auto result = new Function(std::move(def), std::move(captures));
 	m_blocks.push_back(result);
 	return result;
