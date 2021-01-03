@@ -31,8 +31,6 @@ struct Trie {
 	void insert(Entry);
 	bool has(string_view);
 	Entry longest_prefix_of(string_view);
-
-	void print(int n = 0, int d = 0) const;
 };
 
 Trie build_trie (std::vector<Trie::Entry> strings);

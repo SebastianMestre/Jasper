@@ -68,22 +68,6 @@ Trie::Entry Trie::longest_prefix_of(string_view haystack) {
 	return entries[entry_idx];
 }
 
-void print_space(int n){
-	for(int i = n; i--;)
-		std::cout << "   ";
-}
-
-void Trie::print(int n, int d) const {
-	for (int i = 0; i < 255; ++i) {
-		if (nodes[n].children[i] != nil) {
-			print_space(d);
-			std::cout << char(i) << " (" << i << ")\n";
-
-			print(nodes[n].children[i], d+1);
-		}
-	}
-}
-
 Trie build_trie (std::vector<Trie::Entry> entries) {
 	Trie result;
 	for (auto const& entry : entries)
