@@ -208,6 +208,15 @@ struct ConstructorExpression : public AST {
 	    : AST {ASTTag::ConstructorExpression} {}
 };
 
+struct Block;
+
+struct SequenceExpression : public AST {
+	Block* m_body;
+
+	SequenceExpression()
+	    : AST {ASTTag::SequenceExpression} {}
+};
+
 struct Block : public AST {
 	std::vector<AST*> m_body;
 

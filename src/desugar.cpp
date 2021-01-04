@@ -201,6 +201,11 @@ AST* desugar(MatchExpression* ast, Allocator& alloc) {
 	return ast;
 }
 
+AST* desugar(SequenceExpression* ast, Allocator& alloc) {
+	ast->m_body = static_cast<Block*>(desugar(ast->m_body, alloc));
+	return ast;
+}
+
 AST* desugar(AST* ast, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
@@ -243,6 +248,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(MatchExpression);
+		DISPATCH(SequenceExpression);
 
 		RETURN(TypeTerm);
 		RETURN(TypeVar);
