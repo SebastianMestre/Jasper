@@ -512,11 +512,17 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return match_expr;
 	}
 
-	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_string[int(TokenTag::KEYWORD_FN)], token)});
+	if (token->m_type == TokenTag::KEYWORD_SEQ) {
+		auto expr = parse_sequence_expression();
+		CHECK_AND_RETURN(result, expr);
+		return expr;
+	}
 
-	result.m_error.m_sub_errors.push_back({make_expected_error(
-	    token_string[int(TokenTag::IDENTIFIER)], token)});
+	result.m_error.m_sub_errors.push_back(
+	    {make_expected_error(token_string[int(TokenTag::KEYWORD_FN)], token)});
+
+	result.m_error.m_sub_errors.push_back(
+	    {make_expected_error(token_string[int(TokenTag::IDENTIFIER)], token)});
 
 	result.m_error.m_sub_errors.push_back(
 	    {make_expected_error(token_string[int(TokenTag::NUMBER)], token)});
@@ -874,6 +880,20 @@ Writer<AST::AST*> Parser::parse_match_expression() {
 	match->m_cases = std::move(cases);
 
 	return make_writer<AST::AST*>(match);
+}
+
+Writer<AST::AST*> Parser::parse_sequence_expression() {
+	Writer<AST::AST*> result = {
+	    {"Parse Error: Failed to parse sequence expression"}};
+
+	REQUIRE(result, TokenTag::KEYWORD_SEQ);
+	auto body = parse_block();
+	CHECK_AND_RETURN(result, body);
+
+	auto expr = m_ast_allocator->make<AST::SequenceExpression>();
+	expr->m_body = static_cast<AST::Block*>(body.m_result);
+
+	return make_writer<AST::AST*>(expr);
 }
 
 Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool required_type) {

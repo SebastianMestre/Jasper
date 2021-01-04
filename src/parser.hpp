@@ -37,6 +37,8 @@ struct Parser {
 	parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<AST::AST*> parse_top_level();
+
+	Writer<AST::AST*> parse_sequence_expression();
 	Writer<AST::Identifier*> parse_identifier(bool types_allowed = false);
 	Writer<AST::Declaration*> parse_declaration();
 	Writer<AST::AST*> parse_expression(int bp = 0);
@@ -54,12 +56,12 @@ struct Parser {
 	Writer<AST::AST*> parse_for_statement();
 	Writer<AST::AST*> parse_while_statement();
 	Writer<AST::AST*> parse_match_expression();
-	Writer<std::pair<Token const*, AST::AST*>>
-	    parse_name_and_type(bool required_type = false);
+	Writer<std::pair<Token const*, AST::AST*>> parse_name_and_type(
+	    bool required_type = false);
 	Writer<AST::AST*> parse_type_term();
 	Writer<std::vector<AST::AST*>> parse_type_term_arguments();
-	Writer<std::pair<std::vector<AST::Identifier>,std::vector<AST::AST*>>>
-	    parse_type_list(bool);
+	Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> parse_type_list(
+	    bool);
 	Writer<AST::AST*> parse_type_var();
 	Writer<AST::AST*> parse_type_function();
 
