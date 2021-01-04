@@ -196,6 +196,11 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 			e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
 		}
 
+		// this feels really dumb:
+		// we get a value on the stack, then we move it to the return value
+		// slot, then we pop some stuff off the stack, and put it back on the
+		// stack. It is doubly dumb when we eval a seq-expr (because it does a
+		// save-pop sequence)
 		eval(callee->m_def->m_body, e);
 		e.save_return_value(e.m_env.pop_unsafe());
 
