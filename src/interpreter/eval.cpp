@@ -146,30 +146,7 @@ auto is_callable_value(Value* v) -> bool {
 	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
-void eval_call_function(
-    gc_ptr<Function> callee, int arg_count, Interpreter& e) {
-
-	// TODO: error handling ?
-	assert(callee->m_def->m_args.size() == arg_count);
-
-	// TODO: This is a big hack. pushing nullptr into the
-	// stack should actually never happen.
-	for (int i = callee->m_captures.size(); i--;)
-		e.m_env.push(nullptr);
-
-	for (auto& kv : callee->m_captures) {
-		assert(kv.second);
-		assert(kv.second->type() == ValueTag::Reference);
-		auto capture_value = unboxed(kv.second);
-		// TODO: I would like to get rid of this hash table access
-		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
-	}
-
-	assert(callee->m_def->m_body->type() == TypedASTTag::Block);
-	auto* body = static_cast<TypedAST::Block*>(callee->m_def->m_body);
-	eval(body, e);
-}
+void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {}
 
 void eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
@@ -189,36 +166,59 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	e.m_env.start_stack_region();
-
-	// arguments go before the frame pointer
+	auto callee_ = callee;
 	if (callee->type() == ValueTag::Function) {
+		gc_ptr<Function> callee = static_cast<Function*>(callee_);
+
+		// TODO: error handling ?
+		assert(callee->m_def->m_args.size() == arg_count);
+
+		e.m_env.start_stack_region();
 		for (auto expr : arglist) {
 			eval(expr, e);
-			e.m_env.m_stack.back() = e.new_reference(unboxed(e.m_env.m_stack.back())).get();
+			e.m_env.m_stack.back() =
+			    e.new_reference(unboxed(e.m_env.m_stack.back())).get();
 		}
-	} else {
-		for (auto expr : arglist) {
-			eval(expr, e);
+		// arguments go before the frame pointer
+		e.m_env.start_stack_frame();
+
+		// TODO: This is a big hack. pushing nullptr into the
+		// stack should actually never happen.
+		for (int i = callee->m_captures.size(); i--;)
+			e.m_env.push(nullptr);
+
+		for (auto& kv : callee->m_captures) {
+			assert(kv.second);
+			assert(kv.second->type() == ValueTag::Reference);
+			auto capture_value = unboxed(kv.second);
+			// TODO: I would like to get rid of this hash table access
+			auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
+			e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
 		}
-	}
 
-	e.m_env.start_stack_frame();
+		eval(callee->m_def->m_body, e);
+		e.save_return_value(e.m_env.pop_unsafe());
 
-	if (callee->type() == ValueTag::Function) {
-		eval_call_function(static_cast<Function*>(callee), arg_count, e);
+		e.m_env.end_stack_frame();
+		e.m_env.end_stack_region();
+		e.m_env.push(e.fetch_return_value());
 	} else if (callee->type() == ValueTag::NativeFunction) {
+		e.m_env.start_stack_region();
+		for (auto expr : arglist) {
+			eval(expr, e);
+		}
+		// arguments go before the frame pointer
+		e.m_env.start_stack_frame();
+
 		eval_call_native_function(
 		    static_cast<NativeFunction*>(callee), arg_count, e);
+		e.m_env.end_stack_frame();
+		e.m_env.end_stack_region();
+		e.m_env.push(e.fetch_return_value());
 	} else {
-		assert(0);
+		Log::fatal("Attempted to call a non function at runtime");
 	}
-
-	e.m_env.end_stack_frame();
-	e.m_env.end_stack_region();
-
-	e.m_env.push(e.fetch_return_value());
-};
+}
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
@@ -348,6 +348,12 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	}
 }
 
+void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
+	eval(ast->m_body, e);
+	assert(e.m_return_value);
+	e.m_env.push(e.fetch_return_value());
+}
+
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	eval(ast->m_condition, e);
 	auto condition_result = e.m_env.pop();
@@ -472,6 +478,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
