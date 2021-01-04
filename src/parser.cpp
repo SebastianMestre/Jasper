@@ -690,7 +690,7 @@ Writer<AST::AST*> Parser::parse_function() {
 		auto expression = parse_expression();
 		CHECK_AND_RETURN(result, expression);
 
-		auto e = m_ast_allocator->make<AST::ShortFunctionLiteral>();
+		auto e = m_ast_allocator->make<AST::FunctionLiteral>();
 		e->m_body = expression.m_result;
 		e->m_args = std::move(args);
 
@@ -699,7 +699,7 @@ Writer<AST::AST*> Parser::parse_function() {
 		auto block = parse_block();
 		CHECK_AND_RETURN(result, block);
 
-		auto e = m_ast_allocator->make<AST::FunctionLiteral>();
+		auto e = m_ast_allocator->make<AST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
 		e->m_args = std::move(args);
 
