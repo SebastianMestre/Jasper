@@ -164,14 +164,16 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
+	e.m_env.start_stack_region();
+
 	auto callee_ = callee;
 	if (callee->type() == ValueTag::Function) {
+
 		gc_ptr<Function> callee = static_cast<Function*>(callee_);
 
 		// TODO: error handling ?
 		assert(callee->m_def->m_args.size() == arg_count);
 
-		e.m_env.start_stack_region();
 		for (auto expr : arglist) {
 			eval(expr, e);
 			e.m_env.m_stack.back() =
@@ -197,11 +199,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		eval(callee->m_def->m_body, e);
 		e.save_return_value(e.m_env.pop_unsafe());
 
-		e.m_env.end_stack_frame();
-		e.m_env.end_stack_region();
-		e.m_env.push(e.fetch_return_value());
 	} else if (callee->type() == ValueTag::NativeFunction) {
-		e.m_env.start_stack_region();
 		for (auto expr : arglist) {
 			eval(expr, e);
 		}
@@ -210,12 +208,13 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 		eval_call_native_function(
 		    static_cast<NativeFunction*>(callee), arg_count, e);
-		e.m_env.end_stack_frame();
-		e.m_env.end_stack_region();
-		e.m_env.push(e.fetch_return_value());
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
+
+	e.m_env.end_stack_frame();
+	e.m_env.end_stack_region();
+	e.m_env.push(e.fetch_return_value());
 }
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
