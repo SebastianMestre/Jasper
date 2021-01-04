@@ -316,7 +316,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 
 #define REJECT(type)                                                           \
 	case ASTTag::type:                                                         \
-		assert(0 && "use of " #type " is forbidden in convert")
+		Log::fatal("use of " #type " is forbidden in convert")
 
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);

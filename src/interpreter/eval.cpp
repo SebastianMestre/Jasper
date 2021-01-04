@@ -1,10 +1,11 @@
 #include "eval.hpp"
 
-#include <iostream>
+#include <sstream>
 
 #include <cassert>
 #include <climits>
 
+#include "../log/log.hpp"
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "../utils/span.hpp"
@@ -71,8 +72,7 @@ void eval(TypedAST::ObjectLiteral* ast, Interpreter& e) {
 			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text()] = value.get();
 		} else {
-			std::cerr << "ERROR: declaration in object must have a value";
-			assert(0);
+			Log::fatal("declaration in object must have a value");
 		}
 	}
 
@@ -88,8 +88,7 @@ void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
-			std::cerr << "ERROR: declaration in dictionary must have value";
-			assert(0);
+			Log::fatal("declaration in dictionary must have a value");
 		}
 	}
 
@@ -111,8 +110,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
-			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
-			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
+			Log::fatal(("MISSING LAYOUT FOR AN IDENTIFIER" + ast->text().str()).c_str());
 		}
 		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
 	} else {
@@ -494,8 +492,12 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(Constructor);
 	}
 
-	std::cerr << "@ Internal Error: unhandled case in eval:\n";
-	std::cerr << "@   - AST type is: " << typed_ast_string[(int)ast->type()] << '\n';
+	{
+		std::stringstream ss;
+		ss << "(internal) unhandled case in eval: "
+		   << typed_ast_string[(int)ast->type()];
+		Log::fatal(ss.str().c_str());
+	}
 }
 
 } // namespace Interpreter

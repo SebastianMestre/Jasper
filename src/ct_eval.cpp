@@ -1,10 +1,11 @@
 #include "ct_eval.hpp"
 
+#include "./log/log.hpp"
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_allocator.hpp"
 
-#include <iostream>
+#include <sstream>
 
 #include <cassert>
 
@@ -405,9 +406,12 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(TypeTerm);
 	}
 
-	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "
-	          << typed_ast_string[int(ast->type())] << "\n";
-	assert(0);
+	{
+		std::stringstream ss;
+		ss << "(internal) Unhandled case in ct_eval : "
+		   << typed_ast_string[int(ast->type())];
+		Log::fatal(ss.str().c_str());
+	}
 
 #undef DISPATCH
 #undef RETURN

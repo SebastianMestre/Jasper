@@ -104,7 +104,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
-		// TODO: do something better, use the type hints
+		// TODO: do return type hint
 		ast->m_return_type = tc.new_var();
 
 		std::vector<MonoId> arg_types;

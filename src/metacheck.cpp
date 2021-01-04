@@ -1,9 +1,10 @@
 #include "metacheck.hpp"
 
+#include "./log/log.hpp"
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
 
-#include <iostream>
+#include <sstream>
 #include <cassert>
 
 namespace TypeChecker {
@@ -256,7 +257,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 				for (auto other : decl->m_references)
 					if (tc.m_core.m_meta_core.find(other->m_meta_type) ==
 					    tc.meta_value())
-						assert(0 && "value referenced in a type definition");
+						Log::fatal("Value referenced in a type definition");
 	}
 }
 
@@ -339,9 +340,12 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		REJECT(Constructor);
 	}
 
-	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "
-	          << typed_ast_string[int(ast->type())] << "\n";
-	assert(0);
+	{
+		std::stringstream ss;
+		ss << "(internal) Unhandled case in metacheck : "
+		   << typed_ast_string[int(ast->type())];
+		Log::fatal(ss.str().c_str());
+	}
 
 #undef DISPATCH
 #undef LITERAL
