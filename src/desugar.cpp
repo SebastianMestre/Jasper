@@ -1,10 +1,11 @@
 #include "desugar.hpp"
 
+#include "./log/log.hpp"
 #include "ast.hpp"
 #include "ast_allocator.hpp"
 
 #include <cassert>
-#include <iostream>
+#include <sstream>
 
 namespace AST {
 
@@ -256,9 +257,12 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		RETURN(StructExpression);
 		RETURN(TupleExpression);
 	}
-	std::cerr << "Error: AST type not handled in desugar: "
-	          << ast_string[(int)ast->type()] << std::endl;
-	assert(0);
+
+	{
+		std::stringstream ss;
+		ss << "(internal) AST type not handled in desugar: " << ast_string[(int)ast->type()];
+		Log::fatal(ss.str().c_str());
+	}
 
 #undef RETURN
 #undef DISPATCH
