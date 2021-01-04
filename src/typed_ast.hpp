@@ -249,6 +249,15 @@ struct ConstructorExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::ConstructorExpression} {}
 };
 
+struct Block;
+
+struct SequenceExpression : public TypedAST {
+	Block* m_body;
+
+	SequenceExpression()
+	    : TypedAST {TypedASTTag::SequenceExpression} {}
+};
+
 struct Block : public TypedAST {
 	std::vector<TypedAST*> m_body;
 
