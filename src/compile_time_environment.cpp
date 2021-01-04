@@ -53,6 +53,18 @@ void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
 }
 
+TypedAST::SequenceExpression* CompileTimeEnvironment::current_seq_expr() {
+	return m_seq_expr_stack.empty() ? nullptr : m_seq_expr_stack.back();
+}
+
+void CompileTimeEnvironment::enter_seq_expr(TypedAST::SequenceExpression* seq_expr) {
+	m_seq_expr_stack.push_back(seq_expr);
+}
+
+void CompileTimeEnvironment::exit_seq_expr() {
+	m_seq_expr_stack.pop_back();
+}
+
 TypedAST::FunctionLiteral* CompileTimeEnvironment::current_function() {
 	return m_function_stack.empty() ? nullptr : m_function_stack.back();
 }

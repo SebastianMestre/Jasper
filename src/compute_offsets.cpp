@@ -76,11 +76,7 @@ void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
 	}
 
 	// TODO? store the frame size
-
-	// scan body
-	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body);
-	compute_offsets(body, frame_offset);
+	compute_offsets(ast->m_body, frame_offset);
 }
 
 void compute_offsets(TypedAST::ArrayLiteral* ast, int frame_offset) {
@@ -144,6 +140,10 @@ void compute_offsets(TypedAST::ConstructorExpression* ast, int frame_offset) {
 		compute_offsets(arg, frame_offset);
 }
 
+void compute_offsets(TypedAST::SequenceExpression* ast, int frame_offset) {
+	compute_offsets(ast->m_body, frame_offset);
+}
+
 void compute_offsets(TypedAST::DeclarationList* ast, int frame_offset) {
 	for (auto& decl : ast->m_declarations) {
 		if (decl.m_value)
@@ -187,6 +187,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
 		DISPATCH(ForStatement);
