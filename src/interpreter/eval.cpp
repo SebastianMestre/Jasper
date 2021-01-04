@@ -144,7 +144,33 @@ auto is_callable_value(Value* v) -> bool {
 	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
-void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {}
+void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {
+
+	// TODO: error handling ?
+	assert(callee->m_def->m_args.size() == arg_count);
+
+	// TODO: This is a big hack. pushing nullptr into the
+	// stack should actually never happen.
+	for (int i = callee->m_captures.size(); i--;)
+		e.m_env.push(nullptr);
+
+	for (auto& kv : callee->m_captures) {
+		assert(kv.second);
+		assert(kv.second->type() == ValueTag::Reference);
+		auto capture_value = unboxed(kv.second);
+		// TODO: I would like to get rid of this hash table access
+		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
+		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
+	}
+
+	// this feels really dumb:
+	// we get a value on the stack, then we move it to the return value
+	// slot, then we pop some stuff off the stack, and put it back on the
+	// stack. It is doubly dumb when we eval a seq-expr (because it does a
+	// save-pop sequence)
+	eval(callee->m_def->m_body, e);
+	e.save_return_value(e.m_env.pop_unsafe());
+}
 
 void eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
@@ -166,14 +192,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	e.m_env.start_stack_region();
 
-	auto callee_ = callee;
 	if (callee->type() == ValueTag::Function) {
-
-		gc_ptr<Function> callee = static_cast<Function*>(callee_);
-
-		// TODO: error handling ?
-		assert(callee->m_def->m_args.size() == arg_count);
-
 		for (auto expr : arglist) {
 			eval(expr, e);
 			e.m_env.m_stack.back() =
@@ -181,29 +200,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		}
 		// arguments go before the frame pointer
 		e.m_env.start_stack_frame();
-
-		// TODO: This is a big hack. pushing nullptr into the
-		// stack should actually never happen.
-		for (int i = callee->m_captures.size(); i--;)
-			e.m_env.push(nullptr);
-
-		for (auto& kv : callee->m_captures) {
-			assert(kv.second);
-			assert(kv.second->type() == ValueTag::Reference);
-			auto capture_value = unboxed(kv.second);
-			// TODO: I would like to get rid of this hash table access
-			auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-			e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
-		}
-
-		// this feels really dumb:
-		// we get a value on the stack, then we move it to the return value
-		// slot, then we pop some stuff off the stack, and put it back on the
-		// stack. It is doubly dumb when we eval a seq-expr (because it does a
-		// save-pop sequence)
-		eval(callee->m_def->m_body, e);
-		e.save_return_value(e.m_env.pop_unsafe());
-
+		eval_call_function(static_cast<Function*>(callee), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist) {
 			eval(expr, e);
