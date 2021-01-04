@@ -9,8 +9,8 @@
 	X(ObjectLiteral)                                                           \
 	X(ArrayLiteral)                                                            \
 	X(DictionaryLiteral)                                                       \
+	X(BlockFunctionLiteral)                                                    \
 	X(FunctionLiteral)                                                         \
-	X(ShortFunctionLiteral)                                                    \
                                                                                \
 	X(DeclarationList)                                                         \
 	X(Declaration)                                                             \

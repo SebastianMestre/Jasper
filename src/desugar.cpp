@@ -52,30 +52,24 @@ AST* desugar(DictionaryLiteral* ast, Allocator& alloc) {
 }
 
 AST* desugar(FunctionLiteral* ast, Allocator& alloc) {
+	ast->m_body = desugar(ast->m_body, alloc);
+
 	for (auto& arg : ast->m_args)
 		desugar(&arg, alloc);
-
-	ast->m_body = desugar(ast->m_body, alloc);
 
 	return ast;
 }
 
-AST* desugar(ShortFunctionLiteral* ast, Allocator& alloc) {
-	auto return_stmt = alloc.make<ReturnStatement>();
-	return_stmt->m_value = desugar(ast->m_body, alloc);
+AST* desugar(BlockFunctionLiteral* ast, Allocator& alloc) {
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = static_cast<Block*>(ast->m_body);
+	ast->m_body = nullptr;
 
-	auto block = alloc.make<Block>();
-	block->m_body.push_back(return_stmt);
+	auto result = alloc.make<FunctionLiteral>();
+	result->m_body = seq_expr;
+	result->m_args = std::move(ast->m_args);
 
-	auto func = alloc.make<FunctionLiteral>();
-	func->m_args = std::move(ast->m_args);
-
-	for (auto& arg : func->m_args)
-		desugar(&arg, alloc);
-
-	func->m_body = block;
-
-	return func;
+	return desugar(result, alloc);
 }
 
 AST* desugarPizza(BinaryExpression* ast, Allocator& alloc) {
@@ -229,8 +223,8 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		DISPATCH(ObjectLiteral);
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
+		DISPATCH(BlockFunctionLiteral);
 		DISPATCH(FunctionLiteral);
-		DISPATCH(ShortFunctionLiteral);
 
 		RETURN(Identifier);
 		DISPATCH(BinaryExpression);
