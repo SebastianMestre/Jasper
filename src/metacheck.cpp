@@ -55,10 +55,7 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 		assign_meta_type(arg.m_meta_type, tc.meta_value(), tc);
 	}
 
-	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body);
-	for (auto& child : body->m_body)
-		metacheck(child, tc);
+	metacheck(ast->m_body, tc);
 }
 
 void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
@@ -162,6 +159,11 @@ void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 		metacheck(arg, tc);
 		tc.m_core.m_meta_core.unify(arg->m_meta_type, tc.meta_value());
 	}
+}
+
+void metacheck(TypedAST::SequenceExpression* ast, TypeChecker& tc) {
+	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
+	metacheck(ast->m_body, tc);
 }
 
 // statements
@@ -317,6 +319,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
