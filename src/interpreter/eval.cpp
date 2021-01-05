@@ -293,7 +293,9 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
-	e.m_env.m_stack.back() = variant_inner;
+	// We also wrap it in a reference so it can be captured
+	auto ref = e.new_reference(unboxed(variant_inner));
+	e.m_env.m_stack.back() = ref.get();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
