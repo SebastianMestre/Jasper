@@ -644,6 +644,23 @@ void interpreter_tests(Test::Tester& tests) {
 	    }}));
 
 
+	// Testing for a bug where we could not capture the inner variable that gets
+	// bound in a match expression
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"jp(
+		A := union { X : int(<>); };
+		__invoke := fn() {
+			outter := A(<>).X{ 10 };
+			k := match(outter) {
+				X { inner } => fn() => inner;
+			};
+			return k();
+		}
+		)jp",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 10);
+	    }}));
+
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 		// AST for a simple language
