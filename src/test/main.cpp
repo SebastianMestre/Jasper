@@ -655,7 +655,7 @@ void interpreter_tests(Test::Tester& tests) {
 				X { inner } => fn() => inner;
 			};
 			return k();
-		}
+		};
 		)jp",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 10);
