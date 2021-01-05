@@ -178,8 +178,11 @@ bool Lexer::consume_string() {
 	}
 
 	char const* base_ptr = m_source.data() + i0;
-	m_tokens.push_back(
-			{TokenTag::STRING, InternedString {base_ptr, len}, l0, c0, m_current_line, m_current_column});
+	m_tokens.push_back({
+		TokenTag::STRING,
+		InternedString {base_ptr, len},
+		l0, c0,
+		m_current_line, m_current_column});
 
 	m_current_column += 1;
 	m_source_index += 1;
