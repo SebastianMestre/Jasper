@@ -13,6 +13,10 @@ string_view::string_view(std::string const& str)
     : m_data {str.data()}
     , m_size {str.size()} {}
 
+string_view::string_view(char const* data, size_t size)
+    : m_data {data}
+    , m_size {size} {}
+
 std::ostream& operator<<(std::ostream& o, string_view const& sv) {
 	for (char c : sv)
 		o << c;

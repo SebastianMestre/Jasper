@@ -15,6 +15,7 @@ COMMON_DIR := .
 COMMON_TARGETS := \
 	algorithms/tarjan_solver \
 	algorithms/unification \
+	algorithms/trie \
 	log/log \
 	utils/polymorphic_block_allocator \
 	utils/polymorphic_dumb_allocator \
