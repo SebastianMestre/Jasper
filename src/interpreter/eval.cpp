@@ -1,10 +1,11 @@
 #include "eval.hpp"
 
-#include <iostream>
+#include <sstream>
 
 #include <cassert>
 #include <climits>
 
+#include "../log/log.hpp"
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "../utils/span.hpp"
@@ -71,8 +72,7 @@ void eval(TypedAST::ObjectLiteral* ast, Interpreter& e) {
 			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text()] = value.get();
 		} else {
-			std::cerr << "ERROR: declaration in object must have a value";
-			assert(0);
+			Log::fatal("declaration in object must have a value");
 		}
 	}
 
@@ -88,8 +88,7 @@ void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 			auto value = e.m_env.pop();
 			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
-			std::cerr << "ERROR: declaration in dictionary must have value";
-			assert(0);
+			Log::fatal("declaration in dictionary must have a value");
 		}
 	}
 
@@ -111,8 +110,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
-			std::cerr << "MISSING LAYOUT FOR IDENTIFIER " << ast->text() << "\n";
-			assert(0 && "MISSING LAYOUT FOR AN IDENTIFIER");
+			Log::fatal(("MISSING LAYOUT FOR AN IDENTIFIER" + ast->text().str()).c_str());
 		}
 		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
 	} else {
@@ -146,8 +144,7 @@ auto is_callable_value(Value* v) -> bool {
 	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
-void eval_call_function(
-    gc_ptr<Function> callee, int arg_count, Interpreter& e) {
+void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
@@ -166,9 +163,13 @@ void eval_call_function(
 		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
 	}
 
-	assert(callee->m_def->m_body->type() == TypedASTTag::Block);
-	auto* body = static_cast<TypedAST::Block*>(callee->m_def->m_body);
-	eval(body, e);
+	// this feels really dumb:
+	// we get a value on the stack, then we move it to the return value
+	// slot, then we pop some stuff off the stack, and put it back on the
+	// stack. It is doubly dumb when we eval a seq-expr (because it does a
+	// save-pop sequence)
+	eval(callee->m_def->m_body, e);
+	e.save_return_value(e.m_env.pop_unsafe());
 }
 
 void eval_call_native_function(
@@ -191,34 +192,32 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	e.m_env.start_stack_region();
 
-	// arguments go before the frame pointer
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
-			e.m_env.m_stack.back() = e.new_reference(unboxed(e.m_env.m_stack.back())).get();
+			e.m_env.m_stack.back() =
+			    e.new_reference(unboxed(e.m_env.m_stack.back())).get();
 		}
-	} else {
-		for (auto expr : arglist) {
-			eval(expr, e);
-		}
-	}
-
-	e.m_env.start_stack_frame();
-
-	if (callee->type() == ValueTag::Function) {
+		// arguments go before the frame pointer
+		e.m_env.start_stack_frame();
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
+		for (auto expr : arglist) {
+			eval(expr, e);
+		}
+		// arguments go before the frame pointer
+		e.m_env.start_stack_frame();
+
 		eval_call_native_function(
 		    static_cast<NativeFunction*>(callee), arg_count, e);
 	} else {
-		assert(0);
+		Log::fatal("Attempted to call a non function at runtime");
 	}
 
 	e.m_env.end_stack_frame();
 	e.m_env.end_stack_region();
-
 	e.m_env.push(e.fetch_return_value());
-};
+}
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
@@ -293,7 +292,9 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
-	e.m_env.m_stack.back() = variant_inner;
+	// We also wrap it in a reference so it can be captured
+	auto ref = e.new_reference(unboxed(variant_inner));
+	e.m_env.m_stack.back() = ref.get();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -346,6 +347,12 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 
 		e.m_env.push(result.get());
 	}
+}
+
+void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
+	eval(ast->m_body, e);
+	assert(e.m_return_value);
+	e.m_env.push(e.fetch_return_value());
 }
 
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
@@ -472,6 +479,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
@@ -487,8 +495,12 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(Constructor);
 	}
 
-	std::cerr << "@ Internal Error: unhandled case in eval:\n";
-	std::cerr << "@   - AST type is: " << typed_ast_string[(int)ast->type()] << '\n';
+	{
+		std::stringstream ss;
+		ss << "(internal) unhandled case in eval: "
+		   << typed_ast_string[(int)ast->type()];
+		Log::fatal(ss.str().c_str());
+	}
 }
 
 } // namespace Interpreter

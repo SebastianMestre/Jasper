@@ -113,10 +113,7 @@ namespace TypeChecker {
 	}
 
 	// scan body
-	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body);
-	for (auto& child : body->m_body)
-		CHECK_AND_RETURN(match_identifiers(child, env));
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 
 	env.end_scope();
 	env.exit_function();
@@ -214,6 +211,11 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
+    TypedAST::SequenceExpression* ast, Frontend::CompileTimeEnvironment& env) {
+	return match_identifiers(ast->m_body, env);
+}
+
+[[nodiscard]] ErrorReport match_identifiers(
     TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		env.declare(&decl);
@@ -287,6 +289,7 @@ namespace TypeChecker {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
 		DISPATCH(ForStatement);

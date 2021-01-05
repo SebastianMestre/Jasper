@@ -12,6 +12,7 @@ namespace TypedAST {
 struct Declaration;
 struct DeclarationList;
 struct FunctionLiteral;
+struct SequenceExpression;
 
 } // namespace TypedAST
 
@@ -27,6 +28,7 @@ struct CompileTimeEnvironment {
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<TypedAST::FunctionLiteral*> m_function_stack;
+	std::vector<TypedAST::SequenceExpression*> m_seq_expr_stack;
 	TypedAST::Declaration* m_current_decl {nullptr};
 
 	// TODO: is this a good place to put this?
@@ -37,6 +39,10 @@ struct CompileTimeEnvironment {
 	void declare(TypedAST::Declaration*);
 
 	TypedAST::Declaration* access(InternedString const&);
+
+	TypedAST::SequenceExpression* current_seq_expr();
+	void enter_seq_expr(TypedAST::SequenceExpression*);
+	void exit_seq_expr();
 
 	TypedAST::FunctionLiteral* current_function();
 	void enter_function(TypedAST::FunctionLiteral*);

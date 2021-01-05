@@ -78,6 +78,7 @@ constexpr const char* token_string[] = {
 	"KEYWORD_FOR",
 	"KEYWORD_WHILE",
 	"KEYWORD_MATCH",
+	"KEYWORD_SEQ",
 
 	"KEYWORD_UNION",
 	"KEYWORD_TUPLE",
@@ -164,6 +165,7 @@ enum class TokenTag {
 	KEYWORD_FOR,
 	KEYWORD_WHILE,
 	KEYWORD_MATCH,
+	KEYWORD_SEQ,
 
 	KEYWORD_UNION,
 	KEYWORD_TUPLE,

@@ -114,20 +114,20 @@ struct DictionaryLiteral : public AST {
 	    : AST {ASTTag::DictionaryLiteral} {}
 };
 
+struct BlockFunctionLiteral : public AST {
+	AST* m_body;
+	std::vector<Declaration> m_args;
+
+	BlockFunctionLiteral()
+	    : AST {ASTTag::BlockFunctionLiteral} {}
+};
+
 struct FunctionLiteral : public AST {
 	AST* m_body;
 	std::vector<Declaration> m_args;
 
 	FunctionLiteral()
 	    : AST {ASTTag::FunctionLiteral} {}
-};
-
-struct ShortFunctionLiteral : public AST {
-	AST* m_body;
-	std::vector<Declaration> m_args;
-
-	ShortFunctionLiteral()
-	    : AST {ASTTag::ShortFunctionLiteral} {}
 };
 
 struct Identifier : public AST {
@@ -206,6 +206,15 @@ struct ConstructorExpression : public AST {
 
 	ConstructorExpression()
 	    : AST {ASTTag::ConstructorExpression} {}
+};
+
+struct Block;
+
+struct SequenceExpression : public AST {
+	Block* m_body;
+
+	SequenceExpression()
+	    : AST {ASTTag::SequenceExpression} {}
 };
 
 struct Block : public AST {

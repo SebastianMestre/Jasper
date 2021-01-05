@@ -109,7 +109,7 @@ void print_impl(Block* ast, int d) {
 	std::cout << "])";
 }
 
-void print_impl(FunctionLiteral* ast, int d) {
+void print_impl(BlockFunctionLiteral* ast, int d) {
 	print_indentation(d);
 	std::cout << "(function-literal [";
 	for (auto arg : ast->m_args) {
@@ -123,7 +123,7 @@ void print_impl(FunctionLiteral* ast, int d) {
 	std::cout << ")";
 }
 
-void print_impl(ShortFunctionLiteral* ast, int d) {
+void print_impl(FunctionLiteral* ast, int d) {
 	print_indentation(d);
 	std::cout << "(short-function-literal [";
 	for (auto arg : ast->m_args) {
@@ -220,6 +220,13 @@ void print_impl(MatchExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print_impl(SequenceExpression* ast, int d) {
+	print_indentation(d);
+	std::cout << "(sequence-expr";
+	print(ast->m_body, d + 2);
+	std::cout << ")";
+}
+
 void print_impl(ReturnStatement* ast, int d) {
 	print_indentation(d);
 	std::cout << "(return-stmt\n";
@@ -303,10 +310,10 @@ void print_impl(AST* ast, int d) {
 		return print_impl(static_cast<ArrayLiteral*>(ast), d);
 	case ASTTag::DictionaryLiteral:
 		return print_impl(static_cast<DictionaryLiteral*>(ast), d);
+	case ASTTag::BlockFunctionLiteral:
+		return print_impl(static_cast<BlockFunctionLiteral*>(ast), d);
 	case ASTTag::FunctionLiteral:
 		return print_impl(static_cast<FunctionLiteral*>(ast), d);
-	case ASTTag::ShortFunctionLiteral:
-		return print_impl(static_cast<ShortFunctionLiteral*>(ast), d);
 
 	case ASTTag::Identifier:
 		return print_impl(static_cast<Identifier*>(ast), d);
@@ -320,6 +327,8 @@ void print_impl(AST* ast, int d) {
 		return print_impl(static_cast<TernaryExpression*>(ast), d);
 	case ASTTag::AccessExpression:
 		return print_impl(static_cast<AccessExpression*>(ast), d);
+	case ASTTag::SequenceExpression:
+		return print_impl(static_cast<SequenceExpression*>(ast), d);
 
 	case ASTTag::DeclarationList:
 		return print_impl(static_cast<DeclarationList*>(ast), d);
