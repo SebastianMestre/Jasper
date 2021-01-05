@@ -6,61 +6,61 @@ Trie::Node::Node() {
 	children.fill(nil);
 }
 
-Trie::Trie (){
+Trie::Trie() {
 	nodes.push_back(Node {});
 }
 
-uint16_t Trie::go(uint16_t n, uint8_t uc) {
-	return nodes[n].children[uc];
+uint8_t Trie::go(uint8_t node, uint8_t uc) {
+	return nodes[node].children[uc];
 }
 
 void Trie::insert(Entry entry) {
 	int entry_idx = entries.size();
 	entries.push_back(entry);
 
-	int n = 0;
+	int node = 0;
 	for (char c : entry.text) {
 		uint8_t uc = c;
-		auto nn = go(n, uc);
-		if (nn == nil) {
-			nn = nodes[n].children[uc] = nodes.size();
+		auto next_node = go(node, uc);
+		if (next_node == nil) {
+			next_node = nodes[node].children[uc] = nodes.size();
 			nodes.push_back(Node {});
 		}
 
-		n = nn;
+		node = next_node;
 	}
 
-	assert(nodes[n].entry == nil);
-	nodes[n].entry = entry_idx;
+	assert(nodes[node].entry == nil);
+	nodes[node].entry = entry_idx;
 }
 
 bool Trie::has(string_view str) {
-	int n = 0;
+	int node = 0;
 	for (char c : str) {
 		uint8_t uc = c;
-		auto nn = go(n, uc);
-		if (nn == nil)
+		auto next_node = go(node, uc);
+		if (next_node == nil)
 			return false;
 
-		n = nn;
+		node = next_node;
 	}
-	return nodes[n].entry != nil;
+	return nodes[node].entry != nil;
 }
 
 Trie::Entry Trie::longest_prefix_of(string_view haystack) {
-	uint16_t entry_idx = nil;
-	uint16_t n = 0;
+	uint8_t entry_idx = nil;
+	uint8_t node = 0;
 
 	for (char c : haystack) {
 		uint8_t uc = c;
-		uint16_t nn = go(n, uc);
-		if (nn == nil)
+		uint8_t next_node = go(node, uc);
+		if (next_node == nil)
 			break;
 
-		n = nn;
+		node = next_node;
 
-		if (nodes[n].entry != nil)
-			entry_idx = nodes[n].entry;
+		if (nodes[node].entry != nil)
+			entry_idx = nodes[node].entry;
 	}
 
 	if (entry_idx == nil)
@@ -68,10 +68,9 @@ Trie::Entry Trie::longest_prefix_of(string_view haystack) {
 	return entries[entry_idx];
 }
 
-Trie build_trie (std::vector<Trie::Entry> entries) {
+Trie build_trie(std::vector<Trie::Entry> entries) {
 	Trie result;
 	for (auto const& entry : entries)
 		result.insert(entry);
 	return result;
 }
-
