@@ -678,8 +678,8 @@ void interpreter_tests(Test::Tester& tests) {
 		eval := fn(e, c) => match(e : expr(<>)) {
 			val { v } => c(v);
 			add { v } => eval(v.left,  fn(x) =>
-						 eval(v.right, fn(y) =>
-						 c(x + y)));
+			             eval(v.right, fn(y) =>
+			             c(x + y)));
 		};
 
 		__invoke := fn() => eval(
