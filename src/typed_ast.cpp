@@ -211,6 +211,12 @@ TypedAST* convert_ast(AST::ConstructorExpression* ast, Allocator& alloc) {
 	return typed_ast;
 }
 
+TypedAST* convert_ast(AST::SequenceExpression* ast, Allocator& alloc) {
+	auto result = alloc.make<SequenceExpression>();
+	result->m_body = static_cast<Block*>(convert_ast(ast->m_body, alloc));
+	return result;
+}
+
 TypedAST* convert_ast(AST::Block* ast, Allocator& alloc) {
 	auto typed_block = alloc.make<Block>();
 
@@ -310,7 +316,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 
 #define REJECT(type)                                                           \
 	case ASTTag::type:                                                         \
-		assert(0 && "use of " #type " is forbidden in convert")
+		Log::fatal("use of " #type " is forbidden in convert")
 
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);
@@ -321,6 +327,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
+		REJECT(BlockFunctionLiteral);
 
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
@@ -329,6 +336,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 		REJECT(BinaryExpression);
 
 		DISPATCH(Block);

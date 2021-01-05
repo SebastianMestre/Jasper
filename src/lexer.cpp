@@ -133,6 +133,7 @@ std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
 		{{"array"}, TokenTag::KEYWORD_ARRAY},
 		{{"dict"}, TokenTag::KEYWORD_DICT},
 		{{"null"}, TokenTag::KEYWORD_NULL},
+		{{"seq"}, TokenTag::KEYWORD_SEQ},
 		{{"obt"}, TokenTag::KEYWORD_OBJECT},
 		{{"tuple"}, TokenTag::KEYWORD_TUPLE},
 		{{"struct"}, TokenTag::KEYWORD_STRUCT},

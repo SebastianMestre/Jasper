@@ -1,10 +1,11 @@
 #include "ct_eval.hpp"
 
+#include "./log/log.hpp"
 #include "typechecker.hpp"
 #include "typed_ast.hpp"
 #include "typed_ast_allocator.hpp"
 
-#include <iostream>
+#include <sstream>
 
 #include <cassert>
 
@@ -27,10 +28,7 @@ TypedAST::FunctionLiteral* ct_eval(
 		if (arg.m_type_hint)
 			arg.m_type_hint = ct_eval(arg.m_type_hint, tc, alloc);
 
-	assert(ast->m_body->type() == TypedASTTag::Block);
-	auto body = static_cast<TypedAST::Block*>(ast->m_body);
-	for (auto& child : body->m_body)
-		child = ct_eval(child, tc, alloc);
+	ast->m_body = ct_eval(ast->m_body, tc, alloc);
 
 	return ast;
 }
@@ -140,6 +138,12 @@ TypedAST::ConstructorExpression* ct_eval(
 	for (auto& arg : ast->m_args)
 		arg = ct_eval(arg, tc, alloc);
 
+	return ast;
+}
+
+TypedAST::TypedAST* ct_eval(
+    TypedAST::SequenceExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+	ast->m_body = static_cast<TypedAST::Block*>(ct_eval(ast->m_body, tc, alloc));
 	return ast;
 }
 
@@ -388,6 +392,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
@@ -401,9 +406,12 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(TypeTerm);
 	}
 
-	std::cerr << "Unhandled case in " << __PRETTY_FUNCTION__ << " : "
-	          << typed_ast_string[int(ast->type())] << "\n";
-	assert(0);
+	{
+		std::stringstream ss;
+		ss << "(internal) Unhandled case in ct_eval : "
+		   << typed_ast_string[int(ast->type())];
+		Log::fatal(ss.str().c_str());
+	}
 
 #undef DISPATCH
 #undef RETURN

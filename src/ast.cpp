@@ -200,6 +200,13 @@ void print(MatchExpression* ast, int d) {
 	std::cout << stab << "]\n";
 }
 
+void print(SequenceExpression* ast, int d) {
+	print_indentation(d);
+	std::cout << "(sequence-expr";
+	print(ast->m_body, d + 2);
+	std::cout << ")";
+}
+
 void print(ReturnStatement* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::cout << stab << "[ ReturnStatement\n";
@@ -287,6 +294,8 @@ void print(AST* ast, int d) {
 		return print(static_cast<TernaryExpression*>(ast), d);
 	case ASTTag::AccessExpression:
 		return print(static_cast<AccessExpression*>(ast), d);
+	case ASTTag::SequenceExpression:
+		return print(static_cast<SequenceExpression*>(ast), d);
 
 	case ASTTag::DeclarationList:
 		return print(static_cast<DeclarationList*>(ast), d);

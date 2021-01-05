@@ -5,8 +5,9 @@
 namespace Interpreter {
 
 void Environment::start_stack_frame() {
+	start_stack_region();
+
 	m_fp_stack.push_back(m_frame_ptr);
-	m_sp_stack.push_back(m_stack_ptr);
 	m_frame_ptr = m_stack_ptr;
 }
 
@@ -14,10 +15,7 @@ void Environment::end_stack_frame(){
 	m_frame_ptr = m_fp_stack.back();
 	m_fp_stack.pop_back();
 
-	m_stack_ptr = m_sp_stack.back();
-	m_sp_stack.pop_back();
-
-	m_stack.resize(m_stack_ptr);
+	end_stack_region();
 }
 
 void Environment::start_stack_region() {

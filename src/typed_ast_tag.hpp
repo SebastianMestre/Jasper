@@ -18,6 +18,7 @@
 	X(MatchExpression)                                                         \
 	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
+	X(SequenceExpression)                                                      \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
