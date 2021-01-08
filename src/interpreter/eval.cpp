@@ -13,6 +13,7 @@
 #include "interpreter.hpp"
 #include "utils.hpp"
 #include "value.hpp"
+#include "value_as.hpp"
 
 namespace Interpreter {
 
@@ -159,9 +160,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_env.push(nullptr);
 
 	for (auto& kv : callee->m_captures) {
-		assert(kv.second);
-		assert(kv.second->type() == ValueTag::Reference);
-		auto capture_value = unboxed(kv.second);
+		auto capture_value = unboxed(as<Reference>(kv.second));
 		// TODO: I would like to get rid of this hash table access
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
 		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
@@ -188,7 +187,6 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 	gc_ptr<Value> value = e.m_env.pop();
 	auto* callee = unboxed(value.get());
-	assert(callee);
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
@@ -229,17 +227,12 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 	auto callee_value = e.m_env.pop();
 	auto* callee = unboxed(callee_value.get());
-	assert(callee);
-	assert(callee->type() == ValueTag::Array);
+	auto* array_callee = as<Array>(callee);
 
 	eval(ast->m_index, e);
 	auto index_value = e.m_env.pop();
 	auto* index = unboxed(index_value.get());
-	assert(index);
-	assert(index->type() == ValueTag::Integer);
-
-	auto* array_callee = static_cast<Array*>(callee);
-	auto* int_index = static_cast<Integer*>(index);
+	auto* int_index = as<Integer>(index);
 
 	e.m_env.push(array_callee->at(int_index->m_value));
 };
@@ -249,11 +242,9 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 
 	eval(ast->m_condition, e);
 	auto condition = e.m_env.pop();
-	auto* condition_value = unboxed(condition.get());
-	assert(condition_value);
-	assert(condition_value->type() == ValueTag::Boolean);
+	auto* condition_value = as<Boolean>(unboxed(condition.get()));
 
-	if (static_cast<Boolean*>(condition_value)->m_value)
+	if (condition_value->m_value)
 		eval(ast->m_then_expr, e);
 	else
 		eval(ast->m_else_expr, e);
@@ -277,9 +268,7 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec = e.m_env.pop();
-	auto rec_val = unboxed(rec.get());
-	assert(rec_val->type() == ValueTag::Record);
-	auto rec_actually = static_cast<Record*>(rec_val);
+	auto rec_actually = as<Record>(unboxed(rec.get()));
 	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
@@ -410,10 +399,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 		eval(ast->m_condition, e);
 		auto condition_result = e.m_env.pop();
 		auto unboxed_condition_result = unboxed(condition_result.get());
-		assert(unboxed_condition_result);
-
-		assert(unboxed_condition_result->type() == ValueTag::Boolean);
-		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
+		auto* condition_result_b = as<Boolean>(unboxed_condition_result);
 
 		if (!condition_result_b->m_value)
 			break;
