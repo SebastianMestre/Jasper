@@ -16,10 +16,16 @@
 
 namespace Interpreter {
 
-static bool is_expression (TypedAST::TypedAST* ast){
+static bool is_expression (TypedAST::TypedAST* ast) {
 	auto tag = ast->type();
 	auto tag_idx = static_cast<int>(tag);
 	return tag_idx < static_cast<int>(TypedASTTag::Block);
+}
+
+void eval_stmt(TypedAST::TypedAST* ast, Interpreter& e) {
+	eval(ast, e);
+	if (is_expression(ast))
+		e.m_env.pop_unsafe();
 }
 
 void eval(TypedAST::Declaration* ast, Interpreter& e) {
@@ -121,9 +127,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 void eval(TypedAST::Block* ast, Interpreter& e) {
 	e.m_env.start_stack_region();
 	for (auto stmt : ast->m_body) {
-		eval(stmt, e);
-		if (is_expression(stmt))
-			e.m_env.pop();
+		eval_stmt(stmt, e);
 		if (e.m_return_value)
 			break;
 	}
@@ -364,13 +368,9 @@ void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
 
 	if (condition_result_b->m_value) {
-		eval(ast->m_body, e);
-		if (is_expression(ast->m_body))
-			e.m_env.pop();
+		eval_stmt(ast->m_body, e);
 	} else if (ast->m_else_body) {
-		eval(ast->m_else_body, e);
-		if (is_expression(ast->m_else_body))
-			e.m_env.pop();
+		eval_stmt(ast->m_else_body, e);
 	}
 };
 
@@ -392,15 +392,14 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 		if (!condition_result_b->m_value)
 			break;
 
-		eval(ast->m_body, e);
+		eval_stmt(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;
 
+		// is this always an expression?
 		eval(ast->m_action, e);
-		// i think this check is always true...
-		if (is_expression(ast->m_action))
-			e.m_env.pop();
+		e.m_env.pop_unsafe();
 	}
 
 	e.m_env.end_stack_region();
@@ -419,7 +418,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 		if (!condition_result_b->m_value)
 			break;
 
-		eval(ast->m_body, e);
+		eval_stmt(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;
