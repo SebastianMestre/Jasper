@@ -449,7 +449,9 @@ Writer<AST::AST*> Parser::parse_terminal() {
 			return make_writer<AST::AST*>(e);
 		}
 
-		return result;
+		return token->m_type == TokenTag::SUB
+		       ? Writer<AST::AST*> {{"Parse Error: Stray minus sign with no number"}}
+		       : Writer<AST::AST*> {{"Parse Error: Stray plus sign with no number"}};
 	}
 
 	if (token->m_type == TokenTag::INTEGER) {
