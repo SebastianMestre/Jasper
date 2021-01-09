@@ -276,9 +276,8 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant_val = unboxed(e.m_env.m_stack.back());
-	assert(variant_val->type() == ValueTag::Variant);
-	auto variant_actually = static_cast<Variant*>(variant_val);
+	auto variant_val = e.m_env.m_stack.back();
+	auto variant_actually = as<Variant>(unboxed(variant_val));
 
 	auto constructor = variant_actually->m_constructor;
 	auto variant_inner = variant_actually->m_inner_value;
@@ -351,10 +350,7 @@ void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	eval(ast->m_condition, e);
 	auto condition_result = e.m_env.pop();
-	assert(condition_result);
-
-	assert(condition_result->type() == ValueTag::Boolean);
-	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
+	auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
 
 	if (condition_result_b->m_value) {
 		eval_stmt(ast->m_body, e);
@@ -372,11 +368,7 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition_result = e.m_env.pop();
-		auto unboxed_condition_result = unboxed(condition_result.get());
-		assert(unboxed_condition_result);
-
-		assert(unboxed_condition_result->type() == ValueTag::Boolean);
-		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
+		auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
 
 		if (!condition_result_b->m_value)
 			break;
@@ -398,8 +390,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition_result = e.m_env.pop();
-		auto unboxed_condition_result = unboxed(condition_result.get());
-		auto* condition_result_b = as<Boolean>(unboxed_condition_result);
+		auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
 
 		if (!condition_result_b->m_value)
 			break;
