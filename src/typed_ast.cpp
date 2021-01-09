@@ -26,6 +26,8 @@ InternedString const& Declaration::identifier_text() const {
 TypedAST* convert_ast(AST::IntegerLiteral* ast, Allocator& alloc) {
 	auto typed_integer = alloc.make<IntegerLiteral>();
 	typed_integer->m_value = std::stoi(ast->text());
+	if (ast->m_negative)
+		typed_integer->m_value = -typed_integer->m_value;
 	typed_integer->m_token = ast->m_token;
 	return typed_integer;
 }
@@ -33,6 +35,8 @@ TypedAST* convert_ast(AST::IntegerLiteral* ast, Allocator& alloc) {
 TypedAST* convert_ast(AST::NumberLiteral* ast, Allocator& alloc) {
 	auto typed_number = alloc.make<NumberLiteral>();
 	typed_number->m_value = std::stof(ast->text());
+	if (ast->m_negative)
+		typed_number->m_value = -typed_number->m_value;
 	typed_number->m_token = ast->m_token;
 	return typed_number;
 }

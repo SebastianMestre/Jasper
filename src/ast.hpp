@@ -44,6 +44,8 @@ struct DeclarationList : public AST {
 };
 
 struct IntegerLiteral : public AST {
+	bool m_negative {false};
+	Token const* m_sign {nullptr};
 	Token const* m_token;
 
 	std::string const& text() {
@@ -55,6 +57,8 @@ struct IntegerLiteral : public AST {
 };
 
 struct NumberLiteral : public AST {
+	bool m_negative {false};
+	Token const* m_sign {nullptr};
 	Token const* m_token;
 
 	std::string const& text() {
