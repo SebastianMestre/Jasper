@@ -184,8 +184,8 @@ void eval_call_native_function(
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> value = e.m_env.pop();
-	auto* callee = value_of(value.get());
+	gc_ptr<Value> callee_handle = e.m_env.pop();
+	auto* callee = value_of(callee_handle.get());
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
@@ -224,24 +224,24 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
-	auto callee_value = e.m_env.pop();
-	auto* array_callee = value_as<Array>(callee_value.get());
+	auto callee_handle = e.m_env.pop();
+	auto* callee = value_as<Array>(callee_handle.get());
 
 	eval(ast->m_index, e);
-	auto index_value = e.m_env.pop();
-	auto* int_index = value_as<Integer>(index_value.get());
+	auto index_handle = e.m_env.pop();
+	auto* index = value_as<Integer>(index_handle.get());
 
-	e.m_env.push(array_callee->at(int_index->m_value));
+	e.m_env.push(callee->at(index->m_value));
 };
 
 void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition = e.m_env.pop();
-	auto* condition_value = value_as<Boolean>(condition.get());
+	auto condition_handle = e.m_env.pop();
+	auto* condition = value_as<Boolean>(condition_handle.get());
 
-	if (condition_value->m_value)
+	if (condition->m_value)
 		eval(ast->m_then_expr, e);
 	else
 		eval(ast->m_else_expr, e);
@@ -264,9 +264,9 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
-	auto rec = e.m_env.pop();
-	auto rec_actually = value_as<Record>(rec.get());
-	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
+	auto rec_handle = e.m_env.pop();
+	auto rec = value_as<Record>(rec_handle.get());
+	e.m_env.push(rec->m_value[ast->m_member->m_text]);
 }
 
 void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
@@ -299,13 +299,13 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
-	auto constructor = e.m_env.pop();
-	auto constructor_value = value_of(constructor.get());
+	auto constructor_handle = e.m_env.pop();
+	auto constructor = value_of(constructor_handle.get());
 
-	if (constructor_value->type() == ValueTag::RecordConstructor) {
-		auto constructor_actually = static_cast<RecordConstructor*>(constructor_value);
+	if (constructor->type() == ValueTag::RecordConstructor) {
+		auto record_constructor = static_cast<RecordConstructor*>(constructor);
 
-		assert(ast->m_args.size() == constructor_actually->m_keys.size());
+		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
 		int storage_point = e.m_env.m_stack_ptr;
 		RecordType record;
@@ -313,7 +313,7 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			eval(ast->m_args[i], e);
 
 		for (int i = 0; i < ast->m_args.size(); ++i) {
-			record[constructor_actually->m_keys[i]] =
+			record[record_constructor->m_keys[i]] =
 			    e.m_env.m_stack[storage_point + i];
 		}
 		
@@ -323,14 +323,14 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_env.pop();
 
 		e.m_env.push(result.get());
-	} else if (constructor_value->type() == ValueTag::VariantConstructor) {
-		auto constructor_actually = static_cast<VariantConstructor*>(constructor_value);
+	} else if (constructor->type() == ValueTag::VariantConstructor) {
+		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    constructor_actually->m_constructor, e.m_env.m_stack.back());
+		    variant_constructor->m_constructor, e.m_env.m_stack.back());
 		e.m_env.pop();
 
 		e.m_env.push(result.get());
@@ -344,29 +344,29 @@ void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
 }
 
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
-	eval(ast->m_condition, e);
-	auto condition_result = e.m_env.pop();
-	auto* condition_result_b = value_as<Boolean>(condition_result.get());
+	// TODO: proper error handling
 
-	if (condition_result_b->m_value) {
+	eval(ast->m_condition, e);
+	auto condition_handle = e.m_env.pop();
+	auto* condition = value_as<Boolean>(condition_handle.get());
+
+	if (condition->m_value)
 		eval_stmt(ast->m_body, e);
-	} else if (ast->m_else_body) {
+	else if (ast->m_else_body)
 		eval_stmt(ast->m_else_body, e);
-	}
 };
 
 void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 	e.m_env.start_stack_region();
 
-	// NOTE: this is kinda fishy. why do we assert here?
 	eval(&ast->m_declaration, e);
 
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.m_env.pop();
-		auto* condition_result_b = value_as<Boolean>(condition_result.get());
+		auto condition_handle = e.m_env.pop();
+		auto* condition = value_as<Boolean>(condition_handle.get());
 
-		if (!condition_result_b->m_value)
+		if (!condition->m_value)
 			break;
 
 		eval_stmt(ast->m_body, e);
@@ -374,7 +374,6 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 		if (e.m_return_value)
 			break;
 
-		// is this always an expression?
 		eval(ast->m_action, e);
 		e.m_env.pop_unsafe();
 	}
@@ -385,10 +384,10 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.m_env.pop();
-		auto* condition_result_b = value_as<Boolean>(condition_result.get());
+		auto condition_handle = e.m_env.pop();
+		auto* condition = value_as<Boolean>(condition_handle.get());
 
-		if (!condition_result_b->m_value)
+		if (!condition->m_value)
 			break;
 
 		eval_stmt(ast->m_body, e);
@@ -423,7 +422,7 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		e.push_variant_constructor(ast->m_id->m_text);
 	} else {
-		assert(0 && "not implemented this type function for construction");
+		Log::fatal("not implemented this type function for construction");
 	}
 }
 
