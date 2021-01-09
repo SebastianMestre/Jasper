@@ -4,7 +4,7 @@
 
 namespace Interpreter {
 
-Value* unboxed(Value* value) {
+Value* value_of(Value* value) {
 	if (!value)
 		return value;
 

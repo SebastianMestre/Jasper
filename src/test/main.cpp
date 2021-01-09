@@ -694,7 +694,6 @@ void interpreter_tests(Test::Tester& tests) {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }}));
 
-
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 		__invoke := fn() => seq {
@@ -704,7 +703,58 @@ void interpreter_tests(Test::Tester& tests) {
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }}));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		__invoke := fn() {
+			arr := array { 0; 1; 2; 3; 4; };
+			arr[0] = 1;
+			arr[4] = 5;
+			return arr[0] + arr[1] + arr[2] + arr[3] + arr[4];
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 12);
+	    }}));
 	
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		a := 2 - 1;
+		b := 2 -1;
+		c := 2-1;
+		d := 2- 1;
+		e := -1;
+		f := -1.1;
+		g := +1;
+		h := +1.1;
+		__invoke := fn() => 0;
+		)",
+	    Testers {
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("a", env), 1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("b", env), 1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("c", env), 1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("d", env), 1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("e", env), -1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("f", env), -1.1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("g", env), 1);
+		    },
+		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			    return Assert::equals(eval_expression("h", env), 1.1);
+		    }
+	    }));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

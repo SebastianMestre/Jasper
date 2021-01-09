@@ -13,7 +13,7 @@ using Runner = auto(Interpreter&) -> ExitStatusTag;
 // returns an exit status
 ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner);
 
-// creates an expression node and returns the unboxed value from it
+// evaluates an expression and returns the resulting value
 Value* eval_expression(const std::string& expr, Interpreter& env);
 
 } // namespace Interpreter

@@ -42,12 +42,18 @@ void print(Declaration* ast, int d) {
 
 void print(NumberLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::cout << stab << "[ Number " << ast->text() << " ]\n";
+	std::cout << stab << "(number-literal \"";
+	if (ast->m_negative)
+		std::cout << '-';
+	std::cout << ast->text() << "\")";
 }
 
 void print(IntegerLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
-	std::cout << stab << "[ Integer " << ast->text() << " ]\n";
+	std::cout << stab << "(integer-literal \"";
+	if (ast->m_negative)
+		std::cout << '-';
+	std::cout << ast->text() << "\")";
 }
 
 void print(StringLiteral* ast, int d) {
