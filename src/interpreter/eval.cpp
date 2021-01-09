@@ -16,10 +16,16 @@
 
 namespace Interpreter {
 
-static bool is_expression (TypedAST::TypedAST* ast){
+static bool is_expression (TypedAST::TypedAST* ast) {
 	auto tag = ast->type();
 	auto tag_idx = static_cast<int>(tag);
 	return tag_idx < static_cast<int>(TypedASTTag::Block);
+}
+
+void eval_stmt(TypedAST::TypedAST* ast, Interpreter& e) {
+	eval(ast, e);
+	if (is_expression(ast))
+		e.m_env.pop_unsafe();
 }
 
 void eval(TypedAST::Declaration* ast, Interpreter& e) {
@@ -28,7 +34,7 @@ void eval(TypedAST::Declaration* ast, Interpreter& e) {
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_env.pop();
-		ref->m_value = unboxed(value.get());
+		ref->m_value = value_of(value.get());
 	}
 };
 
@@ -101,7 +107,7 @@ void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
 		auto value = e.m_env.pop();
-		result->m_value.push_back(unboxed(value.get()));
+		result->m_value.push_back(value_of(value.get()));
 	}
 	e.m_env.push(result.get());
 }
@@ -121,9 +127,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 void eval(TypedAST::Block* ast, Interpreter& e) {
 	e.m_env.start_stack_region();
 	for (auto stmt : ast->m_body) {
-		eval(stmt, e);
-		if (is_expression(stmt))
-			e.m_env.pop();
+		eval_stmt(stmt, e);
 		if (e.m_return_value)
 			break;
 	}
@@ -134,7 +138,7 @@ void eval(TypedAST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_env.pop();
-	e.save_return_value(unboxed(value.get()));
+	e.save_return_value(value_of(value.get()));
 };
 
 auto is_callable_value(Value* v) -> bool {
@@ -155,9 +159,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_env.push(nullptr);
 
 	for (auto& kv : callee->m_captures) {
-		assert(kv.second);
-		assert(kv.second->type() == ValueTag::Reference);
-		auto capture_value = unboxed(kv.second);
+		auto capture_value = value_of(as<Reference>(kv.second));
 		// TODO: I would like to get rid of this hash table access
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
 		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
@@ -182,9 +184,8 @@ void eval_call_native_function(
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> value = e.m_env.pop();
-	auto* callee = unboxed(value.get());
-	assert(callee);
+	gc_ptr<Value> callee_handle = e.m_env.pop();
+	auto* callee = value_of(callee_handle.get());
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
@@ -196,7 +197,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		for (auto expr : arglist) {
 			eval(expr, e);
 			e.m_env.m_stack.back() =
-			    e.new_reference(unboxed(e.m_env.m_stack.back())).get();
+			    e.new_reference(value_of(e.m_env.m_stack.back())).get();
 		}
 		// arguments go before the frame pointer
 		e.m_env.start_stack_frame();
@@ -223,33 +224,24 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
-	auto callee_value = e.m_env.pop();
-	auto* callee = unboxed(callee_value.get());
-	assert(callee);
-	assert(callee->type() == ValueTag::Array);
+	auto callee_handle = e.m_env.pop();
+	auto* callee = value_as<Array>(callee_handle.get());
 
 	eval(ast->m_index, e);
-	auto index_value = e.m_env.pop();
-	auto* index = unboxed(index_value.get());
-	assert(index);
-	assert(index->type() == ValueTag::Integer);
+	auto index_handle = e.m_env.pop();
+	auto* index = value_as<Integer>(index_handle.get());
 
-	auto* array_callee = static_cast<Array*>(callee);
-	auto* int_index = static_cast<Integer*>(index);
-
-	e.m_env.push(array_callee->at(int_index->m_value));
+	e.m_env.push(callee->at(index->m_value));
 };
 
 void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition = e.m_env.pop();
-	auto* condition_value = unboxed(condition.get());
-	assert(condition_value);
-	assert(condition_value->type() == ValueTag::Boolean);
+	auto condition_handle = e.m_env.pop();
+	auto* condition = value_as<Boolean>(condition_handle.get());
 
-	if (static_cast<Boolean*>(condition_value)->m_value)
+	if (condition->m_value)
 		eval(ast->m_then_expr, e);
 	else
 		eval(ast->m_else_expr, e);
@@ -272,28 +264,24 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
-	auto rec = e.m_env.pop();
-	auto rec_val = unboxed(rec.get());
-	assert(rec_val->type() == ValueTag::Record);
-	auto rec_actually = static_cast<Record*>(rec_val);
-	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
+	auto rec_handle = e.m_env.pop();
+	auto rec = value_as<Record>(rec_handle.get());
+	e.m_env.push(rec->m_value[ast->m_member->m_text]);
 }
 
 void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant_val = unboxed(e.m_env.m_stack.back());
-	assert(variant_val->type() == ValueTag::Variant);
-	auto variant_actually = static_cast<Variant*>(variant_val);
+	auto variant = value_as<Variant>(e.m_env.m_stack.back());
 
-	auto constructor = variant_actually->m_constructor;
-	auto variant_inner = variant_actually->m_inner_value;
+	auto constructor = variant->m_constructor;
+	auto variant_value = variant->m_inner_value;
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(unboxed(variant_inner));
+	auto ref = e.new_reference(value_of(variant_value));
 	e.m_env.m_stack.back() = ref.get();
 	
 	auto case_it = ast->m_cases.find(constructor);
@@ -311,13 +299,13 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
-	auto constructor = e.m_env.pop();
-	auto constructor_value = unboxed(constructor.get());
+	auto constructor_handle = e.m_env.pop();
+	auto constructor = value_of(constructor_handle.get());
 
-	if (constructor_value->type() == ValueTag::RecordConstructor) {
-		auto constructor_actually = static_cast<RecordConstructor*>(constructor_value);
+	if (constructor->type() == ValueTag::RecordConstructor) {
+		auto record_constructor = static_cast<RecordConstructor*>(constructor);
 
-		assert(ast->m_args.size() == constructor_actually->m_keys.size());
+		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
 		int storage_point = e.m_env.m_stack_ptr;
 		RecordType record;
@@ -325,7 +313,7 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			eval(ast->m_args[i], e);
 
 		for (int i = 0; i < ast->m_args.size(); ++i) {
-			record[constructor_actually->m_keys[i]] =
+			record[record_constructor->m_keys[i]] =
 			    e.m_env.m_stack[storage_point + i];
 		}
 		
@@ -335,14 +323,14 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_env.pop();
 
 		e.m_env.push(result.get());
-	} else if (constructor_value->type() == ValueTag::VariantConstructor) {
-		auto constructor_actually = static_cast<VariantConstructor*>(constructor_value);
+	} else if (constructor->type() == ValueTag::VariantConstructor) {
+		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    constructor_actually->m_constructor, e.m_env.m_stack.back());
+		    variant_constructor->m_constructor, e.m_env.m_stack.back());
 		e.m_env.pop();
 
 		e.m_env.push(result.get());
@@ -356,51 +344,38 @@ void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
 }
 
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
+	// TODO: proper error handling
+
 	eval(ast->m_condition, e);
-	auto condition_result = e.m_env.pop();
-	assert(condition_result);
+	auto condition_handle = e.m_env.pop();
+	auto* condition = value_as<Boolean>(condition_handle.get());
 
-	assert(condition_result->type() == ValueTag::Boolean);
-	auto* condition_result_b = static_cast<Boolean*>(condition_result.get());
-
-	if (condition_result_b->m_value) {
-		eval(ast->m_body, e);
-		if (is_expression(ast->m_body))
-			e.m_env.pop();
-	} else if (ast->m_else_body) {
-		eval(ast->m_else_body, e);
-		if (is_expression(ast->m_else_body))
-			e.m_env.pop();
-	}
+	if (condition->m_value)
+		eval_stmt(ast->m_body, e);
+	else if (ast->m_else_body)
+		eval_stmt(ast->m_else_body, e);
 };
 
 void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 	e.m_env.start_stack_region();
 
-	// NOTE: this is kinda fishy. why do we assert here?
 	eval(&ast->m_declaration, e);
 
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.m_env.pop();
-		auto unboxed_condition_result = unboxed(condition_result.get());
-		assert(unboxed_condition_result);
+		auto condition_handle = e.m_env.pop();
+		auto* condition = value_as<Boolean>(condition_handle.get());
 
-		assert(unboxed_condition_result->type() == ValueTag::Boolean);
-		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
-
-		if (!condition_result_b->m_value)
+		if (!condition->m_value)
 			break;
 
-		eval(ast->m_body, e);
+		eval_stmt(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;
 
 		eval(ast->m_action, e);
-		// i think this check is always true...
-		if (is_expression(ast->m_action))
-			e.m_env.pop();
+		e.m_env.pop_unsafe();
 	}
 
 	e.m_env.end_stack_region();
@@ -409,17 +384,13 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_result = e.m_env.pop();
-		auto unboxed_condition_result = unboxed(condition_result.get());
-		assert(unboxed_condition_result);
+		auto condition_handle = e.m_env.pop();
+		auto* condition = value_as<Boolean>(condition_handle.get());
 
-		assert(unboxed_condition_result->type() == ValueTag::Boolean);
-		auto* condition_result_b = static_cast<Boolean*>(unboxed_condition_result);
-
-		if (!condition_result_b->m_value)
+		if (!condition->m_value)
 			break;
 
-		eval(ast->m_body, e);
+		eval_stmt(ast->m_body, e);
 
 		if (e.m_return_value)
 			break;
@@ -451,7 +422,7 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		e.push_variant_constructor(ast->m_id->m_text);
 	} else {
-		assert(0 && "not implemented this type function for construction");
+		Log::fatal("not implemented this type function for construction");
 	}
 }
 
