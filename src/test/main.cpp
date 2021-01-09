@@ -326,8 +326,8 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(
 		std::make_unique<TestCase>(R"(
 			// TODO: fix inability to use keyword 'array' and others in types
-			first_arr := fn(arr : Array(<Array(<Int>)>)) => arr[0];
-			first_int := fn(arr : Array(<Ant>)) => arr[0];
+			first_arr := fn(arr : Array<:Array<:Int:>:>) => arr[0];
+			first_int := fn(arr : Array<:Ant:>) => arr[0];
 			__invoke := fn(){
 				mat := array {
 					array { 4; 5; 6; };
@@ -471,16 +471,16 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 			val := struct {
-				a : string(<>);
-				b : string(<>);
-				c : string(<>);
+				a : string<::>;
+				b : string<::>;
+				c : string<::>;
 			};
 			test1 := fn () {
-				v := val(<>){ "A"; "B"; "C"; };
+				v := val<::>{ "A"; "B"; "C"; };
 				return v.a + v.b + v.c;
 			};
 			test2 := fn () {
-				v := val(<>){ "A"; "B"; "C"; };
+				v := val<::>{ "A"; "B"; "C"; };
 				return v.a + v.b + v.a;
 			};
 		)",
@@ -494,13 +494,13 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
-			a : int(<>) = 1;
-			b : string(<>) = "hello";
-			c : array(< int(<>) >) = array { 1; 2; };
+			a : int<::> = 1;
+			b : string<::> = "hello";
+			c : array<: int<::> :> = array { 1; 2; };
 
 			__invoke := fn() {
-				d : array(< string(<>) >) = array { "hello"; ","; "world"; };
-				e : boolean(<>) = true;
+				d : array<: string<::> :> = array { "hello"; ","; "world"; };
+				e : boolean<::> = true;
 				return d;
 			};
 		)",
@@ -521,11 +521,11 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
-			typefunc := struct { x : int(<>); };
+			typefunc := struct { x : int<::>; };
 			other_typefunc := typefunc;
 			other_other_typefunc := other_typefunc;
 
-			mono := other_other_typefunc(<>);
+			mono := other_other_typefunc<::>;
 			other_mono := mono;
 			other_other_mono := other_mono;
 
@@ -538,8 +538,8 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 		list := struct {
-			load : int(<>);
-			next : list(<>);
+			load : int<::>;
+			next : list<::>;
 		};
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
@@ -550,7 +550,7 @@ void interpreter_tests(Test::Tester& tests) {
 	    R"(
 			a := c;
 			b := a.id { 10 };
-			c := union { id : int(<>); }(<>);
+			c := union { id : int<::>; }<::>;
 			__invoke := fn() => 0;
 		)",
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
@@ -560,9 +560,9 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"jp(
 			b := union {
-				str : string(<>);
-				num : int(<>);
-			}(<>);
+				str : string<::>;
+				num : int<::>;
+			}<::>;
 
 			serialize := fn ( x ) {
 				y := match(x) {
@@ -590,25 +590,25 @@ void interpreter_tests(Test::Tester& tests) {
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 		tree := union {
-			leaf : int(<>);
-			node : tree_node(<>);
+			leaf : int<::>;
+			node : tree_node<::>;
 		};
 
 		tree_node := struct {
-			left : tree(<>);
-			value : int(<>);
-			right : tree(<>);
+			left : tree<::>;
+			value : int<::>;
+			right : tree<::>;
 		};
 
 		__invoke := fn() {
-			x : tree(<>) = tree(<>).leaf {1};
-			y : tree(<>) = tree(<>).node {
-				tree_node(<>) {x; 2; x}
+			x : tree<::> = tree<::>.leaf {1};
+			y : tree<::> = tree<::>.node {
+				tree_node<::> {x; 2; x}
 			};
 
 			node_value := fn(node) => match(node) {
-				leaf { i : int(<>) } => i;
-				node { n : tree_node(<>) } => n.value;
+				leaf { i : int<::> } => i;
+				node { n : tree_node<::> } => n.value;
 			};
 
 			return node_value(x) + node_value(y);
@@ -620,20 +620,20 @@ void interpreter_tests(Test::Tester& tests) {
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
-		f := fn (error_number : int(<>)) =>
-			fn(x : either(<>)) => match(x) {
+		f := fn (error_number : int<::>) =>
+			fn(x : either<::>) => match(x) {
 				left { i } => i;
 				right { s } => error_number;
 			};
 
 		either := union {
-			left : int(<>);
-			right : string(<>);
+			left : int<::>;
+			right : string<::>;
 		};
 
 		__invoke := fn() {
-			x := either(<>).left{ 1 };
-			y := either(<>).right{ "error" };
+			x := either<::>.left{ 1 };
+			y := either<::>.right{ "error" };
 
 			def := f(10);
 			return def(x) + def(y);
@@ -648,9 +648,9 @@ void interpreter_tests(Test::Tester& tests) {
 	// bound in a match expression
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"jp(
-		A := union { X : int(<>); };
+		A := union { X : int<::>; };
 		__invoke := fn() {
-			outter := A(<>).X{ 10 };
+			outter := A<::>.X{ 10 };
 			k := match(outter) {
 				X { inner } => fn() => inner;
 			};
@@ -665,17 +665,17 @@ void interpreter_tests(Test::Tester& tests) {
 	    R"(
 		// AST for a simple language
 		expr := union {
-			add : two_exprs(<>);
-			val : int(<>);
+			add : two_exprs<::>;
+			val : int<::>;
 		};
 
 		two_exprs := struct {
-			left : expr(<>);
-			right : expr(<>);
+			left : expr<::>;
+			right : expr<::>;
 		};
 
 		// continuation passing style!
-		eval := fn(e, c) => match(e : expr(<>)) {
+		eval := fn(e, c) => match(e : expr<::>) {
 			val { v } => c(v);
 			add { v } => eval(v.left,  fn(x) =>
 			             eval(v.right, fn(y) =>
@@ -683,10 +683,10 @@ void interpreter_tests(Test::Tester& tests) {
 		};
 
 		__invoke := fn() => eval(
-			expr(<>).add{
-				two_exprs(<>){
-					expr(<>).val{ 10 };
-					expr(<>).val{ 32 };
+			expr<::>.add{
+				two_exprs<::>{
+					expr<::>.val{ 10 };
+					expr<::>.val{ 32 };
 				};
 			}, fn(x) => x);
 		)",
