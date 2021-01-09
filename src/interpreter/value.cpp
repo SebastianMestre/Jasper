@@ -39,7 +39,7 @@ Array::Array(ArrayType l)
     : Value(ValueTag::Array)
     , m_value(std::move(l)) {}
 
-void Array::append(Value* v) {
+void Array::append(Reference* v) {
 	m_value.push_back(v);
 }
 

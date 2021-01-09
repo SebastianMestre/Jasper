@@ -694,7 +694,6 @@ void interpreter_tests(Test::Tester& tests) {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }}));
 
-
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
 	    R"(
 		__invoke := fn() => seq {
@@ -704,7 +703,19 @@ void interpreter_tests(Test::Tester& tests) {
 	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 42);
 	    }}));
-	
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    R"(
+		__invoke := fn() {
+			arr := array { 0; 1; 2; 3; 4; };
+			arr[0] = 1;
+			arr[4] = 5;
+			return arr[0] + arr[1] + arr[2] + arr[3] + arr[4];
+		};
+		)",
+	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("__invoke()", env), 12);
+	    }}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

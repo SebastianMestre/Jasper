@@ -32,7 +32,7 @@ Value* array_append(ArgsType v, Interpreter& e) {
 	assert(unboxed(v[0])->type() == ValueTag::Array);
 	Array* array = static_cast<Array*>(unboxed(v[0]));
 	for (unsigned int i = 1; i < v.size(); i++) {
-		array->m_value.push_back(unboxed(v[i]));
+		array->append(e.new_reference(unboxed(v[i])).get());
 	}
 	return array;
 }

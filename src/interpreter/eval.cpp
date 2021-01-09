@@ -100,8 +100,9 @@ void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto value = e.m_env.pop();
-		result->m_value.push_back(unboxed(value.get()));
+		auto value_handle = e.m_env.pop();
+		auto* value = unboxed(value_handle.get());
+		result->append(e.new_reference(value).get());
 	}
 	e.m_env.push(result.get());
 }
