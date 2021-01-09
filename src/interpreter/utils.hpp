@@ -22,7 +22,7 @@ template<> struct type_data<Reference> { static constexpr auto tag = ValueTag::R
 template<> struct type_data<VariantConstructor> { static constexpr auto tag = ValueTag::VariantConstructor; };
 template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };
 
-Value* unboxed(Value* value);
+Value* value_of(Value* value);
 
 template<typename T>
 T* as(Value* x) {
@@ -33,9 +33,9 @@ T* as(Value* x) {
 }
 
 template<typename T>
-T* deref_as(Value* x) {
+T* value_as(Value* x) {
 	static_assert(std::is_base_of<Value, T>::value, "T is not a subclass of Value");
-	return as<T>(unboxed(x));
+	return as<T>(value_of(x));
 }
 
 } // namespace Interpreter
