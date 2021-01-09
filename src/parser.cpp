@@ -428,6 +428,32 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return make_writer<AST::AST*>(e);
 	}
 
+	if (token->m_type == TokenTag::SUB || token->m_type == TokenTag::ADD) {
+		m_lexer->advance();
+
+		// NOTE: we store the sign token of the source code for future
+		// feature of printing the source code when an error occurs
+		if (match(TokenTag::INTEGER)) {
+			auto e = m_ast_allocator->make<AST::IntegerLiteral>();
+			e->m_negative = token->m_type == TokenTag::SUB;
+			e->m_sign = token;
+			e->m_token = peek();
+			m_lexer->advance();
+			return make_writer<AST::AST*>(e);
+		} else if (match(TokenTag::NUMBER)) {
+			auto e = m_ast_allocator->make<AST::NumberLiteral>();
+			e->m_negative = token->m_type == TokenTag::SUB;
+			e->m_sign = token;
+			e->m_token = peek();
+			m_lexer->advance();
+			return make_writer<AST::AST*>(e);
+		}
+
+		return token->m_type == TokenTag::SUB
+		       ? Writer<AST::AST*> {{"Parse Error: Stray minus sign with no number"}}
+		       : Writer<AST::AST*> {{"Parse Error: Stray plus sign with no number"}};
+	}
+
 	if (token->m_type == TokenTag::INTEGER) {
 		auto e = m_ast_allocator->make<AST::IntegerLiteral>();
 		e->m_token = token;
