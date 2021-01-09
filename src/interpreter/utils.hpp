@@ -32,4 +32,10 @@ T* as(Value* x) {
 	return static_cast<T*>(x);
 }
 
+template<typename T>
+T* deref_as(Value* x) {
+	static_assert(std::is_base_of<Value, T>::value, "T is not a subclass of Value");
+	return as<T>(unboxed(x));
+}
+
 } // namespace Interpreter

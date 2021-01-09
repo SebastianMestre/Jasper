@@ -225,13 +225,11 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
 	auto callee_value = e.m_env.pop();
-	auto* callee = unboxed(callee_value.get());
-	auto* array_callee = as<Array>(callee);
+	auto* array_callee = deref_as<Array>(callee_value.get());
 
 	eval(ast->m_index, e);
 	auto index_value = e.m_env.pop();
-	auto* index = unboxed(index_value.get());
-	auto* int_index = as<Integer>(index);
+	auto* int_index = deref_as<Integer>(index_value.get());
 
 	e.m_env.push(array_callee->at(int_index->m_value));
 };
@@ -241,7 +239,7 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 
 	eval(ast->m_condition, e);
 	auto condition = e.m_env.pop();
-	auto* condition_value = as<Boolean>(unboxed(condition.get()));
+	auto* condition_value = deref_as<Boolean>(condition.get());
 
 	if (condition_value->m_value)
 		eval(ast->m_then_expr, e);
@@ -267,7 +265,7 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec = e.m_env.pop();
-	auto rec_actually = as<Record>(unboxed(rec.get()));
+	auto rec_actually = deref_as<Record>(rec.get());
 	e.m_env.push(rec_actually->m_value[ast->m_member->m_text]);
 }
 
@@ -275,16 +273,15 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant_val = e.m_env.m_stack.back();
-	auto variant_actually = as<Variant>(unboxed(variant_val));
+	auto variant = deref_as<Variant>(e.m_env.m_stack.back());
 
-	auto constructor = variant_actually->m_constructor;
-	auto variant_inner = variant_actually->m_inner_value;
+	auto constructor = variant->m_constructor;
+	auto variant_value = variant->m_inner_value;
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(unboxed(variant_inner));
+	auto ref = e.new_reference(unboxed(variant_value));
 	e.m_env.m_stack.back() = ref.get();
 	
 	auto case_it = ast->m_cases.find(constructor);
@@ -349,7 +346,7 @@ void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	eval(ast->m_condition, e);
 	auto condition_result = e.m_env.pop();
-	auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
+	auto* condition_result_b = deref_as<Boolean>(condition_result.get());
 
 	if (condition_result_b->m_value) {
 		eval_stmt(ast->m_body, e);
@@ -367,7 +364,7 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition_result = e.m_env.pop();
-		auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
+		auto* condition_result_b = deref_as<Boolean>(condition_result.get());
 
 		if (!condition_result_b->m_value)
 			break;
@@ -389,7 +386,7 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition_result = e.m_env.pop();
-		auto* condition_result_b = as<Boolean>(unboxed(condition_result.get()));
+		auto* condition_result_b = deref_as<Boolean>(condition_result.get());
 
 		if (!condition_result_b->m_value)
 			break;
