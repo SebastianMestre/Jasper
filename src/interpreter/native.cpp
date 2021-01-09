@@ -29,7 +29,7 @@ Value* array_append(ArgsType v, Interpreter& e) {
 	assert(v.size() > 0);
 	Array* array = value_as<Array>(v[0]);
 	for (unsigned int i = 1; i < v.size(); i++) {
-		array->m_value.push_back(value_of(v[i]));
+		array->append(e.new_reference(value_of(v[i])).get());
 	}
 	return array;
 }
