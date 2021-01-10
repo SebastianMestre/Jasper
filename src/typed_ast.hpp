@@ -134,15 +134,6 @@ struct NullLiteral : public TypedAST {
 	    : TypedAST {TypedASTTag::NullLiteral} {}
 };
 
-struct ObjectLiteral : public TypedAST {
-	std::vector<Declaration> m_body;
-
-	// future feature
-	// the value type for objects must be followeb by a class identifier
-	ObjectLiteral()
-	    : TypedAST {TypedASTTag::ObjectLiteral} {}
-};
-
 struct ArrayLiteral : public TypedAST {
 	std::vector<TypedAST*> m_elements;
 

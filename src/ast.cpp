@@ -71,15 +71,6 @@ void print(NullLiteral* ast, int d) {
 	std::cout << stab << "[ NullLiteral ]\n";
 }
 
-void print(ObjectLiteral* ast, int d) {
-	std::string stab(d - 1, tabc);
-	std::string tab(d, tabc);
-	std::cout << stab << "[ ObjectLiteral\n" << tab << "Declarations:\n";
-	for (auto decl : ast->m_body)
-		print(&decl, d + 1);
-	std::cout << stab << "]\n";
-}
-
 void print(ArrayLiteral* ast, int d) {
 	std::string stab(d - 1, tabc);
 	std::string tab(d, tabc);
@@ -279,8 +270,6 @@ void print(AST* ast, int d) {
 		return print(static_cast<BooleanLiteral*>(ast), d);
 	case ASTTag::NullLiteral:
 		return print(static_cast<NullLiteral*>(ast), d);
-	case ASTTag::ObjectLiteral:
-		return print(static_cast<ObjectLiteral*>(ast), d);
 	case ASTTag::ArrayLiteral:
 		return print(static_cast<ArrayLiteral*>(ast), d);
 	case ASTTag::DictionaryLiteral:
