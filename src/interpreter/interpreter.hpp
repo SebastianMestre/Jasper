@@ -1,7 +1,7 @@
 #pragma once
 
-#include "environment.hpp"
 #include "gc_ptr.hpp"
+#include "stack.hpp"
 #include "value.hpp"
 
 #include <map>
@@ -23,7 +23,7 @@ struct Scope {
 };
 
 struct Interpreter {
-	Environment m_env;
+	Stack m_env;
 	TypeChecker::TypeChecker* m_tc;
 	GC* m_gc;
 	int m_gc_size_on_last_pass {64};

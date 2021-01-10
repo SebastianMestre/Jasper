@@ -44,7 +44,6 @@ COMMON_TARGETS := \
 INTERPRETER_DIR := interpreter
 INTERPRETER_ENTRY := main
 INTERPRETER_TARGETS := \
-	environment \
 	error \
 	eval \
 	execute \
@@ -52,6 +51,7 @@ INTERPRETER_TARGETS := \
 	gc_ptr \
 	interpreter \
 	native \
+	stack \
 	utils \
 	value
 

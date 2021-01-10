@@ -6,7 +6,7 @@
 
 namespace Interpreter {
 
-struct Environment {
+struct Stack {
 	int m_frame_ptr {0};
 	int m_stack_ptr {0};
 	std::vector<Value*> m_stack;
