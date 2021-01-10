@@ -83,7 +83,7 @@ Value* eval_expression(const std::string& expr, Interpreter& env) {
 
 	// TODO: return a gc_ptr
 	eval(top_level_call, env);
-	auto value = env.m_env.pop();
+	auto value = env.m_stack.pop();
 	return value_of(value.get());
 }
 

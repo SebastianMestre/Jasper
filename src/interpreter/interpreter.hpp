@@ -23,7 +23,7 @@ struct Scope {
 };
 
 struct Interpreter {
-	Stack m_env;
+	Stack m_stack;
 	TypeChecker::TypeChecker* m_tc;
 	GC* m_gc;
 	int m_gc_size_on_last_pass {64};
