@@ -48,4 +48,16 @@ gc_ptr<Value> Stack::pop() {
 	return result;
 }
 
+gc_ptr<Value> Stack::peek(int offset) {
+	return m_stack[m_stack.size() - 1 - offset];
+}
+
+Value*& Stack::access(int offset) {
+	return m_stack[m_stack.size() - 1 - offset];
+}
+
+Value*& Stack::frame_at(int offset) {
+	return m_stack[m_frame_ptr + offset];
+}
+
 } // namespace Interpreter

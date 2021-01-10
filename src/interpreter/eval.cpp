@@ -28,6 +28,10 @@ void eval_stmt(TypedAST::TypedAST* ast, Interpreter& e) {
 		e.m_env.pop_unsafe();
 }
 
+gc_ptr<Reference> rewrap(Value* x, Interpreter& e) {
+	return e.new_reference(value_of(x));
+}
+
 void eval(TypedAST::Declaration* ast, Interpreter& e) {
 	auto ref = e.new_reference(e.null());
 	e.m_env.push(ref.get());
@@ -107,8 +111,7 @@ void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
 		auto value_handle = e.m_env.pop();
-		auto* value = value_of(value_handle.get());
-		result->append(e.new_reference(value).get());
+		result->append(rewrap(value_handle.get(), e).get());
 	}
 	e.m_env.push(result.get());
 }
@@ -119,7 +122,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 		if (ast->m_frame_offset == INT_MIN) {
 			Log::fatal(("MISSING LAYOUT FOR AN IDENTIFIER" + ast->text().str()).c_str());
 		}
-		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
+		e.m_env.push(e.m_env.frame_at(ast->m_frame_offset));
 	} else {
 		e.m_env.push(e.global_access(ast->text()));
 	}
@@ -163,7 +166,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		auto capture_value = value_of(as<Reference>(kv.second));
 		// TODO: I would like to get rid of this hash table access
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
+		e.m_env.frame_at(offset) = kv.second;
 	}
 
 	// this feels really dumb:
@@ -178,7 +181,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 void eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
 	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_env.m_stack[e.m_env.m_frame_ptr - arg_count], arg_count};
+	Span<Value*> args = {&e.m_env.frame_at(-arg_count), arg_count};
 	e.save_return_value(callee->m_fptr(args, e));
 }
 
@@ -197,8 +200,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
-			e.m_env.m_stack.back() =
-			    e.new_reference(value_of(e.m_env.m_stack.back())).get();
+			e.m_env.access(0) = rewrap(e.m_env.access(0), e).get();
 		}
 		// arguments go before the frame pointer
 		e.m_env.start_stack_frame();
@@ -256,7 +258,7 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		captures.push_back({
 			capture.first,
-			e.m_env.m_stack[e.m_env.m_frame_ptr + capture.second.outer_frame_offset]});
+			e.m_env.frame_at(capture.second.outer_frame_offset)});
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
@@ -274,7 +276,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant = value_as<Variant>(e.m_env.m_stack.back());
+	auto variant = value_as<Variant>(e.m_env.access(0));
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
@@ -282,8 +284,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(value_of(variant_value));
-	e.m_env.m_stack.back() = ref.get();
+	e.m_env.access(0) = rewrap(variant_value, e).get();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -294,7 +295,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 	// evil tinkering with the stack internals
 	// (we just delete the variant value from behind the result)
-	e.m_env.m_stack[e.m_env.m_stack.size() - 2] = e.m_env.m_stack.back();
+	e.m_env.access(1) = e.m_env.access(0);
 	e.m_env.pop_unsafe();
 }
 
@@ -331,10 +332,10 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, e.m_env.m_stack.back());
-		e.m_env.pop();
+		    variant_constructor->m_constructor, e.m_env.access(0));
 
-		e.m_env.push(result.get());
+		// replace value with variant wrapper
+		e.m_env.access(0) = result.get();
 	}
 }
 
