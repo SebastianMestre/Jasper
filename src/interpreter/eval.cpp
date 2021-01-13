@@ -454,7 +454,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		std::stringstream ss;
 		ss << "(internal) unhandled case in eval: "
 		   << typed_ast_string[(int)ast->type()];
-		Log::fatal(ss.str().c_str());
+		Log::fatal(ss.str());
 	}
 }
 

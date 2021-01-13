@@ -344,7 +344,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		std::stringstream ss;
 		ss << "(internal) Unhandled case in metacheck : "
 		   << typed_ast_string[int(ast->type())];
-		Log::fatal(ss.str().c_str());
+		Log::fatal(ss.str());
 	}
 
 #undef DISPATCH

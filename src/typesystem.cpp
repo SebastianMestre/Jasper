@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "./log/log.hpp"
+
 TypeSystemCore::TypeSystemCore() {
 	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {
 		if (core.find_term(a) == core.find_term(b))
@@ -21,12 +23,24 @@ TypeSystemCore::TypeSystemCore() {
 		if (a_data.is_dummy) {
 
 			int new_argument_count = [&] {
-				if (a_data.argument_count == b_data.argument_count)
+				if (a_data.argument_count == b_data.argument_count) {
 					return a_data.argument_count;
-				else if (b_data.is_dummy || b_data.argument_count == -1)
+				} else if (b_data.is_dummy || b_data.argument_count == -1) {
 					return -1;
-				else
-					assert(0 && "Incompatible typefunc argument counts");
+				} else {
+					std::string argc_a =
+					    a_data.argument_count == -1
+					        ? std::string("variadic")
+					        : std::to_string(a_data.argument_count);
+					std::string argc_b =
+					    b_data.argument_count == -1
+					        ? std::string("variadic")
+					        : std::to_string(b_data.argument_count);
+					Log::fatal(
+					    "Deduced type functions with incompatible argument "
+					    "counts to be equal (with " +
+					    argc_a + " and " + argc_b + " arguments)");
+				}
 			}();
 
 			for (auto& kv_a : a_data.structure) {
@@ -37,7 +51,7 @@ TypeSystemCore::TypeSystemCore() {
 					if (b_data.is_dummy)
 						b_data.structure.insert(kv_a);
 					else
-						assert(0 && "accessing non-existing field of a record type");
+						Log::fatal("Accessing non-existing field '" + kv_a.first.str() + "' of a record");
 				else
 					// else the fields must have equivalent types
 					m_mono_core.unify(kv_a.second, kv_b->second);
@@ -59,7 +73,9 @@ TypeSystemCore::TypeSystemCore() {
 			b_data.argument_count = new_argument_count;
 
 		} else {
-			assert(0 and "unifying two different known type functions");
+			Log::fatal(
+			    "Deduced two different type functions to be equal (with IDs " +
+			    std::to_string(fa) + " and " + std::to_string(fb) + ")");
 		}
 	};
 
@@ -102,7 +118,7 @@ TypeSystemCore::TypeSystemCore() {
 		}
 
 #endif
-		assert(0 and "unified two different metatypes");
+		Log::fatal("Unified two different metatypes");
 	};
 }
 

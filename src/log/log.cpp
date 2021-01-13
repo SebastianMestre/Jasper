@@ -12,7 +12,7 @@ void error(char const* str) {
 	std::cerr << "[ Error ] " << str << "\n";
 }
 
-void fatal(char const* str) {
+void fatal(std::string const& str) {
 	std::cerr << "[ Fatal Error ] " << str << "\n";
 	exit(1);
 }
