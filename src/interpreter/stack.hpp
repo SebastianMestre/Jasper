@@ -6,7 +6,7 @@
 
 namespace Interpreter {
 
-struct Environment {
+struct Stack {
 	int m_frame_ptr {0};
 	int m_stack_ptr {0};
 	std::vector<Value*> m_stack;
@@ -19,8 +19,14 @@ struct Environment {
 	void end_stack_region();
 
 	void push(Value* val);
+
 	Value* pop_unsafe();
 	gc_ptr<Value> pop();
+
+	gc_ptr<Value> peek(int offset = 0);
+
+	Value*& access(int offset);
+	Value*& frame_at(int offset);
 };
 
 } // namespace Interpreter

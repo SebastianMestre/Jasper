@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
 
 				eval(top_level_call, env);
-			    auto result = env.m_env.pop();
+			    auto result = env.m_stack.pop();
 
 			    if (result)
 				    Interpreter::print(result.get());

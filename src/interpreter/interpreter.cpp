@@ -60,7 +60,7 @@ void Interpreter::run_gc() {
 	m_gc->unmark_all();
 	m_gc->mark_roots();
 
-	for (auto p : m_env.m_stack)
+	for (auto p : m_stack.m_stack)
 		gc_visit(p);
 
 	for (auto& p : m_global_scope.m_declarations)
@@ -82,32 +82,32 @@ Null* Interpreter::null() {
 }
 
 void Interpreter::push_integer(int i) {
-	m_env.push(m_gc->new_integer_raw(i));
+	m_stack.push(m_gc->new_integer_raw(i));
 	run_gc_if_needed();
 }
 
 void Interpreter::push_float(float f) {
-	m_env.push(m_gc->new_float_raw(f));
+	m_stack.push(m_gc->new_float_raw(f));
 	run_gc_if_needed();
 }
 
 void Interpreter::push_boolean(bool b) {
-	m_env.push(m_gc->new_boolean_raw(b));
+	m_stack.push(m_gc->new_boolean_raw(b));
 	run_gc_if_needed();
 }
 
 void Interpreter::push_string(std::string s) {
-	m_env.push(m_gc->new_string_raw(std::move(s)));
+	m_stack.push(m_gc->new_string_raw(std::move(s)));
 	run_gc_if_needed();
 }
 
 void Interpreter::push_variant_constructor(InternedString constructor) {
-	m_env.push(m_gc->new_variant_constructor_raw(constructor));
+	m_stack.push(m_gc->new_variant_constructor_raw(constructor));
 	run_gc_if_needed();
 }
 
 void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
-	m_env.push(m_gc->new_record_constructor_raw(std::move(keys)));
+	m_stack.push(m_gc->new_record_constructor_raw(std::move(keys)));
 	run_gc_if_needed();
 }
 

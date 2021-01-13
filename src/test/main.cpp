@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "../algorithms/tarjan_solver.hpp"
-#include "../interpreter/environment_fwd.hpp"
 #include "../interpreter/execute.hpp"
 #include "../utils/string_set.hpp"
 #include "test_status_tag.hpp"

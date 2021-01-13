@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 
-#include "../interpreter/environment.hpp"
 #include "../interpreter/execute.hpp"
 #include "../interpreter/value.hpp"
 

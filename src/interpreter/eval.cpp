@@ -25,15 +25,19 @@ static bool is_expression (TypedAST::TypedAST* ast) {
 void eval_stmt(TypedAST::TypedAST* ast, Interpreter& e) {
 	eval(ast, e);
 	if (is_expression(ast))
-		e.m_env.pop_unsafe();
+		e.m_stack.pop_unsafe();
+}
+
+gc_ptr<Reference> rewrap(Value* x, Interpreter& e) {
+	return e.new_reference(value_of(x));
 }
 
 void eval(TypedAST::Declaration* ast, Interpreter& e) {
 	auto ref = e.new_reference(e.null());
-	e.m_env.push(ref.get());
+	e.m_stack.push(ref.get());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
-		auto value = e.m_env.pop();
+		auto value = e.m_stack.pop();
 		ref->m_value = value_of(value.get());
 	}
 };
@@ -43,7 +47,7 @@ void eval(TypedAST::DeclarationList* ast, Interpreter& e) {
 		auto ref = e.new_reference(e.null());
 		e.global_declare_direct(decl.identifier_text(), ref.get());
 		eval(decl.m_value, e);
-		auto value = e.m_env.pop();
+		auto value = e.m_stack.pop();
 		ref->m_value = value.get();
 	}
 };
@@ -66,7 +70,7 @@ void eval(TypedAST::BooleanLiteral* ast, Interpreter& e) {
 };
 
 void eval(TypedAST::NullLiteral* ast, Interpreter& e) {
-	e.m_env.push(e.null());
+	e.m_stack.push(e.null());
 };
 
 void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
@@ -75,14 +79,14 @@ void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 	for (auto& decl : ast->m_body) {
 		if (decl.m_value) {
 			eval(decl.m_value, e);
-			auto value = e.m_env.pop();
+			auto value = e.m_stack.pop();
 			result->m_value[decl.identifier_text().str()] = value.get();
 		} else {
 			Log::fatal("declaration in dictionary must have a value");
 		}
 	}
 
-	e.m_env.push(result.get());
+	e.m_stack.push(result.get());
 }
 
 void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
@@ -90,11 +94,10 @@ void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto value_handle = e.m_env.pop();
-		auto* value = value_of(value_handle.get());
-		result->append(e.new_reference(value).get());
+		auto value_handle = e.m_stack.pop();
+		result->append(rewrap(value_handle.get(), e).get());
 	}
-	e.m_env.push(result.get());
+	e.m_stack.push(result.get());
 }
 
 void eval(TypedAST::Identifier* ast, Interpreter& e) {
@@ -103,26 +106,26 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 		if (ast->m_frame_offset == INT_MIN) {
 			Log::FatalStream() << "MISSING LAYOUT FOR AN IDENTIFIER" << ast->text().str();
 		}
-		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
+		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset));
 	} else {
-		e.m_env.push(e.global_access(ast->text()));
+		e.m_stack.push(e.global_access(ast->text()));
 	}
 };
 
 void eval(TypedAST::Block* ast, Interpreter& e) {
-	e.m_env.start_stack_region();
+	e.m_stack.start_stack_region();
 	for (auto stmt : ast->m_body) {
 		eval_stmt(stmt, e);
 		if (e.m_return_value)
 			break;
 	}
-	e.m_env.end_stack_region();
+	e.m_stack.end_stack_region();
 };
 
 void eval(TypedAST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
-	auto value = e.m_env.pop();
+	auto value = e.m_stack.pop();
 	e.save_return_value(value_of(value.get()));
 };
 
@@ -141,13 +144,13 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	// TODO: This is a big hack. pushing nullptr into the
 	// stack should actually never happen.
 	for (int i = callee->m_captures.size(); i--;)
-		e.m_env.push(nullptr);
+		e.m_stack.push(nullptr);
 
 	for (auto& kv : callee->m_captures) {
 		auto capture_value = value_of(as<Reference>(kv.second));
 		// TODO: I would like to get rid of this hash table access
 		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_env.m_stack[e.m_env.m_frame_ptr + offset] = kv.second;
+		e.m_stack.frame_at(offset) = kv.second;
 	}
 
 	// this feels really dumb:
@@ -156,43 +159,42 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	// stack. It is doubly dumb when we eval a seq-expr (because it does a
 	// save-pop sequence)
 	eval(callee->m_def->m_body, e);
-	e.save_return_value(e.m_env.pop_unsafe());
+	e.save_return_value(e.m_stack.pop_unsafe());
 }
 
 void eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
 	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_env.m_stack[e.m_env.m_frame_ptr - arg_count], arg_count};
+	Span<Value*> args = {&e.m_stack.frame_at(-arg_count), arg_count};
 	e.save_return_value(callee->m_fptr(args, e));
 }
 
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> callee_handle = e.m_env.pop();
+	gc_ptr<Value> callee_handle = e.m_stack.pop();
 	auto* callee = value_of(callee_handle.get());
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	e.m_env.start_stack_region();
+	e.m_stack.start_stack_region();
 
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
-			e.m_env.m_stack.back() =
-			    e.new_reference(value_of(e.m_env.m_stack.back())).get();
+			e.m_stack.access(0) = rewrap(e.m_stack.access(0), e).get();
 		}
 		// arguments go before the frame pointer
-		e.m_env.start_stack_frame();
+		e.m_stack.start_stack_frame();
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist) {
 			eval(expr, e);
 		}
 		// arguments go before the frame pointer
-		e.m_env.start_stack_frame();
+		e.m_stack.start_stack_frame();
 
 		eval_call_native_function(
 		    static_cast<NativeFunction*>(callee), arg_count, e);
@@ -200,30 +202,30 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
 
-	e.m_env.end_stack_frame();
-	e.m_env.end_stack_region();
-	e.m_env.push(e.fetch_return_value());
+	e.m_stack.end_stack_frame();
+	e.m_stack.end_stack_region();
+	e.m_stack.push(e.fetch_return_value());
 }
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
-	auto callee_handle = e.m_env.pop();
+	auto callee_handle = e.m_stack.pop();
 	auto* callee = value_as<Array>(callee_handle.get());
 
 	eval(ast->m_index, e);
-	auto index_handle = e.m_env.pop();
+	auto index_handle = e.m_stack.pop();
 	auto* index = value_as<Integer>(index_handle.get());
 
-	e.m_env.push(callee->at(index->m_value));
+	e.m_stack.push(callee->at(index->m_value));
 };
 
 void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = e.m_env.pop();
+	auto condition_handle = e.m_stack.pop();
 	auto* condition = value_as<Boolean>(condition_handle.get());
 
 	if (condition->m_value)
@@ -240,25 +242,25 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		captures.push_back({
 			capture.first,
-			e.m_env.m_stack[e.m_env.m_frame_ptr + capture.second.outer_frame_offset]});
+			e.m_stack.frame_at(capture.second.outer_frame_offset)});
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
-	e.m_env.push(result.get());
+	e.m_stack.push(result.get());
 };
 
 void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
-	auto rec_handle = e.m_env.pop();
+	auto rec_handle = e.m_stack.pop();
 	auto rec = value_as<Record>(rec_handle.get());
-	e.m_env.push(rec->m_value[ast->m_member->m_text]);
+	e.m_stack.push(rec->m_value[ast->m_member->m_text]);
 }
 
 void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant = value_as<Variant>(e.m_env.m_stack.back());
+	auto variant = value_as<Variant>(e.m_stack.access(0));
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
@@ -266,8 +268,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(value_of(variant_value));
-	e.m_env.m_stack.back() = ref.get();
+	e.m_stack.access(0) = rewrap(variant_value, e).get();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -278,13 +279,13 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 
 	// evil tinkering with the stack internals
 	// (we just delete the variant value from behind the result)
-	e.m_env.m_stack[e.m_env.m_stack.size() - 2] = e.m_env.m_stack.back();
-	e.m_env.pop_unsafe();
+	e.m_stack.access(1) = e.m_stack.access(0);
+	e.m_stack.pop_unsafe();
 }
 
 void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
-	auto constructor_handle = e.m_env.pop();
+	auto constructor_handle = e.m_stack.pop();
 	auto constructor = value_of(constructor_handle.get());
 
 	if (constructor->type() == ValueTag::RecordConstructor) {
@@ -292,22 +293,22 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 
 		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
-		int storage_point = e.m_env.m_stack_ptr;
+		int storage_point = e.m_stack.m_stack_ptr;
 		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i)
 			eval(ast->m_args[i], e);
 
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			record[record_constructor->m_keys[i]] =
-			    e.m_env.m_stack[storage_point + i];
+			    e.m_stack.m_stack[storage_point + i];
 		}
 		
 		auto result = e.m_gc->new_record(std::move(record));
 
-		while (e.m_env.m_stack_ptr > storage_point)
-			e.m_env.pop();
+		while (e.m_stack.m_stack_ptr > storage_point)
+			e.m_stack.pop();
 
-		e.m_env.push(result.get());
+		e.m_stack.push(result.get());
 	} else if (constructor->type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
@@ -315,24 +316,24 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, e.m_env.m_stack.back());
-		e.m_env.pop();
+		    variant_constructor->m_constructor, e.m_stack.access(0));
 
-		e.m_env.push(result.get());
+		// replace value with variant wrapper
+		e.m_stack.access(0) = result.get();
 	}
 }
 
 void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
 	assert(e.m_return_value);
-	e.m_env.push(e.fetch_return_value());
+	e.m_stack.push(e.fetch_return_value());
 }
 
 void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = e.m_env.pop();
+	auto condition_handle = e.m_stack.pop();
 	auto* condition = value_as<Boolean>(condition_handle.get());
 
 	if (condition->m_value)
@@ -342,13 +343,13 @@ void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 };
 
 void eval(TypedAST::ForStatement* ast, Interpreter& e) {
-	e.m_env.start_stack_region();
+	e.m_stack.start_stack_region();
 
 	eval(&ast->m_declaration, e);
 
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_handle = e.m_env.pop();
+		auto condition_handle = e.m_stack.pop();
 		auto* condition = value_as<Boolean>(condition_handle.get());
 
 		if (!condition->m_value)
@@ -360,16 +361,16 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 			break;
 
 		eval(ast->m_action, e);
-		e.m_env.pop_unsafe();
+		e.m_stack.pop_unsafe();
 	}
 
-	e.m_env.end_stack_region();
+	e.m_stack.end_stack_region();
 };
 
 void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_handle = e.m_env.pop();
+		auto condition_handle = e.m_stack.pop();
 		auto* condition = value_as<Boolean>(condition_handle.get());
 
 		if (!condition->m_value)
