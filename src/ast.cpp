@@ -298,68 +298,46 @@ void print_impl(ConstructorExpression* ast, int d) {
 }
 
 void print_impl(AST* ast, int d) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                         \
+		return print_impl(static_cast<type*>(ast), d);
+
 	switch (ast->type()) {
-	case ASTTag::NumberLiteral:
-		return print_impl(static_cast<NumberLiteral*>(ast), d);
-	case ASTTag::IntegerLiteral:
-		return print_impl(static_cast<IntegerLiteral*>(ast), d);
-	case ASTTag::StringLiteral:
-		return print_impl(static_cast<StringLiteral*>(ast), d);
-	case ASTTag::BooleanLiteral:
-		return print_impl(static_cast<BooleanLiteral*>(ast), d);
-	case ASTTag::NullLiteral:
-		return print_impl(static_cast<NullLiteral*>(ast), d);
-	case ASTTag::ArrayLiteral:
-		return print_impl(static_cast<ArrayLiteral*>(ast), d);
-	case ASTTag::DictionaryLiteral:
-		return print_impl(static_cast<DictionaryLiteral*>(ast), d);
-	case ASTTag::BlockFunctionLiteral:
-		return print_impl(static_cast<BlockFunctionLiteral*>(ast), d);
-	case ASTTag::FunctionLiteral:
-		return print_impl(static_cast<FunctionLiteral*>(ast), d);
+		DISPATCH(NumberLiteral)
+		DISPATCH(IntegerLiteral)
+		DISPATCH(StringLiteral)
+		DISPATCH(BooleanLiteral)
+		DISPATCH(NullLiteral)
+		DISPATCH(ArrayLiteral)
+		DISPATCH(DictionaryLiteral)
+		DISPATCH(BlockFunctionLiteral)
+		DISPATCH(FunctionLiteral)
 
-	case ASTTag::Identifier:
-		return print_impl(static_cast<Identifier*>(ast), d);
-	case ASTTag::BinaryExpression:
-		return print_impl(static_cast<BinaryExpression*>(ast), d);
-	case ASTTag::CallExpression:
-		return print_impl(static_cast<CallExpression*>(ast), d);
-	case ASTTag::IndexExpression:
-		return print_impl(static_cast<IndexExpression*>(ast), d);
-	case ASTTag::TernaryExpression:
-		return print_impl(static_cast<TernaryExpression*>(ast), d);
-	case ASTTag::AccessExpression:
-		return print_impl(static_cast<AccessExpression*>(ast), d);
-	case ASTTag::SequenceExpression:
-		return print_impl(static_cast<SequenceExpression*>(ast), d);
-	case ASTTag::MatchExpression:
-		return print_impl(static_cast<MatchExpression*>(ast), d);
-	case ASTTag::ConstructorExpression:
-		return print_impl(static_cast<ConstructorExpression*>(ast), d);
+		DISPATCH(Identifier)
+		DISPATCH(BinaryExpression)
+		DISPATCH(CallExpression)
+		DISPATCH(IndexExpression)
+		DISPATCH(TernaryExpression)
+		DISPATCH(AccessExpression)
+		DISPATCH(SequenceExpression)
+		DISPATCH(MatchExpression)
+		DISPATCH(ConstructorExpression)
 
-	case ASTTag::DeclarationList:
-		return print_impl(static_cast<DeclarationList*>(ast), d);
-	case ASTTag::Declaration:
-		return print_impl(static_cast<Declaration*>(ast), d);
+		DISPATCH(DeclarationList)
+		DISPATCH(Declaration)
 
-	case ASTTag::Block:
-		return print_impl(static_cast<Block*>(ast), d);
-	case ASTTag::ReturnStatement:
-		return print_impl(static_cast<ReturnStatement*>(ast), d);
-	case ASTTag::IfElseStatement:
-		return print_impl(static_cast<IfElseStatement*>(ast), d);
-	case ASTTag::ForStatement:
-		return print_impl(static_cast<ForStatement*>(ast), d);
-	case ASTTag::WhileStatement:
-		return print_impl(static_cast<WhileStatement*>(ast), d);
+		DISPATCH(Block)
+		DISPATCH(ReturnStatement)
+		DISPATCH(IfElseStatement)
+		DISPATCH(ForStatement)
+		DISPATCH(WhileStatement)
 
-	case ASTTag::TypeTerm:
-		return print_impl(static_cast<TypeTerm*>(ast), d);
-	case ASTTag::UnionExpression:
-		return print_impl(static_cast<UnionExpression*>(ast), d);
-	case ASTTag::StructExpression:
-		return print_impl(static_cast<StructExpression*>(ast), d);
+		DISPATCH(TypeTerm)
+		DISPATCH(UnionExpression)
+		DISPATCH(StructExpression)
 	}
+
+#undef DISPATCH
 
 	print_indentation(d);
 	std::cout << "(UNSUPPORTED " << ast_string[int(ast->type())] << ")";
