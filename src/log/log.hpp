@@ -2,6 +2,8 @@
 
 namespace Log {
 
+void info(std::string const&);
+
 void warning(char const*);
 
 void error(char const*);

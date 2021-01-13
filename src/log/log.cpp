@@ -4,6 +4,11 @@
 
 namespace Log {
 
+void info(std::string const& str) {
+	std::clog << "[ Info ] " << str << "\n";
+}
+
+
 void warning(char const* str) {
 	std::clog << "[ Warning ] " << str << "\n";
 }

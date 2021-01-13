@@ -1,12 +1,12 @@
 #include "typecheck.hpp"
 
+#include "./log/log.hpp"
 #include "compile_time_environment.hpp"
 #include "typechecker.hpp"
 #include "typechecker_types.hpp"
 #include "typed_ast.hpp"
 
 #include <cassert>
-#include <iostream>
 #include <unordered_set>
 
 namespace TypeChecker {
@@ -293,9 +293,10 @@ void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
 #if DEBUG
 	auto poly = ast->m_decl_type;
 	auto& poly_data = tc.m_core.poly_data[poly];
-	std::cerr << "@@ Type of local variable " << ast->identifier_text() << '\n';
-	std::cerr << "@@ Has " << poly_data.vars.size() << " variables\n";
-	std::cerr << "@@ It is equal to:\n";
+	Log::info(
+	    "Type of local variable '" + ast->identifier_text().str() + "' has " +
+	    std::to_string(poly_data.vars.size()) + " type variables");
+	Log::info("The type is:");
 	tc.m_core.m_mono_core.print_node(poly_data.base);
 #endif
 }
@@ -418,9 +419,9 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		IGNORE(Constructor);
 	}
 
-	std::cerr << "Error: AST type not handled in typecheck: "
-	          << typed_ast_string[(int)ast->type()] << std::endl;
-	assert(0);
+	Log::fatal(
+	    std::string("(internal) AST type not handled in typecheck: ") +
+	    typed_ast_string[(int)ast->type()]);
 
 #undef DISPATCH
 #undef IGNORE
