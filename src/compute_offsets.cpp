@@ -1,8 +1,7 @@
 #include "compute_offsets.hpp"
 
+#include "./log/log.hpp"
 #include "typed_ast.hpp"
-
-#include <iostream>
 
 #include <cassert>
 
@@ -208,9 +207,8 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
-	          << ": " << typed_ast_string[(int)ast->type()] << '\n';
-	assert(0);
+	Log::FatalStream() << "(internal) Unhandled case in compute_offsets ("
+	                   << typed_ast_string[(int)ast->type()] << ")";
 }
 
 } // namespace TypeChecker
