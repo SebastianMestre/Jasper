@@ -26,17 +26,6 @@ AST* desugar(DeclarationList* ast, Allocator& alloc) {
 	return ast;
 }
 
-AST* desugar(ObjectLiteral* ast, Allocator& alloc) {
-	// TODO: convert
-	// obt { x : t1 = e1; y : t2 = e2; }
-	// into
-	// struct { x : t1; y : t2; } { e1; e2; }
-	for (int i = 0; i < ast->m_body.size(); ++i)
-		desugar(&ast->m_body[i], alloc);
-
-	return ast;
-}
-
 AST* desugar(ArrayLiteral* ast, Allocator& alloc) {
 	for (int i = 0; i < ast->m_elements.size(); ++i)
 		ast->m_elements[i] = desugar(ast->m_elements[i], alloc);
@@ -220,7 +209,6 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		RETURN(StringLiteral);
 		RETURN(BooleanLiteral);
 		RETURN(NullLiteral);
-		DISPATCH(ObjectLiteral);
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
 		DISPATCH(BlockFunctionLiteral);

@@ -73,22 +73,6 @@ void eval(TypedAST::NullLiteral* ast, Interpreter& e) {
 	e.m_stack.push(e.null());
 };
 
-void eval(TypedAST::ObjectLiteral* ast, Interpreter& e) {
-	auto result = e.new_record({});
-
-	for (auto& decl : ast->m_body) {
-		if (decl.m_value) {
-			eval(decl.m_value, e);
-			auto value = e.m_stack.pop();
-			result->m_value[decl.identifier_text()] = value.get();
-		} else {
-			Log::fatal("declaration in object must have a value");
-		}
-	}
-
-	e.m_stack.push(result.get());
-}
-
 void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 	auto result = e.new_dictionary({});
 
@@ -440,7 +424,6 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(StringLiteral);
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
-		DISPATCH(ObjectLiteral);
 		DISPATCH(ArrayLiteral);
 		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
