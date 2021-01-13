@@ -240,11 +240,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		RETURN(TupleExpression);
 	}
 
-	{
-		std::stringstream ss;
-		ss << "(internal) AST type not handled in desugar: " << ast_string[(int)ast->type()];
-		Log::fatal(ss.str().c_str());
-	}
+	Log::FatalStream() << "(internal) AST type not handled in desugar: " << ast_string[(int)ast->type()];
 
 #undef RETURN
 #undef DISPATCH

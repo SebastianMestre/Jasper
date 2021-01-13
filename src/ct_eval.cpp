@@ -293,7 +293,7 @@ TypedAST::Constructor* constructor_from_ast(
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
 	} else {
-		assert(0 && "wrong constructor metatype");
+		Log::fatal("Using something whose metatype is neither 'monotype' nor 'constructor' as a constructor");
 	}
 
 	return constructor;
@@ -406,12 +406,8 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(TypeTerm);
 	}
 
-	{
-		std::stringstream ss;
-		ss << "(internal) Unhandled case in ct_eval : "
-		   << typed_ast_string[int(ast->type())];
-		Log::fatal(ss.str().c_str());
-	}
+	Log::FatalStream() << "(internal) Unhandled case in ct_eval : "
+	                   << typed_ast_string[int(ast->type())];
 
 #undef DISPATCH
 #undef RETURN
