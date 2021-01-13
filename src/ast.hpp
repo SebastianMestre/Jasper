@@ -97,13 +97,6 @@ struct NullLiteral : public AST {
 	    : AST {ASTTag::NullLiteral} {}
 };
 
-struct ObjectLiteral : public AST {
-	std::vector<Declaration> m_body;
-
-	ObjectLiteral()
-	    : AST {ASTTag::ObjectLiteral} {}
-};
-
 struct ArrayLiteral : public AST {
 	std::vector<AST*> m_elements;
 

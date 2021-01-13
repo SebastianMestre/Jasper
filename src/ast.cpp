@@ -63,17 +63,6 @@ void print_impl(NullLiteral* ast, int d) {
 	std::cout << "(null-literal)";
 }
 
-void print_impl(ObjectLiteral* ast, int d) {
-	print_indentation(d - 1);
-	std::cout << "[ ObjectLiteral\n";
-	print_indentation(d);
-	std::cout << "Declarations:\n";
-	for (auto decl : ast->m_body)
-		print(&decl, d + 1);
-	print_indentation(d - 1);
-	std::cout << "]\n";
-}
-
 void print_impl(ArrayLiteral* ast, int d) {
 	print_indentation(d);
 	std::cout << "(array-literal";
@@ -320,8 +309,6 @@ void print_impl(AST* ast, int d) {
 		return print_impl(static_cast<BooleanLiteral*>(ast), d);
 	case ASTTag::NullLiteral:
 		return print_impl(static_cast<NullLiteral*>(ast), d);
-	case ASTTag::ObjectLiteral:
-		return print_impl(static_cast<ObjectLiteral*>(ast), d);
 	case ASTTag::ArrayLiteral:
 		return print_impl(static_cast<ArrayLiteral*>(ast), d);
 	case ASTTag::DictionaryLiteral:

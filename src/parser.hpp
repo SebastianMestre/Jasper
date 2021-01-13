@@ -45,7 +45,6 @@ struct Parser {
 	Writer<AST::AST*> parse_terminal();
 	Writer<AST::AST*> parse_ternary_expression();
 	Writer<AST::AST*> parse_function();
-	Writer<AST::AST*> parse_object_literal();
 	Writer<AST::AST*> parse_array_literal();
 	Writer<AST::AST*> parse_dictionary_literal();
 	Writer<std::vector<AST::AST*>> parse_argument_list();

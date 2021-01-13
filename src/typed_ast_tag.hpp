@@ -6,7 +6,6 @@
 	X(StringLiteral)                                                           \
 	X(BooleanLiteral)                                                          \
 	X(NullLiteral)                                                             \
-	X(ObjectLiteral)                                                           \
 	X(ArrayLiteral)                                                            \
 	X(DictionaryLiteral)                                                       \
 	X(FunctionLiteral)                                                         \
