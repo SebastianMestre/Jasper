@@ -26,7 +26,6 @@ void interpreter_tests(Test::Tester& tests) {
 				a + b;
 				cmp : bool = a < c;
 
-				sqrt5 := obt{x:=1;y:=2;} |> norm();
 				// sixteen := my_lib.times_pi(my_lib.five()) + 1;
 			};
 
@@ -43,13 +42,6 @@ void interpreter_tests(Test::Tester& tests) {
 					}
 				return 0;
 			};
-
-			// f := obt {
-				// greeting := "Hello, ";
-				// __invoke := fn (name : string) {
-					// print(greeting + name);
-				// };
-			// };
 
 			funct := fn (name : string) {};
 

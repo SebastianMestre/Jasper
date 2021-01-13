@@ -506,12 +506,6 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return expr;
 	}
 
-	if (token->m_type == TokenTag::KEYWORD_OBJECT) {
-		auto object = parse_object_literal();
-		CHECK_AND_RETURN(result, object);
-		return object;
-	}
-
 	if (token->m_type == TokenTag::KEYWORD_DICT) {
 		auto dictionary = parse_dictionary_literal();
 		CHECK_AND_RETURN(result, dictionary);
@@ -589,7 +583,6 @@ Writer<AST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 
 	if (types_allowed and
 	   (match(TokenTag::KEYWORD_DICT) or
-	    match(TokenTag::KEYWORD_OBJECT) or
 	    match(TokenTag::KEYWORD_ARRAY))) {
 		token = peek();
 		m_lexer->advance();
@@ -618,23 +611,6 @@ Writer<AST::AST*> Parser::parse_array_literal() {
 
 	auto e = m_ast_allocator->make<AST::ArrayLiteral>();
 	e->m_elements = std::move(elements.m_result);
-
-	return make_writer<AST::AST*>(e);
-}
-
-Writer<AST::AST*> Parser::parse_object_literal() {
-	Writer<AST::AST*> result = {
-	    {"Failed to parse object literal"}};
-
-	REQUIRE(result, TokenTag::KEYWORD_OBJECT);
-	REQUIRE(result, TokenTag::BRACE_OPEN);
-
-	auto declarations = parse_declaration_list(TokenTag::BRACE_CLOSE);
-	CHECK_AND_RETURN(result, declarations);
-	REQUIRE(result, TokenTag::BRACE_CLOSE);
-
-	auto e = m_ast_allocator->make<AST::ObjectLiteral>();
-	e->m_body = std::move(declarations.m_result);
 
 	return make_writer<AST::AST*>(e);
 }
