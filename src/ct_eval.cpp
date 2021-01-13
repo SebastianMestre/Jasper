@@ -406,12 +406,8 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(TypeTerm);
 	}
 
-	{
-		std::stringstream ss;
-		ss << "(internal) Unhandled case in ct_eval : "
-		   << typed_ast_string[int(ast->type())];
-		Log::fatal(ss.str());
-	}
+	Log::FatalStream() << "(internal) Unhandled case in ct_eval : "
+	                   << typed_ast_string[int(ast->type())];
 
 #undef DISPATCH
 #undef RETURN

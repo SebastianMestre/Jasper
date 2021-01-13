@@ -101,7 +101,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
-			Log::fatal(("MISSING LAYOUT FOR AN IDENTIFIER" + ast->text().str()).c_str());
+			Log::FatalStream() << "MISSING LAYOUT FOR AN IDENTIFIER" << ast->text().str();
 		}
 		e.m_env.push(e.m_env.m_stack[e.m_env.m_frame_ptr + ast->m_frame_offset]);
 	} else {
@@ -450,12 +450,8 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(Constructor);
 	}
 
-	{
-		std::stringstream ss;
-		ss << "(internal) unhandled case in eval: "
-		   << typed_ast_string[(int)ast->type()];
-		Log::fatal(ss.str());
-	}
+	Log::FatalStream() << "(internal) unhandled case in eval: "
+	                   << typed_ast_string[(int)ast->type()];
 }
 
 } // namespace Interpreter
