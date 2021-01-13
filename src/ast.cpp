@@ -73,25 +73,24 @@ void print_impl(ObjectLiteral* ast, int d) {
 }
 
 void print_impl(ArrayLiteral* ast, int d) {
-	print_indentation(d - 1);
-	std::cout << "[ ArrayLiteral\n";
 	print_indentation(d);
-	std::cout << "Elements:\n";
-	for (auto elem : ast->m_elements)
-		print(elem, d + 1);
-	print_indentation(d - 1);
-	std::cout << "]\n";
+	std::cout << "(array-literal";
+	for (auto elem : ast->m_elements) {
+		std::cout << "\n";
+		print(elem, d + indent_width);
+	}
+	std::cout << ")";
 }
 
 void print_impl(DictionaryLiteral* ast, int d) {
-	print_indentation(d - 1);
-	std::cout << "[ DictionaryLiteral\n";
 	print_indentation(d);
-	std::cout << "Declarations:\n";
-	for (auto decl : ast->m_body)
-		print(&decl, d + 1);
-	print_indentation(d - 1);
-	std::cout << "]\n";
+	std::cout << "(dictionary-literal";
+	print_indentation(d+1);
+	for (auto decl : ast->m_body) {
+		std::cout << "\n";
+		print(&decl, d + indent_width);
+	}
+	std::cout << ")";
 }
 
 void print_impl(Identifier* ast, int d) {
@@ -101,22 +100,22 @@ void print_impl(Identifier* ast, int d) {
 
 void print_impl(Block* ast, int d) {
 	print_indentation(d);
-	std::cout << "(block-stmt [";
+	std::cout << "(block-stmt ";
 	for (auto child : ast->m_body) {
 		std::cout << "\n";
 		print(child, d + indent_width);
 	}
-	std::cout << "])";
+	std::cout << ")";
 }
 
 void print_impl(BlockFunctionLiteral* ast, int d) {
 	print_indentation(d);
-	std::cout << "(function-literal [";
+	std::cout << "(function-literal (";
 	for (auto arg : ast->m_args) {
 		std::cout << "\n";
 		print(&arg, d + indent_width);
 	}
-	std::cout << "]\n";
+	std::cout << ")\n";
 
 	print(ast->m_body, d + indent_width);
 
@@ -125,12 +124,12 @@ void print_impl(BlockFunctionLiteral* ast, int d) {
 
 void print_impl(FunctionLiteral* ast, int d) {
 	print_indentation(d);
-	std::cout << "(short-function-literal [";
+	std::cout << "(short-function-literal (";
 	for (auto arg : ast->m_args) {
 		std::cout << "\n";
 		print(&arg, d + indent_width);
 	}
-	std::cout << "]\n";
+	std::cout << ")\n";
 
 	print(ast->m_body, d + indent_width);
 
@@ -164,60 +163,52 @@ void print_impl(CallExpression* ast, int d) {
 }
 
 void print_impl(IndexExpression* ast, int d) {
-	std::string stab(d, tabc);
-	std::string tab(d+1, tabc);
-	std::cout << stab << "[ IndexExpression\n" << tab << "Callee:\n";
-	print(ast->m_callee, d + 1);
-	std::cout << tab << "Index:\n";
-	print(ast->m_index, d + 1);
-	std::cout << stab << "]\n";
+	print_indentation(d);
+	std::cout << "(index-expression\n";
+	print(ast->m_callee, d + indent_width);
+	std::cout << "\n";
+	print(ast->m_index, d + indent_width);
+	std::cout << ")";
 }
 
 void print_impl(AccessExpression* ast, int d) {
-	print_indentation(d - 1);
-	std::cout << "[ AccessExpression\n";
-
 	print_indentation(d);
-	std::cout << "Object:\n";
-	print(ast->m_record, d + 1);
-
-	print_indentation(d);
-	std::cout << "Member: " << ast->m_member->m_text << "\n";
-
-	print_indentation(d - 1);
-	std::cout << "]\n";
+	std::cout << "(access-expression\n";
+	print(ast->m_record, d + indent_width);
+	std::cout << "\n";
+	print_indentation(d + indent_width);
+	std::cout << "\"" << ast->m_member->m_text << "\"";
+	std::cout << ")";
 }
 
 void print_impl(TernaryExpression* ast, int d) {
-	std::string stab(d, tabc);
-	std::string tab(d+1, tabc);
-	std::cout << stab << "[ TernaryExpression\n" << tab << "Condition:\n";
-	print(ast->m_condition, d + 1);
-	std::cout << tab << "Then:\n";
-	print(ast->m_then_expr, d + 1);
-	std::cout << tab << "Else:\n";
-	print(ast->m_else_expr, d + 1);
-	std::cout << stab << "]\n";
+	print_indentation(d);
+	std::cout << "(ternary-expression\n";
+	print(ast->m_condition, d + indent_width);
+	std::cout << "\n";
+	print(ast->m_then_expr, d + indent_width);
+	std::cout << "\n";
+	print(ast->m_else_expr, d + indent_width);
+	std::cout << ")";
 }
 
 void print_impl(MatchExpression* ast, int d) {
-	std::string stab(d, tabc);
-	std::string tab(d+1, tabc);
-	std::cout << stab << "[ MatchExpression\n" << tab << "Matchee:\n";
-	print(&ast->m_matchee, d + 1);
-	if (ast->m_type_hint) {
-		std::cout << tab << "Type:\n";
-		print(ast->m_type_hint, d + 1);
-	}
-	std::cout << tab << "Cases:\n";
+	print_indentation(d);
+	std::cout << "(match-expression\n";
+	print(&ast->m_matchee, d + indent_width);
+	std::cout << "\n";
+	print(ast->m_type_hint, d + indent_width);
 	for (auto const& case_data : ast->m_cases) {
-		std::cout << tab << "Case " << case_data.m_name->m_text.str() << ":\n";
-		std::cout << tab << "Identifier " << case_data.m_identifier->m_text.str() << ":\n";
-		if (case_data.m_type_hint)
-			print(case_data.m_type_hint, d + 1);
-		print(case_data.m_expression, d + 1);
+		std::cout << "\n";
+		print_indentation(d + indent_width + 1);
+		std::cout << "(\"" << case_data.m_name->m_text.str() << "\" \""
+		          << case_data.m_identifier->m_text.str() << "\"\n";
+		print(case_data.m_type_hint, d + indent_width + 1);
+		std::cout << "\n";
+		print(case_data.m_expression, d + indent_width + 1);
+		std::cout << ")";
 	}
-	std::cout << stab << "]\n";
+	std::cout << ")";
 }
 
 void print_impl(SequenceExpression* ast, int d) {
@@ -280,16 +271,26 @@ void print_impl(TypeTerm* ast, int d) {
 
 void print_impl(UnionExpression* ast, int d) {
 	print_indentation(d);
-	std::cout << "(union-expression [";
+	std::cout << "(union-expression ";
 	for (int i = 0; i < ast->m_constructors.size(); ++i) {
 		std::cout << "\n";
 		print_indentation(d + indent_width);
-		std::cout << "(constructor \"" << ast->m_constructors[i].text() << "\"\n";
+		std::cout << "(\"" << ast->m_constructors[i].text() << "\"\n";
 		print(ast->m_types[i], d + 2 * indent_width);
-
 		std::cout << ")";
 	}
-	std::cout << "])";
+	std::cout << ")";
+}
+
+void print_impl(ConstructorExpression* ast, int d) {
+	print_indentation(d);
+	std::cout << "(construct-expression\n";
+	print(ast->m_constructor, d + indent_width);
+	for (auto* arg : ast->m_args) {
+		std::cout << "\n";
+		print(arg, d + indent_width);
+	}
+	std::cout << ")";
 }
 
 void print_impl(AST* ast, int d) {
@@ -329,6 +330,10 @@ void print_impl(AST* ast, int d) {
 		return print_impl(static_cast<AccessExpression*>(ast), d);
 	case ASTTag::SequenceExpression:
 		return print_impl(static_cast<SequenceExpression*>(ast), d);
+	case ASTTag::MatchExpression:
+		return print_impl(static_cast<MatchExpression*>(ast), d);
+	case ASTTag::ConstructorExpression:
+		return print_impl(static_cast<ConstructorExpression*>(ast), d);
 
 	case ASTTag::DeclarationList:
 		return print_impl(static_cast<DeclarationList*>(ast), d);
@@ -353,7 +358,7 @@ void print_impl(AST* ast, int d) {
 	}
 
 	print_indentation(d);
-	std::cout << "(UNSUPPORTED)";
+	std::cout << "(UNSUPPORTED " << ast_string[int(ast->type())] << ")";
 }
 
 void print(AST* ast, int d) {
