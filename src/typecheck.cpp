@@ -55,7 +55,7 @@ void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 
 void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	TypedAST::Declaration* declaration = ast->m_declaration;
-	assert(declaration && "accessed an unmatched identifier");
+	assert(declaration);
 
 	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
 	ast->m_meta_type = meta_type;

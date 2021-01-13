@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "./log/log.hpp"
 #include "compile_time_environment.hpp"
 #include "error_report.hpp"
 #include "typed_ast.hpp"
@@ -14,8 +15,17 @@ namespace TypeChecker {
 #define CHECK_AND_RETURN(expr)                                                 \
 	{                                                                          \
 		auto err = expr;                                                       \
-		if (!err.ok())                                                         \
+		if (!err.ok()) {                                                       \
 			return err;                                                        \
+		}                                                                      \
+	}
+
+#define CHECK_AND_WRAP(expr, wrap)                                             \
+	{                                                                          \
+		auto err = (expr);                                                     \
+		if (!err.ok()) {                                                       \
+			return {(wrap), {std::move(err)}};                                 \
+		}                                                                      \
 	}
 
 [[nodiscard]] ErrorReport match_identifiers(
@@ -27,8 +37,11 @@ namespace TypeChecker {
 	if (ast->m_type_hint)
 		CHECK_AND_RETURN(match_identifiers(ast->m_type_hint, env));
 
-	if (ast->m_value)
-		CHECK_AND_RETURN(match_identifiers(ast->m_value, env));
+	if (ast->m_value) {
+		CHECK_AND_WRAP(
+		    match_identifiers(ast->m_value, env),
+		    "While scanning declaration '" + ast->identifier_text().str() + "'");
+	}
 
 	return {};
 }
@@ -41,7 +54,7 @@ namespace TypeChecker {
 	if (!declaration) {
 		// TODO: clean up how we build error reports
 		return {
-		    "ERROR @ line " + std::to_string(ast->m_token->m_line0 + 1) +
+		    "at line " + std::to_string(ast->m_token->m_line0 + 1) +
 		    " : accessed undeclared identifier '" + ast->text().str() + "'"};
 	}
 
@@ -229,7 +242,10 @@ namespace TypeChecker {
 			CHECK_AND_RETURN(match_identifiers(decl.m_type_hint, env));
 
 		if (decl.m_value)
-			CHECK_AND_RETURN(match_identifiers(decl.m_value, env));
+			CHECK_AND_WRAP(
+			    match_identifiers(decl.m_value, env),
+			    "While scanning top level declaration '" +
+			        decl.identifier_text().str() + "'");
 
 		env.exit_top_level_decl();
 	}
@@ -307,9 +323,7 @@ namespace TypeChecker {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	std::cerr << "INTERNAL ERROR: UNHANDLED CASE IN " << __PRETTY_FUNCTION__
-	          << ": " << typed_ast_string[(int)ast->type()] << '\n';
-	assert(0);
+	Log::fatal(std::string("(internal) Unhandled case in match_identifiers '") + typed_ast_string[int(ast->type())] + "'");
 }
 
 #undef CHECK_AND_RETURN
