@@ -6,7 +6,7 @@ namespace AST {
 
 namespace {
 
-constexpr int indent_width = 2;
+constexpr int indent_width = 4;
 constexpr char tabc = ' ';
 static void print_indentation (int d) {
 	for(int i = d; i-- > 0;)
@@ -278,7 +278,20 @@ void print_impl(UnionExpression* ast, int d) {
 		std::cout << "\n";
 		print_indentation(d + indent_width);
 		std::cout << "(\"" << ast->m_constructors[i].text() << "\"\n";
-		print(ast->m_types[i], d + 2 * indent_width);
+		print(ast->m_types[i], d + indent_width + 1);
+		std::cout << ")";
+	}
+	std::cout << ")";
+}
+
+void print_impl(StructExpression* ast, int d) {
+	print_indentation(d);
+	std::cout << "(struct-expression ";
+	for (int i = 0; i < ast->m_fields.size(); ++i) {
+		std::cout << "\n";
+		print_indentation(d + indent_width);
+		std::cout << "(\"" << ast->m_fields[i].text() << "\"\n";
+		print(ast->m_types[i], d + indent_width + 1);
 		std::cout << ")";
 	}
 	std::cout << ")";
@@ -357,6 +370,8 @@ void print_impl(AST* ast, int d) {
 		return print_impl(static_cast<TypeTerm*>(ast), d);
 	case ASTTag::UnionExpression:
 		return print_impl(static_cast<UnionExpression*>(ast), d);
+	case ASTTag::StructExpression:
+		return print_impl(static_cast<StructExpression*>(ast), d);
 	}
 
 	print_indentation(d);
