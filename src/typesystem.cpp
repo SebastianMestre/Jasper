@@ -73,9 +73,9 @@ TypeSystemCore::TypeSystemCore() {
 			b_data.argument_count = new_argument_count;
 
 		} else {
-			Log::fatal(
-			    "Deduced two different type functions to be equal (with IDs " +
-			    std::to_string(fa) + " and " + std::to_string(fb) + ")");
+			Log::FatalStream()
+			    << "Deduced two different type functions to be equal (with IDs "
+			    << std::to_string(fa) << " and " << std::to_string(fb) + ")";
 		}
 	};
 

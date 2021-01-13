@@ -207,9 +207,8 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	Log::fatal(
-	    std::string("(internal) Unhandled case in compute_offsets (") +
-	    typed_ast_string[(int)ast->type()] + ")");
+	Log::FatalStream() << "(internal) Unhandled case in compute_offsets ("
+	                   << typed_ast_string[(int)ast->type()] << ")";
 }
 
 } // namespace TypeChecker
