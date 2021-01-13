@@ -38,12 +38,14 @@ void print_impl(Declaration* ast, int d) {
 
 void print_impl(NumberLiteral* ast, int d) {
 	print_indentation(d);
-	std::cout << "(number-literal \"" << ast->text() << "\")";
+	char const* sign = ast->m_negative ? "-" : "";
+	std::cout << "(number-literal \"" << sign << ast->text() << "\")";
 }
 
 void print_impl(IntegerLiteral* ast, int d) {
 	print_indentation(d);
-	std::cout << "(integer-literal \"" << ast->text() << "\")";
+	char const* sign = ast->m_negative ? "-" : "";
+	std::cout << "(integer-literal \"" << sign << ast->text() << "\")";
 }
 
 void print_impl(StringLiteral* ast, int d) {

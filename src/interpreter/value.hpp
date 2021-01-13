@@ -17,11 +17,13 @@ namespace Interpreter {
 
 struct Interpreter;
 
+struct Reference;
+
 using Identifier = InternedString;
 using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
-using ArrayType = std::vector<Value*>;
+using ArrayType = std::vector<Reference*>;
 using FunctionType = TypedAST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
 using CapturesType = std::vector<std::pair<Identifier, Value*>>;
@@ -86,7 +88,7 @@ struct Array : Value {
 	Array();
 	Array(ArrayType l);
 
-	void append(Value* v);
+	void append(Reference* v);
 	Value* at(int position);
 };
 
