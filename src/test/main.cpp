@@ -15,58 +15,7 @@ void interpreter_tests(Test::Tester& tests) {
 
 	/*
 	tests.add_test(
-		std::make_unique<TestCase>(R"(
-			x : dec = 1.4;
-			y : int = 3;
-			z := fn () {
-				a := 2;
-				b : dec = (4 + 5) * 3 * 1 + 4.5 * 2;
-				c := a;
-				a + b;
-				cmp : bool = a < c;
-
-				// sixteen := my_lib.times_pi(my_lib.five()) + 1;
-			};
-
-			y := fn () {
-				print(1,z(),4);
-			};
-
-			w := fn (a,b:int,c){
-				for(i := b; i < 3; i = i + 1)
-					for(j := i + 1; j < 9; j = j + 1) {
-						if (j < 9)
-							return j;
-						j = 2*j;
-					}
-				return 0;
-			};
-
-			funct := fn (name : string) {};
-
-			sqrt := fn (x) { return (x+1) * 0.5; };
-
-			norm := fn(p){
-				// f.greeting = "Hey, ";
-				// f(" Sailor!");
-				return sqrt(p.x * p.x + p.y * p.y);
-			};
-
-			my_lib := dict {
-				five := fn() { return 6; };
-				times_pi := fn(x) { return x * 3; };
-			};
-
-			__invoke := fn () {
-				
-			};
-
-			names := dict {
-				user0 := "peter";
-				user1 := "joseph";
-				user2 := "anne";
-			};
-		)",
+		std::make_unique<TestCase>("tests/monolithic.jp",
 		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
 			eval_expression("__invoke()", env);
 			return ExitStatusTag::Ok;
@@ -74,75 +23,45 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			int_val := 1 + 2 + 3 + 4;
-			float_val := 1.0 + 1.5 + 1.0;
-			string_val := "test" + "ing" + ".";
-			int_div := 1 / 2;
-			float_div := 1.0 / 2.0;
-		)",
+	tests.add_test(std::make_unique<TestCase>("tests/basic_op.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_val", env), 10);
 	        },
-
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_val", env), 3.5);
 	        },
-
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(
-		            eval_expression("string_val", env), "testing.");
+		        return Assert::equals(eval_expression("string_val", env), "testing.");
 	        },
-
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("int_div", env), 0);
 	        },
-
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::equals(eval_expression("float_div", env), 0.5);
 	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_true(eval_expression("litt()", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_false(eval_expression("litf()", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_null(eval_expression("nullv()", env));
+	        }
 	    }));
 
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			f := fn() {
-				a := 1;
-				b := 2;
-				return a + b;
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("f()", env), 3);
-	    }));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			K := fn (x) { return fn (y) { return x; }; };
-			f := fn () {
-				a := 42;
-				b := 2;
-				return K(a)(b);
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("f()", env), 42);
-	    }));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			// K : forall a b. a -> b -> a
-			K := fn (x) => fn (y) => x;
-			// S : forall a b c. (a->b->c) -> (a->b) -> a -> c
-			S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
-			// I : foral a. a -> a
-			I := S(K)(K);
-			__invoke := fn () => I(42);
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 42);
+	tests.add_test(std::make_unique<TestCase>("tests/function.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("normal()", env), 3);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("curry()", env), 42);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("I(42)", env), 42);
+	        }
 	    }));
 
 	/*
@@ -212,104 +131,41 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			litt := fn () { return true; };
-			litf := fn () { return false; };
-			nullv := fn () { return null; };
-		)",
-	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("litt()", env));
-	        },
-
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("litf()", env));
-	        },
-
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_null(eval_expression("nullv()", env));
-	        }}));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			fib := fn(n){
-				if(n < 2) return n;
-				return fib(n-1) + fib(n-2);
-			};
-			__invoke := fn() => fib(6);
-		)",
+	tests.add_test(std::make_unique<TestCase>("tests/fib.jp",
 	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    return Assert::equals(eval_expression("__invoke()", env), 8);
 	    }));
 
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn () {
-				sum := 0;
-				N := 16;
-				for (i := 0; i < N; i = i + 1) {
-					sum = sum + i;
-				}
-				return sum;
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 120);
-	    }));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn () {
-				A := array {};
-				array_append(A, 10);
-				return A;
-			};
-		)",
+	tests.add_test(std::make_unique<TestCase>("tests/loops.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
+	                return Assert::equals(eval_expression("for_loop()", env), 120);
 	        },
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
-	        }}));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn () {
-				A := array {};
-				array_extend(A, array{10});
-				return A;
-			};
-		)",
-	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::array_of_size(eval_expression("__invoke()", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("__invoke()[0]", env), 10);
-	        }}));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn () {
-				A := array {10;10};
-				return size(A);
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 2);
+	                return Assert::equals(eval_expression("while_loop()", env), 120);
+	        }
 	    }));
 
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn () {
-				A := array {10;10};
-				return array_join(A, ",");
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), "10,10");
+	tests.add_test(std::make_unique<TestCase>("tests/native.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::array_of_size(eval_expression("append()", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(eval_expression("append()[0]", env), 10);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::array_of_size(eval_expression("extend()", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(eval_expression("extend()[0]", env), 10);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("size_of()", env), 2);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("join()", env), "10,10");
+	        }
 	    }));
 
 	/* // HEADS UP : this test won't work because we don't
@@ -335,6 +191,7 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
+	/*
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
 			f := fn(x) => x + 7;
@@ -344,22 +201,6 @@ void interpreter_tests(Test::Tester& tests) {
 		    return Assert::equals(eval_expression("__invoke()", env), 13);
 	    }));
 
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn() {
-				i := 0; sum := 0;
-
-				while(i < 16) {
-					sum = sum + i;
-					i = i + 1;
-				}
-
-				return sum;
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 120);
-	    }));
 
 	tests.add_test(std::make_unique<TestCase>(
 	    R"(
@@ -746,6 +587,7 @@ void interpreter_tests(Test::Tester& tests) {
 			    return Assert::equals(eval_expression("h", env), 1.1);
 		    }
 	    }));
+	*/
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

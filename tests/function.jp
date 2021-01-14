@@ -1,0 +1,19 @@
+normal := fn() {
+       a := 1;
+       b := 2;
+       return a + b;
+};
+
+K := fn (x) { return fn (y) { return x; }; };
+
+curry := fn () {
+       a := 42;
+       b := 2;
+       return K(a)(b);
+};
+
+P := fn (x) => fn (y) => x;
+
+S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
+
+I := S(P)(P);

@@ -1,0 +1,8 @@
+int_val := 1 + 2 + 3 + 4;
+float_val := 1.0 + 1.5 + 1.0;
+string_val := "test" + "ing" + ".";
+int_div := 1 / 2;
+float_div := 1.0 / 2.0;
+litt := fn () { return true; };
+litf := fn () { return false; };
+nullv := fn () { return null; };

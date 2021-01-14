@@ -1,0 +1,47 @@
+x : dec = 1.4;
+y : int = 3;
+z := fn () {
+	a := 2;
+	b : dec = (4 + 5) * 3 * 1 + 4.5 * 2;
+	c := a;
+	a + b;
+	cmp : bool = a < c;
+	// sixteen := my_lib.times_pi(my_lib.five()) + 1;
+};
+
+y := fn () {
+	print(1,z(),4);
+};
+
+w := fn (a, b : int, c) {
+	for(i := b; i < 3; i = i + 1)
+		for(j := i + 1; j < 9; j = j + 1) {
+			if (j < 9)
+				return j;
+			j = 2*j;
+		}
+	return 0;
+};
+
+funct := fn (name : string) {};
+
+sqrt := fn (x) { return (x+1) * 0.5; };
+
+norm := fn(p){
+      // f.greeting = "Hey, ";
+      // f(" Sailor!");
+      return sqrt(p.x * p.x + p.y * p.y);
+};
+
+my_lib := dict {
+	five := fn() { return 6; };
+	times_pi := fn(x) { return x * 3; };
+};
+
+__invoke := fn () {};
+
+names := dict {
+	user0 := "peter";
+	user1 := "joseph";
+	user2 := "anne";
+};
