@@ -111,6 +111,11 @@ Function::Function(FunctionType def, CapturesType captures)
     , m_def(def)
     , m_captures(std::move(captures)) {}
 
+BytecodeFunction::BytecodeFunction(BytecodeFunctionType def, CapturesType captures)
+    : Value(ValueTag::BytecodeFunction)
+    , m_def(def)
+    , m_captures(std::move(captures)) {}
+
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : Value {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
@@ -200,6 +205,15 @@ void gc_visit(Function* f) {
 		gc_visit(capture);
 }
 
+void gc_visit(BytecodeFunction* f) {
+	if (f->m_visited)
+		return;
+
+	f->m_visited = true;
+	for (auto& capture : f->m_captures)
+		gc_visit(capture);
+}
+
 void gc_visit(Reference* r) {
 	if (r->m_visited)
 		return;
@@ -233,6 +247,8 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Variant*>(v));
 	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
+	case ValueTag::BytecodeFunction:
+		return gc_visit(static_cast<BytecodeFunction*>(v));
 	case ValueTag::NativeFunction:
 		return gc_visit(static_cast<NativeFunction*>(v));
 	case ValueTag::Reference:
@@ -311,6 +327,12 @@ void print(Function* f, int d) {
 	std::cout << value_string[int(f->type())] << '\n';
 }
 
+void print(BytecodeFunction* f, int d) {
+	// TODO
+	print_spaces(d);
+	std::cout << value_string[int(f->type())] << '\n';
+}
+
 void print(NativeFunction* f, int d) {
 	// TODO
 	print_spaces(d);
@@ -361,6 +383,8 @@ void print(Value* v, int d) {
 		return print(static_cast<Variant*>(v), d);
 	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
+	case ValueTag::BytecodeFunction:
+		return print(static_cast<BytecodeFunction*>(v), d);
 	case ValueTag::NativeFunction:
 		return print(static_cast<NativeFunction*>(v), d);
 	case ValueTag::Reference:

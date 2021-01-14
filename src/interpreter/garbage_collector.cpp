@@ -134,6 +134,12 @@ gc_ptr<Function> GC::new_function(FunctionType def, CapturesType captures) {
 	return result;
 }
 
+gc_ptr<BytecodeFunction> GC::new_bytecode_function(BytecodeFunctionType def, CapturesType captures) {
+	auto result = new BytecodeFunction(std::move(def), std::move(captures));
+	m_blocks.push_back(result);
+	return result;
+}
+
 gc_ptr<NativeFunction> GC::new_native_function(NativeFunctionType* fptr) {
 	auto result = new NativeFunction(fptr);
 	m_blocks.push_back(result);

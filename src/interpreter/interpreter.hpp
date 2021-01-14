@@ -58,6 +58,7 @@ struct Interpreter {
 	auto new_record(RecordType) -> gc_ptr<Record>;
 	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
 	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
+	auto new_bytecode_function(BytecodeFunctionType, CapturesType) -> gc_ptr<BytecodeFunction>;
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_reference(Value*) -> gc_ptr<Reference>;

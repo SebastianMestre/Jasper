@@ -142,6 +142,12 @@ gc_ptr<Function> Interpreter::new_function(FunctionType def, CapturesType s) {
 	return result;
 }
 
+gc_ptr<BytecodeFunction> Interpreter::new_bytecode_function(BytecodeFunctionType def, CapturesType s) {
+	auto result = m_gc->new_bytecode_function(def, std::move(s));
+	run_gc_if_needed();
+	return result;
+}
+
 gc_ptr<NativeFunction> Interpreter::new_native_function(NativeFunctionType* fptr) {
 	auto result = m_gc->new_native_function(fptr);
 	run_gc_if_needed();

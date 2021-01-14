@@ -8,6 +8,7 @@
 #include "../utils/span.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
+#include "../bytecodevm/bytecode.hpp"
 
 namespace TypedAST {
 struct FunctionLiteral;
@@ -25,6 +26,7 @@ using RecordType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = TypedAST::FunctionLiteral*;
+using BytecodeFunctionType = std::vector<Instruction>*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
 using CapturesType = std::vector<Value*>; // TODO: store references instead of values
 
@@ -126,6 +128,13 @@ struct Function : Value {
 	CapturesType m_captures;
 
 	Function(FunctionType, CapturesType);
+};
+
+struct BytecodeFunction : Value {
+	BytecodeFunctionType m_def;
+	CapturesType m_captures;
+
+	BytecodeFunction(BytecodeFunctionType, CapturesType);
 };
 
 struct NativeFunction : Value {

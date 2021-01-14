@@ -15,6 +15,7 @@
 	X(Variant)                                                                 \
                                                                                \
 	X(Function)                                                                \
+	X(BytecodeFunction)                                                        \
 	X(NativeFunction)                                                          \
                                                                                \
 	X(Reference)                                                               \
