@@ -4,11 +4,15 @@
 
 namespace Interpreter {
 
-void Stack::start_stack_frame() {
+void Stack::start_stack_frame(int frame_start) {
 	start_stack_region();
 
 	m_fp_stack.push_back(m_frame_ptr);
-	m_frame_ptr = m_stack_ptr;
+	m_frame_ptr = frame_start;
+}
+
+void Stack::start_stack_frame() {
+	start_stack_frame(m_stack_ptr);
 }
 
 void Stack::end_stack_frame(){
@@ -57,6 +61,7 @@ Value*& Stack::access(int offset) {
 }
 
 Value*& Stack::frame_at(int offset) {
+	assert(m_frame_ptr + offset < m_stack.size());
 	return m_stack[m_frame_ptr + offset];
 }
 

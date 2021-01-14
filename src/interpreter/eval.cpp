@@ -165,7 +165,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 void eval_call_native_function(
     gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
 	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_stack.frame_at(-arg_count), arg_count};
+	Span<Value*> args = {&e.m_stack.frame_at(0), arg_count};
 	e.save_return_value(callee->m_fptr(args, e));
 }
 
@@ -181,21 +181,19 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	e.m_stack.start_stack_region();
 
+	int frame_start = e.m_stack.m_stack_ptr;
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
 			e.m_stack.access(0) = rewrap(e.m_stack.access(0), e).get();
 		}
-		// arguments go before the frame pointer
-		e.m_stack.start_stack_frame();
+		e.m_stack.start_stack_frame(frame_start);
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist) {
 			eval(expr, e);
 		}
-		// arguments go before the frame pointer
-		e.m_stack.start_stack_frame();
-
+		e.m_stack.start_stack_frame(frame_start);
 		eval_call_native_function(
 		    static_cast<NativeFunction*>(callee), arg_count, e);
 	} else {
