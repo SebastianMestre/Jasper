@@ -4,6 +4,7 @@
 
 #include "error.hpp"
 #include "garbage_collector.hpp"
+#include "utils.hpp"
 
 namespace Interpreter {
 
@@ -53,6 +54,11 @@ Value* Interpreter::fetch_return_value() {
 	Value* rv = m_return_value;
 	m_return_value = nullptr;
 	return rv;
+}
+
+void Interpreter::assign(Value* dst, Value* src) {
+	auto ref = as<Reference>(dst);
+	ref->m_value = src;
 }
 
 
