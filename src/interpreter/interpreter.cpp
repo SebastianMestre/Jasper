@@ -57,8 +57,9 @@ Value* Interpreter::fetch_return_value() {
 }
 
 void Interpreter::assign(Value* dst, Value* src) {
-	auto ref = as<Reference>(dst);
-	ref->m_value = src;
+	// NOTE: copied by reference, matters if rhs is actually a reference
+	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
+	as<Reference>(dst)->m_value = value_of(src);
 }
 
 

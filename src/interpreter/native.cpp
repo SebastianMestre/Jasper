@@ -277,12 +277,7 @@ Value* value_less(ArgsType v, Interpreter& e) {
 }
 
 Value* value_assign(ArgsType v, Interpreter& e) {
-	auto* lhs = v[0];
-	auto* rhs = value_of(v[1]);
-
-	// NOTE: copied by reference, matters if rhs is actually a reference
-	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
-	as<Reference>(lhs)->m_value = rhs;
+	e.assign(v[0], v[1]);
 	return e.null();
 }
 
