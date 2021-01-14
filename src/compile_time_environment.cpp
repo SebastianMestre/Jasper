@@ -2,6 +2,7 @@
 
 #include "algorithms/tarjan_solver.hpp"
 #include "typed_ast.hpp"
+#include "log/log.hpp"
 
 #include <cassert>
 
@@ -16,8 +17,8 @@ Scope& CompileTimeEnvironment::current_scope() {
 void CompileTimeEnvironment::declare(TypedAST::Declaration* decl) {
 	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
 
-	// TODO: do proper error handling
-	assert(insert_result.second && "redeclaration");
+	if (!insert_result.second)
+		Log::FatalStream() << "Redeclaration of " << decl->identifier_text().str() << '\n';
 }
 
 TypedAST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
