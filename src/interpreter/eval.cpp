@@ -172,14 +172,11 @@ void eval_call_native_function(
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> callee_handle = e.m_stack.pop();
-	auto* callee = value_of(callee_handle.get());
+	auto* callee = value_of(e.m_stack.access(0));
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
-
-	e.m_stack.start_stack_region();
 
 	int frame_start = e.m_stack.m_stack_ptr;
 	if (callee->type() == ValueTag::Function) {
@@ -201,8 +198,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	}
 
 	e.m_stack.end_stack_frame();
-	e.m_stack.end_stack_region();
-	e.m_stack.push(e.fetch_return_value());
+	e.m_stack.access(0) = e.fetch_return_value();
 }
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {

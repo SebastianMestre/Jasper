@@ -5,7 +5,7 @@
 namespace Interpreter {
 
 void Stack::start_stack_frame(int frame_start) {
-	start_stack_region();
+	start_stack_region(frame_start);
 
 	m_fp_stack.push_back(m_frame_ptr);
 	m_frame_ptr = frame_start;
@@ -22,8 +22,12 @@ void Stack::end_stack_frame(){
 	end_stack_region();
 }
 
+void Stack::start_stack_region(int region_start) {
+	m_sp_stack.push_back(region_start);
+}
+
 void Stack::start_stack_region() {
-	m_sp_stack.push_back(m_stack_ptr);
+	start_stack_region(m_stack_ptr);
 }
 
 void Stack::end_stack_region() {
