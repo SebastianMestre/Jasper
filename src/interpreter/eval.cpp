@@ -162,13 +162,6 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	e.save_return_value(e.m_stack.pop_unsafe());
 }
 
-void eval_call_native_function(
-    gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
-	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_stack.frame_at(0), arg_count};
-	e.save_return_value(callee->m_fptr(args, e));
-}
-
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
@@ -186,19 +179,18 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		}
 		e.m_stack.start_stack_frame(frame_start);
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
+		e.m_stack.frame_at(-1) = e.fetch_return_value();
 	} else if (callee->type() == ValueTag::NativeFunction) {
-		for (auto expr : arglist) {
+		for (auto expr : arglist)
 			eval(expr, e);
-		}
 		e.m_stack.start_stack_frame(frame_start);
-		eval_call_native_function(
-		    static_cast<NativeFunction*>(callee), arg_count, e);
+		Span<Value*> args = {&e.m_stack.frame_at(0), arg_count};
+		e.m_stack.frame_at(-1) = static_cast<NativeFunction*>(callee)->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
 
 	e.m_stack.end_stack_frame();
-	e.m_stack.access(0) = e.fetch_return_value();
 }
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
