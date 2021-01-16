@@ -9,201 +9,124 @@
 #include "test_utils.hpp"
 #include "tester.hpp"
 
+#define EQUALS(expr, value)                                                    \
+	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
+		return Assert::equals(eval_expression(expr, env), value);      \
+	}
+
+#define IS_TRUE(expr)                                                          \
+	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
+		return Assert::is_true(eval_expression(expr, env));            \
+	}
+
+#define IS_FALSE(expr)                                                         \
+	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
+		return Assert::is_false(eval_expression(expr, env));           \
+	}
+
+#define IS_NULL(expr)                                                          \
+	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
+		return Assert::is_null(eval_expression(expr, env));            \
+	}
+
+#define ARRAY_OF_SIZE(expr, size)                                              \
+	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
+		return Assert::array_of_size(eval_expression(expr, env), size);\
+	}
+
 void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
 	using Testers = std::vector<Test::Interpret>;
 
 	tests.add_test(std::make_unique<TestCase>("tests/basic_op.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("int_val", env), 10);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("float_val", env), 3.5);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("string_val", env), "testing.");
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("int_div", env), 0);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("float_div", env), 0.5);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("litt()", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("litf()", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_null(eval_expression("nullv()", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("pizza()", env), 13);
-		},
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::is_true(eval_expression("if_else_if()", env));
-		},
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("ternary()", env), 2);
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("array_access()", env), 12);
-		},
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("a", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("b", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("c", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("d", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("e", env), -1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("f", env), -1.1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("g", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("h", env), 1.1);
-	        }
+		EQUALS("int_val", 10),
+		EQUALS("float_val", 3.5),
+		EQUALS("string_val", "testing."),
+		EQUALS("int_div", 0),
+		EQUALS("float_div", 0.5),
+		IS_TRUE("litt()"),
+		IS_FALSE("litf()"),
+		IS_NULL("nullv()"),
+	        EQUALS("pizza()", 13),
+		IS_TRUE("if_else_if()"),
+	        EQUALS("ternary()", 2),
+		EQUALS("array_access()", 12),
+	        EQUALS("a", 1),
+	        EQUALS("b", 1),
+	        EQUALS("c", 1),
+	        EQUALS("d", 1),
+	        EQUALS("e", -1),
+	        EQUALS("f", -1.1),
+	        EQUALS("g", 1),
+	        EQUALS("h", 1.1)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/function.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("normal()", env), 3);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("curry()", env), 42);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("I(42)", env), 42);
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("capture_order()", env), "ABCD");
-		},
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("sequence", env), 42);
-		}
+	        EQUALS("normal()", 3),
+	        EQUALS("curry()", 42),
+		EQUALS("I(42)", 42),
+	        EQUALS("capture_order()", "ABCD"),
+	        EQUALS("sequence", 42)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/recursion.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("fib(6)", env), 8);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("even(11)", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("odd(15)", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("even(80)", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("odd(18)", env));
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("inner()", env), 2);
-		}
+	        EQUALS("fib(6)", 8),
+		IS_FALSE("even(11)"),
+		IS_TRUE("odd(15)"),
+		IS_TRUE("even(80)"),
+		IS_FALSE("odd(18)"),
+	        EQUALS("inner()", 2)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/loops.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("for_loop()", env), 120);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("while_loop()", env), 120);
-	        }
+	        EQUALS("for_loop()", 120),
+	        EQUALS("while_loop()", 120)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/native.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::array_of_size(eval_expression("append()", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("append()[0]", env), 10);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::array_of_size(eval_expression("extend()", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("extend()[0]", env), 10);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("size_of()", env), 2);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("join()", env), "10,10");
-	        }
+	        ARRAY_OF_SIZE("append()", 1),
+	        EQUALS("append()[0]", 10),
+	        ARRAY_OF_SIZE("extend()", 1),
+	        EQUALS("extend()[0]", 10),
+	        EQUALS("size_of()", 2),
+	        EQUALS("join()", "10,10")
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/struct.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("access()", env), "ABCA");
-	        }
+		EQUALS("access()", "ABCA")
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/typesystem.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("a", env), 1);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::equals(eval_expression("b", env), "hello");
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::array_of_size(eval_expression("c", env), 2);
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("extract()", env), 4);
-		}
+	        EQUALS("a", 1),
+	        EQUALS("b", "hello"),
+	        ARRAY_OF_SIZE("c", 2),
+	        ARRAY_OF_SIZE("__invoke()", 3),
+		EQUALS("extract()", 4)
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/union.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("serialize(from_number(10))", env), "(number)");
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("serialize(from_string(\"xxx\"))", env), "xxx");
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), 3);
-	        },
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("capture_inner()", env), 10);
-		}
+	        EQUALS("serialize(from_number(10))", "(number)"),
+		EQUALS("serialize(from_string(\"xxx\"))", "xxx"),
+	        EQUALS("__invoke()", 3),
+		EQUALS("capture_inner()", 10)
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/full_union.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), 11);
-	        }
+	        EQUALS("__invoke()", 11)
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/simple_language.jp",
 	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), 42);
-	        }
+	        EQUALS("__invoke()", 42)
 	    }));
 }
 
@@ -280,3 +203,9 @@ int main() {
 		return 1;
 	return 0;
 }
+
+#undef EQUALS
+#undef IS_TRUE
+#undef IS_FALSE
+#undef IS_NULL
+#undef ARRAY_OF_SIZE
