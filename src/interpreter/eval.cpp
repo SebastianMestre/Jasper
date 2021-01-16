@@ -153,13 +153,8 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_stack.frame_at(offset) = kv.second;
 	}
 
-	// this feels really dumb:
-	// we get a value on the stack, then we move it to the return value
-	// slot, then we pop some stuff off the stack, and put it back on the
-	// stack. It is doubly dumb when we eval a seq-expr (because it does a
-	// save-pop sequence)
 	eval(callee->m_def->m_body, e);
-	e.save_return_value(e.m_stack.pop_unsafe());
+	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
@@ -179,7 +174,6 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 		}
 		e.m_stack.start_stack_frame(frame_start);
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
-		e.m_stack.frame_at(-1) = e.fetch_return_value();
 	} else if (callee->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist)
 			eval(expr, e);
