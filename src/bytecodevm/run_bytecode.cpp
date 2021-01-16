@@ -58,14 +58,36 @@ int BytecodeRunner::run_single(Instruction const& instruction) {
 		e.m_stack.end_stack_region();
 		break;
 	case Opcode::Call: {
-		std::cerr << "Call (with " << instruction.int_value << " arguments)\n";
-		int arg_count = instruction.int_value;
-		e.m_stack.start_stack_frame(e.m_stack.m_stack_ptr - arg_count);
-		auto callee = Interpreter::value_as<Interpreter::NativeFunction>(e.m_stack.access(arg_count));
-		Span<Interpreter::Value*> args = {&e.m_stack.frame_at(0), arg_count};
-		e.m_stack.access(arg_count) = callee->m_fptr(args, e);
-		for(int i = arg_count; i-- > 0;)
-			e.m_stack.pop_unsafe();
+
+		int argument_count = instruction.int_value1;
+		int frame_start = e.m_stack.m_stack_ptr - argument_count;
+
+		Log::info("argument count = " + std::to_string(argument_count));
+
+		auto callee = Interpreter::value_of(e.m_stack.access(argument_count));
+		if (callee->type() == ValueTag::NativeFunction) {
+			auto typed_callee = static_cast<Interpreter::NativeFunction*>(callee);
+
+			e.m_stack.start_stack_frame(frame_start);
+			Span<Interpreter::Value*> args = {
+			    &e.m_stack.frame_at(0), argument_count};
+			e.m_stack.frame_at(-1) = typed_callee->m_fptr(args, e);
+			e.m_stack.end_stack_frame();
+		} else if (callee->type() == ValueTag::BytecodeFunction) {
+			auto typed_callee = static_cast<Interpreter::BytecodeFunction*>(callee);
+
+			// TODO argument re-wrapping
+			// TODO captures
+
+			e.m_stack.start_stack_frame(frame_start);
+			run(*typed_callee->m_def);
+			e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
+			e.m_stack.end_stack_frame();
+		} else {
+			Log::FatalStream() << "invalid callable -- type is "
+			                   << value_string[int(callee->type())];
+		}
+
 	} break;
 	}
 	return 0;
