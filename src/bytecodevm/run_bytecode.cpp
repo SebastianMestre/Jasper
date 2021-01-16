@@ -1,10 +1,11 @@
 #include "run_bytecode.hpp"
 
-
-#include "bytecode.hpp"
 #include "../interpreter/interpreter.hpp"
-#include "../interpreter/value.hpp"
 #include "../interpreter/utils.hpp"
+#include "../interpreter/value.hpp"
+#include "../interpreter/value_tag.hpp"
+#include "../log/log.hpp"
+#include "bytecode.hpp"
 
 #include <iostream>
 
@@ -18,6 +19,7 @@ int BytecodeRunner::run(std::vector<Instruction> const& instructions) {
 }
 
 int BytecodeRunner::run_single(Instruction const& instruction) {
+	Log::info(std::string("==== Opcode ") + opcode_string[int(instruction.opcode)] + " ====");
 	switch (instruction.opcode) {
 	case Opcode::IntConst:
 		std::cerr << "IntConst " << instruction.int_value << "\n";
