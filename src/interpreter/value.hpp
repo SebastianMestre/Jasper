@@ -26,7 +26,7 @@ using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = TypedAST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
-using CapturesType = std::vector<std::pair<Identifier, Value*>>;
+using CapturesType = std::vector<std::pair<Identifier, Value*>>; // TODO: store references instead of values
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
@@ -123,7 +123,6 @@ struct Variant : Value {
 
 struct Function : Value {
 	FunctionType m_def;
-	// TODO: store references instead of values
 	CapturesType m_captures;
 
 	Function(FunctionType, CapturesType);
