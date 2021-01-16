@@ -22,29 +22,31 @@ int BytecodeRunner::run_single(Instruction const& instruction) {
 	Log::info(std::string("==== Opcode ") + opcode_string[int(instruction.opcode)] + " ====");
 	switch (instruction.opcode) {
 	case Opcode::IntConst:
-		std::cerr << "IntConst " << instruction.int_value << "\n";
-		e.push_integer(instruction.int_value);
+		e.push_integer(instruction.int_value1);
 		break;
 	case Opcode::FnConst: {
-		std::cerr << "FnConst " << instruction.int_value << "\n";
-		e.push_integer(instruction.int_value);
+		// TODO
+		int argument_count = instruction.int_value1;
+		int capture_count = instruction.int_value2;
+		Interpreter::CapturesType captures;
+		for (int i = 0; i < capture_count; ++i)
+			captures.push_back(e.m_stack.pop_unsafe());
+		auto fn = e.new_bytecode_function(&instruction.fn_value, std::move(captures));
+		e.m_stack.push(fn.get());
 	} break;
 	case Opcode::GlobalAccess:
-		std::cerr << "GlobalAccess '" << instruction.string_value << "'\n";
+		Log::info("identifier is '" + instruction.string_value.str() + "'");
 		e.m_stack.push(e.global_access(instruction.string_value));
 		break;
 	case Opcode::GlobalCreate: {
-		std::cerr << "GlobalCreate '" << instruction.string_value << "'\n";
 		auto ref = e.new_reference(e.null());
 		e.global_declare_direct(instruction.string_value, ref.get());
 		e.m_stack.push(ref.get());
 	} break;
 	case Opcode::FrameAccess:
-		std::cerr << "FrameAccess (with offset " << instruction.int_value << ")\n";
-		e.m_stack.push(e.m_stack.frame_at(instruction.int_value));
+		e.m_stack.push(e.m_stack.frame_at(instruction.int_value1));
 		break;
 	case Opcode::Assign:
-		std::cerr << "Assignment\n";
 		e.assign(e.m_stack.peek(1).get(), e.m_stack.peek(0).get());
 		e.m_stack.pop_unsafe();
 		e.m_stack.pop_unsafe();

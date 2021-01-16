@@ -26,7 +26,7 @@ using RecordType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = TypedAST::FunctionLiteral*;
-using BytecodeFunctionType = std::vector<Instruction>*;
+using BytecodeFunctionType = std::vector<Instruction> const*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
 using CapturesType = std::vector<Value*>; // TODO: store references instead of values
 

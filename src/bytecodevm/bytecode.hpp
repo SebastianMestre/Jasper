@@ -42,7 +42,8 @@ constexpr char const* opcode_string[] = {
 
 struct Instruction {
 	Opcode opcode;
-	int int_value;
+	int int_value1;
+	int int_value2;
 	InternedString string_value;
 	std::vector<Instruction> fn_value;
 };

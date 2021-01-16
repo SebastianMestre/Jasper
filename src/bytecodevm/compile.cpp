@@ -14,7 +14,20 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::IntegerL
 
 static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::FunctionLiteral* ast) {
 	auto body_bytecode = emit_bytecode(ast->m_body);
-	out.push_back(Instruction {Opcode::FnConst, ast->m_args.size(), "", std::move(body_bytecode)});
+	int capture_count = ast->m_captures.size();
+	int argument_count = ast->m_args.size();
+
+	std::vector<int> outer_offsets(capture_count, -1);
+	for(auto kv : ast->m_captures){
+		int index = kv.second.inner_frame_offset - argument_count;
+		outer_offsets[index] = kv.second.outer_frame_offset;
+	}
+
+	for (int offset : outer_offsets)
+		out.push_back(Instruction {Opcode::FrameAccess, offset});
+
+	out.push_back(Instruction {
+	    Opcode::FnConst, argument_count, capture_count, "", std::move(body_bytecode)});
 }
 
 static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::Identifier* ast) {
@@ -26,7 +39,7 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::Identifi
 
 		out.push_back(Instruction {Opcode::FrameAccess, ast->m_frame_offset});
 	} else {
-		out.push_back(Instruction {Opcode::GlobalAccess, 0, ast->text()});
+		out.push_back(Instruction {Opcode::GlobalAccess, 0, 0, ast->text()});
 	}
 }
 
@@ -40,7 +53,7 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::CallExpr
 static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::DeclarationList* ast) {
 	for (auto decl : ast->m_declarations) {
 		out.push_back(
-		    Instruction {Opcode::GlobalCreate, 0, decl.identifier_text()});
+		    Instruction {Opcode::GlobalCreate, 0, 0, decl.identifier_text()});
 		emit_bytecode_impl(out, decl.m_value);
 		out.push_back(Instruction {Opcode::Assign});
 	}
