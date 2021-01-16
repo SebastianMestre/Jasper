@@ -28,9 +28,9 @@ int BytecodeRunner::run_single(Instruction const& instruction) {
 		// TODO
 		int argument_count = instruction.int_value1;
 		int capture_count = instruction.int_value2;
-		Interpreter::CapturesType captures;
-		for (int i = 0; i < capture_count; ++i)
-			captures.push_back(e.m_stack.pop_unsafe());
+		Interpreter::CapturesType captures(capture_count, nullptr);
+		for (int i = capture_count; i-- > 0;)
+			captures[i] = e.m_stack.pop_unsafe();
 		auto fn = e.new_bytecode_function(&instruction.fn_value, std::move(captures));
 		e.m_stack.push(fn.get());
 	} break;
@@ -76,10 +76,14 @@ int BytecodeRunner::run_single(Instruction const& instruction) {
 		} else if (callee->type() == ValueTag::BytecodeFunction) {
 			auto typed_callee = static_cast<Interpreter::BytecodeFunction*>(callee);
 
-			// TODO argument re-wrapping
-			// TODO captures
+			for (int i = 0; i < argument_count; ++i)
+				e.m_stack.access(i) = e.new_reference(value_of(e.m_stack.access(i))).get();
+
+			for (auto capture : typed_callee->m_captures)
+				e.m_stack.push(capture);
 
 			e.m_stack.start_stack_frame(frame_start);
+			// TODO eliminate recursion
 			run(*typed_callee->m_def);
 			e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 			e.m_stack.end_stack_frame();
