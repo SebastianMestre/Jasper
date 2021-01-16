@@ -17,3 +17,13 @@ P := fn (x) => fn (y) => x;
 S := fn(x) => fn(y) => fn(z) => x(z)(y(z));
 
 I := S(P)(P);
+
+cat := fn(a,c,d) => fn(b) => a + b + c + d;
+
+capture_order := fn() => cat("A","C","D")("B");
+
+sequence := seq {
+	return 21 * 2;
+};
+
+__invoke := fn() => 0;

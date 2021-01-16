@@ -1,0 +1,19 @@
+a : int<::> = 1;
+b : string<::> = "hello";
+c : array<: int<::> :> = array { 1; 2; };
+
+__invoke := fn() {
+	d : array<: string<::> :> = array { "hello"; ","; "world"; };
+	e : boolean<::> = true;
+	return d;
+};
+
+typefunc := struct { x : int<::>; };
+other_typefunc := typefunc;
+other_other_typefunc := other_typefunc;
+
+mono := other_other_typefunc<::>;
+other_mono := mono;
+other_other_mono := other_mono;
+
+final := fn() => other_other_mono { 10 };

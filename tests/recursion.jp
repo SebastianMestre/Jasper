@@ -1,0 +1,23 @@
+fib := fn(n){
+	if(n < 2) return n;
+	return fib(n-1) + fib(n-2);
+};
+
+even := fn(x) {
+	if(x == 0) return true;
+	return odd(x - 1);
+};
+
+odd := fn(x) {
+	if(x == 0) return false;
+	return even(x - 1);
+};
+
+inner := fn() {
+	fib:= fn(n) => (if n < 2
+		then n
+		else fib(n-1) + fib(n-2));
+	return fib(3);
+};
+
+__invoke := fn() => 0;

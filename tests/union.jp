@@ -1,0 +1,53 @@
+a := c;
+b := a.id { 10 };
+c := union { id : int<::>; }<::>;
+
+str_num := union {
+	str : string<::>;
+	num : int<::>;
+}<::>;
+
+serialize := fn (x) {
+	y := match(x) {
+		str { s } => s;
+		num { n } => "(number)";
+	};
+	return y;
+};
+
+from_string := fn(str) => str_num.str { str };
+from_number := fn(num) => str_num.num { num };
+
+tree := union {
+	leaf : int<::>;
+	node : tree_node<::>;
+};
+
+tree_node := struct {
+	left : tree<::>;
+	value : int<::>;
+	right : tree<::>;
+};
+
+__invoke := fn() {
+	x : tree<::> = tree<::>.leaf {1};
+	y : tree<::> = tree<::>.node {
+		tree_node<::> {x; 2; x}
+	};
+
+	node_value := fn(node) => match(node) {
+		leaf { i : int<::> } => i;
+		node { n : tree_node<::> } => n.value;
+	};
+
+	return node_value(x) + node_value(y);
+};
+
+A := union { X : int<::>; };
+capture_inner := fn() {
+	outter := A<::>.X{ 10 };
+	k := match(outter) {
+		X { inner } => fn() => inner;
+	};
+	return k();
+};

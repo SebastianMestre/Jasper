@@ -19,3 +19,5 @@ join := fn () {
 	A := array {10;10};
 	return array_join(A, ",");
 };
+
+__invoke := fn() => 0;

@@ -48,6 +48,42 @@ void interpreter_tests(Test::Tester& tests) {
 	        },
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		        return Assert::is_null(eval_expression("nullv()", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("pizza()", env), 13);
+		},
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::is_true(eval_expression("if_else_if()", env));
+		},
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("ternary()", env), 2);
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("array_access()", env), 12);
+		},
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("a", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("b", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("c", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("d", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("e", env), -1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("f", env), -1.1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("g", env), 1);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("h", env), 1.1);
 	        }
 	    }));
 
@@ -61,7 +97,13 @@ void interpreter_tests(Test::Tester& tests) {
 	        },
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::equals(eval_expression("I(42)", env), 42);
-	        }
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("capture_order()", env), "ABCD");
+		},
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("sequence", env), 42);
+		}
 	    }));
 
 	/*
@@ -131,9 +173,26 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	tests.add_test(std::make_unique<TestCase>("tests/fib.jp",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 8);
+	tests.add_test(std::make_unique<TestCase>("tests/recursion.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	                return Assert::equals(eval_expression("fib(6)", env), 8);
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_false(eval_expression("even(11)", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_true(eval_expression("odd(15)", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_true(eval_expression("even(80)", env));
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::is_false(eval_expression("odd(18)", env));
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("inner()", env), 2);
+		}
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/loops.jp",
@@ -191,151 +250,14 @@ void interpreter_tests(Test::Tester& tests) {
 	);
 	*/
 
-	/*
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			f := fn(x) => x + 7;
-			__invoke := fn() => 6 |> f();
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 13);
-	    }));
-
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn(){
-				return even(11);
-			};
-
-			even := fn(x) {
-				if(x == 0) return true;
-				return odd(x - 1);
-			};
-
-			odd := fn(x) {
-				if(x == 0) return false;
-				return even(x - 1);
-			};
-		)",
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/struct.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("__invoke()", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("odd(15)", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_true(eval_expression("even(80)", env));
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::is_false(eval_expression("odd(18)", env));
-	        }}));
-
-	tests.add_test(std::make_unique<TestCase>(
-	    R"(
-			__invoke := fn() {
-				i := 2;
-				if (i == 1)
-					return false;
-				else if (i == 3)
-					return false;
-				else if (i == 2)
-					return true;
-				return false;
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::is_true(eval_expression("__invoke()", env));
+		        return Assert::equals(eval_expression("access()", env), "ABCA");
+	        }
 	    }));
 
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			__invoke := fn() {
-				i := 0;
-				return (if i == 1 then     0 else 1) +
-				       (if i == 0 then i + 1 else 0);
-			};
-		)",
-	    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 2);
-	    }));
-
-	// we really only care that it typechecks, but might as
-	// well throw a whole batch of stuff at it.
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			__invoke := fn() {
-				fib:= fn(n) => (if n < 2
-					then n
-					else fib(n-1) + fib(n-2));
-				return fib(3);
-			};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 2);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			f := fn(x) {
-				x.a = "a";
-				return x.a;
-			};
-			__invoke := fn() => 0;
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 0);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			cat := fn(a,c,d) => fn(b) =>
-				a + b + c + d;
-
-			__invoke := fn() =>
-				cat("A","C","D")("B");
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), "ABCD");
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			val := struct {
-				a : string<::>;
-				b : string<::>;
-				c : string<::>;
-			};
-			test1 := fn () {
-				v := val<::>{ "A"; "B"; "C"; };
-				return v.a + v.b + v.c;
-			};
-			test2 := fn () {
-				v := val<::>{ "A"; "B"; "C"; };
-				return v.a + v.b + v.a;
-			};
-		)",
-	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("test1()", env), "ABC");
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(eval_expression("test2()", env), "ABA");
-		}}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			a : int<::> = 1;
-			b : string<::> = "hello";
-			c : array<: int<::> :> = array { 1; 2; };
-
-			__invoke := fn() {
-				d : array<: string<::> :> = array { "hello"; ","; "world"; };
-				e : boolean<::> = true;
-				return d;
-			};
-		)",
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/typesystem.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::equals(eval_expression("a", env), 1);
@@ -348,246 +270,38 @@ void interpreter_tests(Test::Tester& tests) {
 	        },
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
-	        },
-	        }));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			typefunc := struct { x : int<::>; };
-			other_typefunc := typefunc;
-			other_other_typefunc := other_typefunc;
-
-			mono := other_other_typefunc<::>;
-			other_mono := mono;
-			other_other_mono := other_mono;
-
-			__invoke := fn() => other_other_mono { 10 };
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return ExitStatusTag::Ok;
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		list := struct {
-			load : int<::>;
-			next : list<::>;
-		};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return ExitStatusTag::Ok;
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-			a := c;
-			b := a.id { 10 };
-			c := union { id : int<::>; }<::>;
-			__invoke := fn() => 0;
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 0);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"jp(
-			b := union {
-				str : string<::>;
-				num : int<::>;
-			}<::>;
-
-			serialize := fn ( x ) {
-				y := match(x) {
-					str { s } => s;
-					num { n } => "(number)";
-				};
-				return y;
-			};
-
-			from_string := fn(str) => b.str { str };
-			from_number := fn(num) => b.num { num };
-			__invoke := fn() {
-			};
-		)jp",
-	    Testers {
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(
-		            eval_expression("serialize(from_number(10))", env), "(number)");
-	        },
-	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		        return Assert::equals(
-		            eval_expression("serialize(from_string(\"xxx\"))", env), "xxx");
-	        }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		tree := union {
-			leaf : int<::>;
-			node : tree_node<::>;
-		};
-
-		tree_node := struct {
-			left : tree<::>;
-			value : int<::>;
-			right : tree<::>;
-		};
-
-		__invoke := fn() {
-			x : tree<::> = tree<::>.leaf {1};
-			y : tree<::> = tree<::>.node {
-				tree_node<::> {x; 2; x}
-			};
-
-			node_value := fn(node) => match(node) {
-				leaf { i : int<::> } => i;
-				node { n : tree_node<::> } => n.value;
-			};
-
-			return node_value(x) + node_value(y);
-		};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 3);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		f := fn (error_number : int<::>) =>
-			fn(x : either<::>) => match(x) {
-				left { i } => i;
-				right { s } => error_number;
-			};
-
-		either := union {
-			left : int<::>;
-			right : string<::>;
-		};
-
-		__invoke := fn() {
-			x := either<::>.left{ 1 };
-			y := either<::>.right{ "error" };
-
-			def := f(10);
-			return def(x) + def(y);
-		};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 11);
-	    }}));
-
-
-	// Testing for a bug where we could not capture the inner variable that gets
-	// bound in a match expression
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"jp(
-		A := union { X : int<::>; };
-		__invoke := fn() {
-			outter := A<::>.X{ 10 };
-			k := match(outter) {
-				X { inner } => fn() => inner;
-			};
-			return k();
-		};
-		)jp",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 10);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		// AST for a simple language
-		expr := union {
-			add : two_exprs<::>;
-			val : int<::>;
-		};
-
-		two_exprs := struct {
-			left : expr<::>;
-			right : expr<::>;
-		};
-
-		// continuation passing style!
-		eval := fn(e, c) => match(e : expr<::>) {
-			val { v } => c(v);
-			add { v } => eval(v.left,  fn(x) =>
-			             eval(v.right, fn(y) =>
-			             c(x + y)));
-		};
-
-		__invoke := fn() => eval(
-			expr<::>.add{
-				two_exprs<::>{
-					expr<::>.val{ 10 };
-					expr<::>.val{ 32 };
-				};
-			}, fn(x) => x);
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 42);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		__invoke := fn() => seq {
-			return 21 * 2;
-		};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 42);
-	    }}));
-
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		__invoke := fn() {
-			arr := array { 0; 1; 2; 3; 4; };
-			arr[0] = 1;
-			arr[4] = 5;
-			return arr[0] + arr[1] + arr[2] + arr[3] + arr[4];
-		};
-		)",
-	    Testers {+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-		    return Assert::equals(eval_expression("__invoke()", env), 12);
-	    }}));
-	
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
-	    R"(
-		a := 2 - 1;
-		b := 2 -1;
-		c := 2-1;
-		d := 2- 1;
-		e := -1;
-		f := -1.1;
-		g := +1;
-		h := +1.1;
-		__invoke := fn() => 0;
-		)",
-	    Testers {
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("a", env), 1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("b", env), 1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("c", env), 1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("d", env), 1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("e", env), -1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("f", env), -1.1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("g", env), 1);
-		    },
-		    +[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			    return Assert::equals(eval_expression("h", env), 1.1);
-		    }
+	        }
 	    }));
-	*/
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/union.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(eval_expression("serialize(from_number(10))", env), "(number)");
+	        },
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		        return Assert::equals(eval_expression("serialize(from_string(\"xxx\"))", env), "xxx");
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("__invoke()", env), 3);
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+		    return Assert::equals(eval_expression("capture_inner()", env), 10);
+		}
+	    }));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/full_union.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("__invoke()", env), 11);
+	        }
+	    }));
+
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/simple_language.jp",
+	    Testers {
+	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("__invoke()", env), 42);
+	        }
+	    }));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

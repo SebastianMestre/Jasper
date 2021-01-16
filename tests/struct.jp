@@ -1,0 +1,22 @@
+f := fn(x) {
+	x.a = "a";
+	return x.a;
+};
+
+val := struct {
+	a : string<::>;
+	b : string<::>;
+	c : string<::>;
+};
+
+access := fn () {
+	v := val<::>{ "A"; "B"; "C"; };
+	return v.a + v.b + v.c + v.a;
+};
+
+list := struct {
+	load : int<::>;
+	next : list<::>;
+};
+
+__invoke := fn() => 0;

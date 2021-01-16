@@ -6,3 +6,41 @@ float_div := 1.0 / 2.0;
 litt := fn () { return true; };
 litf := fn () { return false; };
 nullv := fn () { return null; };
+
+p_aux := fn(x) => x + 7;
+pizza := fn() => 6 |> p_aux();
+
+if_else_if := fn() {
+	i := 2;
+	if (i == 1)
+		return false;
+	else if (i == 3)
+		return false;
+	else if (i == 2)
+		return true;
+	return false;
+};
+
+ternary := fn() {
+	i := 0;
+	return (if i == 1 then     0 else 1) +
+	       (if i == 0 then i + 1 else 0);
+};
+
+array_access := fn() {
+	arr := array { 0; 1; 2; 3; 4; };
+	arr[0] = 1;
+	arr[4] = 5;
+	return arr[0] + arr[1] + arr[2] + arr[3] + arr[4];
+};
+
+a := 2 - 1;
+b := 2 -1;
+c := 2-1;
+d := 2- 1;
+e := -1;
+f := -1.1;
+g := +1;
+h := +1.1;
+
+__invoke := fn() => 0;

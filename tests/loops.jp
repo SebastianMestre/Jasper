@@ -17,3 +17,5 @@ while_loop := fn() {
 
 	return sum;
 };
+
+__invoke := fn() => 0;

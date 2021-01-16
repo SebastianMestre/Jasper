@@ -38,7 +38,7 @@ my_lib := dict {
 	times_pi := fn(x) { return x * 3; };
 };
 
-__invoke := fn () {};
+__invoke := fn() => 0;
 
 names := dict {
 	user0 := "peter";
