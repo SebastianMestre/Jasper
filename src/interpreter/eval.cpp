@@ -141,17 +141,8 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
-	// TODO: This is a big hack. pushing nullptr into the
-	// stack should actually never happen.
-	for (int i = callee->m_captures.size(); i--;)
-		e.m_stack.push(nullptr);
-
-	for (auto& kv : callee->m_captures) {
-		auto capture_value = value_of(as<Reference>(kv.second));
-		// TODO: I would like to get rid of this hash table access
-		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_stack.frame_at(offset) = kv.second;
-	}
+	for (auto capture : callee->m_captures)
+		e.m_stack.push(capture);
 
 	eval(callee->m_def->m_body, e);
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
@@ -217,12 +208,12 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 
 	CapturesType captures;
-	captures.reserve(ast->m_captures.size());
+	captures.assign(ast->m_captures.size(), nullptr);
 	for (auto const& capture : ast->m_captures) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
-		captures.push_back({
-			capture.first,
-			e.m_stack.frame_at(capture.second.outer_frame_offset)});
+		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
+		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
+		captures[offset] = as<Reference>(value);
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
