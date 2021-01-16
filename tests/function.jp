@@ -27,3 +27,22 @@ sequence := seq {
 };
 
 __invoke := fn() => 0;
+
+
+issue232_1 := fn() {
+	y := 5 + seq {
+		a := 2;
+		b := 1;
+		return b;
+	};
+	return y;
+};
+
+issue232_2 := fn() {
+	y := 5 + seq {
+		a := 2;
+		b := 1;
+		return a;
+	};
+	return y;
+};

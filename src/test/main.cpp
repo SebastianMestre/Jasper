@@ -68,7 +68,9 @@ void interpreter_tests(Test::Tester& tests) {
 	        EQUALS("curry()", 42),
 		EQUALS("I(42)", 42),
 	        EQUALS("capture_order()", "ABCD"),
-	        EQUALS("sequence", 42)
+	        EQUALS("sequence", 42),
+			EQUALS("issue232_1()", 6),
+			EQUALS("issue232_2()", 7)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/recursion.jp",
