@@ -196,8 +196,8 @@ void gc_visit(Function* f) {
 		return;
 
 	f->m_visited = true;
-	for (auto& dec : f->m_captures)
-		gc_visit(dec.second);
+	for (auto& capture : f->m_captures)
+		gc_visit(capture);
 }
 
 void gc_visit(Reference* r) {

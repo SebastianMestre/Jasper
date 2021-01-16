@@ -13,8 +13,10 @@ struct Stack {
 	std::vector<int> m_fp_stack;
 	std::vector<int> m_sp_stack;
 
+	void start_stack_frame(int start);
 	void start_stack_frame();
 	void end_stack_frame();
+	void start_stack_region(int start);
 	void start_stack_region();
 	void end_stack_region();
 

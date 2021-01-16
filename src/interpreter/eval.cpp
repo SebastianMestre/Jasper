@@ -141,70 +141,41 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
-	// TODO: This is a big hack. pushing nullptr into the
-	// stack should actually never happen.
-	for (int i = callee->m_captures.size(); i--;)
-		e.m_stack.push(nullptr);
+	for (auto capture : callee->m_captures)
+		e.m_stack.push(capture);
 
-	for (auto& kv : callee->m_captures) {
-		auto capture_value = value_of(as<Reference>(kv.second));
-		// TODO: I would like to get rid of this hash table access
-		auto offset = callee->m_def->m_captures[kv.first].inner_frame_offset;
-		e.m_stack.frame_at(offset) = kv.second;
-	}
-
-	// this feels really dumb:
-	// we get a value on the stack, then we move it to the return value
-	// slot, then we pop some stuff off the stack, and put it back on the
-	// stack. It is doubly dumb when we eval a seq-expr (because it does a
-	// save-pop sequence)
 	eval(callee->m_def->m_body, e);
-	e.save_return_value(e.m_stack.pop_unsafe());
-}
-
-void eval_call_native_function(
-    gc_ptr<NativeFunction> callee, int arg_count, Interpreter& e) {
-	// TODO: don't do this conversion
-	Span<Value*> args = {&e.m_stack.frame_at(-arg_count), arg_count};
-	e.save_return_value(callee->m_fptr(args, e));
+	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	gc_ptr<Value> callee_handle = e.m_stack.pop();
-	auto* callee = value_of(callee_handle.get());
+	auto* callee = value_of(e.m_stack.access(0));
 	assert(is_callable_value(callee));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	e.m_stack.start_stack_region();
-
+	int frame_start = e.m_stack.m_stack_ptr;
 	if (callee->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			eval(expr, e);
 			e.m_stack.access(0) = rewrap(e.m_stack.access(0), e).get();
 		}
-		// arguments go before the frame pointer
-		e.m_stack.start_stack_frame();
+		e.m_stack.start_stack_frame(frame_start);
 		eval_call_function(static_cast<Function*>(callee), arg_count, e);
 	} else if (callee->type() == ValueTag::NativeFunction) {
-		for (auto expr : arglist) {
+		for (auto expr : arglist)
 			eval(expr, e);
-		}
-		// arguments go before the frame pointer
-		e.m_stack.start_stack_frame();
-
-		eval_call_native_function(
-		    static_cast<NativeFunction*>(callee), arg_count, e);
+		e.m_stack.start_stack_frame(frame_start);
+		Span<Value*> args = {&e.m_stack.frame_at(0), arg_count};
+		e.m_stack.frame_at(-1) = static_cast<NativeFunction*>(callee)->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
 
 	e.m_stack.end_stack_frame();
-	e.m_stack.end_stack_region();
-	e.m_stack.push(e.fetch_return_value());
 }
 
 void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
@@ -237,12 +208,12 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 
 	CapturesType captures;
-	captures.reserve(ast->m_captures.size());
+	captures.assign(ast->m_captures.size(), nullptr);
 	for (auto const& capture : ast->m_captures) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
-		captures.push_back({
-			capture.first,
-			e.m_stack.frame_at(capture.second.outer_frame_offset)});
+		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
+		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
+		captures[offset] = as<Reference>(value);
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
