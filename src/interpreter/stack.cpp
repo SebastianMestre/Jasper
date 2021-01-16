@@ -65,6 +65,7 @@ Value*& Stack::access(int offset) {
 }
 
 Value*& Stack::frame_at(int offset) {
+	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack.size());
 	return m_stack[m_frame_ptr + offset];
 }
