@@ -20,9 +20,6 @@
 	X(FetchRetval)                                                             \
 	X(Pop)                                                                     \
                                                                                \
-	X(SlideToFront)                                                            \
-	X(SlideToBack)                                                             \
-                                                                               \
 	X(Assign)                                                                  \
                                                                                \
 	X(Call)                                                                    \
