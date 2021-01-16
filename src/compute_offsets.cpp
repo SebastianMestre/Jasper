@@ -43,9 +43,9 @@ void compute_offsets(TypedAST::IfElseStatement* ast, int frame_offset) {
 }
 
 void compute_offsets(TypedAST::CallExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_callee, frame_offset);
+	compute_offsets(ast->m_callee, frame_offset++);
 	for (auto& arg : ast->m_args)
-		compute_offsets(arg, frame_offset);
+		compute_offsets(arg, frame_offset++);
 }
 
 void compute_offsets(TypedAST::FunctionLiteral* ast, int frame_offset) {
