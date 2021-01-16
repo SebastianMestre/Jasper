@@ -1,0 +1,23 @@
+append := fn () {
+	A := array {};
+	array_append(A, 10);
+	return A;
+};
+
+extend := fn () {
+	A := array {};
+	array_extend(A, array{10});
+	return A;
+};
+
+size_of := fn () {
+	A := array {10;10};
+	return size(A);
+};
+
+join := fn () {
+	A := array {10;10};
+	return array_join(A, ",");
+};
+
+__invoke := fn() => 0;

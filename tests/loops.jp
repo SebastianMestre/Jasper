@@ -1,0 +1,21 @@
+for_loop := fn () {
+	sum := 0;
+	N := 16;
+	for (i := 0; i < N; i = i + 1) {
+		sum = sum + i;
+	}
+	return sum;
+};
+
+while_loop := fn() {
+	i := 0; sum := 0;
+
+	while(i < 16) {
+		sum = sum + i;
+		i = i + 1;
+	}
+
+	return sum;
+};
+
+__invoke := fn() => 0;

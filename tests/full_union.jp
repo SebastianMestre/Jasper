@@ -1,0 +1,18 @@
+f := fn (error_number : int<::>) =>
+	fn(x : either<::>) => match(x) {
+		left { i } => i;
+		right { s } => error_number;
+	};
+
+either := union {
+	left : int<::>;
+	right : string<::>;
+};
+
+__invoke := fn() {
+	x := either<::>.left{ 1 };
+	y := either<::>.right{ "error" };
+
+	def := f(10);
+	return def(x) + def(y);
+};

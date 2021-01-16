@@ -52,6 +52,9 @@ TestReport Tester::execute() {
 				veredict = TestStatusTag::Empty;
 			std::cout << 'R';
 			break;
+		case TestStatusTag::MissingFile:
+			std::cout << '?';
+			break;
 		default:
 			std::cout << " -Unknown test code- ";
 		}

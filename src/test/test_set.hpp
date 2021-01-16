@@ -22,7 +22,7 @@ using Interpret = ExitStatusTag (*)(Interpreter::Interpreter&);
 
 struct InterpreterTestSet : public TestSet {
 
-	std::string m_source;
+	std::string m_source_file;
 	std::vector<Interpret> m_testers;
 	bool m_dump = false;
 

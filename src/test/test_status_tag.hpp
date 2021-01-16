@@ -4,7 +4,8 @@
 	X(Ok) \
 	X(Error) \
 	X(Fail) \
-	X(Empty)
+	X(Empty) \
+	X(MissingFile)
 
 #define X(name) #name,
 constexpr const char* test_status_string[] = {
