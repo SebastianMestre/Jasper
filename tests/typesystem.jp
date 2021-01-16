@@ -17,3 +17,15 @@ other_mono := mono;
 other_other_mono := other_mono;
 
 final := fn() => other_other_mono { 10 };
+
+first_arr := fn(arr : array<:array<:int<::>:>:>) => arr[0];
+first_int := fn(arr : array<:int<::>:>) => arr[0];
+extract := fn(){
+	mat := array {
+		array { 4; 5; 6; };
+		array { 1; 2; 3; };
+	};
+	arr := first_arr(mat);
+	val := first_int(arr);
+	return val;
+};

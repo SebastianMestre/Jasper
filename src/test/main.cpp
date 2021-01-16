@@ -13,16 +13,6 @@ void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
 	using Testers = std::vector<Test::Interpret>;
 
-	/*
-	tests.add_test(
-		std::make_unique<TestCase>("tests/monolithic.jp",
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			eval_expression("__invoke()", env);
-			return ExitStatusTag::Ok;
-		})
-	);
-	*/
-
 	tests.add_test(std::make_unique<TestCase>("tests/basic_op.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
@@ -106,73 +96,6 @@ void interpreter_tests(Test::Tester& tests) {
 		}
 	    }));
 
-	/*
-	tests.add_test( // HEADS UP : this test won't work because it's ill typed
-		std::make_unique<TestCase>(R"(
-			cons := fn (l,r) {
-				return array { l; r; };
-			};
-
-			car := fn(l) {
-				return l[0];
-			};
-
-			cdr := fn(l) {
-				return l[1];
-			};
-
-			__invoke := fn () {
-				a := cons(0, cons(1, cons(2, cons(3, 1337))));
-				return car(cdr(cdr(a)));
-			};
-		)",
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), 2);
-		})
-	);
-	*/
-
-	/* // HEADS UP : this test won't work because it's ill typed
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
-			Leaf := fn() => array { "Leaf" };
-			Node := fn(x,l,r) => array { "Node"; x; l; r };
-
-			insert := fn(tree, x) {
-				if(tree[0] == "Leaf")
-					return Node(x, Leaf(), Leaf());
-				if(tree[1] == x)
-					return tree;
-				if(tree[1] < x)
-					return Node(tree[1], tree[2], insert(tree[3], x));
-				if(x < tree[1])
-					return Node(tree[1], insert(tree[2], x), tree[3]);
-			};
-
-			print_inorder := fn (tree) {
-				if(t[0] == "Leaf") return "";
-				return print_inorder(t[2],p) + t[1] + print_inorder(t[3], p);
-			};
-
-			__invoke := fn () {
-				t0 := Leaf();
-				t1 := insert(t0, "f");
-				t2 := insert(t1, "b");
-				t3 := insert(t2, "e");
-				t4 := insert(t3, "c");
-				t5 := insert(t4, "a");
-				t6 := insert(t5, "g");
-				t7 := insert(t6, "d");
-
-				return print_inorder(t7);
-			};
-		)",
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), "abcdefg");
-		})
-	);
-	*/
-
 	tests.add_test(std::make_unique<TestCase>("tests/recursion.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
@@ -227,29 +150,6 @@ void interpreter_tests(Test::Tester& tests) {
 	        }
 	    }));
 
-	/* // HEADS UP : this test won't work because we don't
-	 * know how to take source type hints into account
-	tests.add_test(
-		std::make_unique<TestCase>(R"(
-			// TODO: fix inability to use keyword 'array' and others in types
-			first_arr := fn(arr : Array<:Array<:Int:>:>) => arr[0];
-			first_int := fn(arr : Array<:Ant:>) => arr[0];
-			__invoke := fn(){
-				mat := array {
-					array { 4; 5; 6; };
-					array { 1; 2; 3; };
-				};
-				arr := first_arr(mat);
-				val := first_int(arr);
-				return val;
-			};
-		)",
-		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
-			return Assert::equals(eval_expression("__invoke()", env), 4);
-		})
-	);
-	*/
-
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/struct.jp",
 	    Testers {
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
@@ -270,7 +170,10 @@ void interpreter_tests(Test::Tester& tests) {
 	        },
 	        +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 	                return Assert::array_of_size(eval_expression("__invoke()", env), 3);
-	        }
+	        },
+		+[](Interpreter::Interpreter& env) -> ExitStatusTag {
+			return Assert::equals(eval_expression("extract()", env), 4);
+		}
 	    }));
 
 	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/union.jp",
