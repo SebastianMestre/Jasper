@@ -14,5 +14,5 @@ struct BytecodeRunner {
 	    : e {e_} {}
 
 	int run(std::vector<Instruction> const& instructions);
-	int run_single(Instruction const& instruction);
+	int run_single(Instruction const& instruction, int& pc);
 };

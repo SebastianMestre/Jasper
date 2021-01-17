@@ -23,7 +23,10 @@
 	X(Assign)                                                                  \
                                                                                \
 	X(Call)                                                                    \
-	X(Ret)
+	X(Ret)                                                                     \
+                                                                               \
+	X(Jump)                                                                    \
+	X(CondJump)
 
 #define X(tag) tag,
 enum class Opcode {

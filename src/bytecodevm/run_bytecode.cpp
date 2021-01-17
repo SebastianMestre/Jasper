@@ -10,15 +10,17 @@
 #include <iostream>
 
 int BytecodeRunner::run(std::vector<Instruction> const& instructions) {
-	for (Instruction const& itn : instructions) {
-		int status = run_single(itn);
+	int const instruction_count = instructions.size();
+	for (int i = 0; i < instruction_count;) {
+		auto const& itn = instructions[i];
+		int status = run_single(itn, i);
 		if (status)
 			return status;
 	}
 	return 0;
 }
 
-int BytecodeRunner::run_single(Instruction const& instruction) {
+int BytecodeRunner::run_single(Instruction const& instruction, int& pc) {
 	Log::info(std::string("==== Opcode ") + opcode_string[int(instruction.opcode)] + " ====");
 	switch (instruction.opcode) {
 	case Opcode::IntConst:
@@ -93,6 +95,19 @@ int BytecodeRunner::run_single(Instruction const& instruction) {
 		}
 
 	} break;
+	}
+	switch(instruction.opcode){
+		case Opcode::Jump:
+			pc += instruction.int_value1;
+			break;
+	    case Opcode::CondJump: {
+		    bool success =
+		        Interpreter::value_as<Interpreter::Boolean>(e.m_stack.access(0))->m_value;
+		    e.m_stack.pop_unsafe();
+		    if (success)
+			    pc += instruction.int_value1;
+	    } break;
+	    default: pc += 1;
 	}
 	return 0;
 }
