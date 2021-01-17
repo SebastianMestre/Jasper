@@ -51,7 +51,7 @@ TypeSystemCore::TypeSystemCore() {
 					if (b_data.is_dummy)
 						b_data.structure.insert(kv_a);
 					else
-						Log::fatal() << "Accessing non-existing field '" << kv_a.first.str() << "' of a record";
+						Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
 				else
 					// else the fields must have equivalent types
 					m_mono_core.unify(kv_a.second, kv_b->second);
@@ -75,7 +75,7 @@ TypeSystemCore::TypeSystemCore() {
 		} else {
 			Log::fatal()
 			    << "Deduced two different type functions to be equal (with IDs "
-			    << std::to_string(fa) << " and " << std::to_string(fb) + ")";
+			    << fa << " and " << fb << ")";
 		}
 	};
 

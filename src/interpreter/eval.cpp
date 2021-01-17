@@ -104,7 +104,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
 	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
-			Log::fatal() << "missing layout for identifier '" << ast->text().str() << "'";
+			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
 		}
 		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset));
 	} else {
