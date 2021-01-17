@@ -26,6 +26,9 @@ int BytecodeRunner::run_single(Instruction const& instruction, int& pc) {
 	case Opcode::IntConst:
 		e.push_integer(instruction.int_value1);
 		break;
+	case Opcode::StringConst:
+		e.push_string(instruction.string_value.str());
+		break;
 	case Opcode::FnConst: {
 		// TODO
 		int argument_count = instruction.int_value1;

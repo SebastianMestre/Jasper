@@ -12,6 +12,10 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::IntegerL
 	out.push_back(Instruction {Opcode::IntConst, ast->value()});
 }
 
+static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::StringLiteral* ast) {
+	out.push_back(Instruction {Opcode::StringConst, 0, 0, ast->text()});
+}
+
 static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::FunctionLiteral* ast) {
 	auto body_bytecode = emit_bytecode(ast->m_body);
 	int capture_count = ast->m_captures.size();
@@ -85,6 +89,7 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::TypedAST
 
 	switch (ast->type()) {
 		DISPATCH(IntegerLiteral)
+		DISPATCH(StringLiteral)
 		DISPATCH(FunctionLiteral)
 
 		DISPATCH(Identifier)

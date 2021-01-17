@@ -6,6 +6,7 @@
 
 #define OPCODES                                                                \
 	X(IntConst)                                                                \
+	X(StringConst)                                                             \
 	X(FnConst)                                                                 \
                                                                                \
 	X(GlobalCreate)                                                            \

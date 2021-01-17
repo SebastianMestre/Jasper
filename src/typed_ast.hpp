@@ -109,8 +109,8 @@ struct IntegerLiteral : public TypedAST {
 struct StringLiteral : public TypedAST {
 	Token const* m_token;
 
-	std::string const& text() {
-		return m_token->m_text.str();
+	InternedString const& text() {
+		return m_token->m_text;
 	}
 
 	StringLiteral()

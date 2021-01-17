@@ -61,7 +61,7 @@ void eval(TypedAST::IntegerLiteral* ast, Interpreter& e) {
 }
 
 void eval(TypedAST::StringLiteral* ast, Interpreter& e) {
-	e.push_string(ast->text());
+	e.push_string(ast->text().str());
 };
 
 void eval(TypedAST::BooleanLiteral* ast, Interpreter& e) {
