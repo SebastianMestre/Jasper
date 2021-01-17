@@ -1,15 +1,12 @@
 #include <string>
 
+#include "log_stream.hpp"
+
 namespace Log {
 
-struct FatalStream {
+struct FatalStream : public LogStream {
 	FatalStream();
 	[[noreturn]] ~FatalStream();
-
-	FatalStream& operator<<(std::string const&);
-	FatalStream& operator<<(int);
-	FatalStream& operator<<(float);
-	FatalStream& operator<<(char);
 };
 
 } // namespace Log
