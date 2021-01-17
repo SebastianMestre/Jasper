@@ -17,9 +17,9 @@ COMMON_TARGETS := \
 	algorithms/tarjan_solver \
 	algorithms/unification \
 	algorithms/trie \
-	log/fatal_stream \
-	log/log_stream \
+	log/basic_stream \
 	log/log \
+	log/stream \
 	utils/polymorphic_block_allocator \
 	utils/polymorphic_dumb_allocator \
 	utils/block_allocator \

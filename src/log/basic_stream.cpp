@@ -1,4 +1,4 @@
-#include "log_stream.hpp"
+#include "basic_stream.hpp"
 
 #include <ostream>
 

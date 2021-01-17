@@ -1,6 +1,5 @@
 #include <string>
 #include <iosfwd>
-
 #include "../utils/interned_string.hpp"
 
 namespace Log {

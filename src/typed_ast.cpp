@@ -16,7 +16,7 @@ InternedString const& Declaration::identifier_text() const {
 		}
 
 		auto str = "No identifier on declaration " + m_identifier_token->m_text.str() + ": using token data as fallback";
-		Log::warning(str.c_str());
+		Log::warning(str);
 
 		return m_identifier_token->m_text;
 	}
