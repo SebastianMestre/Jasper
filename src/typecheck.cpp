@@ -175,7 +175,7 @@ void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = var;
 }
 
-void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
+void typecheck(TypedAST::IfElseExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
@@ -399,7 +399,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

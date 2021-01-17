@@ -87,8 +87,8 @@ TypedAST::IndexExpression* ct_eval(
 	return ast;
 }
 
-TypedAST::TernaryExpression* ct_eval(
-    TypedAST::TernaryExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
+TypedAST::IfElseExpression* ct_eval(
+    TypedAST::IfElseExpression* ast, TypeChecker& tc, TypedAST::Allocator& alloc) {
 	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
 	ast->m_then_expr = ct_eval(ast->m_then_expr, tc, alloc);
 	ast->m_else_expr = ct_eval(ast->m_else_expr, tc, alloc);
@@ -388,7 +388,7 @@ TypedAST::TypedAST* ct_eval(
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

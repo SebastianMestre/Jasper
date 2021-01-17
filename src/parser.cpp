@@ -567,7 +567,7 @@ Writer<AST::AST*> Parser::parse_ternary_expression() {
 	auto else_expr = parse_expression();
 	CHECK_AND_RETURN(result, else_expr);
 
-	auto e = m_ast_allocator->make<AST::TernaryExpression>();
+	auto e = m_ast_allocator->make<AST::IfElseExpression>();
 	e->m_condition = condition.m_result;
 	e->m_then_expr = then_expr.m_result;
 	e->m_else_expr = else_expr.m_result;

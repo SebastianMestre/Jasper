@@ -25,7 +25,7 @@
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
-	X(TernaryExpression)                                                       \
+	X(IfElseExpression)                                                       \
 	X(ForStatement)                                                            \
 	X(WhileStatement)                                                          \
                                                                                \

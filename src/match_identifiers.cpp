@@ -179,7 +179,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    TypedAST::IfElseExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_then_expr, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_else_expr, env));
@@ -301,7 +301,7 @@ namespace TypeChecker {
 		DISPATCH(Identifier);
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

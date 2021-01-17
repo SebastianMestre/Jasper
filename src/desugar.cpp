@@ -116,7 +116,7 @@ AST* desugar(IndexExpression* ast, Allocator& alloc) {
 	return ast;
 }
 
-AST* desugar(TernaryExpression* ast, Allocator& alloc) {
+AST* desugar(IfElseExpression* ast, Allocator& alloc) {
 	ast->m_condition = desugar(ast->m_condition, alloc);
 	ast->m_then_expr = desugar(ast->m_then_expr, alloc);
 	ast->m_else_expr = desugar(ast->m_else_expr, alloc);
@@ -216,7 +216,7 @@ AST* desugar(AST* ast, Allocator& alloc) {
 
 		RETURN(Identifier);
 		DISPATCH(BinaryExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(AccessExpression);

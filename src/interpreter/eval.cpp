@@ -192,7 +192,7 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	e.m_stack.push(callee->at(index->m_value));
 };
 
-void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
+void eval(TypedAST::IfElseExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
@@ -402,7 +402,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

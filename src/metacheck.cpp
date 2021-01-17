@@ -82,7 +82,7 @@ void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_meta_core.unify(ast->m_index->m_meta_type, tc.meta_value());
 }
 
-void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
+void metacheck(TypedAST::IfElseExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_condition, tc);
@@ -316,7 +316,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

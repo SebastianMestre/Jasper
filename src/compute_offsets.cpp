@@ -104,7 +104,7 @@ void compute_offsets(TypedAST::IndexExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_index, frame_offset);
 }
 
-void compute_offsets(TypedAST::TernaryExpression* ast, int frame_offset) {
+void compute_offsets(TypedAST::IfElseExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_condition, frame_offset);
 	compute_offsets(ast->m_then_expr, frame_offset);
 	compute_offsets(ast->m_else_expr, frame_offset);
@@ -180,7 +180,7 @@ void compute_offsets(TypedAST::TypedAST* ast, int frame_offset) {
 		DISPATCH(Identifier);
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

@@ -209,13 +209,13 @@ struct AccessExpression : public TypedAST {
 	    : TypedAST {TypedASTTag::AccessExpression} {}
 };
 
-struct TernaryExpression : public TypedAST {
+struct IfElseExpression : public TypedAST {
 	TypedAST* m_condition;
 	TypedAST* m_then_expr;
 	TypedAST* m_else_expr;
 
-	TernaryExpression()
-	    : TypedAST {TypedASTTag::TernaryExpression} {}
+	IfElseExpression()
+	    : TypedAST {TypedASTTag::IfElseExpression} {}
 };
 
 struct MatchExpression : public TypedAST {

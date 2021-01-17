@@ -172,7 +172,7 @@ void print_impl(AccessExpression* ast, int d) {
 	std::cout << ")";
 }
 
-void print_impl(TernaryExpression* ast, int d) {
+void print_impl(IfElseExpression* ast, int d) {
 	print_indentation(d);
 	std::cout << "(ternary-expression\n";
 	print(ast->m_condition, d + indent_width);
@@ -317,7 +317,7 @@ void print_impl(AST* ast, int d) {
 		DISPATCH(BinaryExpression)
 		DISPATCH(CallExpression)
 		DISPATCH(IndexExpression)
-		DISPATCH(TernaryExpression)
+		DISPATCH(IfElseExpression)
 		DISPATCH(AccessExpression)
 		DISPATCH(SequenceExpression)
 		DISPATCH(MatchExpression)

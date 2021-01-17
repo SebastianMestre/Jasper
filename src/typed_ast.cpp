@@ -151,8 +151,8 @@ TypedAST* convert_ast(AST::IndexExpression* ast, Allocator& alloc) {
 	return typed_index;
 }
 
-TypedAST* convert_ast(AST::TernaryExpression* ast, Allocator& alloc) {
-	auto typed_ternary = alloc.make<TernaryExpression>();
+TypedAST* convert_ast(AST::IfElseExpression* ast, Allocator& alloc) {
+	auto typed_ternary = alloc.make<IfElseExpression>();
 
 	typed_ternary->m_condition = convert_ast(ast->m_condition, alloc);
 	typed_ternary->m_then_expr = convert_ast(ast->m_then_expr, alloc);
@@ -336,7 +336,7 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
 		DISPATCH(IndexExpression);
-		DISPATCH(TernaryExpression);
+		DISPATCH(IfElseExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);

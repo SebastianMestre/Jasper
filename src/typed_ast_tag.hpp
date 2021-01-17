@@ -15,7 +15,7 @@
 	X(IndexExpression)                                                         \
 	X(AccessExpression)                                                        \
 	X(MatchExpression)                                                         \
-	X(TernaryExpression)                                                       \
+	X(IfElseExpression)                                                        \
 	X(ConstructorExpression)                                                   \
 	X(SequenceExpression)                                                      \
 	/* All before this point are expressions */                                \

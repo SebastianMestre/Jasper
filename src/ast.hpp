@@ -171,13 +171,13 @@ struct AccessExpression : public AST {
 	    : AST {ASTTag::AccessExpression} {}
 };
 
-struct TernaryExpression : public AST {
+struct IfElseExpression : public AST {
 	AST* m_condition;
 	AST* m_then_expr;
 	AST* m_else_expr;
 
-	TernaryExpression()
-	    : AST {ASTTag::TernaryExpression} {}
+	IfElseExpression()
+	    : AST {ASTTag::IfElseExpression} {}
 };
 
 struct MatchExpression : public AST {
