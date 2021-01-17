@@ -50,6 +50,24 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::CallExpr
 	out.push_back(Instruction {Opcode::Call, ast->m_args.size()});
 }
 
+static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::IfElseExpression* ast) {
+	emit_bytecode_impl(out, ast->m_condition);
+	int cond_end_idx = out.size();
+
+	out.push_back(Instruction{Opcode::CondJump});
+
+	emit_bytecode_impl(out, ast->m_else_expr);
+	int else_end_idx = out.size();
+
+	out.push_back(Instruction{Opcode::Jump});
+
+	emit_bytecode_impl(out, ast->m_then_expr);
+	int then_end_idx = out.size();
+
+	out[cond_end_idx].int_value1 = else_end_idx - cond_end_idx + 1;
+	out[else_end_idx].int_value1 = then_end_idx - else_end_idx;
+}
+
 static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::DeclarationList* ast) {
 	for (auto decl : ast->m_declarations) {
 		out.push_back(
@@ -71,6 +89,7 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::TypedAST
 
 		DISPATCH(Identifier)
 		DISPATCH(CallExpression)
+		DISPATCH(IfElseExpression)
 
 		DISPATCH(DeclarationList)
 	}

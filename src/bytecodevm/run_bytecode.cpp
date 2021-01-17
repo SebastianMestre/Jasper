@@ -97,17 +97,20 @@ int BytecodeRunner::run_single(Instruction const& instruction, int& pc) {
 	} break;
 	}
 	switch(instruction.opcode){
-		case Opcode::Jump:
+	case Opcode::Jump: {
+		pc += instruction.int_value1;
+	} break;
+	case Opcode::CondJump: {
+		bool success =
+		    Interpreter::value_as<Interpreter::Boolean>(e.m_stack.access(0))->m_value;
+		e.m_stack.pop_unsafe();
+		if (success)
 			pc += instruction.int_value1;
-			break;
-	    case Opcode::CondJump: {
-		    bool success =
-		        Interpreter::value_as<Interpreter::Boolean>(e.m_stack.access(0))->m_value;
-		    e.m_stack.pop_unsafe();
-		    if (success)
-			    pc += instruction.int_value1;
-	    } break;
-	    default: pc += 1;
+		else
+			pc += 1;
+	} break;
+	default:
+		pc += 1;
 	}
 	return 0;
 }
