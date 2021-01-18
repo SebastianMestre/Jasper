@@ -36,7 +36,7 @@ TypeSystemCore::TypeSystemCore() {
 					    b_data.argument_count == -1
 					        ? std::string("variadic")
 					        : std::to_string(b_data.argument_count);
-					Log::FatalStream()
+					Log::fatal()
 					    << "Deduced type functions with incompatible argument "
 					       "counts to be equal (with "
 					    << argc_a << " and " << argc_b << " arguments)";
@@ -51,7 +51,7 @@ TypeSystemCore::TypeSystemCore() {
 					if (b_data.is_dummy)
 						b_data.structure.insert(kv_a);
 					else
-						Log::FatalStream() << "Accessing non-existing field '" << kv_a.first.str() << "' of a record";
+						Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
 				else
 					// else the fields must have equivalent types
 					m_mono_core.unify(kv_a.second, kv_b->second);
@@ -73,9 +73,9 @@ TypeSystemCore::TypeSystemCore() {
 			b_data.argument_count = new_argument_count;
 
 		} else {
-			Log::FatalStream()
+			Log::fatal()
 			    << "Deduced two different type functions to be equal (with IDs "
-			    << std::to_string(fa) << " and " << std::to_string(fb) + ")";
+			    << fa << " and " << fb << ")";
 		}
 	};
 

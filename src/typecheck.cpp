@@ -293,9 +293,8 @@ void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
 #if DEBUG
 	auto poly = ast->m_decl_type;
 	auto& poly_data = tc.m_core.poly_data[poly];
-	Log::info(
-	    "Type of local variable '" + ast->identifier_text().str() + "' has " +
-	    std::to_string(poly_data.vars.size()) + " type variables");
+	Log::info() << "Type of local variable '" << ast->identifier_text()
+	            << "' has " << poly_data.vars.size() << " type variables";
 	Log::info("The type is:");
 	tc.m_core.m_mono_core.print_node(poly_data.base);
 #endif
@@ -419,9 +418,8 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		IGNORE(Constructor);
 	}
 
-	Log::fatal(
-	    std::string("(internal) AST type not handled in typecheck: ") +
-	    typed_ast_string[(int)ast->type()]);
+	Log::fatal() << "(internal) AST type not handled in typecheck: "
+	             << typed_ast_string[(int)ast->type()];
 
 #undef DISPATCH
 #undef IGNORE

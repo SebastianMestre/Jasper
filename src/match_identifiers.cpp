@@ -323,7 +323,7 @@ namespace TypeChecker {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	Log::FatalStream() << "(internal) Unhandled case in match_identifiers '" << typed_ast_string[int(ast->type())] << "'";
+	Log::fatal() << "(internal) Unhandled case in match_identifiers '" << typed_ast_string[int(ast->type())] << "'";
 }
 
 #undef CHECK_AND_RETURN
