@@ -1,8 +1,9 @@
 #include "compile.hpp"
 
 #include <iostream>
+#include <sstream>
 
-#include "bytecode.hpp"
+#include "instruction.hpp"
 #include "../log/log.hpp"
 #include "../typed_ast.hpp"
 
@@ -98,6 +99,11 @@ static void emit_bytecode_impl(std::vector<Instruction>& out, TypedAST::TypedAST
 
 		DISPATCH(DeclarationList)
 	}
+
+	std::stringstream ss;
+	ss << "Unhandled case in emit_bytecode_impl '"
+	   << typed_ast_string[int(ast->type())] << "'";
+	Log::error(ss.str().c_str());
 
 #undef DISPATCH
 }

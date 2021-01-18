@@ -8,7 +8,7 @@
 #include "../utils/span.hpp"
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
-#include "../bytecodevm/bytecode.hpp"
+#include "../bytecodevm/instruction.hpp"
 
 namespace TypedAST {
 struct FunctionLiteral;

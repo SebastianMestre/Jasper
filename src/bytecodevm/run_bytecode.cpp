@@ -5,7 +5,7 @@
 #include "../interpreter/value.hpp"
 #include "../interpreter/value_tag.hpp"
 #include "../log/log.hpp"
-#include "bytecode.hpp"
+#include "instruction.hpp"
 
 #include <iostream>
 

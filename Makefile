@@ -72,7 +72,7 @@ BYTECODEVM_DIR := bytecodevm
 BYTECODEVM_ENTRY := main
 BYTECODEVM_TARGETS := \
 	$(INTERPRETER_TARGETS:%=../$(INTERPRETER_DIR)/%) \
-	bytecode \
+	instruction \
 	compile \
 	run_bytecode
 

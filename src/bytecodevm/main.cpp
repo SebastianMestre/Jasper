@@ -22,7 +22,7 @@
 #include "../typechecker.hpp"
 #include "../typed_ast.hpp"
 #include "../typed_ast_allocator.hpp"
-#include "bytecode.hpp"
+#include "instruction.hpp"
 #include "compile.hpp"
 #include "run_bytecode.hpp"
 
