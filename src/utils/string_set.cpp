@@ -149,7 +149,7 @@ StringSet::ScanData StringSet::scan(
 }
 
 void StringSet::put(int position, std::string&& str, uint64_t hash_bits) {
-	assert(m_data[position].status != HashField::Occupied);
+	assert(m_slot[position].status != HashField::Occupied);
 	assert((hash_bits >> 62) == 0);
 
 	m_storage.push_back(std::move(str));
