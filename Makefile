@@ -69,7 +69,7 @@ PLAYGROUND_ENTRY := main
 PLAYGROUND_TARGETS := 
 
 ifeq ($(MODE),debug)
-  CXXFLAGS += -g -fsanitize=address
+  CXXFLAGS += -O0 -g -fsanitize=address
   LIBS += -lasan
   BUILD_DIR := $(BUILD_BASE_DIR)/debug
 else ifeq ($(MODE),tuning)
@@ -79,7 +79,7 @@ else ifeq ($(MODE),dev)
   CXXFLAGS += -O0
   BUILD_DIR := $(BUILD_BASE_DIR)/dev
 else
-  CXXFLAGS += -O3
+  CXXFLAGS += -O3 -DNDEBUG
   BUILD_DIR := $(BUILD_BASE_DIR)/release
 endif
 
