@@ -340,8 +340,8 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		REJECT(Constructor);
 	}
 
-	Log::FatalStream() << "(internal) Unhandled case in metacheck : "
-	                   << typed_ast_string[int(ast->type())];
+	Log::fatal() << "(internal) Unhandled case in metacheck : "
+	             << typed_ast_string[int(ast->type())];
 
 #undef DISPATCH
 #undef LITERAL

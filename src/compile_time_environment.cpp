@@ -18,7 +18,7 @@ void CompileTimeEnvironment::declare(TypedAST::Declaration* decl) {
 	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
 
 	if (!insert_result.second)
-		Log::FatalStream() << "Redeclaration of " << decl->identifier_text().str() << '\n';
+		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
 }
 
 TypedAST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {

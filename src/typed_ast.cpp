@@ -11,12 +11,10 @@ namespace TypedAST {
 InternedString const& Declaration::identifier_text() const {
 	if (m_identifier.is_null()) {
 		if (!m_identifier_token) {
-			auto str = "No identifier or fallback on declaration " + m_identifier_token->m_text.str() + ": aborting";
-			Log::fatal(str.c_str());
+			Log::fatal() << "No identifier or fallback on declaration of '" << m_identifier_token->m_text << "'";
 		}
 
-		auto str = "No identifier on declaration " + m_identifier_token->m_text.str() + ": using token data as fallback";
-		Log::warning(str.c_str());
+		Log::warning() << "No identifier on declaration " << m_identifier_token->m_text << ": using token data as fallback";
 
 		return m_identifier_token->m_text;
 	}
@@ -357,11 +355,8 @@ TypedAST* convert_ast(AST::AST* ast, Allocator& alloc) {
 		DISPATCH(TypeTerm);
 	}
 
-	auto error_message =
-	    std::string("(internal) AST type not handled in convert_ast: ") +
-	    ast_string[(int)ast->type()];
-
-	Log::fatal(error_message.c_str());
+	Log::fatal() << "(internal) AST type not handled in convert_ast: "
+	             << ast_string[(int)ast->type()];
 
 #undef REJECT
 #undef DISPATCH
