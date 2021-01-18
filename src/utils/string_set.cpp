@@ -114,7 +114,8 @@ StringSet::ScanData StringSet::scan(
     char const* data, size_t length, uint64_t hash_bits) const {
 	assert(m_data.size() > m_size);
 
-	int position = hash_bits % m_data.size();
+	const int capacity_mask = m_data.size() - 1;
+	int position = hash_bits & capacity_mask;
 	int free_position = -1;
 
 	while (true) {
@@ -131,8 +132,7 @@ StringSet::ScanData StringSet::scan(
 		}
 
 		position += 1;
-		if (position == static_cast<int>(m_data.size()))
-			position = 0;
+		position &= capacity_mask;
 	}
 }
 
