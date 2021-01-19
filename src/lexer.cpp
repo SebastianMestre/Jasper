@@ -202,7 +202,8 @@ bool Lexer::consume_symbol() {
 void Lexer::consume_token() {
 
 	if (current_char() == '/' && next_char() == '/') {
-		assert(consume_comment());
+		if (!consume_comment())
+			assert(0);
 		return;
 	}
 
@@ -211,7 +212,8 @@ void Lexer::consume_token() {
 	}
 
 	if (current_char() == '"') {
-		assert(consume_string());
+		if (!consume_string())
+			assert(0);
 		return;
 	}
 

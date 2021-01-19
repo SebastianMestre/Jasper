@@ -21,13 +21,13 @@ struct StringSet {
 		static constexpr uint64_t Occupied = 1;
 		static constexpr uint64_t Tombstone = 2;
 
-		std::string* value;
 		uint64_t status : 2;
 		uint64_t hash_bits : 62;
 	};
 
 	ChunkedArray<std::string> m_storage;
-	std::vector<HashField> m_data;
+	std::vector<HashField> m_slot;
+	std::vector<std::string*> m_value;
 	size_t m_size {0};
 
 	StringSet();
