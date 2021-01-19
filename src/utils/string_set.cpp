@@ -126,6 +126,11 @@ StringSet::ScanData StringSet::scan(
     char const* data, size_t length, uint64_t hash_bits) const {
 	assert(m_slot.size() > m_size);
 
+	// ensure that m_slot.size() is a power of 2
+	assert((m_slot.size() & (m_slot.size() - 1)) == 0);
+
+	// m_slot.size() being a power of 2 lets us use bit
+	// masking instead of modulo to wrap indices
 	const int capacity_mask = m_slot.size() - 1;
 	int position = hash_bits & capacity_mask;
 	int free_position = -1;
