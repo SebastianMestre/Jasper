@@ -1,3 +1,6 @@
+Int := int<::>;
+sum := fn(x : Int, y : Int) => x + y;
+
 a : int<::> = 1;
 b : string<::> = "hello";
 c : array<: int<::> :> = array { 1; 2; };

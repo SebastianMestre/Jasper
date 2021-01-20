@@ -1002,15 +1002,14 @@ Writer<AST::AST*> Parser::parse_type_term() {
 	auto callee = parse_identifier(true);
 	CHECK_AND_RETURN(result, callee);
 
-	auto e = m_ast_allocator->make<AST::TypeTerm>();
-	e->m_callee = callee.m_result;
-
 	if (!match(TokenTag::POLY_OPEN))
-		return make_writer<AST::AST*>(e);
+		return make_writer<AST::AST*>(callee.m_result);
 
 	auto args = parse_type_term_arguments();
 	CHECK_AND_RETURN(result, args);
 
+	auto e = m_ast_allocator->make<AST::TypeTerm>();
+	e->m_callee = callee.m_result;
 	e->m_args = std::move(args.m_result);
 	return make_writer<AST::AST*>(e);
 }
