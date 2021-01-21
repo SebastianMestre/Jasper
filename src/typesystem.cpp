@@ -22,7 +22,7 @@ TypeSystemCore::TypeSystemCore() {
 
 		if (a_data.is_dummy) {
 
-			int new_argument_count = [&] {
+			int const new_argument_count = [&] {
 				if (a_data.argument_count == b_data.argument_count) {
 					return a_data.argument_count;
 				} else if (b_data.is_dummy || b_data.argument_count == -1) {
@@ -43,6 +43,24 @@ TypeSystemCore::TypeSystemCore() {
 				}
 			}();
 
+			// Make a point to b. this way, if more fields get added to a or b,
+			// both get updated
+			//
+			// Also, we do it before unifying their data to prevent infinite
+			// recursion
+			//
+			// TODO: think more thoroughly about this...
+			// I get the feeling that we shouldn't really do this if b is a
+			// polymorphic record. why? Because b will have type variables that
+			// are bound to a forall kinda thing, and thus should NOT be unified.
+			// instead, we should do something similar to inst_fresh, but for
+			// type funcs.
+			//
+			// NOTE: this makes the unify_function need to access node_header
+			core.node_header[a].tag = Unification::Core::Tag::Var;
+			core.node_header[a].data_idx = b;
+			b_data.argument_count = new_argument_count;
+
 			for (auto& kv_a : a_data.structure) {
 				auto kv_b = b_data.structure.find(kv_a.first);
 
@@ -56,21 +74,6 @@ TypeSystemCore::TypeSystemCore() {
 					// else the fields must have equivalent types
 					m_mono_core.unify(kv_a.second, kv_b->second);
 			}
-
-			// make a point to b after unifying their data.
-			// this way, if more fields get added to a or b, both get updated
-			//
-			// TODO: think more thoroughly about this...
-			// I get the feeling that we shouldn't really do this if b is a
-			// polymorphic record. why? Because b will have type variables that
-			// are bound to a forall kinda thing, and thus should NOT be unified.
-			// instead, we should do something similar to inst_fresh, but for
-			// type funcs.
-			//
-			// NOTE: this makes the unify_function need to access node_header
-			core.node_header[a].tag = Unification::Core::Tag::Var;
-			core.node_header[a].data_idx = b;
-			b_data.argument_count = new_argument_count;
 
 		} else {
 			Log::fatal()
