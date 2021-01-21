@@ -926,8 +926,6 @@ Writer<AST::AST*> Parser::parse_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse statement"}};
 
-	// TODO: paren_open, string tokens, integer and numer
-	// tokens, etc should also be recognized as expressions.
 	auto* p0 = peek(0);
 	if (p0->m_type == TokenTag::IDENTIFIER) {
 		auto* p1 = peek(1);
@@ -940,7 +938,6 @@ Writer<AST::AST*> Parser::parse_statement() {
 
 			return make_writer<AST::AST*>(declaration.m_result);
 		} else {
-			// TODO: wrap in an ExpressionStatement ?
 			auto expression = parse_expression();
 			CHECK_AND_RETURN(result, expression);
 			REQUIRE(result, TokenTag::SEMICOLON);
@@ -968,10 +965,10 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, block_statement);
 		return block_statement;
 	} else {
-		auto err = make_expected_error("a statement", p0);
-
-		result.m_error.m_sub_errors.push_back(std::move(err));
-		return result;
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
+		return expression;
 	}
 
 	return result;

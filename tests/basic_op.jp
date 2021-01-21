@@ -43,4 +43,15 @@ f := -1.1;
 g := +1;
 h := +1.1;
 
+expressions_as_statements := seq {
+	1 + 1;
+	"hello";
+	fn() => seq { return 0; };
+	true;
+	1.1;
+	(if 1 + 1 == 2 then "YES" else "NO");
+	(0);
+	return 0;
+};
+
 __invoke := fn() => 0;
