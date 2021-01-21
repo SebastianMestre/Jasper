@@ -488,12 +488,9 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return function;
 	}
 
-	if (token->m_type == TokenTag::PAREN_OPEN and
-	    peek(1)->m_type == TokenTag::KEYWORD_IF) {
-		m_lexer->advance();
+	if (token->m_type == TokenTag::KEYWORD_IF) {
 		auto ternary = parse_ternary_expression();
 		CHECK_AND_RETURN(result, ternary);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
 		return ternary;
 	}
 
