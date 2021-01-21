@@ -285,14 +285,17 @@ Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<AST::AST*> Parser::parse_expression(int bp) {
+Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse expression"}};
 
 	Writer<AST::AST*> lhs;
-
-	lhs = parse_terminal();
-	CHECK_AND_RETURN(result, lhs);
+	if (!parsed_lhs) {
+		lhs = parse_terminal();
+		CHECK_AND_RETURN(result, lhs);
+	} else {
+		lhs = make_writer(parsed_lhs);
+	}
 
 	while (1) {
 		auto op = peek();
@@ -547,14 +550,20 @@ Writer<AST::AST*> Parser::parse_terminal() {
 	return result;
 }
 
-Writer<AST::AST*> Parser::parse_ternary_expression() {
+Writer<AST::AST*> Parser::parse_ternary_expression(AST::AST* parsed_condition) {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
-	REQUIRE(result, TokenTag::KEYWORD_IF);
+	Writer<AST::AST*> condition;
+	if (!parsed_condition) {
+		REQUIRE(result, TokenTag::KEYWORD_IF);
 
-	auto condition = parse_expression();
-	CHECK_AND_RETURN(result, condition);
+		condition = parse_expression();
+		CHECK_AND_RETURN(result, condition);
+	} else {
+		condition = make_writer(parsed_condition);
+	}
+
 	REQUIRE(result, TokenTag::KEYWORD_THEN);
 
 	auto then_expr = parse_expression();
@@ -756,16 +765,21 @@ Writer<AST::AST*> Parser::parse_return_statement() {
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_if_else_statement() {
+Writer<AST::AST*> Parser::parse_if_else_statement(AST::AST* parsed_condition) {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse if-else statement"}};
 
-	REQUIRE(result, TokenTag::KEYWORD_IF);
-	REQUIRE(result, TokenTag::PAREN_OPEN);
+	Writer<AST::AST*> condition;
+	if (!parsed_condition) {
+		REQUIRE(result, TokenTag::KEYWORD_IF);
+		REQUIRE(result, TokenTag::PAREN_OPEN);
 
-	auto condition = parse_expression();
-	CHECK_AND_RETURN(result, condition);
-	REQUIRE(result, TokenTag::PAREN_CLOSE);
+		auto condition = parse_expression();
+		CHECK_AND_RETURN(result, condition);
+		REQUIRE(result, TokenTag::PAREN_CLOSE);
+	} else {
+		condition = make_writer(parsed_condition);
+	}
 
 	auto body = parse_statement();
 	CHECK_AND_RETURN(result, body);
@@ -946,6 +960,7 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, return_statement);
 		return return_statement;
 	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
+		// first disambiguation: no parenthesis
 		auto* p1 = peek(1);
 		if (p1->m_type != TokenTag::PAREN_OPEN) {
 			auto expression = parse_expression();
@@ -953,7 +968,31 @@ Writer<AST::AST*> Parser::parse_statement() {
 			REQUIRE(result, TokenTag::SEMICOLON);
 			return expression;
 		}
-		auto if_else_statement = parse_if_else_statement();
+
+		m_lexer->advance();
+
+		// we must include parenthesis otherwise
+		REQUIRE(result, TokenTag::PAREN_OPEN);
+
+		auto condition = parse_expression();
+		CHECK_AND_RETURN(result, condition);
+		REQUIRE(result, TokenTag::PAREN_CLOSE);
+
+		// second disambiguation: then keyword
+		// rollback to parsing a whole expression
+		auto* p2 = peek(0);
+		if (p2->m_type == TokenTag::KEYWORD_THEN) {
+			auto ternary = parse_ternary_expression(condition.m_result);
+			CHECK_AND_RETURN(result, ternary);
+
+			auto expression = parse_expression(0, ternary.m_result);
+			CHECK_AND_RETURN(result, expression);
+			REQUIRE(result, TokenTag::SEMICOLON);
+
+			return expression;
+		}
+
+		auto if_else_statement = parse_if_else_statement(condition.m_result);
 		CHECK_AND_RETURN(result, if_else_statement);
 		return if_else_statement;
 	} else if (p0->m_type == TokenTag::KEYWORD_FOR) {

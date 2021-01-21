@@ -41,9 +41,9 @@ struct Parser {
 	Writer<AST::AST*> parse_sequence_expression();
 	Writer<AST::Identifier*> parse_identifier(bool types_allowed = false);
 	Writer<AST::Declaration*> parse_declaration();
-	Writer<AST::AST*> parse_expression(int bp = 0);
+	Writer<AST::AST*> parse_expression(int bp = 0, AST::AST* parsed_lhs = nullptr);
 	Writer<AST::AST*> parse_terminal();
-	Writer<AST::AST*> parse_ternary_expression();
+	Writer<AST::AST*> parse_ternary_expression(AST::AST* parsed_condition = nullptr);
 	Writer<AST::AST*> parse_function();
 	Writer<AST::AST*> parse_array_literal();
 	Writer<AST::AST*> parse_dictionary_literal();
@@ -51,7 +51,7 @@ struct Parser {
 	Writer<AST::AST*> parse_block();
 	Writer<AST::AST*> parse_statement();
 	Writer<AST::AST*> parse_return_statement();
-	Writer<AST::AST*> parse_if_else_statement();
+	Writer<AST::AST*> parse_if_else_statement(AST::AST* parsed_condition = nullptr);
 	Writer<AST::AST*> parse_for_statement();
 	Writer<AST::AST*> parse_while_statement();
 	Writer<AST::AST*> parse_match_expression();
