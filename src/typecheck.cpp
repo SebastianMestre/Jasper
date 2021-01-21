@@ -157,7 +157,7 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 	typecheck(ast->m_value, tc);
 
 	auto mono = ast->m_value->m_value_type;
-	auto seq_expr = tc.m_env.current_seq_expr();
+	auto seq_expr = ast->m_surrounding_seq_expr;
 	tc.m_core.m_mono_core.unify(seq_expr->m_value_type, mono);
 }
 

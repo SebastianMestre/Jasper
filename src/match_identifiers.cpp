@@ -32,6 +32,7 @@ namespace TypeChecker {
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
+	ast->m_surrounding_seq_expr = env.current_seq_expr();
 	env.declare(ast);
 
 	if (ast->m_type_hint)
@@ -168,6 +169,7 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_surrounding_seq_expr = env.current_seq_expr();
 	return match_identifiers(ast->m_value, env);
 }
 
@@ -225,7 +227,10 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::SequenceExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_body, env);
+	env.enter_seq_expr(ast);
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
+	env.exit_seq_expr();
+	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
