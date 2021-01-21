@@ -946,6 +946,13 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, return_statement);
 		return return_statement;
 	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
+		auto* p1 = peek(1);
+		if (p1->m_type != TokenTag::PAREN_OPEN) {
+			auto expression = parse_expression();
+			CHECK_AND_RETURN(result, expression);
+			REQUIRE(result, TokenTag::SEMICOLON);
+			return expression;
+		}
 		auto if_else_statement = parse_if_else_statement();
 		CHECK_AND_RETURN(result, if_else_statement);
 		return if_else_statement;
