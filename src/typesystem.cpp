@@ -6,6 +6,7 @@
 
 TypeSystemCore::TypeSystemCore() {
 	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {
+		// TODO: Redo this once we add polymorphic records
 		if (core.find_term(a) == core.find_term(b))
 			return;
 	
@@ -48,15 +49,6 @@ TypeSystemCore::TypeSystemCore() {
 			//
 			// Also, we do it before unifying their data to prevent infinite
 			// recursion
-			//
-			// TODO: think more thoroughly about this...
-			// I get the feeling that we shouldn't really do this if b is a
-			// polymorphic record. why? Because b will have type variables that
-			// are bound to a forall kinda thing, and thus should NOT be unified.
-			// instead, we should do something similar to inst_fresh, but for
-			// type funcs.
-			//
-			// NOTE: this makes the unify_function need to access node_header
 			core.node_header[a].tag = Unification::Core::Tag::Var;
 			core.node_header[a].data_idx = b;
 			b_data.argument_count = new_argument_count;
