@@ -64,7 +64,7 @@ namespace TypeChecker {
 
 	env.current_top_level_declaration()->m_references.insert(declaration);
 
-	if (!declaration->m_surrounding_function) {
+	if (declaration->is_global()) {
 		ast->m_origin = TypedAST::Identifier::Origin::Global;
 	} else if (declaration->m_surrounding_function != ast->m_surrounding_function) {
 		ast->m_origin = TypedAST::Identifier::Origin::Capture;
@@ -73,7 +73,7 @@ namespace TypeChecker {
 	}
 
 	// dont capture globals
-	if (declaration->m_surrounding_function) {
+	if (!declaration->is_global()) {
 		for (int i = env.m_function_stack.size(); i--;) {
 			auto* func = env.m_function_stack[i];
 			if (func == declaration->m_surrounding_function)
