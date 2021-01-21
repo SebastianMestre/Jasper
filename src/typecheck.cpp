@@ -100,7 +100,6 @@ void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
-	tc.m_env.enter_function(ast);
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
@@ -128,7 +127,6 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_return_type, ast->m_body->m_value_type);
 
 	tc.m_env.end_scope();
-	tc.m_env.exit_function();
 }
 
 void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
@@ -283,10 +281,8 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(TypedAST::SequenceExpression* ast, TypeChecker& tc) {
-	tc.m_env.enter_seq_expr(ast);
 	ast->m_value_type = tc.new_var();
 	typecheck(ast->m_body, tc);
-	tc.m_env.exit_seq_expr();
 }
 
 void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
