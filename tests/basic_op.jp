@@ -49,10 +49,23 @@ expressions_as_statements := seq {
 	fn() => seq { return 0; };
 	true;
 	1.1;
-	(if 1 + 1 == 2 then "YES" else "NO");
-	 if 1 + 1 == 2 then "YES" else "NO";
 	(0);
 	return 0;
+};
+
+ternary_disambiguations := seq {
+	(if 1 + 1 == 2 then "YES" else "NO");
+	 if 1 + 1 == 2 then "YES" else "NO";
+	
+	if (true)
+		if (true)
+		then 1
+		else 0;
+	
+	result := 0;
+	return if (if (false) then false else true)
+	       then 1
+	       else 0;
 };
 
 __invoke := fn() => 0;
