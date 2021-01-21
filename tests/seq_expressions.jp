@@ -1,0 +1,41 @@
+
+return_const := seq {
+	return 31415;
+};
+
+return_call := seq {
+	return 21 * 2;
+};
+
+issue232_1 := fn() {
+	y := 5 + seq {
+		a := 2;
+		b := 1;
+		return b;
+	};
+	return y;
+};
+
+issue232_2 := fn() {
+	y := 5 + seq {
+		a := 2;
+		b := 1;
+		return a;
+	};
+	return y;
+};
+
+issue240_1 := seq {
+    b := seq { return 10; };
+    return b;
+};
+
+issue240_2 := seq {
+    var := 0;
+    b := seq {
+        var = 7;
+        return 1;
+    };
+    return b + var;
+};
+
