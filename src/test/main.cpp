@@ -128,15 +128,15 @@ void interpreter_tests(Test::Tester& tests) {
 	        EQUALS("__invoke()", 42)
 	    }));
 
-	tests.add_test(std::make_unique<Test::InterpreterTestSet>("tests/seq_expressions.jp",
+	tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    "tests/seq_expressions.jp",
 	    Testers {
 	        EQUALS("return_const", 31415),
 	        EQUALS("return_call", 42),
-			EQUALS("issue232_1()", 6),
-			EQUALS("issue232_2()", 7),
+	        EQUALS("issue232_1()", 6),
+	        EQUALS("issue232_2()", 7),
 	        EQUALS("issue240_1", 10),
-	        EQUALS("issue240_2", 8)
-	    }));
+	        EQUALS("issue240_2", 8)}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
