@@ -23,8 +23,8 @@ if_else_if := fn() {
 
 ternary := fn() {
 	i := 0;
-	return (if i == 1 then     0 else 1) +
-	        if i == 0 then i + 1 else 0;
+	return (if (i == 1) then     0 else 1) +
+	        if (i == 0) then i + 1 else 0;
 };
 
 array_access := fn() {
@@ -54,13 +54,19 @@ expressions_as_statements := seq {
 };
 
 ternary_disambiguations := seq {
-	(if 1 + 1 == 2 then "YES" else "NO");
-	 if 1 + 1 == 2 then "YES" else "NO";
+	(if (1 + 1 == 2) then "YES" else "NO");
+	 if (1 + 1 == 2) then "YES" else "NO";
 	
 	if (true)
 		if (true)
 		then 1
 		else 0;
+
+	bar := false;
+	if (bar) { print("10"); }
+
+	if (1 == 1)
+		1 + 1;
 	
 	result := 0;
 	return if (if (false) then false else true)

@@ -557,9 +557,11 @@ Writer<AST::AST*> Parser::parse_ternary_expression(AST::AST* parsed_condition) {
 	Writer<AST::AST*> condition;
 	if (!parsed_condition) {
 		REQUIRE(result, TokenTag::KEYWORD_IF);
+		REQUIRE(result, TokenTag::PAREN_OPEN);
 
 		condition = parse_expression();
 		CHECK_AND_RETURN(result, condition);
+		REQUIRE(result, TokenTag::PAREN_CLOSE);
 	} else {
 		condition = make_writer(parsed_condition);
 	}
@@ -765,20 +767,27 @@ Writer<AST::AST*> Parser::parse_return_statement() {
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_if_else_statement(AST::AST* parsed_condition) {
+Writer<AST::AST*> Parser::parse_if_else_stmt_or_expr() {
 	Writer<AST::AST*> result = {
-	    {"Parse Error: Failed to parse if-else statement"}};
+	    {"Parse Error: Failed to parse if-else statement or expression"}};
 
-	Writer<AST::AST*> condition;
-	if (!parsed_condition) {
-		REQUIRE(result, TokenTag::KEYWORD_IF);
-		REQUIRE(result, TokenTag::PAREN_OPEN);
+	REQUIRE(result, TokenTag::KEYWORD_IF);
+	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-		auto condition = parse_expression();
-		CHECK_AND_RETURN(result, condition);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
-	} else {
-		condition = make_writer(parsed_condition);
+	auto condition = parse_expression();
+	CHECK_AND_RETURN(result, condition);
+	REQUIRE(result, TokenTag::PAREN_CLOSE);
+
+	if (match(TokenTag::KEYWORD_THEN)) {
+		// rollback to whole expression
+		auto ternary = parse_ternary_expression(condition.m_result);
+		CHECK_AND_RETURN(result, ternary);
+
+		auto expression = parse_expression(0, ternary.m_result);
+		CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		return expression;
 	}
 
 	auto body = parse_statement();
@@ -960,41 +969,9 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, return_statement);
 		return return_statement;
 	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
-		// first disambiguation: no parenthesis
-		auto* p1 = peek(1);
-		if (p1->m_type != TokenTag::PAREN_OPEN) {
-			auto expression = parse_expression();
-			CHECK_AND_RETURN(result, expression);
-			REQUIRE(result, TokenTag::SEMICOLON);
-			return expression;
-		}
-
-		m_lexer->advance();
-
-		// we must include parenthesis otherwise
-		REQUIRE(result, TokenTag::PAREN_OPEN);
-
-		auto condition = parse_expression();
-		CHECK_AND_RETURN(result, condition);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
-
-		// second disambiguation: then keyword
-		// rollback to parsing a whole expression
-		auto* p2 = peek(0);
-		if (p2->m_type == TokenTag::KEYWORD_THEN) {
-			auto ternary = parse_ternary_expression(condition.m_result);
-			CHECK_AND_RETURN(result, ternary);
-
-			auto expression = parse_expression(0, ternary.m_result);
-			CHECK_AND_RETURN(result, expression);
-			REQUIRE(result, TokenTag::SEMICOLON);
-
-			return expression;
-		}
-
-		auto if_else_statement = parse_if_else_statement(condition.m_result);
-		CHECK_AND_RETURN(result, if_else_statement);
-		return if_else_statement;
+		auto if_else_stmt_or_expr = parse_if_else_stmt_or_expr();
+		CHECK_AND_RETURN(result, if_else_stmt_or_expr);
+		return if_else_stmt_or_expr;
 	} else if (p0->m_type == TokenTag::KEYWORD_FOR) {
 		auto for_statement = parse_for_statement();
 		CHECK_AND_RETURN(result, for_statement);

@@ -51,7 +51,7 @@ struct Parser {
 	Writer<AST::AST*> parse_block();
 	Writer<AST::AST*> parse_statement();
 	Writer<AST::AST*> parse_return_statement();
-	Writer<AST::AST*> parse_if_else_statement(AST::AST* parsed_condition = nullptr);
+	Writer<AST::AST*> parse_if_else_stmt_or_expr();
 	Writer<AST::AST*> parse_for_statement();
 	Writer<AST::AST*> parse_while_statement();
 	Writer<AST::AST*> parse_match_expression();
