@@ -32,6 +32,7 @@ namespace TypeChecker {
     TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
+	ast->m_surrounding_seq_expr = env.current_seq_expr();
 	env.declare(ast);
 
 	if (ast->m_type_hint)
@@ -63,7 +64,7 @@ namespace TypeChecker {
 
 	env.current_top_level_declaration()->m_references.insert(declaration);
 
-	if (!declaration->m_surrounding_function) {
+	if (declaration->is_global()) {
 		ast->m_origin = TypedAST::Identifier::Origin::Global;
 	} else if (declaration->m_surrounding_function != ast->m_surrounding_function) {
 		ast->m_origin = TypedAST::Identifier::Origin::Capture;
@@ -72,7 +73,7 @@ namespace TypeChecker {
 	}
 
 	// dont capture globals
-	if (declaration->m_surrounding_function) {
+	if (!declaration->is_global()) {
 		for (int i = env.m_function_stack.size(); i--;) {
 			auto* func = env.m_function_stack[i];
 			if (func == declaration->m_surrounding_function)
@@ -168,6 +169,7 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
+	ast->m_surrounding_seq_expr = env.current_seq_expr();
 	return match_identifiers(ast->m_value, env);
 }
 
@@ -225,7 +227,10 @@ namespace TypeChecker {
 
 [[nodiscard]] ErrorReport match_identifiers(
     TypedAST::SequenceExpression* ast, Frontend::CompileTimeEnvironment& env) {
-	return match_identifiers(ast->m_body, env);
+	env.enter_seq_expr(ast);
+	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
+	env.exit_seq_expr();
+	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(

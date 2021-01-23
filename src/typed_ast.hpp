@@ -40,6 +40,7 @@ struct Allocator;
 TypedAST* convert_ast(AST::AST*, Allocator& alloc);
 
 struct FunctionLiteral;
+struct SequenceExpression;
 
 struct Declaration : public TypedAST {
 	InternedString m_identifier;
@@ -55,8 +56,12 @@ struct Declaration : public TypedAST {
 
 	int m_frame_offset {INT_MIN};
 
-	// nullptr means global
 	FunctionLiteral* m_surrounding_function {nullptr};
+	SequenceExpression* m_surrounding_seq_expr {nullptr};
+
+	bool is_global() const {
+		return !m_surrounding_function && !m_surrounding_seq_expr;
+	}
 
 	InternedString const& identifier_text() const;
 
@@ -258,6 +263,7 @@ struct Block : public TypedAST {
 
 struct ReturnStatement : public TypedAST {
 	TypedAST* m_value;
+	SequenceExpression* m_surrounding_seq_expr;
 
 	ReturnStatement()
 	    : TypedAST {TypedASTTag::ReturnStatement} {}
