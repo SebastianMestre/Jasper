@@ -57,6 +57,9 @@ ternary_disambiguations := seq {
 	(if (1 + 1 == 2) then "YES" else "NO");
 	 if (1 + 1 == 2) then "YES" else "NO";
 	
+	x := fn(a) => true;
+	if ((x)(1)) then 1 else 0;
+	
 	if (true)
 		if (true)
 		then 1
