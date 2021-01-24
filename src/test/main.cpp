@@ -59,7 +59,8 @@ void interpreter_tests(Test::Tester& tests) {
 	        EQUALS("e", -1),
 	        EQUALS("f", -1.1),
 	        EQUALS("g", 1),
-	        EQUALS("h", 1.1)
+	        EQUALS("h", 1.1),
+	        EQUALS("ternary_disambiguations", 1)
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/function.jp",

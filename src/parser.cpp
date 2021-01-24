@@ -285,14 +285,17 @@ Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<AST::AST*> Parser::parse_expression(int bp) {
+Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse expression"}};
 
 	Writer<AST::AST*> lhs;
-
-	lhs = parse_terminal();
-	CHECK_AND_RETURN(result, lhs);
+	if (!parsed_lhs) {
+		lhs = parse_terminal();
+		CHECK_AND_RETURN(result, lhs);
+	} else {
+		lhs = make_writer(parsed_lhs);
+	}
 
 	while (1) {
 		auto op = peek();
@@ -488,12 +491,9 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		return function;
 	}
 
-	if (token->m_type == TokenTag::PAREN_OPEN and
-	    peek(1)->m_type == TokenTag::KEYWORD_IF) {
-		m_lexer->advance();
+	if (token->m_type == TokenTag::KEYWORD_IF) {
 		auto ternary = parse_ternary_expression();
 		CHECK_AND_RETURN(result, ternary);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
 		return ternary;
 	}
 
@@ -550,14 +550,22 @@ Writer<AST::AST*> Parser::parse_terminal() {
 	return result;
 }
 
-Writer<AST::AST*> Parser::parse_ternary_expression() {
+Writer<AST::AST*> Parser::parse_ternary_expression(AST::AST* parsed_condition) {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
-	REQUIRE(result, TokenTag::KEYWORD_IF);
+	Writer<AST::AST*> condition;
+	if (!parsed_condition) {
+		REQUIRE(result, TokenTag::KEYWORD_IF);
+		REQUIRE(result, TokenTag::PAREN_OPEN);
 
-	auto condition = parse_expression();
-	CHECK_AND_RETURN(result, condition);
+		condition = parse_expression();
+		CHECK_AND_RETURN(result, condition);
+		REQUIRE(result, TokenTag::PAREN_CLOSE);
+	} else {
+		condition = make_writer(parsed_condition);
+	}
+
 	REQUIRE(result, TokenTag::KEYWORD_THEN);
 
 	auto then_expr = parse_expression();
@@ -759,9 +767,9 @@ Writer<AST::AST*> Parser::parse_return_statement() {
 	return make_writer<AST::AST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_if_else_statement() {
+Writer<AST::AST*> Parser::parse_if_else_stmt_or_expr() {
 	Writer<AST::AST*> result = {
-	    {"Parse Error: Failed to parse if-else statement"}};
+	    {"Parse Error: Failed to parse if-else statement or expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_IF);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -769,6 +777,18 @@ Writer<AST::AST*> Parser::parse_if_else_statement() {
 	auto condition = parse_expression();
 	CHECK_AND_RETURN(result, condition);
 	REQUIRE(result, TokenTag::PAREN_CLOSE);
+
+	if (match(TokenTag::KEYWORD_THEN)) {
+		// rollback to whole expression
+		auto ternary = parse_ternary_expression(condition.m_result);
+		CHECK_AND_RETURN(result, ternary);
+
+		auto expression = parse_expression(0, ternary.m_result);
+		CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		return expression;
+	}
 
 	auto body = parse_statement();
 	CHECK_AND_RETURN(result, body);
@@ -926,8 +946,6 @@ Writer<AST::AST*> Parser::parse_statement() {
 	Writer<AST::AST*> result = {
 	    {"Parse Error: Failed to parse statement"}};
 
-	// TODO: paren_open, string tokens, integer and numer
-	// tokens, etc should also be recognized as expressions.
 	auto* p0 = peek(0);
 	if (p0->m_type == TokenTag::IDENTIFIER) {
 		auto* p1 = peek(1);
@@ -940,7 +958,6 @@ Writer<AST::AST*> Parser::parse_statement() {
 
 			return make_writer<AST::AST*>(declaration.m_result);
 		} else {
-			// TODO: wrap in an ExpressionStatement ?
 			auto expression = parse_expression();
 			CHECK_AND_RETURN(result, expression);
 			REQUIRE(result, TokenTag::SEMICOLON);
@@ -952,9 +969,9 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, return_statement);
 		return return_statement;
 	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
-		auto if_else_statement = parse_if_else_statement();
-		CHECK_AND_RETURN(result, if_else_statement);
-		return if_else_statement;
+		auto if_else_stmt_or_expr = parse_if_else_stmt_or_expr();
+		CHECK_AND_RETURN(result, if_else_stmt_or_expr);
+		return if_else_stmt_or_expr;
 	} else if (p0->m_type == TokenTag::KEYWORD_FOR) {
 		auto for_statement = parse_for_statement();
 		CHECK_AND_RETURN(result, for_statement);
@@ -968,10 +985,10 @@ Writer<AST::AST*> Parser::parse_statement() {
 		CHECK_AND_RETURN(result, block_statement);
 		return block_statement;
 	} else {
-		auto err = make_expected_error("a statement", p0);
-
-		result.m_error.m_sub_errors.push_back(std::move(err));
-		return result;
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
+		return expression;
 	}
 
 	return result;
