@@ -65,8 +65,7 @@ void eval(AST::StringLiteral* ast, Interpreter& e) {
 };
 
 void eval(AST::BooleanLiteral* ast, Interpreter& e) {
-	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
-	e.push_boolean(b);
+	e.push_boolean(ast->m_value);
 };
 
 void eval(AST::NullLiteral* ast, Interpreter& e) {
@@ -224,7 +223,7 @@ void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec_handle = e.m_stack.pop();
 	auto rec = value_as<Record>(rec_handle.get());
-	e.m_stack.push(rec->m_value[ast->m_member->m_text]);
+	e.m_stack.push(rec->m_value[ast->m_member]);
 }
 
 void eval(AST::MatchExpression* ast, Interpreter& e) {
@@ -377,7 +376,7 @@ void eval(AST::Constructor* ast, Interpreter& e) {
 	if (tf_data.tag == TypeFunctionTag::Record) {
 		e.push_record_constructor(tf_data.fields);
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		e.push_variant_constructor(ast->m_id->m_text);
+		e.push_variant_constructor(ast->m_id);
 	} else {
 		Log::fatal("not implemented this type function for construction");
 	}

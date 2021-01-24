@@ -10,14 +10,17 @@ namespace AST {
 
 InternedString const& Declaration::identifier_text() const {
 	if (m_identifier.is_null()) {
-		if (!m_identifier_token) {
-			Log::fatal() << "No identifier or fallback on declaration of '" << m_identifier_token->m_text << "'";
-		}
+		if (!m_cst)
+			Log::fatal() << "No identifier string or fallback on declaration";
 
-		Log::warning() << "No identifier on declaration " << m_identifier_token->m_text << ": using token data as fallback";
+		auto cst = static_cast<CST::Declaration*>(m_cst);
+		auto token = cst->m_identifier_token;
 
-		return m_identifier_token->m_text;
+		Log::warning() << "No identifier on declaration " << token->m_text << ": using token data as fallback";
+
+		return token->m_text;
 	}
+
 	return m_identifier;
 }
 
@@ -30,7 +33,6 @@ AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
 	ast->m_value = std::stoi(cst->text());
 	if (cst->m_negative)
 		ast->m_value = -ast->m_value;
-	ast->m_token = cst->m_token;
 	return ast;
 }
 
@@ -39,19 +41,18 @@ AST* convert_ast(CST::NumberLiteral* cst, Allocator& alloc) {
 	ast->m_value = std::stof(cst->text());
 	if (cst->m_negative)
 		ast->m_value = -ast->m_value;
-	ast->m_token = cst->m_token;
 	return ast;
 }
 
 AST* convert_ast(CST::StringLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<StringLiteral>();
-	ast->m_token = cst->m_token;
+	ast->m_text = cst->m_token->m_text;
 	return ast;
 }
 
 AST* convert_ast(CST::BooleanLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<BooleanLiteral>();
-	ast->m_token = cst->m_token;
+	ast->m_value = cst->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	return ast;
 }
 
@@ -86,7 +87,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	for (auto& arg : cst->m_args) {
 		Declaration decl;
 
-		decl.m_identifier_token = arg.m_identifier_token;
+		decl.m_cst = &arg;
 		decl.m_identifier = arg.m_identifier_token->m_text;
 		if (arg.m_type_hint)
 			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
@@ -103,7 +104,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 
-	ast->m_identifier_token = cst->m_identifier_token;
+	ast->m_cst = cst;
 	ast->m_identifier = cst->m_identifier_token->m_text;
 
 	if (cst->m_type_hint)
@@ -167,7 +168,7 @@ AST* convert_ast(CST::TernaryExpression* cst, Allocator& alloc) {
 AST* convert_ast(CST::AccessExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<AccessExpression>();
 
-	ast->m_member = cst->m_member;
+	ast->m_member = cst->m_member->m_text;
 	ast->m_record = convert_ast(cst->m_record, alloc);
 
 	return ast;
@@ -187,7 +188,7 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 		auto case_name = case_data.m_name->m_text;
 
 		Declaration declaration;
-		declaration.m_identifier_token = case_data.m_identifier;
+		// TODO: store match expression cst in declarations?
 		declaration.m_identifier = case_data.m_identifier->m_text;
 
 		if (case_data.m_type_hint)

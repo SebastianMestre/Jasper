@@ -280,7 +280,7 @@ AST::Constructor* constructor_from_ast(
 
 		// dummy with one constructor, the one used
 		std::unordered_map<InternedString, MonoId> structure;
-		structure[access->m_member->m_text] = tc.new_var();
+		structure[access->m_member] = tc.new_var();
 		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
 		    TypeFunctionTag::Variant, {}, std::move(structure), true);
 		MonoId dummy_monotype =

@@ -8,9 +8,10 @@
 #include <climits>
 
 #include "./utils/interned_string.hpp"
-#include "token.hpp"
 #include "typechecker_types.hpp"
 #include "ast_tag.hpp"
+
+struct Token;
 
 namespace CST {
 struct CST;
@@ -45,7 +46,6 @@ struct SequenceExpression;
 
 struct Declaration : public AST {
 	InternedString m_identifier;
-	Token const* m_identifier_token {nullptr}; // used for error reports only. Is nullptr if the declaration doesn't come from parsing a source file
 
 	AST* m_type_hint {nullptr};  // can be nullptr
 	AST* m_value {nullptr}; // can be nullptr
@@ -82,14 +82,9 @@ struct DeclarationList : public AST {
 // tipo de valor asociado
 struct NumberLiteral : public AST {
 	float m_value;
-	Token const* m_token;
 
 	float value() const {
 		return m_value;
-	}
-
-	std::string const& text() {
-		return m_token->m_text.str();
 	}
 
 	NumberLiteral()
@@ -98,14 +93,9 @@ struct NumberLiteral : public AST {
 
 struct IntegerLiteral : public AST {
 	int m_value;
-	Token const* m_token;
 
 	int value() const {
 		return m_value;
-	}
-
-	std::string const& text() {
-		return m_token->m_text.str();
 	}
 
 	IntegerLiteral()
@@ -113,10 +103,10 @@ struct IntegerLiteral : public AST {
 };
 
 struct StringLiteral : public AST {
-	Token const* m_token;
+	InternedString m_text;
 
 	std::string const& text() {
-		return m_token->m_text.str();
+		return m_text.str();
 	}
 
 	StringLiteral()
@@ -124,11 +114,7 @@ struct StringLiteral : public AST {
 };
 
 struct BooleanLiteral : public AST {
-	Token const* m_token;
-
-	std::string const& text() {
-		return m_token->m_text.str();
-	}
+	bool m_value;
 
 	BooleanLiteral()
 	    : AST {ASTTag::BooleanLiteral} {}
@@ -210,7 +196,7 @@ struct IndexExpression : public AST {
 
 struct AccessExpression : public AST {
 	AST* m_record;
-	Token const* m_member;
+	InternedString m_member;
 
 	AccessExpression()
 	    : AST {ASTTag::AccessExpression} {}
@@ -342,7 +328,7 @@ struct MonoTypeHandle : public AST {
 
 struct Constructor : public AST {
 	MonoId m_mono;
-	Token const* m_id;
+	InternedString m_id;
 	// points to the ast node this one was made from
 	AST* m_syntax;
 

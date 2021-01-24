@@ -198,7 +198,7 @@ void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	    TypeFunctionTag::Record,
 	    // we don't care about field order in dummies
 	    {},
-	    {{ast->m_member->m_text, member_type}},
+	    {{ast->m_member, member_type}},
 	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
@@ -271,7 +271,7 @@ void typecheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
 		assert(ast->m_args.size() == 1);
 
 		typecheck(ast->m_args[0], tc);
-		InternedString id = constructor->m_id->m_text;
+		InternedString id = constructor->m_id;
 		MonoId constructor_type = tf_data.structure[id];
 
 		tc.m_core.m_mono_core.unify(constructor_type, ast->m_args[0]->m_value_type);

@@ -4,9 +4,10 @@
 #include <unordered_map>
 
 #include "./log/log.hpp"
+#include "ast.hpp"
 #include "compile_time_environment.hpp"
 #include "error_report.hpp"
-#include "ast.hpp"
+#include "token.hpp"
 
 #include <cassert>
 
