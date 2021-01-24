@@ -1,15 +1,15 @@
 #pragma once
 
-#include "typed_ast.hpp"
+#include "ast.hpp"
 #include "utils/polymorphic_block_allocator.hpp"
 #include "utils/polymorphic_dumb_allocator.hpp"
 
-namespace TypedAST {
+namespace AST {
 
 struct Allocator {
 	static constexpr int small_size = 56;
-	PolymorphicBlockAllocator<TypedAST> m_small;
-	PolymorphicDumbAllocator<TypedAST> m_big;
+	PolymorphicBlockAllocator<AST> m_small;
+	PolymorphicDumbAllocator<AST> m_big;
 
 	Allocator()
 	    : m_small(small_size, 4 * 4096)
@@ -25,4 +25,4 @@ struct Allocator {
 	}
 };
 
-} // namespace TypedAST
+} // namespace AST

@@ -4,7 +4,7 @@
 #include "compile_time_environment.hpp"
 #include "typechecker.hpp"
 #include "typechecker_types.hpp"
-#include "typed_ast.hpp"
+#include "ast.hpp"
 
 #include <cassert>
 #include <unordered_set>
@@ -16,31 +16,31 @@ namespace TypeChecker {
 // thing to do. At least, the alternatives I came up with
 // are quite a bit worse.
 
-static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
 // Literals
 
-void typecheck(TypedAST::NumberLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::NumberLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_float();
 }
 
-void typecheck(TypedAST::IntegerLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::IntegerLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_int();
 }
 
-void typecheck(TypedAST::StringLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::StringLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_string();
 }
 
-void typecheck(TypedAST::BooleanLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::BooleanLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_boolean();
 }
 
-void typecheck(TypedAST::NullLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::NullLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.mono_unit();
 }
 
-void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::ArrayLiteral* ast, TypeChecker& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element, tc);
@@ -53,8 +53,8 @@ void typecheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 	ast->m_value_type = array_type;
 }
 
-void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
-	TypedAST::Declaration* declaration = ast->m_declaration;
+void typecheck(AST::Identifier* ast, TypeChecker& tc) {
+	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
 	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
@@ -68,14 +68,14 @@ void typecheck(TypedAST::Identifier* ast, TypeChecker& tc) {
 	                        : declaration->m_value_type;
 }
 
-void typecheck(TypedAST::Block* ast, TypeChecker& tc) {
+void typecheck(AST::Block* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	for (auto& child : ast->m_body)
 		typecheck(child, tc);
 	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
+void typecheck(AST::IfElseStatement* ast, TypeChecker& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
@@ -86,7 +86,7 @@ void typecheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 		typecheck(ast->m_else_body, tc);
 }
 
-void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
+void typecheck(AST::CallExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_callee, tc);
 	for (auto& arg : ast->m_args)
 		typecheck(arg, tc);
@@ -99,7 +99,7 @@ void typecheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 	    std::move(arg_types), ast->m_callee->m_value_type);
 }
 
-void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
+void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
@@ -129,7 +129,7 @@ void typecheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
+void typecheck(AST::ForStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	typecheck(&ast->m_declaration, tc);
 	typecheck(ast->m_condition, tc);
@@ -141,7 +141,7 @@ void typecheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
+void typecheck(AST::WhileStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
@@ -151,7 +151,7 @@ void typecheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
 	tc.m_env.end_scope();
 }
 
-void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
+void typecheck(AST::ReturnStatement* ast, TypeChecker& tc) {
 	typecheck(ast->m_value, tc);
 
 	auto mono = ast->m_value->m_value_type;
@@ -159,7 +159,7 @@ void typecheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(seq_expr->m_value_type, mono);
 }
 
-void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
+void typecheck(AST::IndexExpression* ast, TypeChecker& tc) {
 	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
@@ -173,7 +173,7 @@ void typecheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = var;
 }
 
-void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
+void typecheck(AST::TernaryExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
 	    ast->m_condition->m_value_type, tc.mono_boolean());
@@ -187,7 +187,7 @@ void typecheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
-void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
+void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_record, tc);
 
 	// should this be a hidden type var?
@@ -205,11 +205,11 @@ void typecheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
 }
 
-void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 	typecheck(&ast->m_matchee, tc);
 	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
-		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
+		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
 		tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, handle->m_value);
 	}
 
@@ -248,11 +248,11 @@ void typecheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, term_type);
 }
 
-void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
+void typecheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
 	typecheck(ast->m_constructor, tc);
 
-	auto constructor = static_cast<TypedAST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == TypedASTTag::Constructor);
+	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
+	assert(constructor->type() == ASTTag::Constructor);
 
 	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(constructor->m_mono);
 	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
@@ -280,12 +280,12 @@ void typecheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = constructor->m_mono;
 }
 
-void typecheck(TypedAST::SequenceExpression* ast, TypeChecker& tc) {
+void typecheck(AST::SequenceExpression* ast, TypeChecker& tc) {
 	ast->m_value_type = tc.new_var();
 	typecheck(ast->m_body, tc);
 }
 
-void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
+void print_information(AST::Declaration* ast, TypeChecker& tc) {
 #if DEBUG
 	auto poly = ast->m_decl_type;
 	auto& poly_data = tc.m_core.poly_data[poly];
@@ -296,7 +296,7 @@ void print_information(TypedAST::Declaration* ast, TypeChecker& tc) {
 #endif
 }
 
-void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
+void generalize(AST::Declaration* ast, TypeChecker& tc) {
 	assert(!ast->m_is_polymorphic);
 
 	ast->m_is_polymorphic = true;
@@ -305,10 +305,10 @@ void generalize(TypedAST::Declaration* ast, TypeChecker& tc) {
 	print_information(ast, tc);
 }
 
-static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
+static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == TypedASTTag::MonoTypeHandle);
-		auto handle = static_cast<TypedAST::MonoTypeHandle*>(ast->m_type_hint);
+		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
+		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
 		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 	}
 }
@@ -316,7 +316,7 @@ static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecke
 // typecheck the value and make the type of the decl equal
 // to its type
 // apply typehints if available
-void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
+void process_contents(AST::Declaration* ast, TypeChecker& tc) {
 	process_declaration_type_hint(ast, tc);
 
 	// it would be nicer to check this at an earlier stage
@@ -325,14 +325,14 @@ void process_contents(TypedAST::Declaration* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
 }
 
-void typecheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+void typecheck(AST::Declaration* ast, TypeChecker& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
 	generalize(ast, tc);
 }
 
-void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
+void typecheck(AST::DeclarationList* ast, TypeChecker& tc) {
 
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& decls : comps) {
@@ -372,13 +372,13 @@ void typecheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	}
 }
 
-void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
+void typecheck(AST::AST* ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
-	case TypedASTTag::type:                                                    \
-		return typecheck(static_cast<TypedAST::type*>(ast), tc);
+	case ASTTag::type:                                                    \
+		return typecheck(static_cast<AST::type*>(ast), tc);
 
 #define IGNORE(type)                                                           \
-	case TypedASTTag::type:                                                    \
+	case ASTTag::type:                                                    \
 		return;
 
 	// TODO: Compound literals
@@ -415,7 +415,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	}
 
 	Log::fatal() << "(internal) CST type not handled in typecheck: "
-	             << typed_ast_string[(int)ast->type()];
+	             << ast_string[(int)ast->type()];
 
 #undef DISPATCH
 #undef IGNORE

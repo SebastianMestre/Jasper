@@ -6,7 +6,7 @@
 #include "./log/log.hpp"
 #include "compile_time_environment.hpp"
 #include "error_report.hpp"
-#include "typed_ast.hpp"
+#include "ast.hpp"
 
 #include <cassert>
 
@@ -29,7 +29,7 @@ namespace TypeChecker {
 	}
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::Declaration* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
 	ast->m_surrounding_seq_expr = env.current_seq_expr();
@@ -48,9 +48,9 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::Identifier* ast, Frontend::CompileTimeEnvironment& env) {
 
-	TypedAST::Declaration* declaration = env.access(ast->text());
+	AST::Declaration* declaration = env.access(ast->text());
 
 	if (!declaration) {
 		// TODO: clean up how we build error reports
@@ -65,11 +65,11 @@ namespace TypeChecker {
 	env.current_top_level_declaration()->m_references.insert(declaration);
 
 	if (declaration->is_global()) {
-		ast->m_origin = TypedAST::Identifier::Origin::Global;
+		ast->m_origin = AST::Identifier::Origin::Global;
 	} else if (declaration->m_surrounding_function != ast->m_surrounding_function) {
-		ast->m_origin = TypedAST::Identifier::Origin::Capture;
+		ast->m_origin = AST::Identifier::Origin::Capture;
 	} else {
-		ast->m_origin = TypedAST::Identifier::Origin::Local;
+		ast->m_origin = AST::Identifier::Origin::Local;
 	}
 
 	// dont capture globals
@@ -86,7 +86,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::Block* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::Block* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 	for (auto& child : ast->m_body)
 		CHECK_AND_RETURN(match_identifiers(child, env));
@@ -95,7 +95,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::IfElseStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 
@@ -105,7 +105,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::CallExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
 	for (auto& arg : ast->m_args)
 		CHECK_AND_RETURN(match_identifiers(arg, env));
@@ -113,7 +113,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::FunctionLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 
 	ast->m_surrounding_function = env.current_function();
 
@@ -136,7 +136,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::ArrayLiteral* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& element : ast->m_elements)
 		CHECK_AND_RETURN(match_identifiers(element, env));
 
@@ -144,7 +144,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
 	CHECK_AND_RETURN(match_identifiers(&ast->m_declaration, env));
@@ -157,7 +157,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
 	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
@@ -168,20 +168,20 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::ReturnStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	ast->m_surrounding_seq_expr = env.current_seq_expr();
 	return match_identifiers(ast->m_value, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::IndexExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_index, env));
 	return {};
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::TernaryExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_then_expr, env));
 	CHECK_AND_RETURN(match_identifiers(ast->m_else_expr, env));
@@ -189,12 +189,12 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::AccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::AccessExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	return match_identifiers(ast->m_record, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::MatchExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::MatchExpression* ast, Frontend::CompileTimeEnvironment& env) {
 
 	CHECK_AND_RETURN(match_identifiers(&ast->m_matchee, env));
 
@@ -216,7 +216,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::ConstructorExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::ConstructorExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_constructor, env));
 
 	for (auto& arg : ast->m_args)
@@ -226,7 +226,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::SequenceExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::SequenceExpression* ast, Frontend::CompileTimeEnvironment& env) {
 	env.enter_seq_expr(ast);
 	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
 	env.exit_seq_expr();
@@ -234,7 +234,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::DeclarationList* ast, Frontend::CompileTimeEnvironment& env) {
 	for (auto& decl : ast->m_declarations) {
 		env.declare(&decl);
 		decl.m_surrounding_function = env.current_function();
@@ -259,7 +259,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::UnionExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::UnionExpression* ast, Frontend::CompileTimeEnvironment& env) {
 
 	for (auto& type : ast->m_types)
 		CHECK_AND_RETURN(match_identifiers(type, env));
@@ -268,7 +268,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::StructExpression* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::StructExpression* ast, Frontend::CompileTimeEnvironment& env) {
 
 	for (auto& type : ast->m_types)
 		CHECK_AND_RETURN(match_identifiers(type, env));
@@ -277,7 +277,7 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::TypeTerm* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::TypeTerm* ast, Frontend::CompileTimeEnvironment& env) {
 	CHECK_AND_RETURN(match_identifiers(ast->m_callee, env));
 	for (auto& arg : ast->m_args)
 		CHECK_AND_RETURN(match_identifiers(arg, env));
@@ -285,13 +285,13 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment& env) {
+    AST::AST* ast, Frontend::CompileTimeEnvironment& env) {
 #define DISPATCH(type)                                                         \
-	case TypedASTTag::type:                                                    \
-		return match_identifiers(static_cast<TypedAST::type*>(ast), env);
+	case ASTTag::type:                                                    \
+		return match_identifiers(static_cast<AST::type*>(ast), env);
 
 #define DO_NOTHING(type)                                                       \
-	case TypedASTTag::type:                                                    \
+	case ASTTag::type:                                                    \
 		return {};
 
 	switch (ast->type()) {
@@ -328,7 +328,7 @@ namespace TypeChecker {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	Log::fatal() << "(internal) Unhandled case in match_identifiers '" << typed_ast_string[int(ast->type())] << "'";
+	Log::fatal() << "(internal) Unhandled case in match_identifiers '" << ast_string[int(ast->type())] << "'";
 }
 
 #undef CHECK_AND_RETURN

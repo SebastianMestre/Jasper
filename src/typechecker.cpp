@@ -1,12 +1,12 @@
 #include "typechecker.hpp"
 
 #include "typechecker_types.hpp"
-#include "typed_ast.hpp"
-#include "typed_ast_allocator.hpp"
+#include "ast.hpp"
+#include "ast_allocator.hpp"
 
 namespace TypeChecker {
 
-TypeChecker::TypeChecker(TypedAST::Allocator& allocator) : m_typed_ast_allocator(&allocator) {
+TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator) {
 	// INVARIANT: we care only for the headers,
 	// wether something's a var or a term and which one
 	m_core.m_meta_core.new_term(-1); // 0 | value
@@ -178,7 +178,7 @@ MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	return return_type;
 }
 
-TypedAST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& name) {
+AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& name) {
 	m_builtin_declarations.push_back({});
 	auto result = &m_builtin_declarations.back();
 	result->m_identifier = name;
@@ -190,7 +190,7 @@ void TypeChecker::declare_builtin_typefunc(
     InternedString const& name, TypeFunctionId typefunc) {
 	auto decl = new_builtin_declaration(name);
 
-	auto handle = m_typed_ast_allocator->make<TypedAST::TypeFunctionHandle>();
+	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
 	handle->m_value = typefunc;
 	decl->m_value = handle;
 	decl->m_meta_type = meta_typefunc();

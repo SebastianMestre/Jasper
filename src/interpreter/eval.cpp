@@ -7,7 +7,7 @@
 
 #include "../log/log.hpp"
 #include "../typechecker.hpp"
-#include "../typed_ast.hpp"
+#include "../ast.hpp"
 #include "../utils/span.hpp"
 #include "garbage_collector.hpp"
 #include "interpreter.hpp"
@@ -16,13 +16,13 @@
 
 namespace Interpreter {
 
-static bool is_expression (TypedAST::TypedAST* ast) {
+static bool is_expression (AST::AST* ast) {
 	auto tag = ast->type();
 	auto tag_idx = static_cast<int>(tag);
-	return tag_idx < static_cast<int>(TypedASTTag::Block);
+	return tag_idx < static_cast<int>(ASTTag::Block);
 }
 
-void eval_stmt(TypedAST::TypedAST* ast, Interpreter& e) {
+void eval_stmt(AST::AST* ast, Interpreter& e) {
 	eval(ast, e);
 	if (is_expression(ast))
 		e.m_stack.pop_unsafe();
@@ -32,7 +32,7 @@ gc_ptr<Reference> rewrap(Value* x, Interpreter& e) {
 	return e.new_reference(value_of(x));
 }
 
-void eval(TypedAST::Declaration* ast, Interpreter& e) {
+void eval(AST::Declaration* ast, Interpreter& e) {
 	auto ref = e.new_reference(e.null());
 	e.m_stack.push(ref.get());
 	if (ast->m_value) {
@@ -42,7 +42,7 @@ void eval(TypedAST::Declaration* ast, Interpreter& e) {
 	}
 };
 
-void eval(TypedAST::DeclarationList* ast, Interpreter& e) {
+void eval(AST::DeclarationList* ast, Interpreter& e) {
 	for (auto& decl : ast->m_declarations) {
 		auto ref = e.new_reference(e.null());
 		e.global_declare_direct(decl.identifier_text(), ref.get());
@@ -52,28 +52,28 @@ void eval(TypedAST::DeclarationList* ast, Interpreter& e) {
 	}
 };
 
-void eval(TypedAST::NumberLiteral* ast, Interpreter& e) {
+void eval(AST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
 }
 
-void eval(TypedAST::IntegerLiteral* ast, Interpreter& e) {
+void eval(AST::IntegerLiteral* ast, Interpreter& e) {
 	e.push_integer(ast->value());
 }
 
-void eval(TypedAST::StringLiteral* ast, Interpreter& e) {
+void eval(AST::StringLiteral* ast, Interpreter& e) {
 	e.push_string(ast->text());
 };
 
-void eval(TypedAST::BooleanLiteral* ast, Interpreter& e) {
+void eval(AST::BooleanLiteral* ast, Interpreter& e) {
 	bool b = ast->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	e.push_boolean(b);
 };
 
-void eval(TypedAST::NullLiteral* ast, Interpreter& e) {
+void eval(AST::NullLiteral* ast, Interpreter& e) {
 	e.m_stack.push(e.null());
 };
 
-void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
+void eval(AST::DictionaryLiteral* ast, Interpreter& e) {
 	auto result = e.new_dictionary({});
 
 	for (auto& decl : ast->m_body) {
@@ -89,7 +89,7 @@ void eval(TypedAST::DictionaryLiteral* ast, Interpreter& e) {
 	e.m_stack.push(result.get());
 }
 
-void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
+void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	auto result = e.new_list({});
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
@@ -100,9 +100,9 @@ void eval(TypedAST::ArrayLiteral* ast, Interpreter& e) {
 	e.m_stack.push(result.get());
 }
 
-void eval(TypedAST::Identifier* ast, Interpreter& e) {
-	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
-	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
+void eval(AST::Identifier* ast, Interpreter& e) {
+	if (ast->m_origin == AST::Identifier::Origin::Local ||
+	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN) {
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
 		}
@@ -112,7 +112,7 @@ void eval(TypedAST::Identifier* ast, Interpreter& e) {
 	}
 };
 
-void eval(TypedAST::Block* ast, Interpreter& e) {
+void eval(AST::Block* ast, Interpreter& e) {
 	e.m_stack.start_stack_region();
 	for (auto stmt : ast->m_body) {
 		eval_stmt(stmt, e);
@@ -122,7 +122,7 @@ void eval(TypedAST::Block* ast, Interpreter& e) {
 	e.m_stack.end_stack_region();
 };
 
-void eval(TypedAST::ReturnStatement* ast, Interpreter& e) {
+void eval(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_stack.pop();
@@ -148,7 +148,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 }
 
-void eval(TypedAST::CallExpression* ast, Interpreter& e) {
+void eval(AST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
 	auto* callee = value_of(e.m_stack.access(0));
@@ -178,7 +178,7 @@ void eval(TypedAST::CallExpression* ast, Interpreter& e) {
 	e.m_stack.end_stack_frame();
 }
 
-void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
+void eval(AST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
@@ -192,7 +192,7 @@ void eval(TypedAST::IndexExpression* ast, Interpreter& e) {
 	e.m_stack.push(callee->at(index->m_value));
 };
 
-void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
+void eval(AST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
@@ -205,7 +205,7 @@ void eval(TypedAST::TernaryExpression* ast, Interpreter& e) {
 		eval(ast->m_else_expr, e);
 };
 
-void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
+void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 
 	CapturesType captures;
 	captures.assign(ast->m_captures.size(), nullptr);
@@ -220,14 +220,14 @@ void eval(TypedAST::FunctionLiteral* ast, Interpreter& e) {
 	e.m_stack.push(result.get());
 };
 
-void eval(TypedAST::AccessExpression* ast, Interpreter& e) {
+void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec_handle = e.m_stack.pop();
 	auto rec = value_as<Record>(rec_handle.get());
 	e.m_stack.push(rec->m_value[ast->m_member->m_text]);
 }
 
-void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
+void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
@@ -254,7 +254,7 @@ void eval(TypedAST::MatchExpression* ast, Interpreter& e) {
 	e.m_stack.pop_unsafe();
 }
 
-void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
+void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	eval(ast->m_constructor, e);
 	auto constructor_handle = e.m_stack.pop();
 	auto constructor = value_of(constructor_handle.get());
@@ -294,13 +294,13 @@ void eval(TypedAST::ConstructorExpression* ast, Interpreter& e) {
 	}
 }
 
-void eval(TypedAST::SequenceExpression* ast, Interpreter& e) {
+void eval(AST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
 	assert(e.m_return_value);
 	e.m_stack.push(e.fetch_return_value());
 }
 
-void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
+void eval(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
@@ -313,7 +313,7 @@ void eval(TypedAST::IfElseStatement* ast, Interpreter& e) {
 		eval_stmt(ast->m_else_body, e);
 };
 
-void eval(TypedAST::ForStatement* ast, Interpreter& e) {
+void eval(AST::ForStatement* ast, Interpreter& e) {
 	e.m_stack.start_stack_region();
 
 	eval(&ast->m_declaration, e);
@@ -338,7 +338,7 @@ void eval(TypedAST::ForStatement* ast, Interpreter& e) {
 	e.m_stack.end_stack_region();
 };
 
-void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
+void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition_handle = e.m_stack.pop();
@@ -355,13 +355,13 @@ void eval(TypedAST::WhileStatement* ast, Interpreter& e) {
 };
 
 // TODO: include variant implementations? if so, remove duplication
-void eval(TypedAST::TypeFunctionHandle* ast, Interpreter& e) {
+void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
 	e.push_record_constructor(type_function_data.fields);
 }
 
-void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
+void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
 	TypeFunctionId type_function_header =
 	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
@@ -369,7 +369,7 @@ void eval(TypedAST::MonoTypeHandle* ast, Interpreter& e) {
 	e.push_record_constructor(type_function_data.fields);
 }
 
-void eval(TypedAST::Constructor* ast, Interpreter& e) {
+void eval(AST::Constructor* ast, Interpreter& e) {
 	TypeFunctionId tf_header = e.m_tc->m_core.m_mono_core.find_function(ast->m_mono);
 	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
 	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
@@ -383,11 +383,11 @@ void eval(TypedAST::Constructor* ast, Interpreter& e) {
 	}
 }
 
-void eval(TypedAST::TypedAST* ast, Interpreter& e) {
+void eval(AST::AST* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
-	case TypedASTTag::type:                                                    \
-		return eval(static_cast<TypedAST::type*>(ast), e)
+	case ASTTag::type:                                                    \
+		return eval(static_cast<AST::type*>(ast), e)
 
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);
@@ -423,7 +423,7 @@ void eval(TypedAST::TypedAST* ast, Interpreter& e) {
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "
-	             << typed_ast_string[(int)ast->type()];
+	             << ast_string[(int)ast->type()];
 }
 
 } // namespace Interpreter

@@ -7,8 +7,8 @@
 #include "../parse.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
-#include "../typed_ast.hpp"
-#include "../typed_ast_allocator.hpp"
+#include "../ast.hpp"
+#include "../ast_allocator.hpp"
 
 int main(int argc, char** argv) {
 
@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
 
 	{
 		TokenArray ta;
-		CST::Allocator ast_allocator;
-		auto parse_result = parse_program(source, ta, ast_allocator);
+		CST::Allocator cst_allocator;
+		auto parse_result = parse_program(source, ta, cst_allocator);
 
 		if (not parse_result.ok()) {
 			parse_result.m_error.print();

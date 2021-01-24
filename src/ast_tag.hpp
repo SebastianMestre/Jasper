@@ -1,6 +1,6 @@
 #pragma once
 
-#define TYPED_AST_TAGS                                                         \
+#define AST_TAGS                                                         \
 	X(NumberLiteral)                                                           \
 	X(IntegerLiteral)                                                          \
 	X(StringLiteral)                                                           \
@@ -36,11 +36,11 @@
 	X(Constructor)
 
 #define X(name) #name,
-constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};
+constexpr const char* ast_string[] = {AST_TAGS};
 #undef X
 
 #define X(name) name,
-enum class TypedASTTag { TYPED_AST_TAGS };
+enum class ASTTag { AST_TAGS };
 #undef X
 
-#undef TYPED_AST_TAGS
+#undef AST_TAGS

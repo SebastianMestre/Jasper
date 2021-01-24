@@ -2,8 +2,8 @@
 
 #include "error_report.hpp"
 
-namespace TypedAST {
-struct TypedAST;
+namespace AST {
+struct AST;
 }
 
 namespace Frontend {
@@ -17,5 +17,5 @@ namespace TypeChecker {
  * This also includes captures in a closure.
  */
 [[nodiscard]] ErrorReport match_identifiers(
-    TypedAST::TypedAST* ast, Frontend::CompileTimeEnvironment&);
+    AST::AST* ast, Frontend::CompileTimeEnvironment&);
 } // namespace TypeChecker

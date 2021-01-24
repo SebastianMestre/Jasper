@@ -7,8 +7,8 @@
 #include "../parse.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
-#include "../typed_ast.hpp"
-#include "../typed_ast_allocator.hpp"
+#include "../ast.hpp"
+#include "../ast_allocator.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"
@@ -46,11 +46,11 @@ int main(int argc, char** argv) {
 
 		    {
 			    TokenArray ta;
-			    CST::Allocator ast_allocator;
-			    TypedAST::Allocator typed_ast_allocator;
+			    CST::Allocator cst_allocator;
+			    AST::Allocator ast_allocator;
 
-			    auto top_level_call_ast = parse_expression("__invoke()", ta, ast_allocator);
-			    auto top_level_call = TypedAST::convert_ast(top_level_call_ast.m_result, typed_ast_allocator);
+			    auto top_level_call_ast = parse_expression("__invoke()", ta, cst_allocator);
+			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
 
 				eval(top_level_call, env);
 			    auto result = env.m_stack.pop();

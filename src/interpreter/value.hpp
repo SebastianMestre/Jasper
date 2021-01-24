@@ -9,7 +9,7 @@
 #include "value_fwd.hpp"
 #include "value_tag.hpp"
 
-namespace TypedAST {
+namespace AST {
 struct FunctionLiteral;
 }
 
@@ -24,7 +24,7 @@ using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value*>;
 using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Reference*>;
-using FunctionType = TypedAST::FunctionLiteral*;
+using FunctionType = AST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
 using CapturesType = std::vector<Value*>; // TODO: store references instead of values
 
