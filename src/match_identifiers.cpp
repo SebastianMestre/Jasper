@@ -54,8 +54,9 @@ namespace TypeChecker {
 
 	if (!declaration) {
 		// TODO: clean up how we build error reports
+		auto token = ast->token();
 		return {
-		    "at line " + std::to_string(ast->m_token->m_line0 + 1) +
+		    "at line " + std::to_string(token->m_line0 + 1) +
 		    " : accessed undeclared identifier '" + ast->text().str() + "'"};
 	}
 

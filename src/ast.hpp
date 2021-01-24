@@ -26,6 +26,7 @@ struct AST {
 	AST(ASTTag type)
 	    : m_type {type} {}
 
+	CST::CST* m_cst {nullptr};
 	MetaTypeId m_meta_type {-1};
 	// is not set on polymorphic declarations and typefuncs (TODO: refactor)
 	MonoId m_value_type {-1};
@@ -174,15 +175,16 @@ struct FunctionLiteral : public AST {
 struct Identifier : public AST {
 	enum class Origin { Global, Capture, Local };
 
-	Token const* m_token;
+	InternedString m_text;
 	Declaration* m_declaration {nullptr}; // can be nullptr
 	FunctionLiteral* m_surrounding_function {nullptr};
 
 	Origin m_origin;
 	int m_frame_offset {INT_MIN};
 
-	InternedString const& text() {
-		return m_token->m_text;
+	Token const* token() const;
+	InternedString const& text() const {
+		return m_text;
 	}
 
 	Identifier()

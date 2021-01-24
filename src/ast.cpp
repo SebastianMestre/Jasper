@@ -21,6 +21,10 @@ InternedString const& Declaration::identifier_text() const {
 	return m_identifier;
 }
 
+Token const* Identifier::token() const {
+	return static_cast<CST::Identifier*>(m_cst)->m_token;
+}
+
 AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<IntegerLiteral>();
 	ast->m_value = std::stoi(cst->text());
@@ -124,7 +128,8 @@ AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 
 AST* convert_ast(CST::Identifier* cst, Allocator& alloc) {
 	auto ast = alloc.make<Identifier>();
-	ast->m_token = cst->m_token;
+	ast->m_cst = cst;
+	ast->m_text = cst->m_token->m_text;
 	return ast;
 }
 
