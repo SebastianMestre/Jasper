@@ -70,4 +70,13 @@ Value*& Stack::frame_at(int offset) {
 	return m_stack[m_frame_ptr + offset];
 }
 
+Span<Value*> Stack::frame_range(int offset, int length) {
+	if (length > 0) {
+		assert(m_frame_ptr + offset >= 0);
+		assert(m_frame_ptr + offset + length <= m_stack.size());
+	}
+	auto start_address = &m_stack[m_frame_ptr + offset];
+	return {start_address, length};
+}
+
 } // namespace Interpreter
