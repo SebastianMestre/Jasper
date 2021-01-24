@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "../ast_allocator.hpp"
+#include "../cst_allocator.hpp"
 #include "../parse.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
 		    {
 			    TokenArray ta;
-			    AST::Allocator ast_allocator;
+			    CST::Allocator ast_allocator;
 			    TypedAST::Allocator typed_ast_allocator;
 
 			    auto top_level_call_ast = parse_expression("__invoke()", ta, ast_allocator);

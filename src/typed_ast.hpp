@@ -12,8 +12,8 @@
 #include "typechecker_types.hpp"
 #include "typed_ast_tag.hpp"
 
-namespace AST {
-struct AST;
+namespace CST {
+struct CST;
 }
 
 namespace TypedAST {
@@ -37,7 +37,7 @@ struct TypedAST {
 
 struct Allocator;
 
-TypedAST* convert_ast(AST::AST*, Allocator& alloc);
+TypedAST* convert_ast(CST::CST*, Allocator& alloc);
 
 struct FunctionLiteral;
 struct SequenceExpression;

@@ -1,209 +1,209 @@
 #include "desugar.hpp"
 
 #include "./log/log.hpp"
-#include "ast.hpp"
-#include "ast_allocator.hpp"
+#include "cst.hpp"
+#include "cst_allocator.hpp"
 
 #include <cassert>
 #include <sstream>
 
-namespace AST {
+namespace CST {
 
-Declaration* desugar(Declaration* ast, Allocator& alloc) {
-	if (ast->m_type_hint)
-		ast->m_type_hint = desugar(ast->m_type_hint, alloc);
+Declaration* desugar(Declaration* cst, Allocator& alloc) {
+	if (cst->m_type_hint)
+		cst->m_type_hint = desugar(cst->m_type_hint, alloc);
 
-	if (ast->m_value)
-		ast->m_value = desugar(ast->m_value, alloc);
+	if (cst->m_value)
+		cst->m_value = desugar(cst->m_value, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(DeclarationList* ast, Allocator& alloc) {
-	for (auto& declaration : ast->m_declarations)
+CST* desugar(DeclarationList* cst, Allocator& alloc) {
+	for (auto& declaration : cst->m_declarations)
 		desugar(&declaration, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(ArrayLiteral* ast, Allocator& alloc) {
-	for (int i = 0; i < ast->m_elements.size(); ++i)
-		ast->m_elements[i] = desugar(ast->m_elements[i], alloc);
+CST* desugar(ArrayLiteral* cst, Allocator& alloc) {
+	for (int i = 0; i < cst->m_elements.size(); ++i)
+		cst->m_elements[i] = desugar(cst->m_elements[i], alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(DictionaryLiteral* ast, Allocator& alloc) {
-	for (int i = 0; i < ast->m_body.size(); ++i)
-		desugar(&ast->m_body[i], alloc);
+CST* desugar(DictionaryLiteral* cst, Allocator& alloc) {
+	for (int i = 0; i < cst->m_body.size(); ++i)
+		desugar(&cst->m_body[i], alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(FunctionLiteral* ast, Allocator& alloc) {
-	ast->m_body = desugar(ast->m_body, alloc);
+CST* desugar(FunctionLiteral* cst, Allocator& alloc) {
+	cst->m_body = desugar(cst->m_body, alloc);
 
-	for (auto& arg : ast->m_args)
+	for (auto& arg : cst->m_args)
 		desugar(&arg, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(BlockFunctionLiteral* ast, Allocator& alloc) {
+CST* desugar(BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto seq_expr = alloc.make<SequenceExpression>();
-	seq_expr->m_body = static_cast<Block*>(ast->m_body);
-	ast->m_body = nullptr;
+	seq_expr->m_body = static_cast<Block*>(cst->m_body);
+	cst->m_body = nullptr;
 
 	auto result = alloc.make<FunctionLiteral>();
 	result->m_body = seq_expr;
-	result->m_args = std::move(ast->m_args);
+	result->m_args = std::move(cst->m_args);
 
 	return desugar(result, alloc);
 }
 
-AST* desugarPizza(BinaryExpression* ast, Allocator& alloc) {
+CST* desugarPizza(BinaryExpression* cst, Allocator& alloc) {
 	// TODO: error handling
-	assert(ast->m_rhs->type() == ASTTag::CallExpression);
+	assert(cst->m_rhs->type() == CSTTag::CallExpression);
 
-	auto rhs = desugar(ast->m_rhs, alloc);
+	auto rhs = desugar(cst->m_rhs, alloc);
 	auto call = static_cast<CallExpression*>(rhs);
 
-	call->m_args.insert(call->m_args.begin(), desugar(ast->m_lhs, alloc));
+	call->m_args.insert(call->m_args.begin(), desugar(cst->m_lhs, alloc));
 
 	return rhs;
 }
 
-AST* desugar(AccessExpression* ast, Allocator& alloc) {
-	ast->m_record = desugar(ast->m_record, alloc);
-	return ast;
+CST* desugar(AccessExpression* cst, Allocator& alloc) {
+	cst->m_record = desugar(cst->m_record, alloc);
+	return cst;
 }
 
 // This function desugars binary operators into function calls
-AST* desugar(BinaryExpression* ast, Allocator& alloc) {
+CST* desugar(BinaryExpression* cst, Allocator& alloc) {
 
-	if (ast->m_op_token->m_type == TokenTag::PIZZA)
-		return desugarPizza(ast, alloc);
+	if (cst->m_op_token->m_type == TokenTag::PIZZA)
+		return desugarPizza(cst, alloc);
 
-	if (ast->m_op_token->m_type == TokenTag::DOT)
+	if (cst->m_op_token->m_type == TokenTag::DOT)
 		assert(0);
 
 	auto identifier = alloc.make<Identifier>();
-	identifier->m_token = ast->m_op_token;
+	identifier->m_token = cst->m_op_token;
 
 	auto result = alloc.make<CallExpression>();
 	result->m_callee = identifier;
 
-	result->m_args.push_back(desugar(ast->m_lhs, alloc));
-	result->m_args.push_back(desugar(ast->m_rhs, alloc));
+	result->m_args.push_back(desugar(cst->m_lhs, alloc));
+	result->m_args.push_back(desugar(cst->m_rhs, alloc));
 
 	return result;
 }
 
-AST* desugar(CallExpression* ast, Allocator& alloc) {
-	for (auto& arg : ast->m_args) {
+CST* desugar(CallExpression* cst, Allocator& alloc) {
+	for (auto& arg : cst->m_args) {
 		arg = desugar(arg, alloc);
 	}
 
-	ast->m_callee = desugar(ast->m_callee, alloc);
+	cst->m_callee = desugar(cst->m_callee, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(IndexExpression* ast, Allocator& alloc) {
-	ast->m_callee = desugar(ast->m_callee, alloc);
-	ast->m_index = desugar(ast->m_index, alloc);
+CST* desugar(IndexExpression* cst, Allocator& alloc) {
+	cst->m_callee = desugar(cst->m_callee, alloc);
+	cst->m_index = desugar(cst->m_index, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(TernaryExpression* ast, Allocator& alloc) {
-	ast->m_condition = desugar(ast->m_condition, alloc);
-	ast->m_then_expr = desugar(ast->m_then_expr, alloc);
-	ast->m_else_expr = desugar(ast->m_else_expr, alloc);
+CST* desugar(TernaryExpression* cst, Allocator& alloc) {
+	cst->m_condition = desugar(cst->m_condition, alloc);
+	cst->m_then_expr = desugar(cst->m_then_expr, alloc);
+	cst->m_else_expr = desugar(cst->m_else_expr, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(ConstructorExpression* ast, Allocator& alloc) {
-	ast->m_constructor = desugar(ast->m_constructor, alloc);
-	for (auto& arg : ast->m_args)
+CST* desugar(ConstructorExpression* cst, Allocator& alloc) {
+	cst->m_constructor = desugar(cst->m_constructor, alloc);
+	for (auto& arg : cst->m_args)
 		arg = desugar(arg, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(Block* ast, Allocator& alloc) {
-	for (auto& element : ast->m_body) {
+CST* desugar(Block* cst, Allocator& alloc) {
+	for (auto& element : cst->m_body) {
 		element = desugar(element, alloc);
 	}
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(ReturnStatement* ast, Allocator& alloc) {
-	ast->m_value = desugar(ast->m_value, alloc);
+CST* desugar(ReturnStatement* cst, Allocator& alloc) {
+	cst->m_value = desugar(cst->m_value, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(IfElseStatement* ast, Allocator& alloc) {
-	ast->m_condition = desugar(ast->m_condition, alloc);
-	ast->m_body = desugar(ast->m_body, alloc);
+CST* desugar(IfElseStatement* cst, Allocator& alloc) {
+	cst->m_condition = desugar(cst->m_condition, alloc);
+	cst->m_body = desugar(cst->m_body, alloc);
 
-	if (ast->m_else_body)
-		ast->m_else_body = desugar(ast->m_else_body, alloc);
+	if (cst->m_else_body)
+		cst->m_else_body = desugar(cst->m_else_body, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(ForStatement* ast, Allocator& alloc) {
-	desugar(&ast->m_declaration, alloc);
-	ast->m_condition = desugar(ast->m_condition, alloc);
-	ast->m_action = desugar(ast->m_action, alloc);
-	ast->m_body = desugar(ast->m_body, alloc);
+CST* desugar(ForStatement* cst, Allocator& alloc) {
+	desugar(&cst->m_declaration, alloc);
+	cst->m_condition = desugar(cst->m_condition, alloc);
+	cst->m_action = desugar(cst->m_action, alloc);
+	cst->m_body = desugar(cst->m_body, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(WhileStatement* ast, Allocator& alloc) {
-	ast->m_condition = desugar(ast->m_condition, alloc);
-	ast->m_body = desugar(ast->m_body, alloc);
+CST* desugar(WhileStatement* cst, Allocator& alloc) {
+	cst->m_condition = desugar(cst->m_condition, alloc);
+	cst->m_body = desugar(cst->m_body, alloc);
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(MatchExpression* ast, Allocator& alloc) {
-	if (ast->m_type_hint)
-		ast->m_type_hint = desugar(ast->m_type_hint, alloc);
+CST* desugar(MatchExpression* cst, Allocator& alloc) {
+	if (cst->m_type_hint)
+		cst->m_type_hint = desugar(cst->m_type_hint, alloc);
 
-	for (auto& case_data : ast->m_cases) {
+	for (auto& case_data : cst->m_cases) {
 		case_data.m_expression = desugar(case_data.m_expression, alloc);
 		if (case_data.m_type_hint)
 			case_data.m_type_hint = desugar(case_data.m_type_hint, alloc);
 	}
 
-	return ast;
+	return cst;
 }
 
-AST* desugar(SequenceExpression* ast, Allocator& alloc) {
-	ast->m_body = static_cast<Block*>(desugar(ast->m_body, alloc));
-	return ast;
+CST* desugar(SequenceExpression* cst, Allocator& alloc) {
+	cst->m_body = static_cast<Block*>(desugar(cst->m_body, alloc));
+	return cst;
 }
 
-AST* desugar(AST* ast, Allocator& alloc) {
+CST* desugar(CST* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
-		return desugar(static_cast<type*>(ast), alloc);
+	case CSTTag::type:                                                         \
+		return desugar(static_cast<type*>(cst), alloc);
 
 #define RETURN(type)                                                           \
-	case ASTTag::type:                                                         \
-		return ast;
+	case CSTTag::type:                                                         \
+		return cst;
 
 #define REJECT(type)                                                           \
-	case ASTTag::type:                                                         \
+	case CSTTag::type:                                                         \
 		assert(0);
 	
-	switch (ast->type()) {
+	switch (cst->type()) {
 		RETURN(NumberLiteral);
 		RETURN(IntegerLiteral);
 		RETURN(StringLiteral);
@@ -240,11 +240,11 @@ AST* desugar(AST* ast, Allocator& alloc) {
 		RETURN(TupleExpression);
 	}
 
-	Log::fatal() << "(internal) AST type not handled in desugar: " << ast_string[(int)ast->type()];
+	Log::fatal() << "(internal) CST type not handled in desugar: " << cst_string[(int)cst->type()];
 
 #undef RETURN
 #undef DISPATCH
 #undef REJECT
 }
 
-} // namespace AST
+} // namespace CST

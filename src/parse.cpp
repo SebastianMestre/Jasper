@@ -3,7 +3,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
-Writer<AST::AST*> parse_program(std::string const& source, TokenArray& ta, AST::Allocator& allocator) {
+Writer<CST::CST*> parse_program(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
@@ -17,7 +17,7 @@ Writer<AST::AST*> parse_program(std::string const& source, TokenArray& ta, AST::
 	return p.parse_top_level();
 }
 
-Writer<AST::AST*> parse_expression(std::string const& source, TokenArray& ta, AST::Allocator& allocator) {
+Writer<CST::CST*> parse_expression(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);

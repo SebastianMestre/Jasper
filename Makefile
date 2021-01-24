@@ -27,7 +27,7 @@ COMMON_TARGETS := \
 	utils/span \
 	utils/string_set \
 	utils/string_view \
-	ast \
+	cst \
 	compile_time_environment \
 	compute_offsets \
 	ct_eval \

@@ -1,6 +1,6 @@
 #pragma once
 
-#define AST_TAGS                                                               \
+#define CST_TAGS                                                               \
 	X(NumberLiteral)                                                           \
 	X(IntegerLiteral)                                                          \
 	X(StringLiteral)                                                           \
@@ -36,15 +36,15 @@
 	X(StructExpression)
 
 #define X(name) #name,
-constexpr const char* ast_string[] = {
-	AST_TAGS
+constexpr const char* cst_string[] = {
+	CST_TAGS
 };
 #undef X
 
 #define X(name) name,
-enum class ASTTag {
-	AST_TAGS
+enum class CSTTag {
+	CST_TAGS
 };
 #undef X
 
-#undef AST_TAGS
+#undef CST_TAGS

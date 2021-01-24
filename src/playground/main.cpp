@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "../ast_allocator.hpp"
+#include "../cst_allocator.hpp"
 #include "../parse.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 
 	{
 		TokenArray ta;
-		AST::Allocator ast_allocator;
+		CST::Allocator ast_allocator;
 		auto parse_result = parse_program(source, ta, ast_allocator);
 
 		if (not parse_result.ok()) {

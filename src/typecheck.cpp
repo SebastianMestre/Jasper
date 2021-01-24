@@ -414,7 +414,7 @@ void typecheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 		IGNORE(Constructor);
 	}
 
-	Log::fatal() << "(internal) AST type not handled in typecheck: "
+	Log::fatal() << "(internal) CST type not handled in typecheck: "
 	             << typed_ast_string[(int)ast->type()];
 
 #undef DISPATCH
