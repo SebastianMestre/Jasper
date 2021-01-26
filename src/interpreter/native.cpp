@@ -281,6 +281,34 @@ Value* value_assign(ArgsType v, Interpreter& e) {
 	return e.null();
 }
 
+Value* read_integer(ArgsType v, Interpreter& e) {
+	// TODO: error handling
+	int result;
+	std::cin >> result;
+	return e.m_gc->new_integer_raw(result);
+}
+
+Value* read_number(ArgsType v, Interpreter& e) {
+	// TODO: error handling
+	float result;
+	std::cin >> result;
+	return e.m_gc->new_float_raw(result);
+}
+
+Value* read_line(ArgsType v, Interpreter& e) {
+	// TODO: error handling
+	std::string result;
+	std::getline(std::cin, result);
+	return e.m_gc->new_string_raw(std::move(result));
+}
+
+Value* read_string(ArgsType v, Interpreter& e) {
+	// TODO: error handling
+	std::string result;
+	std::cin >> result;
+	return e.m_gc->new_string_raw(std::move(result));
+}
+
 void declare_native_functions(Interpreter& env) {
 	env.global_declare(
 	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
@@ -330,6 +358,20 @@ void declare_native_functions(Interpreter& env) {
 	env.global_declare(
 	    "||",
 	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicor)));
+
+	// Input
+	env.global_declare(
+	    "read_integer",
+	    env.new_native_function(static_cast<NativeFunctionType*>(&read_integer)));
+	env.global_declare(
+	    "read_number",
+	    env.new_native_function(static_cast<NativeFunctionType*>(&read_number)));
+	env.global_declare(
+	    "read_string",
+	    env.new_native_function(static_cast<NativeFunctionType*>(&read_string)));
+	env.global_declare(
+	    "read_line",
+	    env.new_native_function(static_cast<NativeFunctionType*>(&read_line)));
 }
 
 } // namespace Interpreter
