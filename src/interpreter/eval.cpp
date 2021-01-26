@@ -100,11 +100,21 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 }
 
 void eval(AST::Identifier* ast, Interpreter& e) {
+
+#ifdef DEBUG
+	Log::info() << "Identifier " << ast->text();
+	if (ast->m_origin == TypedAST::Identifier::Origin::Local ||
+	    ast->m_origin == TypedAST::Identifier::Origin::Capture) {
+		Log::info() << "is local";
+	} else {
+		Log::info() << "is global";
+	}
+#endif
+
 	if (ast->m_origin == AST::Identifier::Origin::Local ||
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
-		if (ast->m_frame_offset == INT_MIN) {
+		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		}
 		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset));
 	} else {
 		e.m_stack.push(e.global_access(ast->text()));
@@ -168,11 +178,12 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 		for (auto expr : arglist)
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
-		Span<Value*> args = {&e.m_stack.frame_at(0), arg_count};
+		auto args = e.m_stack.frame_range(0, arg_count);
 		e.m_stack.frame_at(-1) = static_cast<NativeFunction*>(callee)->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
+
 
 	e.m_stack.end_stack_frame();
 }
@@ -387,6 +398,10 @@ void eval(AST::AST* ast, Interpreter& e) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
 		return eval(static_cast<AST::type*>(ast), e)
+
+#ifdef DEBUG
+	Log::info() << "case in eval: " << typed_ast_string[(int)ast->type()];
+#endif
 
 	switch (ast->type()) {
 		DISPATCH(NumberLiteral);

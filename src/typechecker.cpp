@@ -122,6 +122,28 @@ TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator
 			declare_builtin_value( "<", poly_id);
 			declare_builtin_value("==", poly_id);
 		}
+
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function, {mono_int()}, "[builtin] () -> Integer");
+			auto poly_id = m_core.new_poly(term_mono_id, {});
+			declare_builtin_value("read_integer", poly_id);
+		}
+
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function, {mono_float()}, "[builtin] () -> Number");
+			auto poly_id = m_core.new_poly(term_mono_id, {});
+			declare_builtin_value("read_number", poly_id);
+		}
+
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function, {mono_string()}, "[builtin] () -> String");
+			auto poly_id = m_core.new_poly(term_mono_id, {});
+			declare_builtin_value("read_string", poly_id);
+			declare_builtin_value("read_line", poly_id);
+		}
 	}
 
 	declare_builtin_typefunc("int", BuiltinType::Int);

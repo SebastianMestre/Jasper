@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../utils/interned_string.hpp"
+#include "../utils/span.hpp"
 #include "gc_ptr.hpp"
 #include "value.hpp"
 
@@ -29,6 +30,7 @@ struct Stack {
 
 	Value*& access(int offset);
 	Value*& frame_at(int offset);
+	Span<Value*> frame_range(int offset, int length);
 };
 
 } // namespace Interpreter
