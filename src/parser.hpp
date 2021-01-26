@@ -5,8 +5,8 @@
 #include "error_report.hpp"
 #include "lexer.hpp"
 
-namespace AST {
-struct AST;
+namespace CST {
+struct CST;
 struct Allocator;
 struct Identifier;
 struct Declaration;
@@ -30,39 +30,39 @@ Writer<T> make_writer(T x) {
 struct Parser {
 	/* token handler */
 	Lexer* m_lexer;
-	AST::Allocator* m_ast_allocator;
+	CST::Allocator* m_ast_allocator;
 
-	Writer<std::vector<AST::Declaration>> parse_declaration_list(TokenTag);
-	Writer<std::vector<AST::AST*>>
+	Writer<std::vector<CST::Declaration>> parse_declaration_list(TokenTag);
+	Writer<std::vector<CST::CST*>>
 	parse_expression_list(TokenTag, TokenTag, bool);
 
-	Writer<AST::AST*> parse_top_level();
+	Writer<CST::CST*> parse_top_level();
 
-	Writer<AST::AST*> parse_sequence_expression();
-	Writer<AST::Identifier*> parse_identifier(bool types_allowed = false);
-	Writer<AST::Declaration*> parse_declaration();
-	Writer<AST::AST*> parse_expression(int bp = 0, AST::AST* parsed_lhs = nullptr);
-	Writer<AST::AST*> parse_terminal();
-	Writer<AST::AST*> parse_ternary_expression(AST::AST* parsed_condition = nullptr);
-	Writer<AST::AST*> parse_function();
-	Writer<AST::AST*> parse_array_literal();
-	Writer<AST::AST*> parse_dictionary_literal();
-	Writer<std::vector<AST::AST*>> parse_argument_list();
-	Writer<AST::AST*> parse_block();
-	Writer<AST::AST*> parse_statement();
-	Writer<AST::AST*> parse_return_statement();
-	Writer<AST::AST*> parse_if_else_stmt_or_expr();
-	Writer<AST::AST*> parse_for_statement();
-	Writer<AST::AST*> parse_while_statement();
-	Writer<AST::AST*> parse_match_expression();
-	Writer<std::pair<Token const*, AST::AST*>> parse_name_and_type(
+	Writer<CST::CST*> parse_sequence_expression();
+	Writer<CST::Identifier*> parse_identifier(bool types_allowed = false);
+	Writer<CST::Declaration*> parse_declaration();
+	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
+	Writer<CST::CST*> parse_terminal();
+	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
+	Writer<CST::CST*> parse_function();
+	Writer<CST::CST*> parse_array_literal();
+	Writer<CST::CST*> parse_dictionary_literal();
+	Writer<std::vector<CST::CST*>> parse_argument_list();
+	Writer<CST::CST*> parse_block();
+	Writer<CST::CST*> parse_statement();
+	Writer<CST::CST*> parse_return_statement();
+	Writer<CST::CST*> parse_if_else_stmt_or_expr();
+	Writer<CST::CST*> parse_for_statement();
+	Writer<CST::CST*> parse_while_statement();
+	Writer<CST::CST*> parse_match_expression();
+	Writer<std::pair<Token const*, CST::CST*>> parse_name_and_type(
 	    bool required_type = false);
-	Writer<AST::AST*> parse_type_term();
-	Writer<std::vector<AST::AST*>> parse_type_term_arguments();
-	Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> parse_type_list(
+	Writer<CST::CST*> parse_type_term();
+	Writer<std::vector<CST::CST*>> parse_type_term_arguments();
+	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(
 	    bool);
-	Writer<AST::AST*> parse_type_var();
-	Writer<AST::AST*> parse_type_function();
+	Writer<CST::CST*> parse_type_var();
+	Writer<CST::CST*> parse_type_function();
 
 	Writer<Token const*> require(TokenTag);
 	bool consume(TokenTag);

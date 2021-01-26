@@ -1,7 +1,7 @@
 #include "parser.hpp"
 
 #include "utils/string_view.hpp"
-#include "ast_allocator.hpp"
+#include "cst_allocator.hpp"
 
 #include <sstream>
 #include <utility>
@@ -71,25 +71,25 @@ bool Parser::match(TokenTag expected_type) {
 	return current_token->m_type == expected_type;
 }
 
-Writer<AST::AST*> Parser::parse_top_level() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_top_level() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse top level program"}};
 
 	auto declarations = parse_declaration_list(TokenTag::END);
 	CHECK_AND_RETURN(result, declarations);
 
-	auto e = m_ast_allocator->make<AST::DeclarationList>();
+	auto e = m_ast_allocator->make<CST::DeclarationList>();
 	e->m_declarations = std::move(declarations.m_result);
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<std::vector<AST::Declaration>>
+Writer<std::vector<CST::Declaration>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<AST::Declaration>> result = {
+	Writer<std::vector<CST::Declaration>> result = {
 	    {"Parse Error: Failed to parse declaration list"}};
 
-	std::vector<AST::Declaration> declarations;
+	std::vector<CST::Declaration> declarations;
 
 	while (1) {
 		auto p0 = peek();
@@ -116,12 +116,12 @@ Parser::parse_declaration_list(TokenTag terminator) {
 	return make_writer(std::move(declarations));
 }
 
-Writer<std::vector<AST::AST*>> Parser::parse_expression_list(
+Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<AST::AST*>> result = {
+	Writer<std::vector<CST::CST*>> result = {
 	    {"Parse Error: Failed to parse expression list"}};
 
-	std::vector<AST::AST*> expressions;
+	std::vector<CST::CST*> expressions;
 
 	if (peek()->m_type == terminator) {
 		m_lexer->advance();
@@ -172,14 +172,14 @@ Writer<std::vector<AST::AST*>> Parser::parse_expression_list(
 	return make_writer(std::move(expressions));
 }
 
-Writer<AST::Declaration*> Parser::parse_declaration() {
-	Writer<AST::Declaration*> result = {
+Writer<CST::Declaration*> Parser::parse_declaration() {
+	Writer<CST::Declaration*> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
 	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, name);
 
-	Writer<AST::AST*> type;
+	Writer<CST::CST*> type;
 
 	if (consume(TokenTag::DECLARE_ASSIGN)) {
 	} else if (consume(TokenTag::DECLARE)) {
@@ -195,12 +195,12 @@ Writer<AST::Declaration*> Parser::parse_declaration() {
 	CHECK_AND_RETURN(result, value);
 	REQUIRE(result, TokenTag::SEMICOLON);
 
-	auto p = m_ast_allocator->make<AST::Declaration>();
+	auto p = m_ast_allocator->make<CST::Declaration>();
 	p->m_identifier_token = name.m_result;
 	p->m_type_hint = type.m_result;
 	p->m_value = value.m_result;
 
-	return make_writer<AST::Declaration*>(p);
+	return make_writer<CST::Declaration*>(p);
 }
 
 // These are important for infix expression parsing.
@@ -269,8 +269,8 @@ binding_power binding_power_of(TokenTag t) {
 	}
 }
 
-Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
-	Writer<std::vector<AST::AST*>> result = {
+Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
+	Writer<std::vector<CST::CST*>> result = {
 	    {"Parse Error: Failed to argument list"}};
 
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -285,11 +285,11 @@ Writer<std::vector<AST::AST*>> Parser::parse_argument_list() {
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse expression"}};
 
-	Writer<AST::AST*> lhs;
+	Writer<CST::CST*> lhs;
 	if (!parsed_lhs) {
 		lhs = parse_terminal();
 		CHECK_AND_RETURN(result, lhs);
@@ -328,7 +328,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 			auto args = parse_argument_list();
 			CHECK_AND_RETURN(result, args);
 
-			auto e = m_ast_allocator->make<AST::CallExpression>();
+			auto e = m_ast_allocator->make<CST::CallExpression>();
 			e->m_callee = lhs.m_result;
 			e->m_args = std::move(args.m_result);
 			lhs.m_result = e;
@@ -343,7 +343,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 			CHECK_AND_RETURN(result, index);
 			REQUIRE(result, TokenTag::BRACKET_CLOSE);
 
-			auto e = m_ast_allocator->make<AST::IndexExpression>();
+			auto e = m_ast_allocator->make<CST::IndexExpression>();
 			e->m_callee = lhs.m_result;
 			e->m_index = index.m_result;
 			lhs.m_result = e;
@@ -355,7 +355,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 			auto args = parse_type_term_arguments();
 			CHECK_AND_RETURN(result, args);
 
-			auto e = m_ast_allocator->make<AST::TypeTerm>();
+			auto e = m_ast_allocator->make<CST::TypeTerm>();
 			e->m_callee = lhs.m_result;
 			e->m_args = std::move(args.m_result);
 			lhs.m_result = e;
@@ -367,7 +367,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 			auto member = require(TokenTag::IDENTIFIER);
 			CHECK_AND_RETURN(result, member);
 
-			auto e = m_ast_allocator->make<AST::AccessExpression>();
+			auto e = m_ast_allocator->make<CST::AccessExpression>();
 			e->m_record = lhs.m_result;
 			e->m_member = member.m_result;
 			lhs.m_result = e;
@@ -380,7 +380,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 			    parse_expression_list(TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
 			CHECK_AND_RETURN(result, args);
 
-			auto e = m_ast_allocator->make<AST::ConstructorExpression>();
+			auto e = m_ast_allocator->make<CST::ConstructorExpression>();
 			e->m_constructor = lhs.m_result;
 			e->m_args = std::move(args.m_result);
 			lhs.m_result = e;
@@ -391,7 +391,7 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 		m_lexer->advance();
 		auto rhs = parse_expression(rp);
 
-		auto e = m_ast_allocator->make<AST::BinaryExpression>();
+		auto e = m_ast_allocator->make<CST::BinaryExpression>();
 		e->m_op_token = op;
 		e->m_lhs = lhs.m_result;
 		e->m_rhs = rhs.m_result;
@@ -405,30 +405,30 @@ Writer<AST::AST*> Parser::parse_expression(int bp, AST::AST* parsed_lhs) {
 /* We say a terminal is any expression that is not an infix expression.
  * This is not what the term usually means in the literature.
  */
-Writer<AST::AST*> Parser::parse_terminal() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_terminal() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse terminal expression"}};
 
 	auto token = peek();
 
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
-		auto e = m_ast_allocator->make<AST::NullLiteral>();
+		auto e = m_ast_allocator->make<CST::NullLiteral>();
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_TRUE) {
-		auto e = m_ast_allocator->make<AST::BooleanLiteral>();
+		auto e = m_ast_allocator->make<CST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FALSE) {
-		auto e = m_ast_allocator->make<AST::BooleanLiteral>();
+		auto e = m_ast_allocator->make<CST::BooleanLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::SUB || token->m_type == TokenTag::ADD) {
@@ -437,52 +437,52 @@ Writer<AST::AST*> Parser::parse_terminal() {
 		// NOTE: we store the sign token of the source code for future
 		// feature of printing the source code when an error occurs
 		if (match(TokenTag::INTEGER)) {
-			auto e = m_ast_allocator->make<AST::IntegerLiteral>();
+			auto e = m_ast_allocator->make<CST::IntegerLiteral>();
 			e->m_negative = token->m_type == TokenTag::SUB;
 			e->m_sign = token;
 			e->m_token = peek();
 			m_lexer->advance();
-			return make_writer<AST::AST*>(e);
+			return make_writer<CST::CST*>(e);
 		} else if (match(TokenTag::NUMBER)) {
-			auto e = m_ast_allocator->make<AST::NumberLiteral>();
+			auto e = m_ast_allocator->make<CST::NumberLiteral>();
 			e->m_negative = token->m_type == TokenTag::SUB;
 			e->m_sign = token;
 			e->m_token = peek();
 			m_lexer->advance();
-			return make_writer<AST::AST*>(e);
+			return make_writer<CST::CST*>(e);
 		}
 
 		return token->m_type == TokenTag::SUB
-		       ? Writer<AST::AST*> {{"Parse Error: Stray minus sign with no number"}}
-		       : Writer<AST::AST*> {{"Parse Error: Stray plus sign with no number"}};
+		       ? Writer<CST::CST*> {{"Parse Error: Stray minus sign with no number"}}
+		       : Writer<CST::CST*> {{"Parse Error: Stray plus sign with no number"}};
 	}
 
 	if (token->m_type == TokenTag::INTEGER) {
-		auto e = m_ast_allocator->make<AST::IntegerLiteral>();
+		auto e = m_ast_allocator->make<CST::IntegerLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::NUMBER) {
-		auto e = m_ast_allocator->make<AST::NumberLiteral>();
+		auto e = m_ast_allocator->make<CST::NumberLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::IDENTIFIER) {
-		auto e = m_ast_allocator->make<AST::Identifier>();
+		auto e = m_ast_allocator->make<CST::Identifier>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::STRING) {
-		auto e = m_ast_allocator->make<AST::StringLiteral>();
+		auto e = m_ast_allocator->make<CST::StringLiteral>();
 		e->m_token = token;
 		m_lexer->advance();
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
@@ -550,11 +550,11 @@ Writer<AST::AST*> Parser::parse_terminal() {
 	return result;
 }
 
-Writer<AST::AST*> Parser::parse_ternary_expression(AST::AST* parsed_condition) {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse ternary expression"}};
 
-	Writer<AST::AST*> condition;
+	Writer<CST::CST*> condition;
 	if (!parsed_condition) {
 		REQUIRE(result, TokenTag::KEYWORD_IF);
 		REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -575,16 +575,16 @@ Writer<AST::AST*> Parser::parse_ternary_expression(AST::AST* parsed_condition) {
 	auto else_expr = parse_expression();
 	CHECK_AND_RETURN(result, else_expr);
 
-	auto e = m_ast_allocator->make<AST::TernaryExpression>();
+	auto e = m_ast_allocator->make<CST::TernaryExpression>();
 	e->m_condition = condition.m_result;
 	e->m_then_expr = then_expr.m_result;
 	e->m_else_expr = else_expr.m_result;
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::Identifier*> Parser::parse_identifier(bool types_allowed) {
-	Writer<AST::Identifier*> result = {
+Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
+	Writer<CST::Identifier*> result = {
 	    {"Parse Error: Failed to parse identifier"}};
 
 	Token const* token;
@@ -600,14 +600,14 @@ Writer<AST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 		token = identifier.m_result;
 	}
 
-	auto e = m_ast_allocator->make<AST::Identifier>();
+	auto e = m_ast_allocator->make<CST::Identifier>();
 	e->m_token = token;
 
-	return make_writer<AST::Identifier*>(e);
+	return make_writer<CST::Identifier*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_array_literal() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_array_literal() {
+	Writer<CST::CST*> result = {
 	    {"Failed to parse array literal"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_ARRAY);
@@ -617,14 +617,14 @@ Writer<AST::AST*> Parser::parse_array_literal() {
 	    TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
 	CHECK_AND_RETURN(result, elements);
 
-	auto e = m_ast_allocator->make<AST::ArrayLiteral>();
+	auto e = m_ast_allocator->make<CST::ArrayLiteral>();
 	e->m_elements = std::move(elements.m_result);
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_dictionary_literal() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_dictionary_literal() {
+	Writer<CST::CST*> result = {
 	    {"Failed to parse dictionary literal"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_DICT);
@@ -634,10 +634,10 @@ Writer<AST::AST*> Parser::parse_dictionary_literal() {
 	CHECK_AND_RETURN(result, declarations);
 	REQUIRE(result, TokenTag::BRACE_CLOSE);
 
-	auto e = m_ast_allocator->make<AST::DictionaryLiteral>();
+	auto e = m_ast_allocator->make<CST::DictionaryLiteral>();
 	e->m_body = std::move(declarations.m_result);
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
 /*
@@ -646,21 +646,21 @@ Writer<AST::AST*> Parser::parse_dictionary_literal() {
  *   print(x);
  * }
  */
-Writer<AST::AST*> Parser::parse_function() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_function() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse function"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-	std::vector<AST::Declaration> args;
+	std::vector<CST::Declaration> args;
 	while (1) {
 		if (consume(TokenTag::PAREN_CLOSE)) {
 			break;
 		} else if (match(TokenTag::IDENTIFIER)) {
 			// consume argument name
 
-			AST::Declaration arg;
+			CST::Declaration arg;
 
 			arg.m_identifier_token = peek();
 			m_lexer->advance();
@@ -700,30 +700,30 @@ Writer<AST::AST*> Parser::parse_function() {
 		auto expression = parse_expression();
 		CHECK_AND_RETURN(result, expression);
 
-		auto e = m_ast_allocator->make<AST::FunctionLiteral>();
+		auto e = m_ast_allocator->make<CST::FunctionLiteral>();
 		e->m_body = expression.m_result;
 		e->m_args = std::move(args);
 
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	} else {
 		auto block = parse_block();
 		CHECK_AND_RETURN(result, block);
 
-		auto e = m_ast_allocator->make<AST::BlockFunctionLiteral>();
+		auto e = m_ast_allocator->make<CST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
 		e->m_args = std::move(args);
 
-		return make_writer<AST::AST*>(e);
+		return make_writer<CST::CST*>(e);
 	}
 }
 
-Writer<AST::AST*> Parser::parse_block() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_block() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse block statement"}};
 
 	REQUIRE(result, TokenTag::BRACE_OPEN);
 
-	std::vector<AST::AST*> statements;
+	std::vector<CST::CST*> statements;
 
 	// loop until we find a matching closing bracket
 	while (1) {
@@ -745,14 +745,14 @@ Writer<AST::AST*> Parser::parse_block() {
 		statements.push_back(statement.m_result);
 	}
 
-	auto e = m_ast_allocator->make<AST::Block>();
+	auto e = m_ast_allocator->make<CST::Block>();
 	e->m_body = std::move(statements);
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_return_statement() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_return_statement() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse return statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_RETURN);
@@ -761,14 +761,14 @@ Writer<AST::AST*> Parser::parse_return_statement() {
 	CHECK_AND_RETURN(result, value);
 	REQUIRE(result, TokenTag::SEMICOLON);
 
-	auto e = m_ast_allocator->make<AST::ReturnStatement>();
+	auto e = m_ast_allocator->make<CST::ReturnStatement>();
 	e->m_value = value.m_result;
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_if_else_stmt_or_expr() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse if-else statement or expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_IF);
@@ -793,7 +793,7 @@ Writer<AST::AST*> Parser::parse_if_else_stmt_or_expr() {
 	auto body = parse_statement();
 	CHECK_AND_RETURN(result, body);
 
-	auto e = m_ast_allocator->make<AST::IfElseStatement>();
+	auto e = m_ast_allocator->make<CST::IfElseStatement>();
 	e->m_condition = condition.m_result;
 	e->m_body = body.m_result;
 
@@ -804,11 +804,11 @@ Writer<AST::AST*> Parser::parse_if_else_stmt_or_expr() {
 		e->m_else_body = else_body.m_result;
 	}
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_for_statement() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_for_statement() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse for statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FOR);
@@ -829,17 +829,17 @@ Writer<AST::AST*> Parser::parse_for_statement() {
 	auto body = parse_statement();
 	CHECK_AND_RETURN(result, body);
 
-	auto e = m_ast_allocator->make<AST::ForStatement>();
+	auto e = m_ast_allocator->make<CST::ForStatement>();
 	e->m_declaration = std::move(*declaration.m_result);
 	e->m_condition = condition.m_result;
 	e->m_action = action.m_result;
 	e->m_body = body.m_result;
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_while_statement() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_while_statement() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse while statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_WHILE);
@@ -852,15 +852,15 @@ Writer<AST::AST*> Parser::parse_while_statement() {
 	auto body = parse_statement();
 	CHECK_AND_RETURN(result, body);
 
-	auto e = m_ast_allocator->make<AST::WhileStatement>();
+	auto e = m_ast_allocator->make<CST::WhileStatement>();
 	e->m_condition = condition.m_result;
 	e->m_body = body.m_result;
 
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<AST::AST*> Parser::parse_match_expression() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_match_expression() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse match expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_MATCH);
@@ -871,7 +871,7 @@ Writer<AST::AST*> Parser::parse_match_expression() {
 	REQUIRE(result, TokenTag::PAREN_CLOSE);
 	REQUIRE(result, TokenTag::BRACE_OPEN);
 
-	std::vector<AST::MatchExpression::CaseData> cases;
+	std::vector<CST::MatchExpression::CaseData> cases;
 	while (!consume(TokenTag::BRACE_CLOSE)) {
 		auto case_name = require(TokenTag::IDENTIFIER);
 		CHECK_AND_RETURN(result, case_name);
@@ -893,39 +893,39 @@ Writer<AST::AST*> Parser::parse_match_expression() {
 		     expression.m_result});
 	}
 
-	AST::Identifier matchee;
+	CST::Identifier matchee;
 	matchee.m_token = matchee_and_hint.m_result.first;
 
-	auto match = m_ast_allocator->make<AST::MatchExpression>();
+	auto match = m_ast_allocator->make<CST::MatchExpression>();
 	match->m_matchee = std::move(matchee);
 	match->m_type_hint = matchee_and_hint.m_result.second;
 	match->m_cases = std::move(cases);
 
-	return make_writer<AST::AST*>(match);
+	return make_writer<CST::CST*>(match);
 }
 
-Writer<AST::AST*> Parser::parse_sequence_expression() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_sequence_expression() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse sequence expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_SEQ);
 	auto body = parse_block();
 	CHECK_AND_RETURN(result, body);
 
-	auto expr = m_ast_allocator->make<AST::SequenceExpression>();
-	expr->m_body = static_cast<AST::Block*>(body.m_result);
+	auto expr = m_ast_allocator->make<CST::SequenceExpression>();
+	expr->m_body = static_cast<CST::Block*>(body.m_result);
 
-	return make_writer<AST::AST*>(expr);
+	return make_writer<CST::CST*>(expr);
 }
 
-Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool required_type) {
-	Writer<std::pair<Token const*, AST::AST*>> result = {
+Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool required_type) {
+	Writer<std::pair<Token const*, CST::CST*>> result = {
 	    {"Parse Error: Failed to parse name and type"}};
 
 	auto name = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, name);
 
-	Writer<AST::AST*> type;
+	Writer<CST::CST*> type;
 	if (required_type or match(TokenTag::DECLARE)) {
 		REQUIRE(result, TokenTag::DECLARE);
 
@@ -933,7 +933,7 @@ Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool requ
 		CHECK_AND_RETURN(result, type);
 	}
 
-	return make_writer<std::pair<Token const*, AST::AST*>>(
+	return make_writer<std::pair<Token const*, CST::CST*>>(
 	    {name.m_result, type.m_result});
 }
 
@@ -942,8 +942,8 @@ Writer<std::pair<Token const*, AST::AST*>> Parser::parse_name_and_type(bool requ
  * parse. This prevents us from backtracking and ensures the parser runs in
  * linear time.
  */
-Writer<AST::AST*> Parser::parse_statement() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_statement() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse statement"}};
 
 	auto* p0 = peek(0);
@@ -956,7 +956,7 @@ Writer<AST::AST*> Parser::parse_statement() {
 			auto declaration = parse_declaration();
 			CHECK_AND_RETURN(result, declaration);
 
-			return make_writer<AST::AST*>(declaration.m_result);
+			return make_writer<CST::CST*>(declaration.m_result);
 		} else {
 			auto expression = parse_expression();
 			CHECK_AND_RETURN(result, expression);
@@ -994,13 +994,13 @@ Writer<AST::AST*> Parser::parse_statement() {
 	return result;
 }
 
-Writer<std::vector<AST::AST*>> Parser::parse_type_term_arguments() {
-	Writer<std::vector<AST::AST*>> result = {
+Writer<std::vector<CST::CST*>> Parser::parse_type_term_arguments() {
+	Writer<std::vector<CST::CST*>> result = {
 	    {"Parse Error: Failed to parse type arguments"}};
 
 	REQUIRE(result, TokenTag::POLY_OPEN);
 
-	std::vector<AST::AST*> args;
+	std::vector<CST::CST*> args;
 
 	while (!consume(TokenTag::POLY_CLOSE)) {
 		auto arg = parse_type_term();
@@ -1012,32 +1012,32 @@ Writer<std::vector<AST::AST*>> Parser::parse_type_term_arguments() {
 	return make_writer(std::move(args));
 }
 
-Writer<AST::AST*> Parser::parse_type_term() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_type_term() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse type"}};
 
 	auto callee = parse_identifier(true);
 	CHECK_AND_RETURN(result, callee);
 
 	if (!match(TokenTag::POLY_OPEN))
-		return make_writer<AST::AST*>(callee.m_result);
+		return make_writer<CST::CST*>(callee.m_result);
 
 	auto args = parse_type_term_arguments();
 	CHECK_AND_RETURN(result, args);
 
-	auto e = m_ast_allocator->make<AST::TypeTerm>();
+	auto e = m_ast_allocator->make<CST::TypeTerm>();
 	e->m_callee = callee.m_result;
 	e->m_args = std::move(args.m_result);
-	return make_writer<AST::AST*>(e);
+	return make_writer<CST::CST*>(e);
 }
 
-Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> Parser::parse_type_list(
+Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::parse_type_list(
     bool with_identifiers = false) {
-	Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>>
+	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>>
 	    result = {{"Parse Error: Failed to parse type list"}};
 
-	std::vector<AST::Identifier> identifiers;
-	std::vector<AST::AST*> types;
+	std::vector<CST::Identifier> identifiers;
+	std::vector<CST::CST*> types;
 
 	REQUIRE(result, TokenTag::BRACE_OPEN);
 
@@ -1058,12 +1058,12 @@ Writer<std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>> Parser::
 	}
 
 	return make_writer<
-	    std::pair<std::vector<AST::Identifier>, std::vector<AST::AST*>>>(
+	    std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>>(
 	    make_pair(std::move(identifiers), std::move(types)));
 }
 
-Writer<AST::AST*> Parser::parse_type_var() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_type_var() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse type var"}};
 
 	REQUIRE(result, TokenTag::AT);
@@ -1071,42 +1071,42 @@ Writer<AST::AST*> Parser::parse_type_var() {
 	auto token = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, token);
 
-	auto t = m_ast_allocator->make<AST::TypeVar>();
+	auto t = m_ast_allocator->make<CST::TypeVar>();
 	t->m_token = token.m_result;
 
-	return make_writer<AST::AST*>(t);
+	return make_writer<CST::CST*>(t);
 }
 
-Writer<AST::AST*> Parser::parse_type_function() {
-	Writer<AST::AST*> result = {
+Writer<CST::CST*> Parser::parse_type_function() {
+	Writer<CST::CST*> result = {
 	    {"Parse Error: Failed to parse type function"}};
 
 	if (consume(TokenTag::KEYWORD_UNION)) {
 		auto tl = parse_type_list(true);
 		CHECK_AND_RETURN(result, tl);
 
-		auto u = m_ast_allocator->make<AST::UnionExpression>();
+		auto u = m_ast_allocator->make<CST::UnionExpression>();
 		u->m_constructors = std::move(tl.m_result.first);
 		u->m_types = std::move(tl.m_result.second);
 
-		return make_writer<AST::AST*>(u);
+		return make_writer<CST::CST*>(u);
 	} else if (consume(TokenTag::KEYWORD_TUPLE)) {
 		auto tl = parse_type_list(false);
 		CHECK_AND_RETURN(result, tl);
 
-		auto t = m_ast_allocator->make<AST::TupleExpression>();
+		auto t = m_ast_allocator->make<CST::TupleExpression>();
 		t->m_types = std::move(tl.m_result.second);
 
-		return make_writer<AST::AST*>(t);
+		return make_writer<CST::CST*>(t);
 	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
 		auto tl = parse_type_list(true);
 		CHECK_AND_RETURN(result, tl);
 
-		auto s = m_ast_allocator->make<AST::StructExpression>();
+		auto s = m_ast_allocator->make<CST::StructExpression>();
 		s->m_fields = std::move(tl.m_result.first);
 		s->m_types = std::move(tl.m_result.second);
 
-		return make_writer<AST::AST*>(s);
+		return make_writer<CST::CST*>(s);
 	}
 
 	return result;

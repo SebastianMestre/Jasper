@@ -1,10 +1,21 @@
 #pragma once
 
 #include <string>
+#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
+#include <climits>
+
+#include "./utils/interned_string.hpp"
+#include "typechecker_types.hpp"
 #include "ast_tag.hpp"
-#include "token.hpp"
+
+struct Token;
+
+namespace CST {
+struct CST;
+}
 
 namespace AST {
 
@@ -13,29 +24,53 @@ struct AST {
 	ASTTag m_type;
 
   public:
-	AST() = default;
 	AST(ASTTag type)
 	    : m_type {type} {}
 
+	CST::CST* m_cst {nullptr};
+	MetaTypeId m_meta_type {-1};
+	// is not set on polymorphic declarations and typefuncs (TODO: refactor)
+	MonoId m_value_type {-1};
 	ASTTag type() const {
 		return m_type;
 	}
 	virtual ~AST() = default;
 };
 
+struct Allocator;
+
+AST* convert_ast(CST::CST*, Allocator& alloc);
+
+struct FunctionLiteral;
+struct SequenceExpression;
+
 struct Declaration : public AST {
-	Token const* m_identifier_token;
+	InternedString m_identifier;
+
 	AST* m_type_hint {nullptr};  // can be nullptr
 	AST* m_value {nullptr}; // can be nullptr
 
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text.str();
+	std::unordered_set<Declaration*> m_references;
+
+	bool m_is_polymorphic {false};
+	PolyId m_decl_type;
+
+	int m_frame_offset {INT_MIN};
+
+	FunctionLiteral* m_surrounding_function {nullptr};
+	SequenceExpression* m_surrounding_seq_expr {nullptr};
+
+	bool is_global() const {
+		return !m_surrounding_function && !m_surrounding_seq_expr;
 	}
+
+	InternedString const& identifier_text() const;
 
 	Declaration()
 	    : AST {ASTTag::Declaration} {}
 };
 
+// doesnt have a ast_vtype
 struct DeclarationList : public AST {
 	std::vector<Declaration> m_declarations;
 
@@ -43,37 +78,35 @@ struct DeclarationList : public AST {
 	    : AST {ASTTag::DeclarationList} {}
 };
 
-struct IntegerLiteral : public AST {
-	bool m_negative {false};
-	Token const* m_sign {nullptr};
-	Token const* m_token;
-
-	std::string const& text() {
-		return m_token->m_text.str();
-	}
-
-	IntegerLiteral()
-	    : AST {ASTTag::IntegerLiteral} {}
-};
-
+// las estructuras como declaration list, index expression, block, if, for no tienen
+// tipo de valor asociado
 struct NumberLiteral : public AST {
-	bool m_negative {false};
-	Token const* m_sign {nullptr};
-	Token const* m_token;
+	float m_value;
 
-	std::string const& text() {
-		return m_token->m_text.str();
+	float value() const {
+		return m_value;
 	}
 
 	NumberLiteral()
 	    : AST {ASTTag::NumberLiteral} {}
 };
 
+struct IntegerLiteral : public AST {
+	int m_value;
+
+	int value() const {
+		return m_value;
+	}
+
+	IntegerLiteral()
+	    : AST {ASTTag::IntegerLiteral} {}
+};
+
 struct StringLiteral : public AST {
-	Token const* m_token;
+	InternedString m_text;
 
 	std::string const& text() {
-		return m_token->m_text.str();
+		return m_text.str();
 	}
 
 	StringLiteral()
@@ -81,11 +114,7 @@ struct StringLiteral : public AST {
 };
 
 struct BooleanLiteral : public AST {
-	Token const* m_token;
-
-	std::string const& text() {
-		return m_token->m_text.str();
-	}
+	bool m_value;
 
 	BooleanLiteral()
 	    : AST {ASTTag::BooleanLiteral} {}
@@ -111,42 +140,44 @@ struct DictionaryLiteral : public AST {
 	    : AST {ASTTag::DictionaryLiteral} {}
 };
 
-struct BlockFunctionLiteral : public AST {
-	AST* m_body;
-	std::vector<Declaration> m_args;
-
-	BlockFunctionLiteral()
-	    : AST {ASTTag::BlockFunctionLiteral} {}
-};
-
 struct FunctionLiteral : public AST {
+	struct CaptureData {
+		Declaration* outer_declaration{nullptr};
+		int outer_frame_offset{INT_MIN};
+		int inner_frame_offset{INT_MIN};
+	};
+
+	MonoId m_return_type;
 	AST* m_body;
 	std::vector<Declaration> m_args;
+	std::unordered_map<InternedString, CaptureData> m_captures;
+	FunctionLiteral* m_surrounding_function {nullptr};
 
 	FunctionLiteral()
 	    : AST {ASTTag::FunctionLiteral} {}
 };
 
+// the ast_vtype must be computed
 struct Identifier : public AST {
-	Token const* m_token;
+	enum class Origin { Global, Capture, Local };
 
-	std::string const& text() {
-		return m_token->m_text.str();
+	InternedString m_text;
+	Declaration* m_declaration {nullptr}; // can be nullptr
+	FunctionLiteral* m_surrounding_function {nullptr};
+
+	Origin m_origin;
+	int m_frame_offset {INT_MIN};
+
+	Token const* token() const;
+	InternedString const& text() const {
+		return m_text;
 	}
 
 	Identifier()
 	    : AST {ASTTag::Identifier} {}
 };
 
-struct BinaryExpression : public AST {
-	Token const* m_op_token;
-	AST* m_lhs;
-	AST* m_rhs;
-
-	BinaryExpression()
-	    : AST {ASTTag::BinaryExpression} {}
-};
-
+// the value depends on the return value of callee
 struct CallExpression : public AST {
 	AST* m_callee;
 	std::vector<AST*> m_args;
@@ -165,7 +196,7 @@ struct IndexExpression : public AST {
 
 struct AccessExpression : public AST {
 	AST* m_record;
-	Token const* m_member;
+	InternedString m_member;
 
 	AccessExpression()
 	    : AST {ASTTag::AccessExpression} {}
@@ -182,16 +213,13 @@ struct TernaryExpression : public AST {
 
 struct MatchExpression : public AST {
 	struct CaseData {
-		Token const* m_name;
-		Token const* m_identifier;
-		AST* m_type_hint {nullptr};
+		Declaration m_declaration;
 		AST* m_expression;
 	};
 
-	// TODO: allow matching on arbitrary expressions
 	Identifier m_matchee;
 	AST* m_type_hint {nullptr};
-	std::vector<CaseData> m_cases;
+	std::unordered_map<InternedString, CaseData> m_cases;
 
 	MatchExpression()
 	    : AST {ASTTag::MatchExpression} {}
@@ -223,6 +251,7 @@ struct Block : public AST {
 
 struct ReturnStatement : public AST {
 	AST* m_value;
+	SequenceExpression* m_surrounding_seq_expr;
 
 	ReturnStatement()
 	    : AST {ASTTag::ReturnStatement} {}
@@ -255,29 +284,7 @@ struct WhileStatement : public AST {
 	    : AST {ASTTag::WhileStatement} {}
 };
 
-struct TypeTerm : public AST {
-	AST* m_callee;
-	std::vector<AST*> m_args;
-
-	TypeTerm()
-	    : AST {ASTTag::TypeTerm} {}
-};
-
-// A TypeVar is a name, bound to a type variable of any kind.
-// e.g. a type function, a polytype or a monotype
-struct TypeVar : public AST {
-	Token const* m_token;
-
-	std::string const& text() {
-		return m_token->m_text.str();
-	}
-
-	TypeVar()
-	    : AST {ASTTag::TypeVar} {}
-};
-
 struct UnionExpression : public AST {
-	// TODO: better storage?
 	std::vector<Identifier> m_constructors;
 	std::vector<AST*> m_types;
 
@@ -285,15 +292,7 @@ struct UnionExpression : public AST {
 	    : AST {ASTTag::UnionExpression} {}
 };
 
-struct TupleExpression : public AST {
-	std::vector<AST*> m_types;
-
-	TupleExpression()
-	    : AST {ASTTag::TupleExpression} {}
-};
-
 struct StructExpression : public AST {
-	// TODO: better storage?
 	std::vector<Identifier> m_fields;
 	std::vector<AST*> m_types;
 
@@ -301,6 +300,40 @@ struct StructExpression : public AST {
 	    : AST {ASTTag::StructExpression} {}
 };
 
-void print(AST*, int);
+struct TypeTerm : public AST {
+	AST* m_callee;
+	std::vector<AST*> m_args; // should these be TypeTerms?
+
+	TypeTerm()
+	    : AST {ASTTag::TypeTerm} {}
+};
+
+struct TypeFunctionHandle : public AST {
+	TypeFunctionId m_value;
+	// points to the ast node this one was made from
+	AST* m_syntax;
+
+	TypeFunctionHandle()
+	    : AST {ASTTag::TypeFunctionHandle} {}
+};
+
+struct MonoTypeHandle : public AST {
+	MonoId m_value;
+	// points to the ast node this one was made from
+	AST* m_syntax;
+
+	MonoTypeHandle()
+	    : AST {ASTTag::MonoTypeHandle} {}
+};
+
+struct Constructor : public AST {
+	MonoId m_mono;
+	InternedString m_id;
+	// points to the ast node this one was made from
+	AST* m_syntax;
+
+	Constructor()
+	    : AST {ASTTag::Constructor} {}
+};
 
 } // namespace AST

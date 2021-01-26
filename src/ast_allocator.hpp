@@ -7,8 +7,7 @@
 namespace AST {
 
 struct Allocator {
-	static constexpr int small_size = 48;
-
+	static constexpr int small_size = 56;
 	PolymorphicBlockAllocator<AST> m_small;
 	PolymorphicDumbAllocator<AST> m_big;
 
@@ -24,7 +23,6 @@ struct Allocator {
 			return m_small.make<T>();
 		}
 	}
-
 };
 
 } // namespace AST

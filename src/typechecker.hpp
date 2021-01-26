@@ -5,7 +5,7 @@
 #include "utils/chunked_array.hpp"
 #include "utils/interned_string.hpp"
 
-namespace TypedAST {
+namespace AST {
 struct Allocator;
 struct Declaration;
 }
@@ -16,14 +16,14 @@ struct TypeChecker {
 
 	TypeSystemCore m_core;
 	Frontend::CompileTimeEnvironment m_env;
-	ChunkedArray<TypedAST::Declaration> m_builtin_declarations;
+	ChunkedArray<AST::Declaration> m_builtin_declarations;
 
-	TypedAST::Allocator* m_typed_ast_allocator;
+	AST::Allocator* m_ast_allocator;
 	bool m_in_last_metacheck_pass {false};
 
-	TypeChecker(TypedAST::Allocator& allocator);
+	TypeChecker(AST::Allocator& allocator);
 
-	TypedAST::Declaration* new_builtin_declaration(InternedString const& name);
+	AST::Declaration* new_builtin_declaration(InternedString const& name);
 	void declare_builtin_value(InternedString const& name, PolyId);
 	void declare_builtin_typefunc(InternedString const& name, TypeFunctionId);
 

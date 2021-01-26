@@ -1,355 +1,371 @@
-#include "ast.hpp"
-
+#include <cassert>
 #include <iostream>
+
+#include "./log/log.hpp"
+#include "cst.hpp"
+#include "ast.hpp"
+#include "ast_allocator.hpp"
 
 namespace AST {
 
-namespace {
+InternedString const& Declaration::identifier_text() const {
+	if (m_identifier.is_null()) {
+		if (!m_cst)
+			Log::fatal() << "No identifier string or fallback on declaration";
 
-constexpr int indent_width = 4;
-constexpr char tabc = ' ';
-static void print_indentation (int d) {
-	for(int i = d; i-- > 0;)
-		std::cout << tabc;
-}
+		auto cst = static_cast<CST::Declaration*>(m_cst);
+		auto token = cst->m_identifier_token;
 
-}
+		Log::warning() << "No identifier on declaration " << token->m_text << ": using token data as fallback";
 
-void print_impl(DeclarationList* ast, int d) {
-	print_indentation(d);
-	std::cout << "(decl-list";
-	for (auto& decl : ast->m_declarations) {
-		std::cout << "\n";
-		print(&decl, d + indent_width);
+		return token->m_text;
 	}
-	std::cout << ")";
+
+	return m_identifier;
 }
 
-void print_impl(Declaration* ast, int d) {
-	print_indentation(d);
-	std::cout << "(decl \"" << ast->identifier_text() << "\"\n";
-
-	print(ast->m_type_hint, d + 6);
-	std::cout << "\n";
-
-	print(ast->m_value, d + 6);
-	std::cout << ")";
+Token const* Identifier::token() const {
+	return static_cast<CST::Identifier*>(m_cst)->m_token;
 }
 
-void print_impl(NumberLiteral* ast, int d) {
-	print_indentation(d);
-	char const* sign = ast->m_negative ? "-" : "";
-	std::cout << "(number-literal \"" << sign << ast->text() << "\")";
+AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<IntegerLiteral>();
+	ast->m_value = std::stoi(cst->text());
+	if (cst->m_negative)
+		ast->m_value = -ast->m_value;
+	return ast;
 }
 
-void print_impl(IntegerLiteral* ast, int d) {
-	print_indentation(d);
-	char const* sign = ast->m_negative ? "-" : "";
-	std::cout << "(integer-literal \"" << sign << ast->text() << "\")";
+AST* convert_ast(CST::NumberLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<NumberLiteral>();
+	ast->m_value = std::stof(cst->text());
+	if (cst->m_negative)
+		ast->m_value = -ast->m_value;
+	return ast;
 }
 
-void print_impl(StringLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(string-literal \"" << ast->text() << "\")";
+AST* convert_ast(CST::StringLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<StringLiteral>();
+	ast->m_text = cst->m_token->m_text;
+	return ast;
 }
 
-void print_impl(BooleanLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(boolean-literal \"" << ast->text() << "\")";
+AST* convert_ast(CST::BooleanLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<BooleanLiteral>();
+	ast->m_value = cst->m_token->m_type == TokenTag::KEYWORD_TRUE;
+	return ast;
 }
 
-void print_impl(NullLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(null-literal)";
+AST* convert_ast(CST::NullLiteral* cst, Allocator& alloc) {
+	return alloc.make<NullLiteral>();
 }
 
-void print_impl(ArrayLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(array-literal";
-	for (auto elem : ast->m_elements) {
-		std::cout << "\n";
-		print(elem, d + indent_width);
+AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<ArrayLiteral>();
+
+	for (auto element : cst->m_elements) {
+		ast->m_elements.push_back(convert_ast(element, alloc));
 	}
-	std::cout << ")";
+
+	return ast;
 }
 
-void print_impl(DictionaryLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(dictionary-literal";
-	print_indentation(d+1);
-	for (auto decl : ast->m_body) {
-		std::cout << "\n";
-		print(&decl, d + indent_width);
+AST* convert_ast(CST::DictionaryLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<DictionaryLiteral>();
+
+	for (auto& element : cst->m_body) {
+		auto decl = static_cast<Declaration*>(convert_ast(&element, alloc));
+		ast->m_body.push_back(std::move(*decl));
 	}
-	std::cout << ")";
+
+	return ast;
 }
 
-void print_impl(Identifier* ast, int d) {
-	print_indentation(d);
-	std::cout << "(identifier \"" << ast->text() << "\")";
-}
+AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<FunctionLiteral>();
 
-void print_impl(Block* ast, int d) {
-	print_indentation(d);
-	std::cout << "(block-stmt ";
-	for (auto child : ast->m_body) {
-		std::cout << "\n";
-		print(child, d + indent_width);
+	for (auto& arg : cst->m_args) {
+		Declaration decl;
+
+		decl.m_cst = &arg;
+		decl.m_identifier = arg.m_identifier_token->m_text;
+		if (arg.m_type_hint)
+			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
+		decl.m_surrounding_function = ast;
+
+		ast->m_args.push_back(std::move(decl));
 	}
-	std::cout << ")";
+
+	ast->m_body = convert_ast(cst->m_body, alloc);
+
+	return ast;
 }
 
-void print_impl(BlockFunctionLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(function-literal (";
-	for (auto arg : ast->m_args) {
-		std::cout << "\n";
-		print(&arg, d + indent_width);
+AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
+	auto ast = alloc.make<Declaration>();
+
+	ast->m_cst = cst;
+	ast->m_identifier = cst->m_identifier_token->m_text;
+
+	if (cst->m_type_hint)
+		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
+
+	if (cst->m_value)
+		ast->m_value = convert_ast(cst->m_value, alloc);
+
+	return ast;
+}
+
+AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
+	auto ast = alloc.make<DeclarationList>();
+
+	for (auto& declaration : cst->m_declarations) {
+		auto decl = static_cast<Declaration*>(convert_ast(&declaration, alloc));
+		ast->m_declarations.push_back(std::move(*decl));
 	}
-	std::cout << ")\n";
 
-	print(ast->m_body, d + indent_width);
-
-	std::cout << ")";
+	return ast;
 }
 
-void print_impl(FunctionLiteral* ast, int d) {
-	print_indentation(d);
-	std::cout << "(short-function-literal (";
-	for (auto arg : ast->m_args) {
-		std::cout << "\n";
-		print(&arg, d + indent_width);
+AST* convert_ast(CST::Identifier* cst, Allocator& alloc) {
+	auto ast = alloc.make<Identifier>();
+	ast->m_cst = cst;
+	ast->m_text = cst->m_token->m_text;
+	return ast;
+}
+
+AST* convert_ast(CST::CallExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<CallExpression>();
+
+	for (auto arg : cst->m_args) {
+		ast->m_args.push_back(convert_ast(arg, alloc));
 	}
-	std::cout << ")\n";
 
-	print(ast->m_body, d + indent_width);
+	ast->m_callee = convert_ast(cst->m_callee, alloc);
 
-	std::cout << ")";
+	return ast;
 }
 
-void print_impl(BinaryExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(binary-expr\n";
+AST* convert_ast(CST::IndexExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<IndexExpression>();
 
-	print_indentation(d + indent_width);
-	std::cout << token_string[int(ast->m_op_token->m_type)] << '\n';
+	ast->m_callee = convert_ast(cst->m_callee, alloc);
+	ast->m_index = convert_ast(cst->m_index, alloc);
 
-	print(ast->m_lhs, d + indent_width);
-	std::cout << "\n";
-
-	print(ast->m_rhs, d + indent_width);
-
-	std::cout << ")";
+	return ast;
 }
 
-void print_impl(CallExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(call-expr\n";
-	print(ast->m_callee, d + indent_width);
-	for (auto arg : ast->m_args) {
-		std::cout << "\n";
-		print(arg, d + indent_width);
+AST* convert_ast(CST::TernaryExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<TernaryExpression>();
+
+	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_then_expr = convert_ast(cst->m_then_expr, alloc);
+	ast->m_else_expr = convert_ast(cst->m_else_expr, alloc);
+
+	return ast;
+}
+
+AST* convert_ast(CST::AccessExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<AccessExpression>();
+
+	ast->m_member = cst->m_member->m_text;
+	ast->m_record = convert_ast(cst->m_record, alloc);
+
+	return ast;
+}
+
+AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<MatchExpression>();
+
+	auto matchee = static_cast<Identifier*>(convert_ast(&cst->m_matchee, alloc));
+	ast->m_matchee = std::move(*matchee);
+
+	if (cst->m_type_hint)
+		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
+
+	std::unordered_map<InternedString, MatchExpression::CaseData> cases;
+	for (auto& case_data : cst->m_cases) {
+		auto case_name = case_data.m_name->m_text;
+
+		Declaration declaration;
+		// TODO: store match expression cst in declarations?
+		declaration.m_identifier = case_data.m_identifier->m_text;
+
+		if (case_data.m_type_hint)
+			declaration.m_type_hint = convert_ast(case_data.m_type_hint, alloc);
+
+		auto expression = convert_ast(case_data.m_expression, alloc);
+
+		auto insertion_result = cases.insert(
+		    {case_name,
+		     MatchExpression::CaseData {std::move(declaration), expression}});
+
+		assert(insertion_result.second);
 	}
-	std::cout << ")";
+
+	ast->m_cases = std::move(cases);
+
+	return ast;
 }
 
-void print_impl(IndexExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(index-expression\n";
-	print(ast->m_callee, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_index, d + indent_width);
-	std::cout << ")";
+AST* convert_ast(CST::ConstructorExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<ConstructorExpression>();
+
+	ast->m_constructor = convert_ast(cst->m_constructor, alloc);
+
+	for (auto& arg : cst->m_args)
+		ast->m_args.push_back(convert_ast(arg, alloc));
+
+	return ast;
 }
 
-void print_impl(AccessExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(access-expression\n";
-	print(ast->m_record, d + indent_width);
-	std::cout << "\n";
-	print_indentation(d + indent_width);
-	std::cout << "\"" << ast->m_member->m_text << "\"";
-	std::cout << ")";
+AST* convert_ast(CST::SequenceExpression* cst, Allocator& alloc) {
+	auto result = alloc.make<SequenceExpression>();
+	result->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
+	return result;
 }
 
-void print_impl(TernaryExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(ternary-expression\n";
-	print(ast->m_condition, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_then_expr, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_else_expr, d + indent_width);
-	std::cout << ")";
-}
+AST* convert_ast(CST::Block* cst, Allocator& alloc) {
+	auto ast = alloc.make<Block>();
 
-void print_impl(MatchExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(match-expression\n";
-	print(&ast->m_matchee, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_type_hint, d + indent_width);
-	for (auto const& case_data : ast->m_cases) {
-		std::cout << "\n";
-		print_indentation(d + indent_width + 1);
-		std::cout << "(\"" << case_data.m_name->m_text.str() << "\" \""
-		          << case_data.m_identifier->m_text.str() << "\"\n";
-		print(case_data.m_type_hint, d + indent_width + 1);
-		std::cout << "\n";
-		print(case_data.m_expression, d + indent_width + 1);
-		std::cout << ")";
+	for (auto element : cst->m_body) {
+		ast->m_body.push_back(convert_ast(element, alloc));
 	}
-	std::cout << ")";
+
+	return ast;
 }
 
-void print_impl(SequenceExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(sequence-expr";
-	print(ast->m_body, d + 2);
-	std::cout << ")";
+AST* convert_ast(CST::ReturnStatement* cst, Allocator& alloc) {
+	auto ast = alloc.make<ReturnStatement>();
+
+	ast->m_value = convert_ast(cst->m_value, alloc);
+
+	return ast;
 }
 
-void print_impl(ReturnStatement* ast, int d) {
-	print_indentation(d);
-	std::cout << "(return-stmt\n";
-	print(ast->m_value, d + indent_width);
-	std::cout << ")";
+AST* convert_ast(CST::IfElseStatement* cst, Allocator& alloc) {
+	auto ast = alloc.make<IfElseStatement>();
+
+	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_body = convert_ast(cst->m_body, alloc);
+
+	if (cst->m_else_body)
+		ast->m_else_body = convert_ast(cst->m_else_body, alloc);
+
+	return ast;
 }
 
-void print_impl(IfElseStatement* ast, int d) {
-	print_indentation(d);
-	std::cout << "(if-else-stmt\n";
-	print(ast->m_condition, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_body, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_else_body, d + indent_width);
-	std::cout << ")";
+AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
+	auto ast = alloc.make<ForStatement>();
+
+	auto decl = static_cast<Declaration*>(convert_ast(&cst->m_declaration, alloc));
+	ast->m_declaration = std::move(*decl);
+	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_action = convert_ast(cst->m_action, alloc);
+	ast->m_body = convert_ast(cst->m_body, alloc);
+
+	return ast;
 }
 
-void print_impl(ForStatement* ast, int d) {
-	print_indentation(d);
-	std::cout << "(for-stmt\n";
-	print(&ast->m_declaration, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_condition, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_action, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_body, d + indent_width);
-	std::cout << ")";
+AST* convert_ast(CST::WhileStatement* cst, Allocator& alloc) {
+	auto ast = alloc.make<WhileStatement>();
+
+	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_body = convert_ast(cst->m_body, alloc);
+
+	return ast;
 }
 
-void print_impl(WhileStatement* ast, int d) {
-	print_indentation(d);
-	std::cout << "(while-statement\n";
-	print(ast->m_condition, d + indent_width);
-	std::cout << "\n";
-	print(ast->m_body, d + indent_width);
-	std::cout << ")";
-}
+AST* convert_ast(CST::UnionExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<UnionExpression>();
 
-void print_impl(TypeTerm* ast, int d) {
-	print_indentation(d);
-	std::cout << "(type-term\n";
-	print(ast->m_callee, d + indent_width);
-	for (auto arg : ast->m_args) {
-		std::cout << "\n";
-		print(arg, d + indent_width);
+	for (auto& constructor : cst->m_constructors) {
+		auto field = static_cast<Identifier*>(convert_ast(&constructor, alloc));
+		ast->m_constructors.push_back(std::move(*field));
 	}
-	std::cout << ")";
-}
 
-void print_impl(UnionExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(union-expression ";
-	for (int i = 0; i < ast->m_constructors.size(); ++i) {
-		std::cout << "\n";
-		print_indentation(d + indent_width);
-		std::cout << "(\"" << ast->m_constructors[i].text() << "\"\n";
-		print(ast->m_types[i], d + indent_width + 1);
-		std::cout << ")";
+	for (auto type : cst->m_types) {
+		ast->m_types.push_back(convert_ast(type, alloc));
 	}
-	std::cout << ")";
-}
 
-void print_impl(StructExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(struct-expression ";
-	for (int i = 0; i < ast->m_fields.size(); ++i) {
-		std::cout << "\n";
-		print_indentation(d + indent_width);
-		std::cout << "(\"" << ast->m_fields[i].text() << "\"\n";
-		print(ast->m_types[i], d + indent_width + 1);
-		std::cout << ")";
+	return ast;
+};
+
+AST* convert_ast(CST::StructExpression* cst, Allocator& alloc) {
+	auto ast = alloc.make<StructExpression>();
+
+	for (auto& cst_field : cst->m_fields) {
+		auto field = static_cast<Identifier*>(convert_ast(&cst_field, alloc));
+		ast->m_fields.push_back(std::move(*field));
 	}
-	std::cout << ")";
-}
 
-void print_impl(ConstructorExpression* ast, int d) {
-	print_indentation(d);
-	std::cout << "(construct-expression\n";
-	print(ast->m_constructor, d + indent_width);
-	for (auto* arg : ast->m_args) {
-		std::cout << "\n";
-		print(arg, d + indent_width);
+	for (auto type : cst->m_types) {
+		ast->m_types.push_back(convert_ast(type, alloc));
 	}
-	std::cout << ")";
+
+	return ast;
+};
+
+AST* convert_ast(CST::TypeTerm* cst, Allocator& alloc) {
+	auto ast = alloc.make<TypeTerm>();
+
+	ast->m_callee = convert_ast(cst->m_callee, alloc);
+	for (auto arg : cst->m_args){
+		ast->m_args.push_back(convert_ast(arg, alloc));
+	}
+
+	return ast;
 }
 
-void print_impl(AST* ast, int d) {
+AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
-		return print_impl(static_cast<type*>(ast), d);
+	case CSTTag::type:                                                         \
+		return convert_ast(static_cast<CST::type*>(cst), alloc)
 
-	switch (ast->type()) {
-		DISPATCH(NumberLiteral)
-		DISPATCH(IntegerLiteral)
-		DISPATCH(StringLiteral)
-		DISPATCH(BooleanLiteral)
-		DISPATCH(NullLiteral)
-		DISPATCH(ArrayLiteral)
-		DISPATCH(DictionaryLiteral)
-		DISPATCH(BlockFunctionLiteral)
-		DISPATCH(FunctionLiteral)
+#define REJECT(type)                                                           \
+	case CSTTag::type:                                                         \
+		Log::fatal("use of " #type " is forbidden in convert")
 
-		DISPATCH(Identifier)
-		DISPATCH(BinaryExpression)
-		DISPATCH(CallExpression)
-		DISPATCH(IndexExpression)
-		DISPATCH(TernaryExpression)
-		DISPATCH(AccessExpression)
-		DISPATCH(SequenceExpression)
-		DISPATCH(MatchExpression)
-		DISPATCH(ConstructorExpression)
+	switch (cst->type()) {
+		DISPATCH(NumberLiteral);
+		DISPATCH(IntegerLiteral);
+		DISPATCH(StringLiteral);
+		DISPATCH(BooleanLiteral);
+		DISPATCH(NullLiteral);
+		DISPATCH(ArrayLiteral);
+		DISPATCH(DictionaryLiteral);
+		DISPATCH(FunctionLiteral);
+		REJECT(BlockFunctionLiteral);
 
-		DISPATCH(DeclarationList)
-		DISPATCH(Declaration)
+		DISPATCH(Identifier);
+		DISPATCH(CallExpression);
+		DISPATCH(IndexExpression);
+		DISPATCH(TernaryExpression);
+		DISPATCH(AccessExpression);
+		DISPATCH(MatchExpression);
+		DISPATCH(ConstructorExpression);
+		DISPATCH(SequenceExpression);
+		REJECT(BinaryExpression);
 
-		DISPATCH(Block)
-		DISPATCH(ReturnStatement)
-		DISPATCH(IfElseStatement)
-		DISPATCH(ForStatement)
-		DISPATCH(WhileStatement)
+		DISPATCH(Block);
+		DISPATCH(ReturnStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
 
-		DISPATCH(TypeTerm)
-		DISPATCH(UnionExpression)
-		DISPATCH(StructExpression)
+		DISPATCH(DeclarationList);
+		DISPATCH(Declaration);
+
+		DISPATCH(UnionExpression);
+		DISPATCH(StructExpression);
+		DISPATCH(TypeTerm);
 	}
 
+	Log::fatal() << "(internal) CST type not handled in convert_ast: "
+	             << cst_string[(int)cst->type()];
+
+#undef REJECT
 #undef DISPATCH
-
-	print_indentation(d);
-	std::cout << "(UNSUPPORTED " << ast_string[int(ast->type())] << ")";
-}
-
-void print(AST* ast, int d) {
-	if (!ast) {
-		print_indentation(d);
-		std::cout << "'()";
-	} else {
-		print_impl(ast, d);
-	}
 }
 
 } // namespace AST

@@ -1,7 +1,7 @@
 #pragma once
 
-namespace TypedAST {
-struct TypedAST;
+namespace AST {
+struct AST;
 }
 
 namespace TypeChecker {
@@ -17,5 +17,5 @@ struct TypeChecker;
  * PRECONDITION: match_identifiers has already been called
  * the given ast.
  */
-void typecheck(TypedAST::TypedAST* ast, TypeChecker&);
+void typecheck(AST::AST* ast, TypeChecker&);
 } // namespace TypeChecker

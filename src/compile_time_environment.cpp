@@ -1,7 +1,7 @@
 #include "compile_time_environment.hpp"
 
 #include "algorithms/tarjan_solver.hpp"
-#include "typed_ast.hpp"
+#include "ast.hpp"
 #include "log/log.hpp"
 
 #include <cassert>
@@ -14,15 +14,15 @@ Scope& CompileTimeEnvironment::current_scope() {
 	return m_scopes.empty() ? m_global_scope : m_scopes.back();
 }
 
-void CompileTimeEnvironment::declare(TypedAST::Declaration* decl) {
+void CompileTimeEnvironment::declare(AST::Declaration* decl) {
 	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
 
 	if (!insert_result.second)
 		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
 }
 
-TypedAST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
-	auto scan_scope = [](Scope& scope, InternedString const& name) -> TypedAST::Declaration* {
+AST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
+	auto scan_scope = [](Scope& scope, InternedString const& name) -> AST::Declaration* {
 		auto it = scope.m_vars.find(name);
 		if (it != scope.m_vars.end())
 			return it->second;
@@ -54,11 +54,11 @@ void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
 }
 
-TypedAST::SequenceExpression* CompileTimeEnvironment::current_seq_expr() {
+AST::SequenceExpression* CompileTimeEnvironment::current_seq_expr() {
 	return m_seq_expr_stack.empty() ? nullptr : m_seq_expr_stack.back();
 }
 
-void CompileTimeEnvironment::enter_seq_expr(TypedAST::SequenceExpression* seq_expr) {
+void CompileTimeEnvironment::enter_seq_expr(AST::SequenceExpression* seq_expr) {
 	m_seq_expr_stack.push_back(seq_expr);
 }
 
@@ -66,11 +66,11 @@ void CompileTimeEnvironment::exit_seq_expr() {
 	m_seq_expr_stack.pop_back();
 }
 
-TypedAST::FunctionLiteral* CompileTimeEnvironment::current_function() {
+AST::FunctionLiteral* CompileTimeEnvironment::current_function() {
 	return m_function_stack.empty() ? nullptr : m_function_stack.back();
 }
 
-void CompileTimeEnvironment::enter_function(TypedAST::FunctionLiteral* func) {
+void CompileTimeEnvironment::enter_function(AST::FunctionLiteral* func) {
 	m_function_stack.push_back(func);
 }
 
@@ -98,11 +98,11 @@ bool CompileTimeEnvironment::has_type_var(MonoId var) {
 	return scan_scope(m_global_scope, var);
 }
 
-TypedAST::Declaration* CompileTimeEnvironment::current_top_level_declaration() {
+AST::Declaration* CompileTimeEnvironment::current_top_level_declaration() {
 	return m_current_decl;
 }
 
-void CompileTimeEnvironment::enter_top_level_decl(TypedAST::Declaration* decl) {
+void CompileTimeEnvironment::enter_top_level_decl(AST::Declaration* decl) {
 	assert(!m_current_decl);
 	m_current_decl = decl;
 }
@@ -112,10 +112,10 @@ void CompileTimeEnvironment::exit_top_level_decl() {
 	m_current_decl = nullptr;
 }
 
-void CompileTimeEnvironment::compute_declaration_order(TypedAST::DeclarationList* ast) {
+void CompileTimeEnvironment::compute_declaration_order(AST::DeclarationList* ast) {
 
-	std::unordered_map<TypedAST::Declaration*, int> decl_to_index;
-	std::vector<TypedAST::Declaration*> index_to_decl;
+	std::unordered_map<AST::Declaration*, int> decl_to_index;
+	std::vector<AST::Declaration*> index_to_decl;
 
 	// assign a unique int to every top level declaration
 	int i = 0;
@@ -143,7 +143,7 @@ void CompileTimeEnvironment::compute_declaration_order(TypedAST::DeclarationList
 	solver.solve();
 
 	auto const& comps = solver.vertices_of_components();
-	std::vector<TypedAST::Declaration*> decl_comp;
+	std::vector<AST::Declaration*> decl_comp;
 	for (auto const& comp : comps) {
 		decl_comp.clear();
 		decl_comp.reserve(comp.size());

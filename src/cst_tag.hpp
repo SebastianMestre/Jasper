@@ -1,6 +1,6 @@
 #pragma once
 
-#define TYPED_AST_TAGS                                                         \
+#define CST_TAGS                                                               \
 	X(NumberLiteral)                                                           \
 	X(IntegerLiteral)                                                          \
 	X(StringLiteral)                                                           \
@@ -8,39 +8,43 @@
 	X(NullLiteral)                                                             \
 	X(ArrayLiteral)                                                            \
 	X(DictionaryLiteral)                                                       \
+	X(BlockFunctionLiteral)                                                    \
 	X(FunctionLiteral)                                                         \
-	/* All before this point are literals */                                   \
+                                                                               \
+	X(DeclarationList)                                                         \
+	X(Declaration)                                                             \
 	X(Identifier)                                                              \
+	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \
 	X(IndexExpression)                                                         \
 	X(AccessExpression)                                                        \
 	X(MatchExpression)                                                         \
-	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
 	X(SequenceExpression)                                                      \
-	/* All before this point are expressions */                                \
+                                                                               \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
+	X(TernaryExpression)                                                       \
 	X(ForStatement)                                                            \
 	X(WhileStatement)                                                          \
                                                                                \
-	X(DeclarationList)                                                         \
-	X(Declaration)                                                             \
-                                                                               \
-	X(UnionExpression)                                                         \
-	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
-	X(TypeFunctionHandle)                                                      \
-	X(MonoTypeHandle)                                                          \
-	X(Constructor)
+	X(TypeVar)                                                                 \
+	X(UnionExpression)                                                         \
+	X(TupleExpression)                                                         \
+	X(StructExpression)
 
 #define X(name) #name,
-constexpr const char* typed_ast_string[] = {TYPED_AST_TAGS};
+constexpr const char* cst_string[] = {
+	CST_TAGS
+};
 #undef X
 
 #define X(name) name,
-enum class TypedASTTag { TYPED_AST_TAGS };
+enum class CSTTag {
+	CST_TAGS
+};
 #undef X
 
-#undef TYPED_AST_TAGS
+#undef CST_TAGS

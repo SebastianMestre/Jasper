@@ -1,13 +1,13 @@
 #pragma once
 
-namespace TypedAST {
-struct TypedAST;
+namespace AST {
+struct AST;
 }
 
 namespace Interpreter {
 
 struct Interpreter;
 
-void eval(TypedAST::TypedAST*, Interpreter&);
+void eval(AST::AST*, Interpreter&);
 
 }

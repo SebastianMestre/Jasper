@@ -30,6 +30,7 @@ COMMON_TARGETS := \
 	ast \
 	compile_time_environment \
 	compute_offsets \
+	cst \
 	ct_eval \
 	desugar \
 	error_report \
@@ -41,7 +42,6 @@ COMMON_TARGETS := \
 	token \
 	typecheck \
 	typechecker \
-	typed_ast \
 	typesystem
 
 INTERPRETER_DIR := interpreter

@@ -2,14 +2,14 @@
 
 #include "./log/log.hpp"
 #include "typechecker.hpp"
-#include "typed_ast.hpp"
+#include "ast.hpp"
 
 #include <sstream>
 #include <cassert>
 
 namespace TypeChecker {
 
-static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc);
+static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
 void unsafe_assign_meta_type(MetaTypeId& target, MetaTypeId value) {
 	target = value;
@@ -25,11 +25,11 @@ void assign_meta_type(MetaTypeId& target, MetaTypeId value, TypeChecker& tc) {
 
 // literals
 
-void metacheck_literal(TypedAST::TypedAST* ast, TypeChecker& tc) {
+void metacheck_literal(AST::AST* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 }
 
-void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
+void metacheck(AST::ArrayLiteral* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	for (auto& element : ast->m_elements) {
@@ -40,12 +40,12 @@ void metacheck(TypedAST::ArrayLiteral* ast, TypeChecker& tc) {
 
 // expressions
 
-void metacheck(TypedAST::Identifier* ast, TypeChecker& tc) {
+void metacheck(AST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
 	assign_meta_type(ast->m_meta_type, ast->m_declaration->m_meta_type, tc);
 }
 
-void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
+void metacheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	for (auto& arg : ast->m_args) {
@@ -59,7 +59,7 @@ void metacheck(TypedAST::FunctionLiteral* ast, TypeChecker& tc) {
 	metacheck(ast->m_body, tc);
 }
 
-void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
+void metacheck(AST::CallExpression* ast, TypeChecker& tc) {
 	// TODO? maybe we would like to support compile time functions that return types eventually?
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
@@ -72,7 +72,7 @@ void metacheck(TypedAST::CallExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
+void metacheck(AST::IndexExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_callee, tc);
@@ -82,7 +82,7 @@ void metacheck(TypedAST::IndexExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_meta_core.unify(ast->m_index->m_meta_type, tc.meta_value());
 }
 
-void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
+void metacheck(AST::TernaryExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_condition, tc);
@@ -95,7 +95,7 @@ void metacheck(TypedAST::TernaryExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_meta_core.unify(ast->m_else_expr->m_meta_type, tc.meta_value());
 }
 
-void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
+void metacheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	// first time through metacheck
 	if (ast->m_meta_type == -1)
 		ast->m_meta_type = tc.new_meta_var();
@@ -128,7 +128,7 @@ void metacheck(TypedAST::AccessExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
+void metacheck(AST::MatchExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(&ast->m_matchee, tc);
@@ -151,7 +151,7 @@ void metacheck(TypedAST::MatchExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
+void metacheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 
 	metacheck(ast->m_constructor, tc);
@@ -162,19 +162,19 @@ void metacheck(TypedAST::ConstructorExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::SequenceExpression* ast, TypeChecker& tc) {
+void metacheck(AST::SequenceExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_value(), tc);
 	metacheck(ast->m_body, tc);
 }
 
 // statements
 
-void metacheck(TypedAST::Block* ast, TypeChecker& tc) {
+void metacheck(AST::Block* ast, TypeChecker& tc) {
 	for (auto& child : ast->m_body)
 		metacheck(child, tc);
 }
 
-void metacheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
+void metacheck(AST::IfElseStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(ast->m_condition->m_meta_type, tc.meta_value());
 
@@ -184,7 +184,7 @@ void metacheck(TypedAST::IfElseStatement* ast, TypeChecker& tc) {
 		metacheck(ast->m_else_body, tc);
 }
 
-void metacheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
+void metacheck(AST::ForStatement* ast, TypeChecker& tc) {
 	metacheck(&ast->m_declaration, tc);
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(
@@ -194,7 +194,7 @@ void metacheck(TypedAST::ForStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_body, tc);
 }
 
-void metacheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
+void metacheck(AST::WhileStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(
 	    ast->m_condition->m_meta_type, tc.meta_value());
@@ -202,13 +202,13 @@ void metacheck(TypedAST::WhileStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_body, tc);
 }
 
-void metacheck(TypedAST::ReturnStatement* ast, TypeChecker& tc) {
+void metacheck(AST::ReturnStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_value, tc);
 }
 
 // declarations
 
-static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecker& tc) {
+static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc) {
 	auto* type_hint = ast->m_type_hint;
 	if (type_hint) {
 		metacheck(type_hint, tc);
@@ -217,20 +217,20 @@ static void process_declaration_type_hint(TypedAST::Declaration* ast, TypeChecke
 	}
 }
 
-void process_declaration(TypedAST::Declaration* ast, TypeChecker& tc) {
+void process_declaration(AST::Declaration* ast, TypeChecker& tc) {
 	process_declaration_type_hint(ast, tc);
 	metacheck(ast->m_value, tc);
 	tc.m_core.m_meta_core.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
 
-void metacheck(TypedAST::Declaration* ast, TypeChecker& tc) {
+void metacheck(AST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_meta_type == -1)
 		ast->m_meta_type = tc.new_meta_var();
 
 	process_declaration(ast, tc);
 }
 
-void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
+void metacheck(AST::DeclarationList* ast, TypeChecker& tc) {
 	for (auto& decl : ast->m_declarations)
 		// this is OK because we haven't done any metachecking yet.
 		unsafe_assign_meta_type(decl.m_meta_type, tc.new_meta_var());
@@ -261,7 +261,7 @@ void metacheck(TypedAST::DeclarationList* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
+void metacheck(AST::UnionExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
@@ -270,7 +270,7 @@ void metacheck(TypedAST::UnionExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
+void metacheck(AST::StructExpression* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_typefunc(), tc);
 
 	for (auto& type : ast->m_types) {
@@ -279,7 +279,7 @@ void metacheck(TypedAST::StructExpression* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
+void metacheck(AST::TypeTerm* ast, TypeChecker& tc) {
 	assign_meta_type(ast->m_meta_type, tc.meta_monotype(), tc);
 
 	metacheck(ast->m_callee, tc);
@@ -291,17 +291,17 @@ void metacheck(TypedAST::TypeTerm* ast, TypeChecker& tc) {
 	}
 }
 
-void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
+void metacheck(AST::AST* ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
-	case TypedASTTag::type:                                                    \
-		return void(metacheck(static_cast<TypedAST::type*>(ast), tc))
+	case ASTTag::type:                                                    \
+		return void(metacheck(static_cast<AST::type*>(ast), tc))
 
 #define LITERAL(type)                                                          \
-	case TypedASTTag::type:                                                    \
+	case ASTTag::type:                                                    \
 		return void(metacheck_literal(ast, tc))
 
 #define REJECT(type)                                                          \
-	case TypedASTTag::type:                                                    \
+	case ASTTag::type:                                                    \
 		assert(0);
 
 	switch (ast->type()) {
@@ -341,7 +341,7 @@ void metacheck(TypedAST::TypedAST* ast, TypeChecker& tc) {
 	}
 
 	Log::fatal() << "(internal) Unhandled case in metacheck : "
-	             << typed_ast_string[int(ast->type())];
+	             << ast_string[int(ast->type())];
 
 #undef DISPATCH
 #undef LITERAL

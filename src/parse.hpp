@@ -5,9 +5,9 @@
 #include "parser.hpp"
 #include "token_array.hpp"
 
-namespace AST {
+namespace CST {
 struct Allocator;
 }
 
-Writer<AST::AST*> parse_program(std::string const&, TokenArray&, AST::Allocator&);
-Writer<AST::AST*> parse_expression(std::string const&, TokenArray&, AST::Allocator&);
+Writer<CST::CST*> parse_program(std::string const&, TokenArray&, CST::Allocator&);
+Writer<CST::CST*> parse_expression(std::string const&, TokenArray&, CST::Allocator&);

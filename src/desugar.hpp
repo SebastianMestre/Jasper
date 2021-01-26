@@ -1,10 +1,10 @@
 #pragma once
 
-namespace AST {
+namespace CST {
 
-struct AST;
+struct CST;
 struct Allocator;
 
-AST* desugar(AST*, Allocator&);
+CST* desugar(CST*, Allocator&);
 
-} // namespace AST
+} // namespace CST

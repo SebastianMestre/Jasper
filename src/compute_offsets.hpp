@@ -1,13 +1,13 @@
 #pragma once
 
-namespace TypedAST {
+namespace AST {
 
-struct TypedAST;
+struct AST;
 
 }
 
 namespace TypeChecker {
 
-void compute_offsets(TypedAST::TypedAST* ast, int frame_offset);
+void compute_offsets(AST::AST* ast, int frame_offset);
 
 }

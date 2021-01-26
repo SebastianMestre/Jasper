@@ -1,7 +1,7 @@
 #pragma once
 
-namespace TypedAST {
-struct TypedAST;
+namespace AST {
+struct AST;
 struct Allocator;
 }
 
@@ -9,6 +9,6 @@ namespace TypeChecker {
 
 struct TypeChecker;
 
-TypedAST::TypedAST* ct_eval(TypedAST::TypedAST*, TypeChecker& tc, TypedAST::Allocator& alloc);
+AST::AST* ct_eval(AST::AST*, TypeChecker& tc, AST::Allocator& alloc);
 
 } // namespace TypeChecker
