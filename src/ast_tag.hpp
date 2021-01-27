@@ -7,7 +7,6 @@
 	X(BooleanLiteral)                                                          \
 	X(NullLiteral)                                                             \
 	X(ArrayLiteral)                                                            \
-	X(DictionaryLiteral)                                                       \
 	X(FunctionLiteral)                                                         \
 	/* All before this point are literals */                                   \
 	X(Identifier)                                                              \

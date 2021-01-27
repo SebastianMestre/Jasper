@@ -70,17 +70,6 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::DictionaryLiteral* cst, Allocator& alloc) {
-	auto ast = alloc.make<DictionaryLiteral>();
-
-	for (auto& element : cst->m_body) {
-		auto decl = static_cast<Declaration*>(convert_ast(&element, alloc));
-		ast->m_body.push_back(std::move(*decl));
-	}
-
-	return ast;
-}
-
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
@@ -333,7 +322,6 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
 		DISPATCH(ArrayLiteral);
-		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
 		REJECT(BlockFunctionLiteral);
 

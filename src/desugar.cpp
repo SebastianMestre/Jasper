@@ -33,13 +33,6 @@ CST* desugar(ArrayLiteral* cst, Allocator& alloc) {
 	return cst;
 }
 
-CST* desugar(DictionaryLiteral* cst, Allocator& alloc) {
-	for (int i = 0; i < cst->m_body.size(); ++i)
-		desugar(&cst->m_body[i], alloc);
-
-	return cst;
-}
-
 CST* desugar(FunctionLiteral* cst, Allocator& alloc) {
 	cst->m_body = desugar(cst->m_body, alloc);
 
@@ -210,7 +203,6 @@ CST* desugar(CST* cst, Allocator& alloc) {
 		RETURN(BooleanLiteral);
 		RETURN(NullLiteral);
 		DISPATCH(ArrayLiteral);
-		DISPATCH(DictionaryLiteral);
 		DISPATCH(BlockFunctionLiteral);
 		DISPATCH(FunctionLiteral);
 

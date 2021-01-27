@@ -17,7 +17,6 @@ struct BuiltinType {
 	static constexpr TypeFunctionId Float {2};
 	static constexpr TypeFunctionId String {3};
 	static constexpr TypeFunctionId Array {4};
-	static constexpr TypeFunctionId Dictionary {5};
 	static constexpr TypeFunctionId Boolean {6};
 	static constexpr TypeFunctionId Unit {7};
 	static constexpr int amount_ {8};

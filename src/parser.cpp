@@ -506,12 +506,6 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		return expr;
 	}
 
-	if (token->m_type == TokenTag::KEYWORD_DICT) {
-		auto dictionary = parse_dictionary_literal();
-		CHECK_AND_RETURN(result, dictionary);
-		return dictionary;
-	}
-
 	if (token->m_type == TokenTag::KEYWORD_ARRAY) {
 		auto array = parse_array_literal();
 		CHECK_AND_RETURN(result, array);
@@ -589,9 +583,7 @@ Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 
 	Token const* token;
 
-	if (types_allowed and
-	   (match(TokenTag::KEYWORD_DICT) or
-	    match(TokenTag::KEYWORD_ARRAY))) {
+	if (types_allowed and match(TokenTag::KEYWORD_ARRAY)) {
 		token = peek();
 		m_lexer->advance();
 	} else {
@@ -619,23 +611,6 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 
 	auto e = m_ast_allocator->make<CST::ArrayLiteral>();
 	e->m_elements = std::move(elements.m_result);
-
-	return make_writer<CST::CST*>(e);
-}
-
-Writer<CST::CST*> Parser::parse_dictionary_literal() {
-	Writer<CST::CST*> result = {
-	    {"Failed to parse dictionary literal"}};
-
-	REQUIRE(result, TokenTag::KEYWORD_DICT);
-	REQUIRE(result, TokenTag::BRACE_OPEN);
-
-	auto declarations = parse_declaration_list(TokenTag::BRACE_CLOSE);
-	CHECK_AND_RETURN(result, declarations);
-	REQUIRE(result, TokenTag::BRACE_CLOSE);
-
-	auto e = m_ast_allocator->make<CST::DictionaryLiteral>();
-	e->m_body = std::move(declarations.m_result);
 
 	return make_writer<CST::CST*>(e);
 }

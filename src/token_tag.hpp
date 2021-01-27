@@ -68,7 +68,6 @@ constexpr const char* token_string[] = {
 	"KEYWORD",
 
 	"KEYWORD_FN",
-	"KEYWORD_DICT",
 	"KEYWORD_ARRAY",
 	"KEYWORD_RETURN",
 	"KEYWORD_IF",
@@ -154,7 +153,6 @@ enum class TokenTag {
 	KEYWORD,
 
 	KEYWORD_FN,
-	KEYWORD_DICT,
 	KEYWORD_ARRAY,
 	KEYWORD_RETURN,
 	KEYWORD_IF,

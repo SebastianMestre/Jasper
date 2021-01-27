@@ -104,13 +104,6 @@ struct ArrayLiteral : public CST {
 	    : CST {CSTTag::ArrayLiteral} {}
 };
 
-struct DictionaryLiteral : public CST {
-	std::vector<Declaration> m_body;
-
-	DictionaryLiteral()
-	    : CST {CSTTag::DictionaryLiteral} {}
-};
-
 struct BlockFunctionLiteral : public CST {
 	CST* m_body;
 	std::vector<Declaration> m_args;

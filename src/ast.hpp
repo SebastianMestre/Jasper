@@ -133,13 +133,6 @@ struct ArrayLiteral : public AST {
 	    : AST {ASTTag::ArrayLiteral} {}
 };
 
-struct DictionaryLiteral : public AST {
-	std::vector<Declaration> m_body;
-
-	DictionaryLiteral()
-	    : AST {ASTTag::DictionaryLiteral} {}
-};
-
 struct FunctionLiteral : public AST {
 	struct CaptureData {
 		Declaration* outer_declaration{nullptr};

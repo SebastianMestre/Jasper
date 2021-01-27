@@ -46,7 +46,6 @@ struct Parser {
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
-	Writer<CST::CST*> parse_dictionary_literal();
 	Writer<std::vector<CST::CST*>> parse_argument_list();
 	Writer<CST::CST*> parse_block();
 	Writer<CST::CST*> parse_statement();

@@ -19,7 +19,6 @@ TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator
 	m_core.new_builtin_type_function(0);  // 2  | float
 	m_core.new_builtin_type_function(0);  // 3  | string
 	m_core.new_builtin_type_function(1);  // 4  | array
-	m_core.new_builtin_type_function(1);  // 5  | dictionary
 	m_core.new_builtin_type_function(0);  // 6  | boolean
 	m_core.new_builtin_type_function(0);  // 7  | unit
 
