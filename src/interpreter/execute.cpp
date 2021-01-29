@@ -5,7 +5,6 @@
 #include "../compute_offsets.hpp"
 #include "../cst_allocator.hpp"
 #include "../ct_eval.hpp"
-#include "../desugar.hpp"
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parse.hpp"
@@ -20,7 +19,7 @@
 
 namespace Interpreter {
 
-ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) {
+ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
 
 	TokenArray ta;
 	CST::Allocator cst_allocator;
@@ -31,38 +30,38 @@ ExitStatusTag execute(std::string const& source, bool dump_ast, Runner* runner) 
 		return ExitStatusTag::ParseError;
 	}
 
-	if (dump_ast)
-		print(parse_result.m_result, 1);
+	auto cst = parse_result.m_result;
+
+	if (dump_cst)
+		print(cst, 1);
 
 	// Can this even happen? parse_program should always either return a
 	// DeclarationList or an error
-	if (parse_result.m_result->type() != CSTTag::DeclarationList)
+	if (cst->type() != CSTTag::DeclarationList)
 		return ExitStatusTag::TopLevelTypeError;
 
-	auto desugared_ast = CST::desugar(parse_result.m_result, cst_allocator);
-
 	AST::Allocator ast_allocator;
-	auto top_level = AST::convert_ast(desugared_ast, ast_allocator);
+	auto ast = AST::convert_ast(cst, ast_allocator);
 	TypeChecker::TypeChecker tc{ast_allocator};
 
 	{
-		auto err = TypeChecker::match_identifiers(top_level, tc.m_env);
+		auto err = TypeChecker::match_identifiers(ast, tc.m_env);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;
 		}
 	}
-	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(top_level));
+	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
 
-	TypeChecker::metacheck(top_level, tc);
-	top_level = TypeChecker::ct_eval(top_level, tc, ast_allocator);
-	TypeChecker::typecheck(top_level, tc);
-	TypeChecker::compute_offsets(top_level, 0);
+	TypeChecker::metacheck(ast, tc);
+	ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
+	TypeChecker::typecheck(ast, tc);
+	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
 	Interpreter env = {&tc, &gc};
 	declare_native_functions(env);
-	eval(top_level, env);
+	eval(ast, env);
 
 	ExitStatusTag runner_exit_code = runner(env);
 
@@ -78,11 +77,12 @@ Value* eval_expression(const std::string& expr, Interpreter& env) {
 	CST::Allocator cst_allocator;
 	AST::Allocator ast_allocator;
 
-	auto top_level_call_cst = parse_expression(expr, ta, cst_allocator);
-	auto top_level_call = AST::convert_ast(top_level_call_cst.m_result, ast_allocator);
+	auto parse_result = parse_expression(expr, ta, cst_allocator);
+	auto cst = parse_result.m_result;
+	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	// TODO: return a gc_ptr
-	eval(top_level_call, env);
+	eval(ast, env);
 	auto value = env.m_stack.pop();
 	return value_of(value.get());
 }

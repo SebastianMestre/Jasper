@@ -72,31 +72,6 @@ Value* Record::getMember(Identifier const& id) {
 	}
 }
 
-Dictionary::Dictionary()
-    : Value(ValueTag::Dictionary) {}
-
-Dictionary::Dictionary(DictionaryType o)
-    : Value(ValueTag::Dictionary)
-    , m_value(std::move(o)) {}
-
-void Dictionary::addMember(StringType const& id, Value* v) {
-	m_value[id] = v;
-}
-
-Value* Dictionary::getMember(StringType const& id) {
-	auto it = m_value.find(id);
-	if (it == m_value.end()) {
-		// TODO: return RangeError
-		return nullptr;
-	} else {
-		return it->second;
-	}
-}
-
-void Dictionary::removeMember(StringType const& id) {
-	m_value.erase(id);
-}
-
 Variant::Variant(InternedString constructor)
     : Value(ValueTag::Variant)
     , m_constructor(constructor) {}
@@ -174,15 +149,6 @@ void gc_visit(Record* o) {
 		gc_visit(child.second);
 }
 
-void gc_visit(Dictionary* d) {
-	if (d->m_visited)
-		return;
-
-	d->m_visited = true;
-	for (auto child : d->m_value)
-		gc_visit(child.second);
-}
-
 void gc_visit(Variant* u) {
 	if (u->m_visited)
 		return;
@@ -227,8 +193,6 @@ void gc_visit(Value* v) {
 		return gc_visit(static_cast<Array*>(v));
 	case ValueTag::Record:
 		return gc_visit(static_cast<Record*>(v));
-	case ValueTag::Dictionary:
-		return gc_visit(static_cast<Dictionary*>(v));
 	case ValueTag::Variant:
 		return gc_visit(static_cast<Variant*>(v));
 	case ValueTag::Function:
@@ -293,12 +257,6 @@ void print(Record* o, int d) {
 	}
 }
 
-void print(Dictionary* m, int d) {
-	// TODO
-	print_spaces(d);
-	std::cout << value_string[int(m->type())] << '\n';
-}
-
 void print(Variant* m, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(m->type())] << " " << m->m_constructor << '\n';
@@ -355,8 +313,6 @@ void print(Value* v, int d) {
 		return print(static_cast<Array*>(v), d);
 	case ValueTag::Record:
 		return print(static_cast<Record*>(v), d);
-	case ValueTag::Dictionary:
-		return print(static_cast<Dictionary*>(v), d);
 	case ValueTag::Variant:
 		return print(static_cast<Variant*>(v), d);
 	case ValueTag::Function:

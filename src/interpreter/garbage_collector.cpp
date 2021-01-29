@@ -74,13 +74,6 @@ gc_ptr<Record> GC::new_record(RecordType declarations) {
 	return result;
 }
 
-gc_ptr<Dictionary> GC::new_dictionary(DictionaryType declarations) {
-	auto result = new Dictionary;
-	result->m_value = std::move(declarations);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<Array> GC::new_list(ArrayType elements) {
 	auto result = new Array;
 	result->m_value = std::move(elements);

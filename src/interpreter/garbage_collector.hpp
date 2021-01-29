@@ -32,7 +32,6 @@ struct GC {
 
 	auto new_variant(InternedString constructor, Value* v) -> gc_ptr<Variant>;
 	auto new_record(RecordType) -> gc_ptr<Record>;
-	auto new_dictionary(DictionaryType) -> gc_ptr<Dictionary>;
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_integer(int) -> gc_ptr<Integer>;
 	auto new_float(float) -> gc_ptr<Float>;

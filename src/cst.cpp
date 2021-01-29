@@ -73,17 +73,6 @@ void print_impl(ArrayLiteral* cst, int d) {
 	std::cout << ")";
 }
 
-void print_impl(DictionaryLiteral* cst, int d) {
-	print_indentation(d);
-	std::cout << "(dictionary-literal";
-	print_indentation(d+1);
-	for (auto decl : cst->m_body) {
-		std::cout << "\n";
-		print(&decl, d + indent_width);
-	}
-	std::cout << ")";
-}
-
 void print_impl(Identifier* cst, int d) {
 	print_indentation(d);
 	std::cout << "(identifier \"" << cst->text() << "\")";
@@ -309,7 +298,6 @@ void print_impl(CST* cst, int d) {
 		DISPATCH(BooleanLiteral)
 		DISPATCH(NullLiteral)
 		DISPATCH(ArrayLiteral)
-		DISPATCH(DictionaryLiteral)
 		DISPATCH(BlockFunctionLiteral)
 		DISPATCH(FunctionLiteral)
 

@@ -11,7 +11,6 @@
                                                                                \
 	X(Array)                                                                   \
 	X(Record)                                                                  \
-	X(Dictionary)                                                              \
 	X(Variant)                                                                 \
                                                                                \
 	X(Function)                                                                \

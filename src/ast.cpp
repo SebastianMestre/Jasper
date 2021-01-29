@@ -70,17 +70,6 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::DictionaryLiteral* cst, Allocator& alloc) {
-	auto ast = alloc.make<DictionaryLiteral>();
-
-	for (auto& element : cst->m_body) {
-		auto decl = static_cast<Declaration*>(convert_ast(&element, alloc));
-		ast->m_body.push_back(std::move(*decl));
-	}
-
-	return ast;
-}
-
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
@@ -97,6 +86,67 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	}
 
 	ast->m_body = convert_ast(cst->m_body, alloc);
+
+	return ast;
+}
+
+AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<FunctionLiteral>();
+
+	for (auto& arg : cst->m_args) {
+		Declaration decl;
+
+		decl.m_cst = &arg;
+		decl.m_identifier = arg.m_identifier_token->m_text;
+		if (arg.m_type_hint)
+			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
+		decl.m_surrounding_function = ast;
+
+		ast->m_args.push_back(std::move(decl));
+	}
+
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
+	ast->m_body = seq_expr;
+
+	return ast;
+}
+
+// convert pizza expressions into plain calls
+AST* convert_pizza(CST::BinaryExpression* cst, Allocator& alloc) {
+	// TODO: better error
+	if (cst->m_rhs->type() != CSTTag::CallExpression)
+		Log::fatal("parsing error: bad pizza");
+
+	auto ast = alloc.make<CallExpression>();
+
+	ast->m_args.push_back(convert_ast(cst->m_lhs, alloc));
+
+	auto call_cst = static_cast<CST::CallExpression*>(cst->m_rhs);
+	ast->m_callee = convert_ast(call_cst->m_callee, alloc);
+	for (auto arg : call_cst->m_args)
+		convert_ast(arg, alloc);
+
+	return ast;
+}
+
+// convert binary operators into calls
+AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
+	if (cst->m_op_token->m_type == TokenTag::PIZZA)
+		return convert_pizza(cst, alloc);
+
+	if (cst->m_op_token->m_type == TokenTag::DOT)
+		Log::fatal("found '.' used as a binary operator");
+	
+	auto ast = alloc.make<CallExpression>();
+
+	auto identifier = alloc.make<Identifier>();
+	identifier->m_text = cst->m_op_token->m_text;
+
+	ast->m_callee = identifier;
+
+	ast->m_args.push_back(convert_ast(cst->m_lhs, alloc));
+	ast->m_args.push_back(convert_ast(cst->m_rhs, alloc));
 
 	return ast;
 }
@@ -333,9 +383,8 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(BooleanLiteral);
 		DISPATCH(NullLiteral);
 		DISPATCH(ArrayLiteral);
-		DISPATCH(DictionaryLiteral);
 		DISPATCH(FunctionLiteral);
-		REJECT(BlockFunctionLiteral);
+		DISPATCH(BlockFunctionLiteral);
 
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
@@ -345,7 +394,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
-		REJECT(BinaryExpression);
+		DISPATCH(BinaryExpression);
 
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);

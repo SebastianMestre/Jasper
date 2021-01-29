@@ -14,7 +14,6 @@ template<> struct type_data<Boolean> { static constexpr auto tag = ValueTag::Boo
 template<> struct type_data<String> { static constexpr auto tag = ValueTag::String; };
 template<> struct type_data<Array> { static constexpr auto tag = ValueTag::Array; };
 template<> struct type_data<Record> { static constexpr auto tag = ValueTag::Record; };
-template<> struct type_data<Dictionary> { static constexpr auto tag = ValueTag::Dictionary; };
 template<> struct type_data<Variant> { static constexpr auto tag = ValueTag::Variant; };
 template<> struct type_data<Function> { static constexpr auto tag = ValueTag::Function; };
 template<> struct type_data<NativeFunction> { static constexpr auto tag = ValueTag::NativeFunction; };

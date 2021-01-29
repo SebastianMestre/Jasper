@@ -22,7 +22,6 @@ struct Reference;
 using Identifier = InternedString;
 using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value*>;
-using DictionaryType = std::unordered_map<StringType, Value*>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
@@ -100,17 +99,6 @@ struct Record : Value {
 
 	void addMember(Identifier const& id, Value* v);
 	Value* getMember(Identifier const& id);
-};
-
-struct Dictionary : Value {
-	DictionaryType m_value;
-
-	Dictionary();
-	Dictionary(DictionaryType);
-
-	void addMember(StringType const& id, Value* v);
-	Value* getMember(StringType const& id);
-	void removeMember(StringType const& id);
 };
 
 struct Variant : Value {

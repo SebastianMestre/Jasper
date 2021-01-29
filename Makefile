@@ -32,7 +32,6 @@ COMMON_TARGETS := \
 	compute_offsets \
 	cst \
 	ct_eval \
-	desugar \
 	error_report \
 	lexer \
 	match_identifiers \

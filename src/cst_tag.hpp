@@ -7,7 +7,6 @@
 	X(BooleanLiteral)                                                          \
 	X(NullLiteral)                                                             \
 	X(ArrayLiteral)                                                            \
-	X(DictionaryLiteral)                                                       \
 	X(BlockFunctionLiteral)                                                    \
 	X(FunctionLiteral)                                                         \
                                                                                \
