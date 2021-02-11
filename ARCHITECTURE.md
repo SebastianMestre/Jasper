@@ -11,15 +11,19 @@ test suite, and the playground. Respectively, these 3
 
 The general stages of running a Jasper program go as follows:
 
- - Parsing -- The parser produces a `CST`. This stores information about the
- source location of the different syntactic constructs in a program.
+ - Parsing -- The parser recognizes the syntactic stuctures in a Jasper program,
+ and produces a Concrete Syntax Tree (`CST`), which describes the syntactic
+ structure of a program in hierarchical fashion. Besides the plain structure, it
+ also stores information about the source location of said syntactic constructs.
  - AST Conversion -- We convert the `CST` into an `AST`, discarding source
- location information. We also de-sugar some constructs into simpler ones.
+ location information, and de-sugaring some constructs into simpler ones.
+ In the later stages, this data structure will also hold types and other semantic
+ information, like name bindings.
  - Symbol resolution -- We create a symbol table, and match every identifier to
  its declaration, while gathering references between global declarations.
  - Metatype inference -- validates that types and values are used in acceptable
  ways. (e.g. no saying that a variable has type 42) while eliminating certain
- ambiguities (e.g. is this identifier a type?).
+ ambiguities (e.g. does this identifier map to a type?).
  - Type evaluation -- We build data structures that represent types and
  relations between them.
  - Type inference -- For every declaration and expression, we infer a type using
