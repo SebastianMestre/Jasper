@@ -52,6 +52,6 @@ The tree-walk interpreter lives in the `src/interpreter/` directory.
 There are a few generally useful data structures in the `src/utils/` directory,
 and some more project-specific ones in the `src/algorithms/` directory.
 
-`src/test/` stores the implementation of the test runner, while `src/tests/`
+`src/test/` stores the implementation of the test runner, while `tests/`
 stores the content of the tests themselves. You will need to touch these in
 order to add new tests.
