@@ -43,14 +43,17 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 };
 
 void eval(AST::DeclarationList* ast, Interpreter& e) {
-	for (auto& decl : ast->m_declarations) {
-		auto ref = e.new_reference(e.null());
-		e.global_declare_direct(decl.identifier_text(), ref.get());
-		eval(decl.m_value, e);
-		auto value = e.m_stack.pop();
-		ref->m_value = value.get();
+	auto const& comps = *e.m_declaration_order;
+	for (auto const& comp : comps) {
+		for (auto decl : comp) {
+			auto ref = e.new_reference(e.null());
+			e.global_declare_direct(decl->identifier_text(), ref.get());
+			eval(decl->m_value, e);
+			auto value = e.m_stack.pop();
+			ref->m_value = value_of(value.get());
+		}
 	}
-};
+}
 
 void eval(AST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
