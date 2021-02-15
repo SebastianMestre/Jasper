@@ -153,6 +153,11 @@ void compute_offsets(AST::StructExpression* ast, int frame_offset) {
 		compute_offsets(type, frame_offset);
 }
 
+void compute_offsets(AST::UnionExpression* ast, int frame_offset) {
+	for (auto& type : ast->m_types)
+		compute_offsets(type, frame_offset);
+}
+
 void compute_offsets(AST::TypeTerm* ast, int frame_offset) {
 	compute_offsets(ast->m_callee, frame_offset);
 	for (auto& arg : ast->m_args)
@@ -196,6 +201,7 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(DeclarationList);
 
 		DISPATCH(StructExpression);
+		DISPATCH(UnionExpression);
 		DISPATCH(TypeTerm);
 
 		DO_NOTHING(TypeFunctionHandle);

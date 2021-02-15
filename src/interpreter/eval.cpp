@@ -351,11 +351,22 @@ void eval(AST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
-// TODO: include variant implementations? if so, remove duplication
+void eval(AST::StructExpression* ast, Interpreter& e) {
+	e.push_record_constructor(ast->m_fields);
+}
+
+void eval(AST::UnionExpression* ast, Interpreter& e) {
+	RecordType constructors;
+	for(auto& constructor : ast->m_constructors) {
+		constructors.insert(
+		    {constructor, e.m_gc->new_variant_constructor_raw(constructor)});
+	}
+	auto result = e.new_record(std::move(constructors));
+	e.m_stack.push(result.get());
+}
+
 void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
-	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
-	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_record_constructor(type_function_data.fields);
+	eval(ast->m_syntax, e);
 }
 
 void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
@@ -378,6 +389,10 @@ void eval(AST::Constructor* ast, Interpreter& e) {
 	} else {
 		Log::fatal("not implemented this type function for construction");
 	}
+}
+
+void eval(AST::TypeTerm* ast, Interpreter& e) {
+	eval(ast->m_callee, e);
 }
 
 void eval(AST::AST* ast, Interpreter& e) {
@@ -417,6 +432,9 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 
+		DISPATCH(TypeTerm);
+		DISPATCH(StructExpression);
+		DISPATCH(UnionExpression);
 		DISPATCH(TypeFunctionHandle);
 		DISPATCH(MonoTypeHandle);
 		DISPATCH(Constructor);
