@@ -330,8 +330,8 @@ AST* convert_ast(CST::UnionExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<UnionExpression>();
 
 	for (auto& constructor : cst->m_constructors) {
-		auto field = static_cast<Identifier*>(convert_ast(&constructor, alloc));
-		ast->m_constructors.push_back(std::move(*field));
+		auto field_name = static_cast<CST::Identifier&>(constructor).text();
+		ast->m_constructors.push_back(field_name);
 	}
 
 	for (auto type : cst->m_types) {
@@ -345,8 +345,8 @@ AST* convert_ast(CST::StructExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<StructExpression>();
 
 	for (auto& cst_field : cst->m_fields) {
-		auto field = static_cast<Identifier*>(convert_ast(&cst_field, alloc));
-		ast->m_fields.push_back(std::move(*field));
+		auto field_name = static_cast<CST::Identifier&>(cst_field).text();
+		ast->m_fields.push_back(field_name);
 	}
 
 	for (auto type : cst->m_types) {

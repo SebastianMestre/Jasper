@@ -13,7 +13,7 @@ enum class TypeFunctionTag { Builtin, Variant, Tuple, Record };
 // to tell how many arguments it takes. Else, for variant, tuple and record,
 // we store their structure as a hash from names to monotypes.
 //
-// Dummy type functions are for unifying purposes only, but do not count
+// Dummy type functions are for unification purposes only, but do not count
 // as 'deduced', because they were not created by the user/
 //
 // TODO: change for polymorphic approach
