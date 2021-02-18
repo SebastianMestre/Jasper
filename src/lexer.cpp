@@ -8,6 +8,11 @@
 
 #include "token_array.hpp"
 
+Token const& eof() {
+	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};
+	return t;
+}
+
 Lexer::Lexer(std::vector<char> source, TokenArray& tokens)
     : m_source {std::move(source)}
     , m_tokens {tokens}
@@ -199,6 +204,13 @@ bool Lexer::consume_symbol() {
 }
 
 void Lexer::consume_token() {
+	if (done()) return;
+
+	if (current_char() == '\0') {
+		m_tokens.push_back(eof());
+		m_done = true;
+		return;
+	}
 
 	if (current_char() == '/' && next_char() == '/') {
 		if (!consume_comment())
@@ -310,11 +322,6 @@ void Lexer::advance() {
 void Lexer::regress() {
 	assert(m_token_index > 0);
 	m_token_index -= 1;
-}
-
-Token const& eof() {
-	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};
-	return t;
 }
 
 Token const& Lexer::token_at(int index) {
