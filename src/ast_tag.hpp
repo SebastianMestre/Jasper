@@ -21,7 +21,6 @@
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
-	X(ForStatement)                                                            \
 	X(WhileStatement)                                                          \
                                                                                \
 	X(DeclarationList)                                                         \
