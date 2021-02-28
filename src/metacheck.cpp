@@ -184,16 +184,6 @@ void metacheck(AST::IfElseStatement* ast, TypeChecker& tc) {
 		metacheck(ast->m_else_body, tc);
 }
 
-void metacheck(AST::ForStatement* ast, TypeChecker& tc) {
-	metacheck(&ast->m_declaration, tc);
-	metacheck(ast->m_condition, tc);
-	tc.m_core.m_meta_core.unify(
-	    ast->m_condition->m_meta_type, tc.meta_value());
-
-	metacheck(ast->m_action, tc);
-	metacheck(ast->m_body, tc);
-}
-
 void metacheck(AST::WhileStatement* ast, TypeChecker& tc) {
 	metacheck(ast->m_condition, tc);
 	tc.m_core.m_meta_core.unify(
@@ -324,7 +314,6 @@ void metacheck(AST::AST* ast, TypeChecker& tc) {
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(ReturnStatement);
 

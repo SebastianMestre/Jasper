@@ -81,15 +81,6 @@ void compute_offsets(AST::ArrayLiteral* ast, int frame_offset) {
 		compute_offsets(element, frame_offset);
 }
 
-void compute_offsets(AST::ForStatement* ast, int frame_offset) {
-	auto& decl = ast->m_declaration;
-	decl.m_frame_offset = frame_offset++;
-	compute_offsets(&ast->m_declaration, frame_offset);
-	compute_offsets(ast->m_condition, frame_offset+1);
-	compute_offsets(ast->m_action, frame_offset+1);
-	compute_offsets(ast->m_body, frame_offset+1);
-}
-
 void compute_offsets(AST::WhileStatement* ast, int frame_offset) {
 	compute_offsets(ast->m_condition, frame_offset);
 	compute_offsets(ast->m_body, frame_offset);
@@ -187,7 +178,6 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);

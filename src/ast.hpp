@@ -259,16 +259,6 @@ struct IfElseStatement : public AST {
 	    : AST {ASTTag::IfElseStatement} {}
 };
 
-struct ForStatement : public AST {
-	Declaration m_declaration;
-	AST* m_condition;
-	AST* m_action;
-	AST* m_body;
-
-	ForStatement()
-	    : AST {ASTTag::ForStatement} {}
-};
-
 struct WhileStatement : public AST {
 	AST* m_condition;
 	AST* m_body;

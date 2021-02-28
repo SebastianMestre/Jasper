@@ -305,16 +305,35 @@ AST* convert_ast(CST::IfElseStatement* cst, Allocator& alloc) {
 	return ast;
 }
 
+/*
+desugar
+	for (x := e; p(x); x = f(x)) stmt;
+to
+	{ x := e; while (p(x)) { stmt; x = f(x); } }
+*/
 AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
-	auto ast = alloc.make<ForStatement>();
 
-	auto decl = static_cast<Declaration*>(convert_ast(&cst->m_declaration, alloc));
-	ast->m_declaration = std::move(*decl);
-	ast->m_condition = convert_ast(cst->m_condition, alloc);
-	ast->m_action = convert_ast(cst->m_action, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	auto body = convert_ast(cst->m_body, alloc);
+	auto block_body = [&] {
+		if (body->type() == ASTTag::Block)
+			return static_cast<Block*>(body);
+		auto inner_block = alloc.make<Block>();
+		inner_block->m_body.push_back(body);
+		return inner_block;
+	}();
 
-	return ast;
+	auto action = convert_ast(cst->m_action, alloc);
+	block_body->m_body.push_back(action);
+
+	auto while_ast = alloc.make<WhileStatement>();
+	while_ast->m_body = block_body;
+	while_ast->m_condition = convert_ast(cst->m_condition, alloc);;
+
+	auto outter_block_ast = alloc.make<Block>();
+	outter_block_ast->m_body.push_back(convert_ast(&cst->m_declaration, alloc));
+	outter_block_ast->m_body.push_back(while_ast);
+
+	return outter_block_ast;
 }
 
 AST* convert_ast(CST::WhileStatement* cst, Allocator& alloc) {

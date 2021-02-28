@@ -165,15 +165,6 @@ AST::IfElseStatement* ct_eval(
 	return ast;
 }
 
-AST::ForStatement* ct_eval(
-    AST::ForStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(&ast->m_declaration, tc, alloc);
-	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
-	ast->m_action = ct_eval(ast->m_action, tc, alloc);
-	ast->m_body = ct_eval(ast->m_body, tc, alloc);
-	return ast;
-}
-
 AST::WhileStatement* ct_eval(
     AST::WhileStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
@@ -400,7 +391,6 @@ AST::AST* ct_eval(
 
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(ReturnStatement);
 
