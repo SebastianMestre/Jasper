@@ -265,7 +265,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			record[record_constructor->m_keys[i]] =
-			    e.m_stack.m_stack[storage_point + i];
+			    value_of(e.m_stack.m_stack[storage_point + i]);
 		}
 		
 		auto result = e.m_gc->new_record(std::move(record));
@@ -281,7 +281,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, e.m_stack.access(0));
+		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
 		// replace value with variant wrapper
 		e.m_stack.access(0) = result.get();
