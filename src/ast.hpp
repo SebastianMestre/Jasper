@@ -158,7 +158,7 @@ struct Identifier : public AST {
 	Declaration* m_declaration {nullptr}; // can be nullptr
 	FunctionLiteral* m_surrounding_function {nullptr};
 
-	Origin m_origin;
+	Origin m_origin { Origin::Global };
 	int m_frame_offset {INT_MIN};
 
 	Token const* token() const;

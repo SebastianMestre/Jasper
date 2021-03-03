@@ -4,7 +4,6 @@
 #include <string>
 
 #include "../cst_allocator.hpp"
-#include "../parse.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
 #include "../ast.hpp"

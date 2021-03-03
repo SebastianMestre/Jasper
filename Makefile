@@ -36,7 +36,6 @@ COMMON_TARGETS := \
 	lexer \
 	match_identifiers \
 	metacheck \
-	parse \
 	parser \
 	token \
 	typecheck \

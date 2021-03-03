@@ -22,7 +22,7 @@ struct Lexer {
 	}
 
 	bool done() {
-		return current_char() == '\0';
+		return m_done;
 	}
 
 	bool consume_symbol();
@@ -53,6 +53,8 @@ struct Lexer {
 	TokenArray& m_tokens;
 
 	Trie m_symbols_trie;
+
+	bool m_done {false};
 
 	int m_source_index {0};
 	int m_token_index {0};
