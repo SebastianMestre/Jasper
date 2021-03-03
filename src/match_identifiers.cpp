@@ -146,19 +146,6 @@ namespace TypeChecker {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(
-    AST::ForStatement* ast, Frontend::CompileTimeEnvironment& env) {
-	env.new_nested_scope();
-
-	CHECK_AND_RETURN(match_identifiers(&ast->m_declaration, env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_condition, env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_action, env));
-	CHECK_AND_RETURN(match_identifiers(ast->m_body, env));
-
-	env.end_scope();
-	return {};
-}
-
-[[nodiscard]] ErrorReport match_identifiers(
     AST::WhileStatement* ast, Frontend::CompileTimeEnvironment& env) {
 	env.new_nested_scope();
 
@@ -315,7 +302,6 @@ namespace TypeChecker {
 		DISPATCH(SequenceExpression);
 
 		DISPATCH(Block);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);

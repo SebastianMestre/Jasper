@@ -129,18 +129,6 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_env.end_scope();
 }
 
-void typecheck(AST::ForStatement* ast, TypeChecker& tc) {
-	tc.m_env.new_nested_scope();
-	typecheck(&ast->m_declaration, tc);
-	typecheck(ast->m_condition, tc);
-	tc.m_core.m_mono_core.unify(
-	    ast->m_condition->m_value_type, tc.mono_boolean());
-
-	typecheck(ast->m_action, tc);
-	typecheck(ast->m_body, tc);
-	tc.m_env.end_scope();
-}
-
 void typecheck(AST::WhileStatement* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_condition, tc);
@@ -404,7 +392,6 @@ void typecheck(AST::AST* ast, TypeChecker& tc) {
 		DISPATCH(DeclarationList);
 
 		DISPATCH(Block);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);

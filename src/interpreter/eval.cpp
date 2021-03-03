@@ -307,31 +307,6 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 		eval_stmt(ast->m_else_body, e);
 };
 
-void eval(AST::ForStatement* ast, Interpreter& e) {
-	e.m_stack.start_stack_region();
-
-	eval(&ast->m_declaration, e);
-
-	while (1) {
-		eval(ast->m_condition, e);
-		auto condition_handle = e.m_stack.pop();
-		auto* condition = value_as<Boolean>(condition_handle.get());
-
-		if (!condition->m_value)
-			break;
-
-		eval_stmt(ast->m_body, e);
-
-		if (e.m_return_value)
-			break;
-
-		eval(ast->m_action, e);
-		e.m_stack.pop_unsafe();
-	}
-
-	e.m_stack.end_stack_region();
-};
-
 void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
@@ -411,7 +386,6 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
-		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 
 		DISPATCH(TypeFunctionHandle);
