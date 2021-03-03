@@ -198,7 +198,7 @@ TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
 		int constructor_count = as_ue->m_constructors.size();
 		for (int i = 0; i < constructor_count; ++i){
 			MonoId mono = mono_type_from_ast(as_ue->m_types[i], tc);
-			InternedString name = as_ue->m_constructors[i].text();
+			InternedString name = as_ue->m_constructors[i];
 			assert(!structure.count(name));
 			structure[name] = mono;
 		}
@@ -215,7 +215,7 @@ TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
 		int field_count = as_se->m_fields.size();
 		for (int i = 0; i < field_count; ++i){
 			MonoId mono = mono_type_from_ast(as_se->m_types[i], tc);
-			InternedString name = as_se->m_fields[i].text();
+			InternedString name = as_se->m_fields[i];
 			assert(!structure.count(name));
 			structure[name] = mono;
 			fields.push_back(name);

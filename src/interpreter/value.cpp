@@ -294,6 +294,11 @@ void print(RecordConstructor* l, int d) {
 	std::cout << "RecordConstructor\n";
 }
 
+void print(VariantConstructor* l, int d) {
+	print_spaces(d);
+	std::cout << "VariantConstructor\n";
+}
+
 void print(Value* v, int d) {
 
 	switch (v->type()) {

@@ -43,14 +43,17 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 };
 
 void eval(AST::DeclarationList* ast, Interpreter& e) {
-	for (auto& decl : ast->m_declarations) {
-		auto ref = e.new_reference(e.null());
-		e.global_declare_direct(decl.identifier_text(), ref.get());
-		eval(decl.m_value, e);
-		auto value = e.m_stack.pop();
-		ref->m_value = value.get();
+	auto const& comps = *e.m_declaration_order;
+	for (auto const& comp : comps) {
+		for (auto decl : comp) {
+			auto ref = e.new_reference(e.null());
+			e.global_declare_direct(decl->identifier_text(), ref.get());
+			eval(decl->m_value, e);
+			auto value = e.m_stack.pop();
+			ref->m_value = value_of(value.get());
+		}
 	}
-};
+}
 
 void eval(AST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
@@ -323,11 +326,22 @@ void eval(AST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
-// TODO: include variant implementations? if so, remove duplication
+void eval(AST::StructExpression* ast, Interpreter& e) {
+	e.push_record_constructor(ast->m_fields);
+}
+
+void eval(AST::UnionExpression* ast, Interpreter& e) {
+	RecordType constructors;
+	for(auto& constructor : ast->m_constructors) {
+		constructors.insert(
+		    {constructor, e.m_gc->new_variant_constructor_raw(constructor)});
+	}
+	auto result = e.new_record(std::move(constructors));
+	e.m_stack.push(result.get());
+}
+
 void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
-	int type_function = e.m_tc->m_core.m_tf_core.find_function(ast->m_value);
-	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_record_constructor(type_function_data.fields);
+	eval(ast->m_syntax, e);
 }
 
 void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
@@ -350,6 +364,10 @@ void eval(AST::Constructor* ast, Interpreter& e) {
 	} else {
 		Log::fatal("not implemented this type function for construction");
 	}
+}
+
+void eval(AST::TypeTerm* ast, Interpreter& e) {
+	eval(ast->m_callee, e);
 }
 
 void eval(AST::AST* ast, Interpreter& e) {
@@ -388,6 +406,9 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(WhileStatement);
 
+		DISPATCH(TypeTerm);
+		DISPATCH(StructExpression);
+		DISPATCH(UnionExpression);
 		DISPATCH(TypeFunctionHandle);
 		DISPATCH(MonoTypeHandle);
 		DISPATCH(Constructor);

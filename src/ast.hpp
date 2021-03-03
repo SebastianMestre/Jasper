@@ -268,7 +268,7 @@ struct WhileStatement : public AST {
 };
 
 struct UnionExpression : public AST {
-	std::vector<Identifier> m_constructors;
+	std::vector<InternedString> m_constructors;
 	std::vector<AST*> m_types;
 
 	UnionExpression()
@@ -276,7 +276,7 @@ struct UnionExpression : public AST {
 };
 
 struct StructExpression : public AST {
-	std::vector<Identifier> m_fields;
+	std::vector<InternedString> m_fields;
 	std::vector<AST*> m_types;
 
 	StructExpression()

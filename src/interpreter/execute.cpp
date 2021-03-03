@@ -53,13 +53,17 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 	}
 	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
 
-	TypeChecker::metacheck(ast, tc);
-	ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
-	TypeChecker::typecheck(ast, tc);
+	// TODO: expose this flag
+	constexpr bool run_typechecking = true;
+	if (run_typechecking) {
+		TypeChecker::metacheck(ast, tc);
+		ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
+		TypeChecker::typecheck(ast, tc);
+	}
 	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
-	Interpreter env = {&tc, &gc};
+	Interpreter env = {&tc, &gc, &tc.m_env.declaration_components};
 	declare_native_functions(env);
 	eval(ast, env);
 
