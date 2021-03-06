@@ -51,6 +51,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 			return ExitStatusTag::StaticError;
 		}
 	}
+
 	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
 
 	// TODO: expose this flag
@@ -72,20 +73,22 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 	return runner_exit_code;
 }
 
-// NOTE: We currently implement funcion evaluation in eval(CST::CallExpression)
-// this means we need to create a call expression node to run the program.
-// Having the TokenArray die here is not good, as it takes ownership of the tokens
-// TODO: We need to clean this up
+// FIXME: This does not handle seq-expressions, or inline definitions of
+// functions, because it does not call `match_identifiers` or `compute_offsets`.
+// Note that we can't just call match_identifiers, because that wouldn't take
+// into account the rest of the program that's already been processed, before
+// this is run
 Value* eval_expression(const std::string& expr, Interpreter& env) {
 	TokenArray ta;
 	CST::Allocator cst_allocator;
 	AST::Allocator ast_allocator;
 
 	auto parse_result = parse_expression(expr, ta, cst_allocator);
+	// TODO: handle parse error
 	auto cst = parse_result.m_result;
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
-	// TODO: return a gc_ptr
+	// TODO?: return a gc_ptr
 	eval(ast, env);
 	auto value = env.m_stack.pop();
 	return value_of(value.get());
