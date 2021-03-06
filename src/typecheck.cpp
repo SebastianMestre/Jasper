@@ -130,6 +130,7 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 }
 
 void typecheck(AST::WhileStatement* ast, TypeChecker& tc) {
+	// TODO: Why do while statements create a new nested scope?
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(

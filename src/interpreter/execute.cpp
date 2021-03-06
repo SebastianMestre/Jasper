@@ -42,10 +42,12 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
+
+	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};
 
 	{
-		auto err = TypeChecker::match_identifiers(ast, tc.m_env);
+		auto err = Frontend::match_identifiers(ast, tc.m_builtin_declarations);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;

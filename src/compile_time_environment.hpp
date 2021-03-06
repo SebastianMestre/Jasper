@@ -18,13 +18,12 @@ struct SequenceExpression;
 
 namespace Frontend {
 
-struct Scope {
-	bool m_nested {false};
-	std::unordered_map<InternedString, AST::Declaration*> m_vars;
-	std::unordered_set<MonoId> m_type_vars;
-};
-
 struct CompileTimeEnvironment {
+	struct Scope {
+		bool m_nested {false};
+		std::unordered_set<MonoId> m_type_vars;
+	};
+
 	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<AST::FunctionLiteral*> m_function_stack;
@@ -35,22 +34,6 @@ struct CompileTimeEnvironment {
 	std::vector<std::vector<AST::Declaration*>> declaration_components;
 
 	CompileTimeEnvironment();
-
-	void declare(AST::Declaration*);
-
-	AST::Declaration* access(InternedString const&);
-
-	AST::SequenceExpression* current_seq_expr();
-	void enter_seq_expr(AST::SequenceExpression*);
-	void exit_seq_expr();
-
-	AST::FunctionLiteral* current_function();
-	void enter_function(AST::FunctionLiteral*);
-	void exit_function();
-
-	AST::Declaration* current_top_level_declaration();
-	void enter_top_level_decl(AST::Declaration*);
-	void exit_top_level_decl();
 
 	Scope& current_scope();
 	void new_scope();
