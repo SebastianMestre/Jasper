@@ -149,7 +149,6 @@ void typecheck(AST::ReturnStatement* ast, TypeChecker& tc) {
 }
 
 void typecheck(AST::IndexExpression* ast, TypeChecker& tc) {
-	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
 
