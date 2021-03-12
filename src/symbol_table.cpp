@@ -7,47 +7,48 @@
 
 namespace Frontend {
 
-SymbolTable::Scope& SymbolTable::current_scope() {
-	return m_scopes.empty() ? m_global_scope : m_scopes.back();
+SymbolTable::SymbolTable() {
+	new_nested_scope();
+}
+
+SymbolTable::SymbolMap& SymbolTable::latest_shadowed_scope() {
+	return m_shadowed_scopes.back();
 }
 
 void SymbolTable::declare(AST::Declaration* decl) {
-	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
+	// @speed: to use SymbolMap::insert instead of SymbolTable::access
+	auto old_decl = access(decl->identifier_text());
+
+	auto insert_result =
+	    latest_shadowed_scope().insert({decl->identifier_text(), old_decl});
 	if (!insert_result.second)
 		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
+
+	m_available_vars[decl->identifier_text()] = decl;
 }
 
 AST::Declaration* SymbolTable::access(InternedString const& name) {
-	auto scan_scope = [](Scope& scope, InternedString const& name) -> AST::Declaration* {
-		auto it = scope.m_vars.find(name);
-		if (it != scope.m_vars.end())
-			return it->second;
+	auto it = m_available_vars.find(name);
+	if (it == m_available_vars.end())
 		return nullptr;
-	};
-
-	// scan nested scopes from the inside out
-	for (int i = m_scopes.size(); i--;) {
-		auto ptr = scan_scope(m_scopes[i], name);
-		if (ptr)
-			return ptr;
-		if (!m_scopes[i].m_nested)
-			break;
-	}
-
-	// fall back to global scope lookup
-	return scan_scope(m_global_scope, name);
-}
-
-void SymbolTable::new_scope() {
-	m_scopes.push_back({false});
+	return it->second;
 }
 
 void SymbolTable::new_nested_scope() {
-	m_scopes.push_back({true});
+	m_shadowed_scopes.push_back({});
 }
 
 void SymbolTable::end_scope() {
-	m_scopes.pop_back();
+	auto& prev_scope = latest_shadowed_scope();
+
+	for (auto& kv : prev_scope) {
+		if (kv.second)
+			m_available_vars[kv.first] = kv.second;
+		else
+			m_available_vars.erase(kv.first);
+	}
+
+	m_shadowed_scopes.pop_back();
 }
 
 AST::SequenceExpression* SymbolTable::current_seq_expr() {
