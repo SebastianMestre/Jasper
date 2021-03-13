@@ -25,7 +25,7 @@ void SymbolTable::declare(AST::Declaration* decl) {
 
 	auto insert_result =
 	    latest_shadowed_scope().insert({decl->identifier_text(), old_decl});
-	if (!insert_result.second) // clobbers a name in the same scope
+	if (!insert_result.second)
 		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
 }
 
