@@ -16,15 +16,18 @@ SymbolTable::SymbolMap& SymbolTable::latest_shadowed_scope() {
 }
 
 void SymbolTable::declare(AST::Declaration* decl) {
-	// @speed: to use SymbolMap::insert instead of SymbolTable::access
-	auto old_decl = access(decl->identifier_text());
+	auto old_decl = [&]() -> AST::Declaration* {
+		auto insert_result =
+		    m_available_vars.insert({decl->identifier_text(), decl});
+		if (insert_result.second) // introduced a previously undeclared name
+			return nullptr;
+		return std::exchange(insert_result.first->second, decl);
+	}();
 
-	auto insert_result =
+	auto scope_insert_result =
 	    latest_shadowed_scope().insert({decl->identifier_text(), old_decl});
-	if (!insert_result.second)
+	if (!scope_insert_result.second) // clobbers a name in the same scope
 		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
-
-	m_available_vars[decl->identifier_text()] = decl;
 }
 
 AST::Declaration* SymbolTable::access(InternedString const& name) {
