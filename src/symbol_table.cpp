@@ -17,8 +17,7 @@ SymbolTable::SymbolMap& SymbolTable::latest_shadowed_scope() {
 
 void SymbolTable::declare(AST::Declaration* decl) {
 	auto old_decl = [&]() -> AST::Declaration* {
-		auto insert_result =
-		    m_available_vars.insert({decl->identifier_text(), decl});
+		auto insert_result = m_bindings.insert({decl->identifier_text(), decl});
 		if (insert_result.second) // introduced a previously undeclared name
 			return nullptr;
 		return std::exchange(insert_result.first->second, decl);
@@ -31,8 +30,8 @@ void SymbolTable::declare(AST::Declaration* decl) {
 }
 
 AST::Declaration* SymbolTable::access(InternedString const& name) {
-	auto it = m_available_vars.find(name);
-	if (it == m_available_vars.end())
+	auto it = m_bindings.find(name);
+	if (it == m_bindings.end())
 		return nullptr;
 	return it->second;
 }
@@ -46,9 +45,9 @@ void SymbolTable::end_scope() {
 
 	for (auto& kv : prev_scope) {
 		if (kv.second)
-			m_available_vars[kv.first] = kv.second;
+			m_bindings[kv.first] = kv.second;
 		else
-			m_available_vars.erase(kv.first);
+			m_bindings.erase(kv.first);
 	}
 
 	m_shadowed_scopes.pop_back();

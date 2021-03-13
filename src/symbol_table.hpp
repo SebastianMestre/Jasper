@@ -36,7 +36,7 @@ struct SymbolTable {
 	void new_nested_scope();
 	void end_scope();
 
-	SymbolMap m_available_vars;
+	SymbolMap m_bindings;
 	std::vector<SymbolMap> m_shadowed_scopes;
 
 	std::vector<AST::FunctionLiteral*> m_function_stack;
