@@ -23,9 +23,9 @@ void SymbolTable::declare(AST::Declaration* decl) {
 		return std::exchange(insert_result.first->second, decl);
 	}();
 
-	auto scope_insert_result =
+	auto insert_result =
 	    latest_shadowed_scope().insert({decl->identifier_text(), old_decl});
-	if (!scope_insert_result.second) // clobbers a name in the same scope
+	if (!insert_result.second) // clobbers a name in the same scope
 		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
 }
 
