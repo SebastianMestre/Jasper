@@ -103,7 +103,7 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 	tc.m_env.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
-		// TODO: do return type hint
+		// TODO: consume return-type type-hints
 		ast->m_return_type = tc.new_var();
 
 		std::vector<MonoId> arg_types;
@@ -130,6 +130,7 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 }
 
 void typecheck(AST::WhileStatement* ast, TypeChecker& tc) {
+	// TODO: Why do while statements create a new nested scope?
 	tc.m_env.new_nested_scope();
 	typecheck(ast->m_condition, tc);
 	tc.m_core.m_mono_core.unify(
@@ -148,7 +149,6 @@ void typecheck(AST::ReturnStatement* ast, TypeChecker& tc) {
 }
 
 void typecheck(AST::IndexExpression* ast, TypeChecker& tc) {
-	// TODO: put the monotype in the ast
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
 

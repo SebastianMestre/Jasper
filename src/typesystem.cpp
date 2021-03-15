@@ -123,7 +123,7 @@ MonoId TypeSystemCore::new_term(
 	tf = m_tf_core.find(tf);
 
 	{
-		// TODO: add a TypeFunctionTag::Unkown tag, to express
+		// TODO: add a TypeFunctionTag::Unknown tag, to express
 		// that it's a dummy of unknown characteristics
 
 		// TODO: add some APIs to make this less jarring

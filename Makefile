@@ -37,6 +37,7 @@ COMMON_TARGETS := \
 	match_identifiers \
 	metacheck \
 	parser \
+	symbol_table \
 	token \
 	typecheck \
 	typechecker \

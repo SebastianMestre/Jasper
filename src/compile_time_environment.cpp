@@ -10,36 +10,8 @@ namespace Frontend {
 
 CompileTimeEnvironment::CompileTimeEnvironment() {}
 
-Scope& CompileTimeEnvironment::current_scope() {
+CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
 	return m_scopes.empty() ? m_global_scope : m_scopes.back();
-}
-
-void CompileTimeEnvironment::declare(AST::Declaration* decl) {
-	auto insert_result = current_scope().m_vars.insert({decl->identifier_text(), decl});
-
-	if (!insert_result.second)
-		Log::fatal() << "Redeclaration of '" << decl->identifier_text() << "'";
-}
-
-AST::Declaration* CompileTimeEnvironment::access(InternedString const& name) {
-	auto scan_scope = [](Scope& scope, InternedString const& name) -> AST::Declaration* {
-		auto it = scope.m_vars.find(name);
-		if (it != scope.m_vars.end())
-			return it->second;
-		return nullptr;
-	};
-
-	// scan nested scopes from the inside out
-	for (int i = m_scopes.size(); i--;) {
-		auto ptr = scan_scope(m_scopes[i], name);
-		if (ptr)
-			return ptr;
-		if (!m_scopes[i].m_nested)
-			break;
-	}
-
-	// fall back to global scope lookup
-	return scan_scope(m_global_scope, name);
 }
 
 void CompileTimeEnvironment::new_scope() {
@@ -52,30 +24,6 @@ void CompileTimeEnvironment::new_nested_scope() {
 
 void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
-}
-
-AST::SequenceExpression* CompileTimeEnvironment::current_seq_expr() {
-	return m_seq_expr_stack.empty() ? nullptr : m_seq_expr_stack.back();
-}
-
-void CompileTimeEnvironment::enter_seq_expr(AST::SequenceExpression* seq_expr) {
-	m_seq_expr_stack.push_back(seq_expr);
-}
-
-void CompileTimeEnvironment::exit_seq_expr() {
-	m_seq_expr_stack.pop_back();
-}
-
-AST::FunctionLiteral* CompileTimeEnvironment::current_function() {
-	return m_function_stack.empty() ? nullptr : m_function_stack.back();
-}
-
-void CompileTimeEnvironment::enter_function(AST::FunctionLiteral* func) {
-	m_function_stack.push_back(func);
-}
-
-void CompileTimeEnvironment::exit_function() {
-	m_function_stack.pop_back();
 }
 
 bool CompileTimeEnvironment::has_type_var(MonoId var) {
@@ -98,20 +46,6 @@ bool CompileTimeEnvironment::has_type_var(MonoId var) {
 	return scan_scope(m_global_scope, var);
 }
 
-AST::Declaration* CompileTimeEnvironment::current_top_level_declaration() {
-	return m_current_decl;
-}
-
-void CompileTimeEnvironment::enter_top_level_decl(AST::Declaration* decl) {
-	assert(!m_current_decl);
-	m_current_decl = decl;
-}
-
-void CompileTimeEnvironment::exit_top_level_decl() {
-	assert(m_current_decl);
-	m_current_decl = nullptr;
-}
-
 void CompileTimeEnvironment::compute_declaration_order(AST::DeclarationList* ast) {
 
 	std::unordered_map<AST::Declaration*, int> decl_to_index;
@@ -122,7 +56,7 @@ void CompileTimeEnvironment::compute_declaration_order(AST::DeclarationList* ast
 	for (auto& decl : ast->m_declarations) {
 		index_to_decl.push_back(&decl);
 		decl_to_index.insert({&decl, i});
-		++i;
+		i += 1;
 	}
 
 	// build up the explicit declaration graph

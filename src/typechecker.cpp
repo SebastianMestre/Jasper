@@ -203,7 +203,6 @@ AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& nam
 	m_builtin_declarations.push_back({});
 	auto result = &m_builtin_declarations.back();
 	result->m_identifier = name;
-	m_env.declare(result);
 	return result;
 }
 
