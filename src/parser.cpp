@@ -38,8 +38,9 @@ struct Parser {
 	CST::Allocator* m_ast_allocator;
 	int m_token_cursor { 0 };
 
-	Parser(TokenArray& tokens)
-	    : m_tokens {tokens} {}
+	Parser(TokenArray& tokens, CST::Allocator* cst_allocator)
+	    : m_tokens {tokens}
+	    , m_ast_allocator {cst_allocator} {}
 
 	Writer<std::vector<CST::Declaration>> parse_declaration_list(TokenTag);
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
@@ -1153,18 +1154,12 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-static Parser make_parser(TokenArray& ta, CST::Allocator& allocator) {
-	Parser p {ta};
-	p.m_ast_allocator = &allocator;
-	return p;
-}
-
 Writer<CST::CST*> parse_program(TokenArray& ta, CST::Allocator& allocator) {
-	Parser p = make_parser(ta, allocator);
+	Parser p {ta, &allocator};
 	return p.parse_top_level();
 }
 
 Writer<CST::CST*> parse_expression(TokenArray& ta, CST::Allocator& allocator) {
-	Parser p = make_parser(ta, allocator);
+	Parser p {ta, &allocator};
 	return p.parse_expression();
 }
