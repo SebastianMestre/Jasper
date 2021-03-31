@@ -22,7 +22,7 @@ namespace Interpreter {
 
 ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
 
-	TokenArray ta = tokenize(source);
+	TokenArray const ta = tokenize(source);
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_program(ta, cst_allocator);
@@ -83,7 +83,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 // into account the rest of the program that's already been processed, before
 // this is run
 Value* eval_expression(const std::string& expr, Interpreter& env) {
-	TokenArray ta = tokenize(expr);
+	TokenArray const ta = tokenize(expr);
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_expression(ta, cst_allocator);

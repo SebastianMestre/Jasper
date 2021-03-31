@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 		    // TODO: We need to clean this up
 
 		    {
-			    TokenArray ta = tokenize("__invoke()");
+			    TokenArray const ta = tokenize("__invoke()");
 
 			    CST::Allocator cst_allocator;
 			    auto top_level_call_ast = parse_expression(ta, cst_allocator);

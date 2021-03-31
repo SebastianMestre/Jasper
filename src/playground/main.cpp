@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	std::string source = file_content.str();
 
 	{
-		TokenArray ta = tokenize(source);
+		TokenArray const ta = tokenize(source);
 
 		CST::Allocator cst_allocator;
 		auto parse_result = parse_program(ta, cst_allocator);
