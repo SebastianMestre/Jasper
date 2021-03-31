@@ -1165,11 +1165,15 @@ static void tokenize(std::string const& source, TokenArray& ta) {
 		lexer.consume_token();
 }
 
-static Parser init_parser(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
-	tokenize(source, ta);
+static Parser make_parser(TokenArray& ta, CST::Allocator& allocator) {
 	Parser p {ta};
 	p.m_ast_allocator = &allocator;
 	return p;
+}
+
+static Parser init_parser(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
+	tokenize(source, ta);
+	return make_parser(ta, allocator);
 }
 
 Writer<CST::CST*> parse_program(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
