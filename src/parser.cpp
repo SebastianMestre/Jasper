@@ -1156,13 +1156,17 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-static Parser init_parser(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
+static void tokenize(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
 	Lexer lexer = {std::move(v), ta};
 	while (not lexer.done())
 		lexer.consume_token();
+}
+
+static Parser init_parser(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
+	tokenize(source, ta);
 	Parser p {ta};
 	p.m_ast_allocator = &allocator;
 	return p;
