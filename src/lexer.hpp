@@ -35,20 +35,6 @@ struct Lexer {
 
 	std::pair<bool, TokenTag> is_keyword(InternedString const&);
 
-	void advance();
-	void regress();
-
-	Token const& token_at(int index);
-	Token const& current_token() {
-		return token_at(m_token_index);
-	}
-	Token const& next_token() {
-		return token_at(m_token_index + 1);
-	}
-	Token const& peek_token(int dt = 0) {
-		return token_at(m_token_index + dt);
-	}
-
 	std::vector<char> m_source;
 	TokenArray& m_tokens;
 

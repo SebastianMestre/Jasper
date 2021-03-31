@@ -309,29 +309,3 @@ bool Lexer::consume_comment() {
 
 	return true;
 }
-
-void Lexer::advance() {
-	m_token_index += 1;
-	while (m_token_index >= int(m_tokens.size())) {
-		if (done())
-			break;
-		consume_token();
-	}
-}
-
-void Lexer::regress() {
-	assert(m_token_index > 0);
-	m_token_index -= 1;
-}
-
-Token const& Lexer::token_at(int index) {
-	while (!done() && index >= int(m_tokens.size())) {
-		consume_token();
-	}
-
-	if (done() && index >= int(m_tokens.size())) {
-		return eof();
-	}
-
-	return m_tokens.at(index);
-}
