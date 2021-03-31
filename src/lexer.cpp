@@ -6,7 +6,63 @@
 #include <cctype>
 #include <cstdlib>
 
+#include "./algorithms/trie.hpp"
+#include "token.hpp"
 #include "token_array.hpp"
+#include "token_tag.hpp"
+
+struct Lexer {
+	Lexer(std::vector<char>, TokenArray&);
+
+	char char_at(int index);
+	char current_char() {
+		return char_at(m_source_index);
+	}
+	char next_char() {
+		return char_at(m_source_index + 1);
+	}
+	char peek_char(int di = 0) {
+		return char_at(m_source_index + di);
+	}
+
+	bool done() {
+		return m_done;
+	}
+
+	bool consume_symbol();
+	bool consume_string();
+	bool consume_comment();
+	bool consume_identifier_or_keyword();
+	bool consume_number();
+	void consume_token();
+	void push_token(TokenTag, int);
+
+	std::pair<bool, TokenTag> is_keyword(InternedString const&);
+
+	std::vector<char> m_source;
+	TokenArray& m_tokens;
+
+	Trie m_symbols_trie;
+
+	bool m_done {false};
+
+	int m_source_index {0};
+	int m_token_index {0};
+
+	int m_current_line {0};
+	int m_current_column {0};
+};
+
+TokenArray tokenize(std::string const& source) {
+	TokenArray ta;
+	std::vector<char> v;
+	for (char c : source)
+		v.push_back(c);
+	Lexer lexer = {std::move(v), ta};
+	while (not lexer.done())
+		lexer.consume_token();
+	return ta;
+}
 
 static Token const& eof() {
 	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};

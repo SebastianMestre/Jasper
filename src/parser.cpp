@@ -4,10 +4,7 @@
 #include "cst.hpp"
 #include "cst_allocator.hpp"
 #include "error_report.hpp"
-#include "lexer.hpp"
 #include "token_array.hpp"
-
-#include <iostream>
 
 #include <sstream>
 #include <utility>
@@ -1155,17 +1152,6 @@ Writer<CST::CST*> Parser::parse_type_function() {
 
 #undef CHECK_AND_RETURN
 #undef REQUIRE
-
-TokenArray tokenize(std::string const& source) {
-	TokenArray ta;
-	std::vector<char> v;
-	for (char c : source)
-		v.push_back(c);
-	Lexer lexer = {std::move(v), ta};
-	while (not lexer.done())
-		lexer.consume_token();
-	return ta;
-}
 
 static Parser make_parser(TokenArray& ta, CST::Allocator& allocator) {
 	Parser p {ta};

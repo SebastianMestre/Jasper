@@ -3,11 +3,12 @@
 #include <sstream>
 #include <string>
 
-#include "../cst_allocator.hpp"
-#include "../parser.hpp"
-#include "../token_array.hpp"
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../cst_allocator.hpp"
+#include "../lexer.hpp"
+#include "../parser.hpp"
+#include "../token_array.hpp"
 
 int main(int argc, char** argv) {
 
