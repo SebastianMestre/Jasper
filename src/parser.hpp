@@ -20,6 +20,6 @@ struct Writer {
 	}
 };
 
-void tokenize(std::string const& source, TokenArray&);
+TokenArray tokenize(std::string const& source);
 Writer<CST::CST*> parse_program(TokenArray&, CST::Allocator&);
 Writer<CST::CST*> parse_expression(TokenArray&, CST::Allocator&);
