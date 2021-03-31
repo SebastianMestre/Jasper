@@ -66,34 +66,38 @@ struct Parser {
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
 
+	void advance_token_cursor() {
+		m_lexer.advance();
+	}
+
+	Token const* peek(int dt = 0) {
+		return &m_lexer.peek_token(dt);
+	}
+
 	Writer<Token const*> require(TokenTag expected_type) {
-		Token const* current_token = &m_lexer.current_token();
+		Token const* current_token = peek();
 
 		if (current_token->m_type != expected_type) {
 			return {make_expected_error(
 			    token_string[int(expected_type)], current_token)};
 		}
 
-		m_lexer.advance();
+		advance_token_cursor();
 
 		return make_writer(current_token);
 	}
 
 	bool match(TokenTag expected_type) {
-		Token const* current_token = &m_lexer.current_token();
+		Token const* current_token = peek();
 		return current_token->m_type == expected_type;
 	}
 
 	bool consume(TokenTag expected_type) {
 		if (match(expected_type)) {
-			m_lexer.advance();
+			advance_token_cursor();
 			return true;
 		}
 		return false;
-	}
-
-	Token const* peek(int dt = 0) {
-		return &m_lexer.peek_token(dt);
 	}
 };
 
@@ -177,7 +181,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 	std::vector<CST::CST*> expressions;
 
 	if (peek()->m_type == terminator) {
-		m_lexer.advance();
+		advance_token_cursor();
 	} else {
 		while (1) {
 			auto p0 = peek();
@@ -190,7 +194,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 
 			if (p0->m_type == terminator) {
 				if (allow_trailing_delimiter) {
-					m_lexer.advance();
+					advance_token_cursor();
 					break;
 				} else {
 					result.m_error.m_sub_errors.push_back(
@@ -208,9 +212,9 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 			auto p1 = peek();
 
 			if (p1->m_type == delimiter) {
-				m_lexer.advance();
+				advance_token_cursor();
 			} else if (p1->m_type == terminator) {
-				m_lexer.advance();
+				advance_token_cursor();
 				break;
 			} else {
 				result.m_error.m_sub_errors.push_back(
@@ -391,7 +395,7 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 		}
 
 		if (op->m_type == TokenTag::BRACKET_OPEN) {
-			m_lexer.advance();
+			advance_token_cursor();
 
 			auto index = parse_expression();
 			CHECK_AND_RETURN(result, index);
@@ -442,7 +446,7 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			continue;
 		}
 
-		m_lexer.advance();
+		advance_token_cursor();
 		auto rhs = parse_expression(rp);
 
 		auto e = m_ast_allocator->make<CST::BinaryExpression>();
@@ -467,26 +471,26 @@ Writer<CST::CST*> Parser::parse_terminal() {
 
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
 		auto e = m_ast_allocator->make<CST::NullLiteral>();
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_TRUE) {
 		auto e = m_ast_allocator->make<CST::BooleanLiteral>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FALSE) {
 		auto e = m_ast_allocator->make<CST::BooleanLiteral>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::SUB || token->m_type == TokenTag::ADD) {
-		m_lexer.advance();
+		advance_token_cursor();
 
 		// NOTE: we store the sign token of the source code for future
 		// feature of printing the source code when an error occurs
@@ -495,14 +499,14 @@ Writer<CST::CST*> Parser::parse_terminal() {
 			e->m_negative = token->m_type == TokenTag::SUB;
 			e->m_sign = token;
 			e->m_token = peek();
-			m_lexer.advance();
+			advance_token_cursor();
 			return make_writer<CST::CST*>(e);
 		} else if (match(TokenTag::NUMBER)) {
 			auto e = m_ast_allocator->make<CST::NumberLiteral>();
 			e->m_negative = token->m_type == TokenTag::SUB;
 			e->m_sign = token;
 			e->m_token = peek();
-			m_lexer.advance();
+			advance_token_cursor();
 			return make_writer<CST::CST*>(e);
 		}
 
@@ -514,28 +518,28 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	if (token->m_type == TokenTag::INTEGER) {
 		auto e = m_ast_allocator->make<CST::IntegerLiteral>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::NUMBER) {
 		auto e = m_ast_allocator->make<CST::NumberLiteral>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::IDENTIFIER) {
 		auto e = m_ast_allocator->make<CST::Identifier>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
 	if (token->m_type == TokenTag::STRING) {
 		auto e = m_ast_allocator->make<CST::StringLiteral>();
 		e->m_token = token;
-		m_lexer.advance();
+		advance_token_cursor();
 		return make_writer<CST::CST*>(e);
 	}
 
@@ -553,7 +557,7 @@ Writer<CST::CST*> Parser::parse_terminal() {
 
 	// parse a parenthesized expression.
 	if (token->m_type == TokenTag::PAREN_OPEN) {
-		m_lexer.advance();
+		advance_token_cursor();
 		auto expr = parse_expression();
 		CHECK_AND_RETURN(result, expr);
 		REQUIRE(result, TokenTag::PAREN_CLOSE);
@@ -639,7 +643,7 @@ Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 
 	if (types_allowed and match(TokenTag::KEYWORD_ARRAY)) {
 		token = peek();
-		m_lexer.advance();
+		advance_token_cursor();
 	} else {
 		auto identifier = require(TokenTag::IDENTIFIER);
 		CHECK_AND_RETURN(result, identifier);
@@ -692,7 +696,7 @@ Writer<CST::CST*> Parser::parse_function() {
 			CST::Declaration arg;
 
 			arg.m_identifier_token = peek();
-			m_lexer.advance();
+			advance_token_cursor();
 
 			if (consume(TokenTag::DECLARE)) {
 				// optionally consume a type hint
@@ -765,7 +769,7 @@ Writer<CST::CST*> Parser::parse_block() {
 		}
 
 		if (p0->m_type == TokenTag::BRACE_CLOSE) {
-			m_lexer.advance();
+			advance_token_cursor();
 			break;
 		}
 
