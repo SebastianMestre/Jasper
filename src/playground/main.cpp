@@ -33,8 +33,10 @@ int main(int argc, char** argv) {
 
 	{
 		TokenArray ta;
+		tokenize(source, ta);
+
 		CST::Allocator cst_allocator;
-		auto parse_result = parse_program(source, ta, cst_allocator);
+		auto parse_result = parse_program(ta, cst_allocator);
 
 		if (not parse_result.ok()) {
 			parse_result.m_error.print();

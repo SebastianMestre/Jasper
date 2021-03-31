@@ -22,8 +22,10 @@ namespace Interpreter {
 ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
 
 	TokenArray ta;
+	tokenize(source, ta);
+
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_program(source, ta, cst_allocator);
+	auto parse_result = parse_program(ta, cst_allocator);
 
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
@@ -82,12 +84,14 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 // this is run
 Value* eval_expression(const std::string& expr, Interpreter& env) {
 	TokenArray ta;
-	CST::Allocator cst_allocator;
-	AST::Allocator ast_allocator;
+	tokenize(expr, ta);
 
-	auto parse_result = parse_expression(expr, ta, cst_allocator);
+	CST::Allocator cst_allocator;
+	auto parse_result = parse_expression(ta, cst_allocator);
 	// TODO: handle parse error
 	auto cst = parse_result.m_result;
+
+	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	// TODO?: return a gc_ptr

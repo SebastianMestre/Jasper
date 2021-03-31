@@ -48,7 +48,8 @@ int main(int argc, char** argv) {
 			    CST::Allocator cst_allocator;
 			    AST::Allocator ast_allocator;
 
-			    auto top_level_call_ast = parse_expression("__invoke()", ta, cst_allocator);
+				tokenize("__invoke()", ta);
+			    auto top_level_call_ast = parse_expression(ta, cst_allocator);
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
 
 				eval(top_level_call, env);

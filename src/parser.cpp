@@ -1156,7 +1156,7 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-static void tokenize(std::string const& source, TokenArray& ta) {
+void tokenize(std::string const& source, TokenArray& ta) {
 	std::vector<char> v;
 	for (char c : source)
 		v.push_back(c);
@@ -1171,17 +1171,12 @@ static Parser make_parser(TokenArray& ta, CST::Allocator& allocator) {
 	return p;
 }
 
-static Parser init_parser(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
-	tokenize(source, ta);
-	return make_parser(ta, allocator);
-}
-
-Writer<CST::CST*> parse_program(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
-	Parser p = init_parser(source, ta, allocator);
+Writer<CST::CST*> parse_program(TokenArray& ta, CST::Allocator& allocator) {
+	Parser p = make_parser(ta, allocator);
 	return p.parse_top_level();
 }
 
-Writer<CST::CST*> parse_expression(std::string const& source, TokenArray& ta, CST::Allocator& allocator) {
-	Parser p = init_parser(source, ta, allocator);
+Writer<CST::CST*> parse_expression(TokenArray& ta, CST::Allocator& allocator) {
+	Parser p = make_parser(ta, allocator);
 	return p.parse_expression();
 }
