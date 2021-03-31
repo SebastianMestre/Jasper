@@ -20,16 +20,26 @@ Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
 }
 
+ErrorReport make_expected_error(string_view expected, Token const* found_token) {
+	std::stringstream ss;
+	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
+	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
+	   << token_string[int(found_token->m_type)] << ' '
+	   << found_token->m_text << " instead";
+
+	return ErrorReport {ss.str()};
+}
+
 struct Parser {
 	/* token handler */
 	Lexer m_lexer;
 	CST::Allocator* m_ast_allocator;
 
-	Parser(Lexer lexer) : m_lexer{std::move(lexer)} {}
+	Parser(Lexer lexer)
+	    : m_lexer {std::move(lexer)} {}
 
 	Writer<std::vector<CST::Declaration>> parse_declaration_list(TokenTag);
-	Writer<std::vector<CST::CST*>>
-	parse_expression_list(TokenTag, TokenTag, bool);
+	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<CST::CST*> parse_top_level();
 
@@ -49,31 +59,43 @@ struct Parser {
 	Writer<CST::CST*> parse_for_statement();
 	Writer<CST::CST*> parse_while_statement();
 	Writer<CST::CST*> parse_match_expression();
-	Writer<std::pair<Token const*, CST::CST*>> parse_name_and_type(
-	    bool required_type = false);
+	Writer<std::pair<Token const*, CST::CST*>> parse_name_and_type(bool required_type = false);
 	Writer<CST::CST*> parse_type_term();
 	Writer<std::vector<CST::CST*>> parse_type_term_arguments();
-	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(
-	    bool);
+	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(bool);
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
 
-	Writer<Token const*> require(TokenTag);
-	bool consume(TokenTag);
-	bool match(TokenTag);
+	Writer<Token const*> require(TokenTag expected_type) {
+		Token const* current_token = &m_lexer.current_token();
+
+		if (current_token->m_type != expected_type) {
+			return {make_expected_error(
+			    token_string[int(expected_type)], current_token)};
+		}
+
+		m_lexer.advance();
+
+		return make_writer(current_token);
+	}
+
+	bool match(TokenTag expected_type) {
+		Token const* current_token = &m_lexer.current_token();
+		return current_token->m_type == expected_type;
+	}
+
+	bool consume(TokenTag expected_type) {
+		if (match(expected_type)) {
+			m_lexer.advance();
+			return true;
+		}
+		return false;
+	}
 
 	Token const* peek(int dt = 0) {
 		return &m_lexer.peek_token(dt);
 	}
 };
-
-#define CHECK_AND_RETURN(result, writer)                                       \
-	if (handle_error(result, writer))                                          \
-		return result;
-
-#define REQUIRE(result, token)                                                 \
-	if (handle_error(result, require(token)))                                  \
-		return result;
 
 // WHY DO I HAVE TO TYPE THIS TWICE!?
 template <typename T, typename U>
@@ -94,41 +116,13 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ErrorReport make_expected_error(string_view expected, Token const* found_token) {
-	std::stringstream ss;
-	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
-	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
-	   << token_string[int(found_token->m_type)] << ' '
-	   << found_token->m_text << " instead";
+#define CHECK_AND_RETURN(result, writer)                                       \
+	if (handle_error(result, writer))                                          \
+		return result;
 
-	return ErrorReport {ss.str()};
-}
-
-Writer<Token const*> Parser::require(TokenTag expected_type) {
-	Token const* current_token = &m_lexer.current_token();
-
-	if (current_token->m_type != expected_type) {
-		return {make_expected_error(
-		    token_string[int(expected_type)], current_token)};
-	}
-
-	m_lexer.advance();
-
-	return make_writer(current_token);
-}
-
-bool Parser::consume(TokenTag expected_type) {
-	if (match(expected_type)) {
-		m_lexer.advance();
-		return true;
-	}
-	return false;
-}
-
-bool Parser::match(TokenTag expected_type) {
-	Token const* current_token = &m_lexer.current_token();
-	return current_token->m_type == expected_type;
-}
+#define REQUIRE(result, token)                                                 \
+	if (handle_error(result, require(token)))                                  \
+		return result;
 
 Writer<CST::CST*> Parser::parse_top_level() {
 	Writer<CST::CST*> result = {
