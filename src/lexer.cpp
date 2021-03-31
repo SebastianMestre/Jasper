@@ -8,7 +8,7 @@
 
 #include "token_array.hpp"
 
-Token const& eof() {
+static Token const& eof() {
 	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};
 	return t;
 }

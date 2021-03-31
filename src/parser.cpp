@@ -15,6 +15,11 @@
 
 #include <cassert>
 
+static Token const& eof() {
+	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};
+	return t;
+}
+
 template <typename T>
 Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
@@ -32,11 +37,12 @@ ErrorReport make_expected_error(string_view expected, Token const* found_token) 
 
 struct Parser {
 	/* token handler */
-	Lexer m_lexer;
+	TokenArray& m_tokens;
 	CST::Allocator* m_ast_allocator;
+	int m_token_cursor { 0 };
 
-	Parser(Lexer lexer)
-	    : m_lexer {std::move(lexer)} {}
+	Parser(TokenArray& tokens)
+	    : m_tokens {tokens} {}
 
 	Writer<std::vector<CST::Declaration>> parse_declaration_list(TokenTag);
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
@@ -67,11 +73,14 @@ struct Parser {
 	Writer<CST::CST*> parse_type_function();
 
 	void advance_token_cursor() {
-		m_lexer.advance();
+		m_token_cursor += 1;
 	}
 
 	Token const* peek(int dt = 0) {
-		return &m_lexer.peek_token(dt);
+		int index = m_token_cursor + dt;
+		if (index >= m_tokens.size())
+			return &eof();
+		return &m_tokens.at(index);
 	}
 
 	Writer<Token const*> require(TokenTag expected_type) {
@@ -1154,7 +1163,7 @@ static Parser init_parser(std::string const& source, TokenArray& ta, CST::Alloca
 	Lexer lexer = {std::move(v), ta};
 	while (not lexer.done())
 		lexer.consume_token();
-	Parser p {std::move(lexer)};
+	Parser p {ta};
 	p.m_ast_allocator = &allocator;
 	return p;
 }
