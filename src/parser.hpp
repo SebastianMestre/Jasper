@@ -20,5 +20,5 @@ struct Writer {
 	}
 };
 
-Writer<CST::CST*> parse_program(TokenArray&, CST::Allocator&);
-Writer<CST::CST*> parse_expression(TokenArray&, CST::Allocator&);
+Writer<CST::CST*> parse_program(TokenArray const&, CST::Allocator&);
+Writer<CST::CST*> parse_expression(TokenArray const&, CST::Allocator&);

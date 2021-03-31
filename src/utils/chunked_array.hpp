@@ -26,7 +26,11 @@ struct ChunkedArray {
 		return m_buckets[i / bucket_size][i % bucket_size];
 	}
 
-	int size() {
+	T const& at(int i) const {
+		return m_buckets[i / bucket_size][i % bucket_size];
+	}
+
+	int size() const {
 		return m_buckets.empty() ? 0
 		                         : (int(m_buckets.size()) - 1) * bucket_size +
 		                               int(m_buckets.back().size());
