@@ -5,6 +5,7 @@
 
 #include "../cst_allocator.hpp"
 #include "../parser.hpp"
+#include "../lexer.hpp"
 #include "../token_array.hpp"
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
@@ -44,11 +45,12 @@ int main(int argc, char** argv) {
 		    // TODO: We need to clean this up
 
 		    {
-			    TokenArray ta;
-			    CST::Allocator cst_allocator;
-			    AST::Allocator ast_allocator;
+			    TokenArray const ta = tokenize("__invoke()");
 
-			    auto top_level_call_ast = parse_expression("__invoke()", ta, cst_allocator);
+			    CST::Allocator cst_allocator;
+			    auto top_level_call_ast = parse_expression(ta, cst_allocator);
+
+			    AST::Allocator ast_allocator;
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
 
 				eval(top_level_call, env);

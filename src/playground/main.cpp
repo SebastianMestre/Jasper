@@ -3,11 +3,12 @@
 #include <sstream>
 #include <string>
 
-#include "../cst_allocator.hpp"
-#include "../parser.hpp"
-#include "../token_array.hpp"
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../cst_allocator.hpp"
+#include "../lexer.hpp"
+#include "../parser.hpp"
+#include "../token_array.hpp"
 
 int main(int argc, char** argv) {
 
@@ -32,9 +33,10 @@ int main(int argc, char** argv) {
 	std::string source = file_content.str();
 
 	{
-		TokenArray ta;
+		TokenArray const ta = tokenize(source);
+
 		CST::Allocator cst_allocator;
-		auto parse_result = parse_program(source, ta, cst_allocator);
+		auto parse_result = parse_program(ta, cst_allocator);
 
 		if (not parse_result.ok()) {
 			parse_result.m_error.print();
