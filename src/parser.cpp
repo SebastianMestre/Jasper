@@ -12,11 +12,6 @@
 
 #include <cassert>
 
-static Token const& eof() {
-	static Token t = {TokenTag::END, "(EOF)", -1, -1, -1, -1};
-	return t;
-}
-
 template <typename T>
 Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
@@ -76,8 +71,6 @@ struct Parser {
 
 	Token const* peek(int dt = 0) {
 		int index = m_token_cursor + dt;
-		if (index >= m_tokens.size())
-			return &eof();
 		return &m_tokens.at(index);
 	}
 
