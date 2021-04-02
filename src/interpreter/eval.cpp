@@ -56,19 +56,19 @@ void eval(AST::DeclarationList* ast, Interpreter& e) {
 }
 
 void eval(AST::NumberLiteral* ast, Interpreter& e) {
-	e.push_float(ast->value());
+	e.push<Float>(ast->value());
 }
 
 void eval(AST::IntegerLiteral* ast, Interpreter& e) {
-	e.push_integer(ast->value());
+	e.push<Integer>(ast->value());
 }
 
 void eval(AST::StringLiteral* ast, Interpreter& e) {
-	e.push_string(ast->text());
+	e.push<String>(ast->text());
 };
 
 void eval(AST::BooleanLiteral* ast, Interpreter& e) {
-	e.push_boolean(ast->m_value);
+	e.push<Boolean>(ast->m_value);
 };
 
 void eval(AST::NullLiteral* ast, Interpreter& e) {
@@ -76,7 +76,7 @@ void eval(AST::NullLiteral* ast, Interpreter& e) {
 };
 
 void eval(AST::ArrayLiteral* ast, Interpreter& e) {
-	auto result = e.new_list({});
+	auto result = e.create<Array>();
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
@@ -213,7 +213,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		captures[offset] = as<Reference>(value);
 	}
 
-	auto result = e.new_function(ast, std::move(captures));
+	auto result = e.create<Function>(ast, std::move(captures));
 	e.m_stack.push(result.get());
 };
 
@@ -271,7 +271,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 			    value_of(e.m_stack.m_stack[storage_point + i]);
 		}
 		
-		auto result = e.m_gc->new_record(std::move(record));
+		auto result = e.m_gc->alloc<Record>(std::move(record));
 
 		while (e.m_stack.m_stack_ptr > storage_point)
 			e.m_stack.pop();
@@ -283,7 +283,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
-		auto result = e.m_gc->new_variant(
+		auto result = e.m_gc->alloc<Variant>(
 		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
 		// replace value with variant wrapper
@@ -327,16 +327,16 @@ void eval(AST::WhileStatement* ast, Interpreter& e) {
 };
 
 void eval(AST::StructExpression* ast, Interpreter& e) {
-	e.push_record_constructor(ast->m_fields);
+	e.push<RecordConstructor>(ast->m_fields);
 }
 
 void eval(AST::UnionExpression* ast, Interpreter& e) {
 	RecordType constructors;
 	for(auto& constructor : ast->m_constructors) {
 		constructors.insert(
-		    {constructor, e.m_gc->new_variant_constructor_raw(constructor)});
+		    {constructor, e.m_gc->alloc_raw<VariantConstructor>(constructor)});
 	}
-	auto result = e.new_record(std::move(constructors));
+	auto result = e.create<Record>(std::move(constructors));
 	e.m_stack.push(result.get());
 }
 
@@ -349,7 +349,7 @@ void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
 	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_record_constructor(type_function_data.fields);
+	e.push<RecordConstructor>(type_function_data.fields);
 }
 
 void eval(AST::Constructor* ast, Interpreter& e) {
@@ -358,9 +358,9 @@ void eval(AST::Constructor* ast, Interpreter& e) {
 	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
 
 	if (tf_data.tag == TypeFunctionTag::Record) {
-		e.push_record_constructor(tf_data.fields);
+		e.push<RecordConstructor>(tf_data.fields);
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		e.push_variant_constructor(ast->m_id);
+		e.push<VariantConstructor>(ast->m_id);
 	} else {
 		Log::fatal("not implemented this type function for construction");
 	}

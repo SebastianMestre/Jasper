@@ -52,7 +52,7 @@ Value* size(ArgsType v, Interpreter& e) {
 	assert(v.size() == 1);
 	Array* array = value_as<Array>(v[0]);
 
-	return e.m_gc->new_integer_raw(array->m_value.size());
+	return e.m_gc->alloc_raw<Integer>(array->m_value.size());
 }
 
 // array_join(array, string) returns a string with
@@ -68,7 +68,7 @@ Value* array_join(ArgsType v, Interpreter& e) {
 		if (i > 0) result << sep->m_value;
 		result << value_as<Integer>(array->m_value[i])->m_value;
 	}
-	return e.m_gc->new_string_raw(result.str());
+	return e.m_gc->alloc_raw<String>(result.str());
 }
 
 // array_at(array, int i) returns the i-th element of the given array
@@ -93,15 +93,15 @@ Value* value_add(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
+		return e.m_gc->alloc_raw<Integer>(
 		    static_cast<Integer*>(lhs)->m_value +
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
+		return e.m_gc->alloc_raw<Float>(
 		    static_cast<Float*>(lhs)->m_value +
 		    static_cast<Float*>(rhs)->m_value);
 	case ValueTag::String:
-		return e.m_gc->new_string_raw(
+		return e.m_gc->alloc_raw<String>(
 		    static_cast<String*>(lhs)->m_value +
 		    static_cast<String*>(rhs)->m_value);
 	default:
@@ -118,11 +118,11 @@ Value* value_sub(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
+		return e.m_gc->alloc_raw<Integer>(
 		    static_cast<Integer*>(lhs)->m_value -
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
+		return e.m_gc->alloc_raw<Float>(
 		    static_cast<Float*>(lhs)->m_value -
 		    static_cast<Float*>(rhs)->m_value);
 	default:
@@ -139,11 +139,11 @@ Value* value_mul(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
+		return e.m_gc->alloc_raw<Integer>(
 		    static_cast<Integer*>(lhs)->m_value *
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
+		return e.m_gc->alloc_raw<Float>(
 		    static_cast<Float*>(lhs)->m_value *
 		    static_cast<Float*>(rhs)->m_value);
 	default:
@@ -160,11 +160,11 @@ Value* value_div(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
+		return e.m_gc->alloc_raw<Integer>(
 		    static_cast<Integer*>(lhs)->m_value /
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
+		return e.m_gc->alloc_raw<Float>(
 		    static_cast<Float*>(lhs)->m_value /
 		    static_cast<Float*>(rhs)->m_value);
 	default:
@@ -179,7 +179,7 @@ Value* value_logicand(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Boolean*>(lhs)->m_value and
 		    static_cast<Boolean*>(rhs)->m_value);
 	std::cerr << "ERROR: logical and operator not defined for types "
@@ -193,7 +193,7 @@ Value* value_logicor(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Boolean*>(lhs)->m_value or
 		    static_cast<Boolean*>(rhs)->m_value);
 	std::cerr << "ERROR: logical or operator not defined for types "
@@ -207,7 +207,7 @@ Value* value_logicxor(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Boolean*>(lhs)->m_value !=
 		    static_cast<Boolean*>(rhs)->m_value);
 	std::cerr << "ERROR: exclusive or operator not defined for types "
@@ -224,21 +224,21 @@ Value* value_equals(ArgsType v, Interpreter& e) {
 
 	switch (lhs->type()) {
 	case ValueTag::Null:
-		return e.m_gc->new_boolean_raw(true);
+		return e.m_gc->alloc_raw<Boolean>(true);
 	case ValueTag::Integer:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Integer*>(lhs)->m_value ==
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Float*>(lhs)->m_value ==
 		    static_cast<Float*>(rhs)->m_value);
 	case ValueTag::String:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<String*>(lhs)->m_value ==
 		    static_cast<String*>(rhs)->m_value);
 	case ValueTag::Boolean:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Boolean*>(lhs)->m_value ==
 		    static_cast<Boolean*>(rhs)->m_value);
 	default: {
@@ -258,15 +258,15 @@ Value* value_less(ArgsType v, Interpreter& e) {
 
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Integer*>(lhs)->m_value <
 		    static_cast<Integer*>(rhs)->m_value);
 	case ValueTag::Float:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<Float*>(lhs)->m_value <
 		    static_cast<Float*>(rhs)->m_value);
 	case ValueTag::String:
-		return e.m_gc->new_boolean_raw(
+		return e.m_gc->alloc_raw<Boolean>(
 		    static_cast<String*>(lhs)->m_value <
 		    static_cast<String*>(rhs)->m_value);
 	default:
@@ -285,93 +285,93 @@ Value* read_integer(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	int result;
 	std::cin >> result;
-	return e.m_gc->new_integer_raw(result);
+	return e.m_gc->alloc_raw<Integer>(result);
 }
 
 Value* read_number(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	float result;
 	std::cin >> result;
-	return e.m_gc->new_float_raw(result);
+	return e.m_gc->alloc_raw<Float>(result);
 }
 
 Value* read_line(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::getline(std::cin, result);
-	return e.m_gc->new_string_raw(std::move(result));
+	return e.m_gc->alloc_raw<String>(std::move(result));
 }
 
 Value* read_string(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::cin >> result;
-	return e.m_gc->new_string_raw(std::move(result));
+	return e.m_gc->alloc_raw<String>(std::move(result));
 }
 
 void declare_native_functions(Interpreter& env) {
 	env.global_declare(
-	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
+	    "print", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&print)));
 
 	env.global_declare(
 	    "array_append",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_append)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&array_append)));
 
 	env.global_declare(
 	    "array_extend",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_extend)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&array_extend)));
 
 	env.global_declare(
-	    "size", env.new_native_function(static_cast<NativeFunctionType*>(&size)));
+	    "size", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&size)));
 
 	env.global_declare(
 	    "array_join",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_join)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&array_join)));
 
 	env.global_declare(
 	    "array_at",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_at)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&array_at)));
 
 	env.global_declare(
-	    "+", env.new_native_function(static_cast<NativeFunctionType*>(&value_add)));
+	    "+", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_add)));
 	env.global_declare(
-	    "-", env.new_native_function(static_cast<NativeFunctionType*>(&value_sub)));
+	    "-", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_sub)));
 	env.global_declare(
-	    "*", env.new_native_function(static_cast<NativeFunctionType*>(&value_mul)));
+	    "*", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_mul)));
 	env.global_declare(
-	    "/", env.new_native_function(static_cast<NativeFunctionType*>(&value_div)));
+	    "/", env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_div)));
 	env.global_declare(
 	    "<",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_less)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_less)));
 	env.global_declare(
 	    "=",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_assign)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_assign)));
 	env.global_declare(
 	    "==",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_equals)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_equals)));
 	env.global_declare(
 	    "^^",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicxor)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_logicxor)));
 	env.global_declare(
 	    "&&",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicand)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_logicand)));
 	env.global_declare(
 	    "||",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicor)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&value_logicor)));
 
 	// Input
 	env.global_declare(
 	    "read_integer",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_integer)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&read_integer)));
 	env.global_declare(
 	    "read_number",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_number)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&read_number)));
 	env.global_declare(
 	    "read_string",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_string)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&read_string)));
 	env.global_declare(
 	    "read_line",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_line)));
+	    env.create<NativeFunction>(static_cast<NativeFunctionType*>(&read_line)));
 }
 
 } // namespace Interpreter

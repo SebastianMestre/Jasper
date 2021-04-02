@@ -88,71 +88,11 @@ Null* Interpreter::null() {
 	return m_gc->null();
 }
 
-void Interpreter::push_integer(int i) {
-	m_stack.push(m_gc->new_integer_raw(i));
-	run_gc_if_needed();
-}
-
-void Interpreter::push_float(float f) {
-	m_stack.push(m_gc->new_float_raw(f));
-	run_gc_if_needed();
-}
-
-void Interpreter::push_boolean(bool b) {
-	m_stack.push(m_gc->new_boolean_raw(b));
-	run_gc_if_needed();
-}
-
-void Interpreter::push_string(std::string s) {
-	m_stack.push(m_gc->new_string_raw(std::move(s)));
-	run_gc_if_needed();
-}
-
-void Interpreter::push_variant_constructor(InternedString constructor) {
-	m_stack.push(m_gc->new_variant_constructor_raw(constructor));
-	run_gc_if_needed();
-}
-
-void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
-	m_stack.push(m_gc->new_record_constructor_raw(std::move(keys)));
-	run_gc_if_needed();
-}
-
-gc_ptr<Array> Interpreter::new_list(ArrayType elements) {
-	auto result = m_gc->new_list(std::move(elements));
-	run_gc_if_needed();
-	return result;
-}
-
-gc_ptr<Record> Interpreter::new_record(RecordType declarations) {
-	auto result = m_gc->new_record(std::move(declarations));
-	run_gc_if_needed();
-	return result;
-}
-
-gc_ptr<Function> Interpreter::new_function(FunctionType def, CapturesType s) {
-	auto result = m_gc->new_function(def, std::move(s));
-	run_gc_if_needed();
-	return result;
-}
-
-gc_ptr<NativeFunction> Interpreter::new_native_function(NativeFunctionType* fptr) {
-	auto result = m_gc->new_native_function(fptr);
-	run_gc_if_needed();
-	return result;
-}
-
-gc_ptr<Error> Interpreter::new_error(std::string e) {
-	auto result = m_gc->new_error(e);
-	run_gc_if_needed();
-	return result;
-}
-
 gc_ptr<Reference> Interpreter::new_reference(Value* v) {
 	assert(
 	    v->type() != ValueTag::Reference &&
 	    "References to references are not allowed.");
-	auto result = m_gc->new_reference(v);
+	auto result = m_gc->alloc<Reference>(v);
 	run_gc_if_needed();
 	return result;
 }

@@ -3,6 +3,7 @@
 #include "gc_ptr.hpp"
 #include "stack.hpp"
 #include "value.hpp"
+#include "memory_manager.hpp"
 
 #include <map>
 
@@ -57,17 +58,20 @@ struct Interpreter {
 	void assign(Value* dst, Value* src);
 
 	auto null() -> Null*;
-	void push_integer(int);
-	void push_float(float);
-	void push_boolean(bool);
-	void push_string(std::string);
-	void push_variant_constructor(InternedString constructor);
-	void push_record_constructor(std::vector<InternedString>);
-	auto new_list(ArrayType) -> gc_ptr<Array>;
-	auto new_record(RecordType) -> gc_ptr<Record>;
-	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
-	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
-	auto new_error(std::string) -> gc_ptr<Error>;
+
+	template<typename T, typename... Us>
+	void push(Us&&... us) {
+		m_stack.push(m_gc->alloc_raw<T>(std::forward<Us>(us)...));
+		run_gc_if_needed();
+	}
+
+	template<typename T, typename... Us>
+	gc_ptr<T> create(Us&&... us) {
+		auto value = m_gc->alloc<T>(std::forward<Us>(us)...);
+		run_gc_if_needed();
+		return value;
+	}
+
 	auto new_reference(Value*) -> gc_ptr<Reference>;
 };
 
