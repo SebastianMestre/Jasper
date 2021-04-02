@@ -16,7 +16,7 @@ struct TypeChecker;
 
 namespace Interpreter {
 
-struct GC;
+struct MemoryManager;
 struct Error;
 
 struct Scope {
@@ -29,7 +29,7 @@ struct Scope {
 struct Interpreter {
 	Stack m_stack;
 	TypeChecker::TypeChecker* m_tc;
-	GC* m_gc;
+	MemoryManager* m_gc;
 	std::vector<std::vector<AST::Declaration*>> const* m_declaration_order;
 	int m_gc_size_on_last_pass {64};
 	Value* m_return_value {nullptr};
@@ -37,7 +37,7 @@ struct Interpreter {
 
 	Interpreter(
 	    TypeChecker::TypeChecker* tc,
-	    GC* gc,
+	    MemoryManager* gc,
 	    std::vector<std::vector<AST::Declaration*>> const* declaration_order)
 	    : m_tc {tc}
 	    , m_gc {gc}

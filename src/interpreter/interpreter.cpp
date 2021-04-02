@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "error.hpp"
-#include "garbage_collector.hpp"
+#include "memory_manager.hpp"
 #include "utils.hpp"
 
 namespace Interpreter {
@@ -64,8 +64,8 @@ void Interpreter::assign(Value* dst, Value* src) {
 
 
 void Interpreter::run_gc() {
-	m_gc->unmark_all();
-	m_gc->mark_roots();
+	m_gc->m_gc.unmark_all();
+	m_gc->m_gc.mark_roots();
 
 	for (auto p : m_stack.m_stack)
 		gc_visit(p);
@@ -73,13 +73,13 @@ void Interpreter::run_gc() {
 	for (auto& p : m_global_scope.m_declarations)
 		gc_visit(p.second);
 
-	m_gc->sweep();
+	m_gc->m_gc.sweep();
 }
 
 void Interpreter::run_gc_if_needed(){
-	if (m_gc->size() >= 2*m_gc_size_on_last_pass) {
+	if (m_gc->m_gc.size() >= 2*m_gc_size_on_last_pass) {
 		run_gc();
-		m_gc_size_on_last_pass = m_gc->size();
+		m_gc_size_on_last_pass = m_gc->m_gc.size();
 	}
 }
 

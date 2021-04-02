@@ -13,8 +13,8 @@
 #include "../typecheck.hpp"
 #include "../typechecker.hpp"
 #include "eval.hpp"
-#include "garbage_collector.hpp"
 #include "interpreter.hpp"
+#include "memory_manager.hpp"
 #include "native.hpp"
 #include "utils.hpp"
 
@@ -67,8 +67,8 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 	}
 	TypeChecker::compute_offsets(ast, 0);
 
-	GC gc;
-	Interpreter env = {&tc, &gc, &tc.m_env.declaration_components};
+	MemoryManager memory_manager;
+	Interpreter env = {&tc, &memory_manager, &tc.m_env.declaration_components};
 	declare_native_functions(env);
 	eval(ast, env);
 

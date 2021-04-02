@@ -5,12 +5,12 @@
 #include <cassert>
 #include <climits>
 
+#include "../ast.hpp"
 #include "../log/log.hpp"
 #include "../typechecker.hpp"
-#include "../ast.hpp"
 #include "../utils/span.hpp"
-#include "garbage_collector.hpp"
 #include "interpreter.hpp"
+#include "memory_manager.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 

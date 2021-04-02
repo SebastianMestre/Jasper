@@ -52,6 +52,7 @@ INTERPRETER_TARGETS := \
 	garbage_collector \
 	gc_ptr \
 	interpreter \
+	memory_manager \
 	native \
 	stack \
 	utils \

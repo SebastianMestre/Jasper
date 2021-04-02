@@ -1,6 +1,6 @@
 #include "../utils/span.hpp"
-#include "garbage_collector.hpp"
 #include "interpreter.hpp"
+#include "memory_manager.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 #include "value_tag.hpp"
