@@ -19,17 +19,34 @@ struct Interpreter;
 
 struct Reference;
 
+struct Handle {
+	Value* as_value;
+	Handle(Handle const&) = default;
+	Handle(Handle&&) = default;
+	Handle& operator=(Handle const&) = default;
+	Handle& operator=(Handle&&) = default;
+	Handle(Value* value) : as_value {value} {}
+	Value* get() { return as_value; }
+};
+
 using Identifier = InternedString;
 using StringType = std::string;
-using RecordType = std::unordered_map<Identifier, Value*>;
+using RecordType = std::unordered_map<Identifier, Handle>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
-using CapturesType = std::vector<Value*>; // TODO: store references instead of values
+using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Handle;
+using CapturesType = std::vector<Reference*>;
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
+inline void print(Handle v, int d = 0) {
+	return print(v.get(), d);
+}
+
 void gc_visit(Value*);
+inline void gc_visit(Handle h) {
+	return gc_visit(h.get());
+}
 
 struct Value {
   protected:
@@ -49,7 +66,6 @@ struct Value {
 };
 
 struct Null : Value {
-
 	Null();
 };
 
@@ -97,8 +113,8 @@ struct Record : Value {
 	Record();
 	Record(RecordType);
 
-	void addMember(Identifier const& id, Value* v);
-	Value* getMember(Identifier const& id);
+	void set_member(Identifier const& id, Handle v);
+	Handle get_member(Identifier const& id);
 };
 
 struct Variant : Value {
@@ -123,9 +139,9 @@ struct NativeFunction : Value {
 };
 
 struct Reference : Value {
-	Value* m_value;
+	Handle m_value;
 
-	Reference(Value* value);
+	Reference(Handle value);
 };
 
 struct VariantConstructor : Value {

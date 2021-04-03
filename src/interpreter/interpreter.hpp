@@ -55,7 +55,7 @@ struct Interpreter {
 	void global_declare(const Identifier& i, Value* v);
 	void global_declare(const Identifier& i, gc_ptr<Value> v);
 	Reference* global_access(const Identifier& i);
-	void assign(Value* dst, Value* src);
+	void assign(Reference* dst, Handle src);
 
 	auto null() -> Null*;
 

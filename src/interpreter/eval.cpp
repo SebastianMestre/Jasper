@@ -221,7 +221,7 @@ void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec_handle = e.m_stack.pop();
 	auto rec = value_as<Record>(rec_handle.get());
-	e.m_stack.push(rec->m_value[ast->m_member]);
+	e.m_stack.push(rec->get_member(ast->m_member));
 }
 
 void eval(AST::MatchExpression* ast, Interpreter& e) {
@@ -267,8 +267,9 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 			eval(ast->m_args[i], e);
 
 		for (int i = 0; i < ast->m_args.size(); ++i) {
-			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i]);
+			record.insert(
+			    {record_constructor->m_keys[i],
+			     value_of(e.m_stack.m_stack[storage_point + i])});
 		}
 		
 		auto result = e.m_gc->alloc<Record>(std::move(record));

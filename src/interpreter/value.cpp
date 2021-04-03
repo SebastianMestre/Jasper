@@ -58,11 +58,11 @@ Record::Record(RecordType o)
     : Value(ValueTag::Record)
     , m_value(std::move(o)) {}
 
-void Record::addMember(Identifier const& id, Value* v) {
-	m_value[id] = v;
+void Record::set_member(Identifier const& id, Handle v) {
+	m_value.insert({id, v});
 }
 
-Value* Record::getMember(Identifier const& id) {
+Handle Record::get_member(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
 		// TODO: return RangeError
@@ -90,7 +90,7 @@ NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : Value {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
 
-Reference::Reference(Value* value)
+Reference::Reference(Handle value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
