@@ -20,12 +20,13 @@ struct Interpreter;
 struct Reference;
 
 struct Handle {
+	ValueTag m_tag;
 	Value* as_value;
 	Handle(Handle const&) = default;
 	Handle(Handle&&) = default;
 	Handle& operator=(Handle const&) = default;
 	Handle& operator=(Handle&&) = default;
-	Handle(Value* value) : as_value {value} {}
+	Handle(Value* value);
 	Value* get() { return as_value; }
 };
 
@@ -64,6 +65,10 @@ struct Value {
 
 	virtual ~Value() = default;
 };
+
+inline Handle::Handle(Value* value)
+    : m_tag {value->type()}
+    , as_value {value} {}
 
 struct Null : Value {
 	Null();
