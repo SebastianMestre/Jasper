@@ -70,21 +70,31 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
-	auto ast = alloc.make<FunctionLiteral>();
+std::vector<Declaration> convert_declarations(
+    std::vector<CST::Declaration>& decls,
+    FunctionLiteral* surrounding_function,
+    Allocator& alloc) {
 
-	for (auto& arg : cst->m_args) {
+	std::vector<Declaration> result;
+	for (auto& arg : decls) {
 		Declaration decl;
 
 		decl.m_cst = &arg;
 		decl.m_identifier = arg.m_identifier_token->m_text;
 		if (arg.m_type_hint)
 			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
-		decl.m_surrounding_function = ast;
+		decl.m_surrounding_function = surrounding_function;
 
-		ast->m_args.push_back(std::move(decl));
+		result.push_back(std::move(decl));
 	}
+	return result;
+}
 
+AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
+	auto ast = alloc.make<FunctionLiteral>();
+
+	std::vector<Declaration> args = convert_declarations(cst->m_args, ast, alloc);
+	ast->m_args = std::move(args);
 	ast->m_body = convert_ast(cst->m_body, alloc);
 
 	return ast;
@@ -162,6 +172,21 @@ AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 
 	if (cst->m_value)
 		ast->m_value = convert_ast(cst->m_value, alloc);
+
+	return ast;
+}
+
+AST* convert_ast(CST::FunctionDeclaration* cst, Allocator& alloc) {
+	auto ast = alloc.make<Declaration>();
+
+	auto func = alloc.make<FunctionLiteral>();
+	std::vector<Declaration> args = convert_declarations(cst->m_args, func, alloc);
+	func->m_args = std::move(args);
+	func->m_body = convert_ast(cst->m_body, alloc);
+
+	ast->m_cst = cst;
+	ast->m_identifier = cst->m_identifier_token->m_text;
+	ast->m_value = func;
 
 	return ast;
 }
@@ -250,7 +275,10 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 		    {case_name,
 		     MatchExpression::CaseData {std::move(declaration), expression}});
 
-		assert(insertion_result.second);
+		if (!insertion_result.second) {
+			// TODO: give line number, etc
+			Log::fatal() << "Duplicated case in switch: '" << case_name << "'";
+		}
 	}
 
 	ast->m_cases = std::move(cases);
@@ -423,6 +451,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
+		DISPATCH(FunctionDeclaration);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
