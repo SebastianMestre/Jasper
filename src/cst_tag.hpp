@@ -12,6 +12,7 @@
                                                                                \
 	X(DeclarationList)                                                         \
 	X(Declaration)                                                             \
+	X(FunctionDeclaration)                                                     \
 	X(Identifier)                                                              \
 	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \

@@ -36,6 +36,15 @@ struct Declaration : public CST {
 	    : CST {CSTTag::Declaration} {}
 };
 
+struct FunctionDeclaration : public CST {
+	Token const* m_identifier_token;
+	std::vector<Declaration> m_args;
+	CST* m_body;
+
+	FunctionDeclaration()
+	    : CST {CSTTag::FunctionDeclaration} {}
+};
+
 struct DeclarationList : public CST {
 	std::vector<CST*> m_declarations;
 
