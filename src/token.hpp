@@ -13,4 +13,8 @@ struct Token {
 	int m_line0, m_col0;
 	/* end of token in source */
 	int m_line1, m_col1;
+
+	TokenTag type() const {
+		return m_type;
+	}
 };

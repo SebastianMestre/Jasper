@@ -20,7 +20,7 @@ void print_impl(DeclarationList* cst, int d) {
 	std::cout << "(decl-list";
 	for (auto& decl : cst->m_declarations) {
 		std::cout << "\n";
-		print(&decl, d + indent_width);
+		print(decl, d + indent_width);
 	}
 	std::cout << ")";
 }

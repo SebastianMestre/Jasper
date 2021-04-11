@@ -37,7 +37,7 @@ struct Declaration : public CST {
 };
 
 struct DeclarationList : public CST {
-	std::vector<Declaration> m_declarations;
+	std::vector<CST*> m_declarations;
 
 	DeclarationList()
 	    : CST {CSTTag::DeclarationList} {}
@@ -104,8 +104,10 @@ struct ArrayLiteral : public CST {
 	    : CST {CSTTag::ArrayLiteral} {}
 };
 
+struct Block;
+
 struct BlockFunctionLiteral : public CST {
-	CST* m_body;
+	Block* m_body;
 	std::vector<Declaration> m_args;
 
 	BlockFunctionLiteral()
@@ -197,8 +199,6 @@ struct ConstructorExpression : public CST {
 	ConstructorExpression()
 	    : CST {CSTTag::ConstructorExpression} {}
 };
-
-struct Block;
 
 struct SequenceExpression : public CST {
 	Block* m_body;

@@ -170,7 +170,7 @@ AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 	auto ast = alloc.make<DeclarationList>();
 
 	for (auto& declaration : cst->m_declarations) {
-		auto decl = static_cast<Declaration*>(convert_ast(&declaration, alloc));
+		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
 		ast->m_declarations.push_back(std::move(*decl));
 	}
 
