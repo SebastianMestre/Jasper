@@ -37,14 +37,17 @@ struct Parser {
 	    : m_tokens {tokens}
 	    , m_cst_allocator {cst_allocator} {}
 
-	Writer<std::vector<CST::Declaration>> parse_declaration_list(TokenTag);
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<CST::CST*> parse_top_level();
 
 	Writer<CST::CST*> parse_sequence_expression();
 	Writer<CST::Identifier*> parse_identifier(bool types_allowed = false);
-	Writer<CST::Declaration*> parse_declaration();
+
+	Writer<CST::CST*> parse_declaration();
+	Writer<CST::Declaration*> parse_plain_declaration();
+	Writer<CST::CST*> parse_function_declaration();
+
 	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
@@ -64,6 +67,7 @@ struct Parser {
 	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(bool);
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
+	Writer<std::vector<CST::Declaration>> parse_function_arguments();
 
 	void advance_token_cursor() {
 		m_token_cursor += 1;
@@ -143,13 +147,102 @@ Writer<CST::CST*> Parser::parse_top_level() {
 		auto declaration = parse_declaration();
 		CHECK_AND_RETURN(result, declaration);
 
-		declarations.push_back(std::move(declaration.m_result));
+		declarations.push_back(declaration.m_result);
 	}
 
 	auto e = m_cst_allocator->make<CST::DeclarationList>();
 	e->m_declarations = std::move(declarations);
 
 	return make_writer<CST::CST*>(e);
+}
+
+Writer<CST::CST*> Parser::parse_declaration() {
+	if (match(TokenTag::IDENTIFIER))
+		return parse_plain_declaration();
+
+	if (match(TokenTag::KEYWORD_FN))
+		return parse_function_declaration();
+
+	Writer<CST::CST*> result = {
+		{"Parse Error: Failed to parse declaration"}};
+
+	result.m_error.m_sub_errors.push_back(
+		make_expected_error("an identifier or 'fn'", peek()));
+
+	return result;
+}
+
+Writer<CST::Declaration*> Parser::parse_plain_declaration() {
+	Writer<CST::Declaration*> result = {
+		{"Parse Error: Failed to parse declaration"}};
+
+	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
+	CHECK_AND_RETURN(result, name);
+
+	Writer<CST::CST*> type;
+
+	if (consume(TokenTag::DECLARE_ASSIGN)) {
+	} else if (consume(TokenTag::DECLARE)) {
+		type = parse_type_term();
+		CHECK_AND_RETURN(result, type);
+		REQUIRE(result, TokenTag::ASSIGN);
+	} else {
+		result.m_error.m_sub_errors.push_back(
+			make_expected_error("':' or ':='", peek()));
+	}
+
+	auto value = parse_expression();
+	CHECK_AND_RETURN(result, value);
+
+	REQUIRE(result, TokenTag::SEMICOLON);
+
+	auto p = m_cst_allocator->make<CST::Declaration>();
+	p->m_identifier_token = name.m_result;
+	p->m_type_hint = type.m_result;
+	p->m_value = value.m_result;
+
+	return make_writer<CST::Declaration*>(p);
+}
+
+Writer<CST::CST*> Parser::parse_function_declaration() {
+	Writer<CST::CST*> result = {
+	    {"Parse Error: Failed to parse function declaration"}};
+
+	REQUIRE(result, TokenTag::KEYWORD_FN);
+
+	auto id = require(TokenTag::IDENTIFIER);
+	CHECK_AND_RETURN(result, id);
+
+	auto args_ = parse_function_arguments();
+	CHECK_AND_RETURN(result, args_);
+
+	if (consume(TokenTag::ARROW)) {
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
+
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		auto e = m_cst_allocator->make<CST::FunctionDeclaration>();
+		e->m_body = expression.m_result;
+		e->m_args = std::move(args_.m_result);
+		e->m_identifier_token = id.m_result;
+
+		return make_writer<CST::CST*>(e);
+	} else {
+		return result;
+		/*
+		auto block = parse_block();
+		CHECK_AND_RETURN(result, block);
+
+		auto e = m_cst_allocator->make<CST::BlockFunctionLiteral>();
+		e->m_body = block.m_result;
+		e->m_args = std::move(args);
+
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		return make_writer<CST::CST*>(e);
+		*/
+	}
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
@@ -206,37 +299,6 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 	}
 
 	return make_writer(std::move(expressions));
-}
-
-Writer<CST::Declaration*> Parser::parse_declaration() {
-	Writer<CST::Declaration*> result = {
-	    {"Parse Error: Failed to parse declaration"}};
-
-	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
-	CHECK_AND_RETURN(result, name);
-
-	Writer<CST::CST*> type;
-
-	if (consume(TokenTag::DECLARE_ASSIGN)) {
-	} else if (consume(TokenTag::DECLARE)) {
-		type = parse_type_term();
-		CHECK_AND_RETURN(result, type);
-		REQUIRE(result, TokenTag::ASSIGN);
-	} else {
-		result.m_error.m_sub_errors.push_back(
-		    make_expected_error("':' or ':='", peek()));
-	}
-
-	auto value = parse_expression();
-	CHECK_AND_RETURN(result, value);
-	REQUIRE(result, TokenTag::SEMICOLON);
-
-	auto p = m_cst_allocator->make<CST::Declaration>();
-	p->m_identifier_token = name.m_result;
-	p->m_type_hint = type.m_result;
-	p->m_value = value.m_result;
-
-	return make_writer<CST::Declaration*>(p);
 }
 
 // These are important for infix expression parsing.
@@ -652,6 +714,56 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 	return make_writer<CST::CST*>(e);
 }
 
+Writer<std::vector<CST::Declaration>> Parser::parse_function_arguments() {
+	Writer<std::vector<CST::Declaration>> result = {
+	    {"Parse Error: Failed to parse function arguments"}};
+
+	std::vector<CST::Declaration> args;
+
+	REQUIRE(result, TokenTag::PAREN_OPEN);
+	while (!consume(TokenTag::PAREN_CLOSE)) {
+		if (!match(TokenTag::IDENTIFIER)) {
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("an argument name (IDENTIFIER)", peek()));
+			return result;
+		}
+
+		// consume argument name
+
+		CST::Declaration arg;
+
+		arg.m_identifier_token = peek();
+		advance_token_cursor();
+
+		if (consume(TokenTag::DECLARE)) {
+			// optionally consume a type hint
+			auto type = parse_type_term();
+			CHECK_AND_RETURN(result, type);
+			arg.m_type_hint = type.m_result;
+		}
+
+		args.push_back(std::move(arg));
+
+		if (consume(TokenTag::COMMA)) {
+			// If we find a comma, we have to parse
+			// another argument, so we loop again.
+			continue;
+		} else if (consume(TokenTag::PAREN_CLOSE)) {
+			// If we find a closing paren, we are done
+			// parsing arguments, so we stop.
+			break;
+		} else {
+			// Anything else is unexpected input, so we
+			// report an error.
+			result.m_error.m_sub_errors.push_back(
+			    make_expected_error("',' or ')'", peek()));
+			return result;
+		}
+	}
+
+	return make_writer(std::move(args));
+}
+
 /*
  * functions look like this:
  * fn (x : int, y) => x
@@ -666,50 +778,11 @@ Writer<CST::CST*> Parser::parse_function() {
 	    {"Parse Error: Failed to parse function"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
-	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-	std::vector<CST::Declaration> args;
-	while (1) {
-		if (consume(TokenTag::PAREN_CLOSE)) {
-			break;
-		} else if (match(TokenTag::IDENTIFIER)) {
-			// consume argument name
+	auto args_ = parse_function_arguments();
+	CHECK_AND_RETURN(result, args_);
 
-			CST::Declaration arg;
-
-			arg.m_identifier_token = peek();
-			advance_token_cursor();
-
-			if (consume(TokenTag::DECLARE)) {
-				// optionally consume a type hint
-				auto type = parse_type_term();
-				CHECK_AND_RETURN(result, type);
-				arg.m_type_hint = type.m_result;
-			}
-
-			args.push_back(std::move(arg));
-
-			if (consume(TokenTag::COMMA)) {
-				// If we find a comma, we have to parse
-				// another argument, so we loop again.
-				continue;
-			} else if (consume(TokenTag::PAREN_CLOSE)) {
-				// If we find a closing paren, we are done
-				// parsing arguments, so we stop.
-				break;
-			} else {
-				// Anything else is unexpected input, so we
-				// report an error.
-				result.m_error.m_sub_errors.push_back(
-				    make_expected_error("',' or ')'", peek()));
-				return result;
-			}
-		} else {
-			result.m_error.m_sub_errors.push_back(
-			    make_expected_error("an argument name (IDENTIFIER)", peek()));
-			return result;
-		}
-	}
+	std::vector<CST::Declaration> args = std::move(args_.m_result);
 
 	if (consume(TokenTag::ARROW)) {
 		auto expression = parse_expression();
@@ -829,7 +902,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 
 	// NOTE: handles semicolon already
-	auto declaration = parse_declaration();
+	auto declaration = parse_plain_declaration();
 	CHECK_AND_RETURN(result, declaration);
 
 	auto condition = parse_expression();
@@ -961,23 +1034,14 @@ Writer<CST::CST*> Parser::parse_statement() {
 	    {"Parse Error: Failed to parse statement"}};
 
 	auto* p0 = peek(0);
-	if (p0->m_type == TokenTag::IDENTIFIER) {
-		auto* p1 = peek(1);
-
-		if (p1->m_type == TokenTag::DECLARE ||
-		    p1->m_type == TokenTag::DECLARE_ASSIGN) {
-
-			auto declaration = parse_declaration();
-			CHECK_AND_RETURN(result, declaration);
-
-			return make_writer<CST::CST*>(declaration.m_result);
-		} else {
-			auto expression = parse_expression();
-			CHECK_AND_RETURN(result, expression);
-			REQUIRE(result, TokenTag::SEMICOLON);
-
-			return expression;
-		}
+	auto* p1 = peek(1);
+	if ((p0->type() == TokenTag::IDENTIFIER &&
+	     (p1->type() == TokenTag::DECLARE_ASSIGN ||
+	      p1->type() == TokenTag::DECLARE)) ||
+	    (p0->type() == TokenTag::KEYWORD_FN && p1->type() == TokenTag::IDENTIFIER)) {
+		auto declaration = parse_declaration();
+		CHECK_AND_RETURN(result, declaration);
+		return make_writer<CST::CST*>(declaration.m_result);
 	} else if (p0->m_type == TokenTag::KEYWORD_RETURN) {
 		auto return_statement = parse_return_statement();
 		CHECK_AND_RETURN(result, return_statement);
