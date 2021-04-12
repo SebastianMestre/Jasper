@@ -13,6 +13,8 @@
 	X(DeclarationList)                                                         \
 	X(Declaration)                                                             \
 	X(FunctionDeclaration)                                                     \
+	X(BlockFunctionDeclaration)                                                \
+                                                                               \
 	X(Identifier)                                                              \
 	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \

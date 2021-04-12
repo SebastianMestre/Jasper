@@ -213,8 +213,8 @@ Writer<CST::CST*> Parser::parse_function_declaration() {
 	auto id = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, id);
 
-	auto args_ = parse_function_arguments();
-	CHECK_AND_RETURN(result, args_);
+	auto args = parse_function_arguments();
+	CHECK_AND_RETURN(result, args);
 
 	if (consume(TokenTag::ARROW)) {
 		auto expression = parse_expression();
@@ -224,24 +224,22 @@ Writer<CST::CST*> Parser::parse_function_declaration() {
 
 		auto e = m_cst_allocator->make<CST::FunctionDeclaration>();
 		e->m_body = expression.m_result;
-		e->m_args = std::move(args_.m_result);
+		e->m_args = std::move(args.m_result);
 		e->m_identifier_token = id.m_result;
 
 		return make_writer<CST::CST*>(e);
 	} else {
-		return result;
-		/*
 		auto block = parse_block();
 		CHECK_AND_RETURN(result, block);
 
-		auto e = m_cst_allocator->make<CST::BlockFunctionLiteral>();
+		auto e = m_cst_allocator->make<CST::BlockFunctionDeclaration>();
 		e->m_body = block.m_result;
-		e->m_args = std::move(args);
+		e->m_args = std::move(args.m_result);
+		e->m_identifier_token = id.m_result;
 
 		REQUIRE(result, TokenTag::SEMICOLON);
 
 		return make_writer<CST::CST*>(e);
-		*/
 	}
 }
 

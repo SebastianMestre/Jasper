@@ -23,6 +23,8 @@ struct CST {
 	virtual ~CST() = default;
 };
 
+struct Block;
+
 struct Declaration : public CST {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
@@ -43,6 +45,15 @@ struct FunctionDeclaration : public CST {
 
 	FunctionDeclaration()
 	    : CST {CSTTag::FunctionDeclaration} {}
+};
+
+struct BlockFunctionDeclaration : public CST {
+	Token const* m_identifier_token;
+	std::vector<Declaration> m_args;
+	Block* m_body;
+
+	BlockFunctionDeclaration()
+	    : CST {CSTTag::BlockFunctionDeclaration} {}
 };
 
 struct DeclarationList : public CST {
@@ -112,8 +123,6 @@ struct ArrayLiteral : public CST {
 	ArrayLiteral()
 	    : CST {CSTTag::ArrayLiteral} {}
 };
-
-struct Block;
 
 struct BlockFunctionLiteral : public CST {
 	Block* m_body;

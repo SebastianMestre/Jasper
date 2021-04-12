@@ -103,17 +103,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args) {
-		Declaration decl;
-
-		decl.m_cst = &arg;
-		decl.m_identifier = arg.m_identifier_token->m_text;
-		if (arg.m_type_hint)
-			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
-		decl.m_surrounding_function = ast;
-
-		ast->m_args.push_back(std::move(decl));
-	}
+	ast->m_args = convert_declarations(cst->m_args, ast, alloc);
 
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
@@ -180,9 +170,25 @@ AST* convert_ast(CST::FunctionDeclaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 
 	auto func = alloc.make<FunctionLiteral>();
-	std::vector<Declaration> args = convert_declarations(cst->m_args, func, alloc);
-	func->m_args = std::move(args);
+	func->m_args = convert_declarations(cst->m_args, func, alloc);
 	func->m_body = convert_ast(cst->m_body, alloc);
+
+	ast->m_cst = cst;
+	ast->m_identifier = cst->m_identifier_token->m_text;
+	ast->m_value = func;
+
+	return ast;
+}
+
+AST* convert_ast(CST::BlockFunctionDeclaration* cst, Allocator& alloc) {
+	auto ast = alloc.make<Declaration>();
+
+	auto func = alloc.make<FunctionLiteral>();
+	func->m_args = convert_declarations(cst->m_args, func, alloc);
+
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
+	func->m_body = seq_expr;
 
 	ast->m_cst = cst;
 	ast->m_identifier = cst->m_identifier_token->m_text;
@@ -196,6 +202,7 @@ AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 
 	for (auto& declaration : cst->m_declarations) {
 		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
+		assert(decl->type() == ASTTag::Declaration);
 		ast->m_declarations.push_back(std::move(*decl));
 	}
 
@@ -452,6 +459,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(DeclarationList);
 		DISPATCH(Declaration);
 		DISPATCH(FunctionDeclaration);
+		DISPATCH(BlockFunctionDeclaration);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
