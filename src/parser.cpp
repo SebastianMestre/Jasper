@@ -746,7 +746,12 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator->make<CST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
-		e->m_args = std::move(args);
+
+		std::vector<CST::DeclarationData> args_data;
+		for(auto& arg : args)
+			args_data.push_back(arg.m_data);
+
+		e->m_args = std::move(args_data);
 
 		return make_writer<CST::CST*>(e);
 	}

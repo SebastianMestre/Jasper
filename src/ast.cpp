@@ -69,14 +69,14 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-Declaration convert_declaration(CST::Declaration& cst, Allocator& alloc) {
+Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
 	Declaration decl;
-	decl.m_cst = &cst;
-	decl.m_identifier = cst.identifier();
-	if (cst.m_data.m_type_hint)
-		decl.m_type_hint = convert_ast(cst.m_data.m_type_hint, alloc);
-	if (cst.m_data.m_value)
-		decl.m_value = convert_ast(cst.m_data.m_value, alloc);
+	decl.m_cst = cst;
+	decl.m_identifier = data.identifier();
+	if (data.m_type_hint)
+		decl.m_type_hint = convert_ast(data.m_type_hint, alloc);
+	if (data.m_value)
+		decl.m_value = convert_ast(data.m_value, alloc);
 	return decl;
 }
 
@@ -84,7 +84,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	for (auto& arg : cst->m_args) {
-		Declaration decl = convert_declaration(arg, alloc);
+		Declaration decl = convert_declaration(&arg, arg.m_data, alloc);
 		decl.m_surrounding_function = ast;
 
 		ast->m_args.push_back(std::move(decl));
@@ -99,7 +99,7 @@ AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	for (auto& arg : cst->m_args) {
-		Declaration decl = convert_declaration(arg, alloc);
+		Declaration decl = convert_declaration(nullptr, arg, alloc);
 		decl.m_surrounding_function = ast;
 
 		ast->m_args.push_back(std::move(decl));
@@ -153,7 +153,7 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 
 AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
-	*ast = convert_declaration(*cst, alloc);
+	*ast = convert_declaration(cst, cst->m_data, alloc);
 	return ast;
 }
 
