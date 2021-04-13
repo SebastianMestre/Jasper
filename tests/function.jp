@@ -22,5 +22,11 @@ cat := fn(a,c,d) => fn(b) => a + b + c + d;
 
 capture_order := fn() => cat("A","C","D")("B");
 
+fn second(x, y, z) => y;
+
+fn third(x, y, z) {
+	return z;
+};
+
 __invoke := fn() => 0;
 
