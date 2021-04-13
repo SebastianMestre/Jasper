@@ -253,9 +253,11 @@ Writer<CST::Declaration*> Parser::parse_declaration() {
 	REQUIRE(result, TokenTag::SEMICOLON);
 
 	auto p = m_cst_allocator->make<CST::Declaration>();
-	p->m_identifier_token = name.m_result;
-	p->m_type_hint = type.m_result;
-	p->m_value = value.m_result;
+	p->m_data = {
+		name.m_result,
+		type.m_result,
+		value.m_result,
+	};
 
 	return make_writer<CST::Declaration*>(p);
 }
@@ -695,14 +697,14 @@ Writer<CST::CST*> Parser::parse_function() {
 
 			CST::Declaration arg;
 
-			arg.m_identifier_token = peek();
+			arg.m_data.m_identifier_token = peek();
 			advance_token_cursor();
 
 			if (consume(TokenTag::DECLARE)) {
 				// optionally consume a type hint
 				auto type = parse_type_term();
 				CHECK_AND_RETURN(result, type);
-				arg.m_type_hint = type.m_result;
+				arg.m_data.m_type_hint = type.m_result;
 			}
 
 			args.push_back(std::move(arg));

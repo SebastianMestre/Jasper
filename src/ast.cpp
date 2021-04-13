@@ -14,11 +14,10 @@ InternedString const& Declaration::identifier_text() const {
 			Log::fatal() << "No identifier string or fallback on declaration";
 
 		auto cst = static_cast<CST::Declaration*>(m_cst);
-		auto token = cst->m_identifier_token;
 
-		Log::warning() << "No identifier on declaration " << token->m_text << ": using token data as fallback";
+		Log::warning() << "No identifier on declaration, using token data as fallback: '" << cst->identifier() << "'";
 
-		return token->m_text;
+		return cst->identifier();
 	}
 
 	return m_identifier;
@@ -70,16 +69,22 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
+Declaration convert_declaration(CST::Declaration& cst, Allocator& alloc) {
+	Declaration decl;
+	decl.m_cst = &cst;
+	decl.m_identifier = cst.identifier();
+	if (cst.m_data.m_type_hint)
+		decl.m_type_hint = convert_ast(cst.m_data.m_type_hint, alloc);
+	if (cst.m_data.m_value)
+		decl.m_value = convert_ast(cst.m_data.m_value, alloc);
+	return decl;
+}
+
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	for (auto& arg : cst->m_args) {
-		Declaration decl;
-
-		decl.m_cst = &arg;
-		decl.m_identifier = arg.m_identifier_token->m_text;
-		if (arg.m_type_hint)
-			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
+		Declaration decl = convert_declaration(arg, alloc);
 		decl.m_surrounding_function = ast;
 
 		ast->m_args.push_back(std::move(decl));
@@ -94,12 +99,7 @@ AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	for (auto& arg : cst->m_args) {
-		Declaration decl;
-
-		decl.m_cst = &arg;
-		decl.m_identifier = arg.m_identifier_token->m_text;
-		if (arg.m_type_hint)
-			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
+		Declaration decl = convert_declaration(arg, alloc);
 		decl.m_surrounding_function = ast;
 
 		ast->m_args.push_back(std::move(decl));
@@ -153,16 +153,7 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 
 AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
-
-	ast->m_cst = cst;
-	ast->m_identifier = cst->identifier_text();
-
-	if (cst->m_type_hint)
-		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
-
-	if (cst->m_value)
-		ast->m_value = convert_ast(cst->m_value, alloc);
-
+	*ast = convert_declaration(*cst, alloc);
 	return ast;
 }
 

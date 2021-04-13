@@ -24,13 +24,21 @@ struct CST {
 	virtual ~CST() = default;
 };
 
-struct Declaration : public CST {
+struct DeclarationData {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
 	CST* m_value {nullptr}; // can be nullptr
 
-	InternedString const& identifier_text() const {
+	InternedString const& identifier() const {
 		return m_identifier_token->m_text;
+	}
+};
+
+struct Declaration : public CST {
+	DeclarationData m_data;
+
+	InternedString const& identifier() const {
+		return m_data.identifier();
 	}
 
 	Declaration()

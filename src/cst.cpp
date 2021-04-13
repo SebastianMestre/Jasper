@@ -27,12 +27,12 @@ void print_impl(DeclarationList* cst, int d) {
 
 void print_impl(Declaration* cst, int d) {
 	print_indentation(d);
-	std::cout << "(decl \"" << cst->identifier_text() << "\"\n";
+	std::cout << "(decl \"" << cst->identifier() << "\"\n";
 
-	print(cst->m_type_hint, d + 6);
+	print(cst->m_data.m_type_hint, d + 6);
 	std::cout << "\n";
 
-	print(cst->m_value, d + 6);
+	print(cst->m_data.m_value, d + 6);
 	std::cout << ")";
 }
 
