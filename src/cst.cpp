@@ -111,7 +111,7 @@ void print_impl(FunctionLiteral* cst, int d) {
 	std::cout << "(short-function-literal (";
 	for (auto arg : cst->m_args) {
 		std::cout << "\n";
-		print(&arg, d + indent_width);
+		print(arg, d + indent_width);
 	}
 	std::cout << ")\n";
 

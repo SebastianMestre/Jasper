@@ -688,26 +688,26 @@ Writer<CST::CST*> Parser::parse_function() {
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-	std::vector<CST::Declaration> args;
+	std::vector<CST::DeclarationData> args_data;
 	while (1) {
 		if (consume(TokenTag::PAREN_CLOSE)) {
 			break;
 		} else if (match(TokenTag::IDENTIFIER)) {
 			// consume argument name
 
-			CST::Declaration arg;
+			CST::DeclarationData arg_data;
 
-			arg.m_data.m_identifier_token = peek();
+			arg_data.m_identifier_token = peek();
 			advance_token_cursor();
 
 			if (consume(TokenTag::DECLARE)) {
 				// optionally consume a type hint
 				auto type = parse_type_term();
 				CHECK_AND_RETURN(result, type);
-				arg.m_data.m_type_hint = type.m_result;
+				arg_data.m_type_hint = type.m_result;
 			}
 
-			args.push_back(std::move(arg));
+			args_data.push_back(std::move(arg_data));
 
 			if (consume(TokenTag::COMMA)) {
 				// If we find a comma, we have to parse
@@ -737,7 +737,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator->make<CST::FunctionLiteral>();
 		e->m_body = expression.m_result;
-		e->m_args = std::move(args);
+		e->m_args = std::move(args_data);
 
 		return make_writer<CST::CST*>(e);
 	} else {
@@ -746,11 +746,6 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator->make<CST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
-
-		std::vector<CST::DeclarationData> args_data;
-		for(auto& arg : args)
-			args_data.push_back(arg.m_data);
-
 		e->m_args = std::move(args_data);
 
 		return make_writer<CST::CST*>(e);

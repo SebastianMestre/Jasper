@@ -123,7 +123,7 @@ struct BlockFunctionLiteral : public CST {
 
 struct FunctionLiteral : public CST {
 	CST* m_body;
-	std::vector<Declaration> m_args;
+	std::vector<DeclarationData> m_args;
 
 	FunctionLiteral()
 	    : CST {CSTTag::FunctionLiteral} {}
