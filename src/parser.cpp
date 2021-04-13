@@ -777,10 +777,8 @@ Writer<CST::CST*> Parser::parse_function() {
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 
-	auto args_ = parse_function_arguments();
-	CHECK_AND_RETURN(result, args_);
-
-	std::vector<CST::Declaration> args = std::move(args_.m_result);
+	auto args = parse_function_arguments();
+	CHECK_AND_RETURN(result, args);
 
 	if (consume(TokenTag::ARROW)) {
 		auto expression = parse_expression();
@@ -788,7 +786,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator->make<CST::FunctionLiteral>();
 		e->m_body = expression.m_result;
-		e->m_args = std::move(args);
+		e->m_args = std::move(args.m_result);
 
 		return make_writer<CST::CST*>(e);
 	} else {
@@ -797,7 +795,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator->make<CST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
-		e->m_args = std::move(args);
+		e->m_args = std::move(args.m_result);
 
 		return make_writer<CST::CST*>(e);
 	}
