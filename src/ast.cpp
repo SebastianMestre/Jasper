@@ -155,7 +155,7 @@ AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 
 	ast->m_cst = cst;
-	ast->m_identifier = cst->m_identifier_token->m_text;
+	ast->m_identifier = cst->identifier_text();
 
 	if (cst->m_type_hint)
 		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);

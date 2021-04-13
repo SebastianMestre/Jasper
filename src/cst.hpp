@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "./utils/interned_string.hpp"
 #include "cst_tag.hpp"
 #include "token.hpp"
 
@@ -28,8 +29,8 @@ struct Declaration : public CST {
 	CST* m_type_hint {nullptr};  // can be nullptr
 	CST* m_value {nullptr}; // can be nullptr
 
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text.str();
+	InternedString const& identifier_text() const {
+		return m_identifier_token->m_text;
 	}
 
 	Declaration()
