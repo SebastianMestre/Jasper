@@ -30,6 +30,10 @@ struct Writer {
 	    : m_error {std::move(error)}
 	    , m_result {std::move(result)} {}
 
+	void add_sub_error(ErrorReport err) {
+		m_error.m_sub_errors.push_back(std::move(err));
+	}
+
 	ErrorReport& error() & {
 		return m_error;
 	}

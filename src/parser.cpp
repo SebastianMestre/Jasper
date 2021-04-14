@@ -17,14 +17,25 @@ Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
 }
 
-ErrorReport make_expected_error(string_view expected, Token const* found_token) {
+ErrorReport make_located_error(string_view text, Token const* token) {
 	std::stringstream ss;
-	ss << "Parse Error: @ " << found_token->m_line0 + 1 << ":"
-	   << found_token->m_col0 + 1 << ": Expected " << expected << " but got "
-	   << token_string[int(found_token->m_type)] << ' '
-	   << found_token->m_text << " instead";
+	ss << "Parse error at " << token->m_line0 + 1 << ":" << token->m_col0 + 1
+	   << " : " << text;
 
 	return ErrorReport {ss.str()};
+}
+
+ErrorReport make_expected_error(string_view expected, Token const* found_token) {
+	std::stringstream ss;
+	ss << "Expected " << expected << " but got "
+	   << token_string[int(found_token->m_type)] << ' ' << found_token->m_text
+	   << " instead";
+
+	return make_located_error(ss.str(), found_token);
+}
+
+ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
+	return make_expected_error(token_string[int(tag)], found_token);
 }
 
 struct Parser {
@@ -79,8 +90,7 @@ struct Parser {
 		Token const* current_token = peek();
 
 		if (current_token->m_type != expected_type) {
-			return {make_expected_error(
-			    token_string[int(expected_type)], current_token)};
+			return {make_expected_error(expected_type, current_token)};
 		}
 
 		advance_token_cursor();
@@ -108,7 +118,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
 	if (not rhs.ok()) {
 		// NOTE: it's kinda bad that we move out of a non r-value, but
 		// due to the way we use it, it's safe.
-		lhs.m_error.m_sub_errors.push_back(std::move(rhs.m_error));
+		lhs.add_sub_error(std::move(rhs).error());
 		return true;
 	}
 	return false;
@@ -117,7 +127,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
 template <typename T, typename U>
 bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	if (not rhs.ok()) {
-		lhs.m_error.m_sub_errors.push_back(std::move(rhs.m_error));
+		lhs.add_sub_error(std::move(rhs).error());
 		return true;
 	}
 	return false;
@@ -132,8 +142,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 		return result;
 
 Writer<CST::CST*> Parser::parse_top_level() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse top level program"}};
+	Writer<CST::CST*> result = {{"Failed to parse top level program"}};
 
 	auto declarations = parse_declaration_list(TokenTag::END);
 	CHECK_AND_RETURN(result, declarations);
@@ -146,8 +155,7 @@ Writer<CST::CST*> Parser::parse_top_level() {
 
 Writer<std::vector<CST::Declaration>>
 Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<CST::Declaration>> result = {
-	    {"Parse Error: Failed to parse declaration list"}};
+	Writer<std::vector<CST::Declaration>> result = {{"Failed to parse declaration list"}};
 
 	std::vector<CST::Declaration> declarations;
 
@@ -158,11 +166,9 @@ Parser::parse_declaration_list(TokenTag terminator) {
 			break;
 
 		if (p0->m_type == TokenTag::END) {
-			result.m_error.m_sub_errors.push_back(
-			    make_expected_error("a declaration", p0));
+			result.add_sub_error(make_expected_error("a declaration", p0));
 
-			result.m_error.m_sub_errors.push_back(
-			    make_expected_error(token_string[int(terminator)], p0));
+			result.add_sub_error(make_expected_error(terminator, p0));
 
 			return result;
 		}
@@ -178,8 +184,7 @@ Parser::parse_declaration_list(TokenTag terminator) {
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<CST::CST*>> result = {
-	    {"Parse Error: Failed to parse expression list"}};
+	Writer<std::vector<CST::CST*>> result = {{"Failed to parse expression list"}};
 
 	std::vector<CST::CST*> expressions;
 
@@ -190,7 +195,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 			auto p0 = peek();
 
 			if (p0->m_type == TokenTag::END) {
-				result.m_error.m_sub_errors.push_back(
+				result.add_sub_error(
 				    {{"Found EOF while parsing an expression list"}});
 				return result;
 			}
@@ -200,7 +205,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 					advance_token_cursor();
 					break;
 				} else {
-					result.m_error.m_sub_errors.push_back(
+					result.add_sub_error(
 					    {{"Found a terminator after a delimiter in an "
 					      "expression list "}});
 					return result;
@@ -220,10 +225,8 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 				advance_token_cursor();
 				break;
 			} else {
-				result.m_error.m_sub_errors.push_back(
-				    make_expected_error(token_string[(int)delimiter], p1));
-				result.m_error.m_sub_errors.push_back(
-				    make_expected_error(token_string[(int)terminator], p1));
+				result.add_sub_error(make_expected_error(delimiter, p1));
+				result.add_sub_error(make_expected_error(terminator, p1));
 				return result;
 			}
 		}
@@ -233,8 +236,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 }
 
 Writer<CST::Declaration*> Parser::parse_declaration() {
-	Writer<CST::Declaration*> result = {
-	    {"Parse Error: Failed to parse declaration"}};
+	Writer<CST::Declaration*> result = {{"Failed to parse declaration"}};
 
 	auto decl_data = parse_declaration_data();
 	CHECK_AND_RETURN(result, decl_data);
@@ -345,8 +347,7 @@ binding_power binding_power_of(TokenTag t) {
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
-	Writer<std::vector<CST::CST*>> result = {
-	    {"Parse Error: Failed to argument list"}};
+	Writer<std::vector<CST::CST*>> result = {{"Failed to argument list"}};
 
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 	auto args =
@@ -361,8 +362,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
 Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse expression"}};
 
 	Writer<CST::CST*> lhs;
 	if (!parsed_lhs) {
@@ -387,8 +387,7 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 		}
 
 		if (not is_binary_operator(op->m_type)) {
-			result.m_error.m_sub_errors.push_back(
-			    make_expected_error("a binary operator", op));
+			result.add_sub_error(make_expected_error("a binary operator", op));
 			return result;
 		}
 
@@ -481,8 +480,7 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
  * This is not what the term usually means in the literature.
  */
 Writer<CST::CST*> Parser::parse_terminal() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse terminal expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse terminal expression"}};
 
 	auto token = peek();
 
@@ -528,8 +526,8 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		}
 
 		return token->m_type == TokenTag::SUB
-		       ? Writer<CST::CST*> {{"Parse Error: Stray minus sign with no number"}}
-		       : Writer<CST::CST*> {{"Parse Error: Stray plus sign with no number"}};
+		           ? make_located_error("Stray minus sign with no number", token)
+		           : make_located_error("Stray plus sign with no number", token);
 	}
 
 	if (token->m_type == TokenTag::INTEGER) {
@@ -607,21 +605,15 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		return expr;
 	}
 
-	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_string[int(TokenTag::KEYWORD_FN)], token)});
-
-	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_string[int(TokenTag::IDENTIFIER)], token)});
-
-	result.m_error.m_sub_errors.push_back(
-	    {make_expected_error(token_string[int(TokenTag::NUMBER)], token)});
+	result.add_sub_error(make_expected_error(TokenTag::KEYWORD_FN, token));
+	result.add_sub_error(make_expected_error(TokenTag::IDENTIFIER, token));
+	result.add_sub_error(make_expected_error(TokenTag::NUMBER, token));
 
 	return result;
 }
 
 Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse ternary expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse ternary expression"}};
 
 	Writer<CST::CST*> condition;
 	if (!parsed_condition) {
@@ -653,8 +645,7 @@ Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
 }
 
 Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
-	Writer<CST::Identifier*> result = {
-	    {"Parse Error: Failed to parse identifier"}};
+	Writer<CST::Identifier*> result = {{"Failed to parse identifier"}};
 
 	Token const* token;
 
@@ -674,8 +665,7 @@ Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 }
 
 Writer<CST::CST*> Parser::parse_array_literal() {
-	Writer<CST::CST*> result = {
-	    {"Failed to parse array literal"}};
+	Writer<CST::CST*> result = {{"Failed to parse array literal"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_ARRAY);
 	REQUIRE(result, TokenTag::BRACE_OPEN);
@@ -697,8 +687,7 @@ Writer<CST::CST*> Parser::parse_array_literal() {
  * }
  */
 Writer<CST::CST*> Parser::parse_function() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse function"}};
+	Writer<CST::CST*> result = {{"Failed to parse function"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -735,12 +724,11 @@ Writer<CST::CST*> Parser::parse_function() {
 			} else {
 				// Anything else is unexpected input, so we
 				// report an error.
-				result.m_error.m_sub_errors.push_back(
-				    make_expected_error("',' or ')'", peek()));
+				result.add_sub_error(make_expected_error("',' or ')'", peek()));
 				return result;
 			}
 		} else {
-			result.m_error.m_sub_errors.push_back(
+			result.add_sub_error(
 			    make_expected_error("an argument name (IDENTIFIER)", peek()));
 			return result;
 		}
@@ -755,7 +743,7 @@ Writer<CST::CST*> Parser::parse_function() {
 		e->m_args = std::move(args_data);
 
 		return make_writer<CST::CST*>(e);
-	} else {
+	} else if (match(TokenTag::BRACE_OPEN)) {
 		auto block = parse_block();
 		CHECK_AND_RETURN(result, block);
 
@@ -764,12 +752,13 @@ Writer<CST::CST*> Parser::parse_function() {
 		e->m_args = std::move(args_data);
 
 		return make_writer<CST::CST*>(e);
+	} else {
+		return make_expected_error("'=>' or '{'", peek());
 	}
 }
 
 Writer<CST::CST*> Parser::parse_block() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse block statement"}};
+	Writer<CST::CST*> result = {{"Failed to parse block statement"}};
 
 	REQUIRE(result, TokenTag::BRACE_OPEN);
 
@@ -780,8 +769,7 @@ Writer<CST::CST*> Parser::parse_block() {
 		auto p0 = peek();
 
 		if (p0->m_type == TokenTag::END) {
-			result.m_error.m_sub_errors.push_back(
-			    {{"Found EOF while parsing block statement"}});
+			result.add_sub_error({{"Found EOF while parsing block statement"}});
 			return result;
 		}
 
@@ -802,8 +790,7 @@ Writer<CST::CST*> Parser::parse_block() {
 }
 
 Writer<CST::CST*> Parser::parse_return_statement() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse return statement"}};
+	Writer<CST::CST*> result = {{"Failed to parse return statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_RETURN);
 
@@ -817,8 +804,7 @@ Writer<CST::CST*> Parser::parse_return_statement() {
 	return make_writer<CST::CST*>(e);
 }
 Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse if-else statement or expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse if-else statement or expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_IF);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -857,8 +843,7 @@ Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 }
 
 Writer<CST::CST*> Parser::parse_for_statement() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse for statement"}};
+	Writer<CST::CST*> result = {{"Failed to parse for statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FOR);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -888,8 +873,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 }
 
 Writer<CST::CST*> Parser::parse_while_statement() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse while statement"}};
+	Writer<CST::CST*> result = {{"Failed to parse while statement"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_WHILE);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -909,8 +893,7 @@ Writer<CST::CST*> Parser::parse_while_statement() {
 }
 
 Writer<CST::CST*> Parser::parse_match_expression() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse match expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse match expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_MATCH);
 	REQUIRE(result, TokenTag::PAREN_OPEN);
@@ -954,8 +937,7 @@ Writer<CST::CST*> Parser::parse_match_expression() {
 }
 
 Writer<CST::CST*> Parser::parse_sequence_expression() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse sequence expression"}};
+	Writer<CST::CST*> result = {{"Failed to parse sequence expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_SEQ);
 	auto body = parse_block();
@@ -968,8 +950,7 @@ Writer<CST::CST*> Parser::parse_sequence_expression() {
 }
 
 Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool required_type) {
-	Writer<std::pair<Token const*, CST::CST*>> result = {
-	    {"Parse Error: Failed to parse name and type"}};
+	Writer<std::pair<Token const*, CST::CST*>> result = {{"Failed to parse name and type"}};
 
 	auto name = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, name);
@@ -992,8 +973,7 @@ Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool requ
  * linear time.
  */
 Writer<CST::CST*> Parser::parse_statement() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse statement"}};
+	Writer<CST::CST*> result = {{"Failed to parse statement"}};
 
 	auto* p0 = peek(0);
 	if (p0->m_type == TokenTag::IDENTIFIER) {
@@ -1044,8 +1024,7 @@ Writer<CST::CST*> Parser::parse_statement() {
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_type_term_arguments() {
-	Writer<std::vector<CST::CST*>> result = {
-	    {"Parse Error: Failed to parse type arguments"}};
+	Writer<std::vector<CST::CST*>> result = {{"Failed to parse type arguments"}};
 
 	REQUIRE(result, TokenTag::POLY_OPEN);
 
@@ -1062,8 +1041,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_type_term_arguments() {
 }
 
 Writer<CST::CST*> Parser::parse_type_term() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse type"}};
+	Writer<CST::CST*> result = {{"Failed to parse type"}};
 
 	auto callee = parse_identifier(true);
 	CHECK_AND_RETURN(result, callee);
@@ -1083,7 +1061,7 @@ Writer<CST::CST*> Parser::parse_type_term() {
 Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::parse_type_list(
     bool with_identifiers = false) {
 	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>>
-	    result = {{"Parse Error: Failed to parse type list"}};
+	    result = {{"Failed to parse type list"}};
 
 	std::vector<CST::Identifier> identifiers;
 	std::vector<CST::CST*> types;
@@ -1112,8 +1090,7 @@ Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::
 }
 
 Writer<CST::CST*> Parser::parse_type_var() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse type var"}};
+	Writer<CST::CST*> result = {{"Failed to parse type var"}};
 
 	REQUIRE(result, TokenTag::AT);
 
@@ -1127,8 +1104,7 @@ Writer<CST::CST*> Parser::parse_type_var() {
 }
 
 Writer<CST::CST*> Parser::parse_type_function() {
-	Writer<CST::CST*> result = {
-	    {"Parse Error: Failed to parse type function"}};
+	Writer<CST::CST*> result = {{"Failed to parse type function"}};
 
 	if (consume(TokenTag::KEYWORD_UNION)) {
 		auto tl = parse_type_list(true);
