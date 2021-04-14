@@ -187,47 +187,37 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 
 	std::vector<CST::CST*> expressions;
 
-	if (peek()->m_type == terminator) {
-		advance_token_cursor();
-	} else {
-		while (1) {
-			auto p0 = peek();
+	if (consume(terminator))
+		return make_writer(std::move(expressions));
 
-			if (p0->m_type == TokenTag::END) {
-				result.add_sub_error(
-				    {{"Found EOF while parsing an expression list"}});
-				return result;
-			}
+	while (1) {
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
 
-			if (p0->m_type == terminator) {
+		expressions.push_back(expression.m_result);
+
+		auto p0 = peek();
+
+		if (p0->m_type == delimiter) {
+			advance_token_cursor();
+
+			if (match(terminator)) {
 				if (allow_trailing_delimiter) {
 					advance_token_cursor();
 					break;
-				} else {
-					result.add_sub_error(
-					    {{"Found a terminator after a delimiter in an "
-					      "expression list "}});
-					return result;
 				}
-			}
 
-			auto expression = parse_expression();
-			CHECK_AND_RETURN(result, expression);
-
-			expressions.push_back(expression.m_result);
-
-			auto p1 = peek();
-
-			if (p1->m_type == delimiter) {
-				advance_token_cursor();
-			} else if (p1->m_type == terminator) {
-				advance_token_cursor();
-				break;
-			} else {
-				result.add_sub_error(make_expected_error(delimiter, p1));
-				result.add_sub_error(make_expected_error(terminator, p1));
+				result.add_sub_error(make_located_error(
+				    "Found trailing delimiter in expression list", p0));
 				return result;
 			}
+		} else if (p0->m_type == terminator) {
+			advance_token_cursor();
+			break;
+		} else {
+			result.add_sub_error(make_expected_error(delimiter, p0));
+			result.add_sub_error(make_expected_error(terminator, p0));
+			return result;
 		}
 	}
 
@@ -346,7 +336,7 @@ binding_power binding_power_of(TokenTag t) {
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
-	Writer<std::vector<CST::CST*>> result = {{"Failed to argument list"}};
+	Writer<std::vector<CST::CST*>> result = {{"Failed to parse argument list"}};
 
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 	auto args =

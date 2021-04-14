@@ -56,6 +56,7 @@ struct Lexer {
 TokenArray tokenize(std::string const& source) {
 	TokenArray ta;
 	std::vector<char> v;
+	v.reserve(source.size());
 	for (char c : source)
 		v.push_back(c);
 	Lexer lexer = {std::move(v), ta};
