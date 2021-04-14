@@ -17,6 +17,27 @@ Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
 }
 
+// WHY DO I HAVE TO TYPE THIS TWICE!?
+template <typename T, typename U>
+bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
+	if (not rhs.ok()) {
+		// NOTE: it's kinda bad that we move out of a non r-value, but
+		// due to the way we use it, it's safe.
+		lhs.add_sub_error(std::move(rhs).error());
+		return true;
+	}
+	return false;
+}
+
+template <typename T, typename U>
+bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
+	if (not rhs.ok()) {
+		lhs.add_sub_error(std::move(rhs).error());
+		return true;
+	}
+	return false;
+}
+
 ErrorReport make_located_error(string_view text, Token const* token) {
 	std::stringstream ss;
 	ss << "Parse error at " << token->m_line0 + 1 << ":" << token->m_col0 + 1
@@ -111,27 +132,6 @@ struct Parser {
 		return false;
 	}
 };
-
-// WHY DO I HAVE TO TYPE THIS TWICE!?
-template <typename T, typename U>
-bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
-	if (not rhs.ok()) {
-		// NOTE: it's kinda bad that we move out of a non r-value, but
-		// due to the way we use it, it's safe.
-		lhs.add_sub_error(std::move(rhs).error());
-		return true;
-	}
-	return false;
-}
-
-template <typename T, typename U>
-bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
-	if (not rhs.ok()) {
-		lhs.add_sub_error(std::move(rhs).error());
-		return true;
-	}
-	return false;
-}
 
 #define CHECK_AND_RETURN(result, writer)                                       \
 	if (handle_error(result, writer))                                          \
