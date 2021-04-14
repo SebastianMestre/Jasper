@@ -223,7 +223,7 @@ void print_impl(IfElseStatement* cst, int d) {
 void print_impl(ForStatement* cst, int d) {
 	print_indentation(d);
 	std::cout << "(for-stmt\n";
-	print(&cst->m_declaration, d + indent_width);
+	print(cst->m_declaration, d + indent_width);
 	std::cout << "\n";
 	print(cst->m_condition, d + indent_width);
 	std::cout << "\n";

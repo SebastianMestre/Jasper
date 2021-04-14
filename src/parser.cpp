@@ -45,6 +45,7 @@ struct Parser {
 	Writer<CST::CST*> parse_sequence_expression();
 	Writer<CST::Identifier*> parse_identifier(bool types_allowed = false);
 	Writer<CST::Declaration*> parse_declaration();
+	Writer<CST::DeclarationData> parse_declaration_data();
 	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
@@ -105,6 +106,8 @@ struct Parser {
 template <typename T, typename U>
 bool handle_error(Writer<T>& lhs, Writer<U>& rhs) {
 	if (not rhs.ok()) {
+		// NOTE: it's kinda bad that we move out of a non r-value, but
+		// due to the way we use it, it's safe.
 		lhs.m_error.m_sub_errors.push_back(std::move(rhs.m_error));
 		return true;
 	}
@@ -233,33 +236,45 @@ Writer<CST::Declaration*> Parser::parse_declaration() {
 	Writer<CST::Declaration*> result = {
 	    {"Parse Error: Failed to parse declaration"}};
 
-	Writer<Token const*> name = require(TokenTag::IDENTIFIER);
-	CHECK_AND_RETURN(result, name);
+	auto decl_data = parse_declaration_data();
+	CHECK_AND_RETURN(result, decl_data);
+
+	auto p = m_cst_allocator->make<CST::Declaration>();
+	p->m_data = decl_data.m_result;
+
+	return make_writer<CST::Declaration*>(p);
+}
+
+Writer<CST::DeclarationData> Parser::parse_declaration_data() {
+	auto name = require(TokenTag::IDENTIFIER);
+	if (!name.ok())
+		return std::move(name).error();
 
 	Writer<CST::CST*> type;
 
 	if (consume(TokenTag::DECLARE_ASSIGN)) {
 	} else if (consume(TokenTag::DECLARE)) {
 		type = parse_type_term();
-		CHECK_AND_RETURN(result, type);
-		REQUIRE(result, TokenTag::ASSIGN);
+		if (!type.ok())
+			return std::move(type).error();
+
+		auto assign = require(TokenTag::ASSIGN);
+		if (!assign.ok())
+			return std::move(assign).error();
 	} else {
-		result.m_error.m_sub_errors.push_back(
-		    make_expected_error("':' or ':='", peek()));
+		return {make_expected_error("':' or ':='", peek())};
 	}
 
 	auto value = parse_expression();
-	CHECK_AND_RETURN(result, value);
-	REQUIRE(result, TokenTag::SEMICOLON);
+	if (!value.ok())
+		return std::move(value).error();
 
-	auto p = m_cst_allocator->make<CST::Declaration>();
-	p->m_data = {
-		name.m_result,
-		type.m_result,
-		value.m_result,
-	};
+	auto semicolon = require(TokenTag::SEMICOLON);
+	if (!semicolon.ok())
+		return std::move(semicolon).error();
 
-	return make_writer<CST::Declaration*>(p);
+	return make_writer<CST::DeclarationData>(
+	    {name.m_result, type.m_result, value.m_result});
 }
 
 // These are important for infix expression parsing.
@@ -849,7 +864,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 
 	// NOTE: handles semicolon already
-	auto declaration = parse_declaration();
+	auto declaration = parse_declaration_data();
 	CHECK_AND_RETURN(result, declaration);
 
 	auto condition = parse_expression();
@@ -864,7 +879,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 	CHECK_AND_RETURN(result, body);
 
 	auto e = m_cst_allocator->make<CST::ForStatement>();
-	e->m_declaration = std::move(*declaration.m_result);
+	e->m_declaration = std::move(declaration.m_result);
 	e->m_condition = condition.m_result;
 	e->m_action = action.m_result;
 	e->m_body = body.m_result;

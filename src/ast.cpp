@@ -321,7 +321,10 @@ AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
 	while_ast->m_condition = convert_ast(cst->m_condition, alloc);;
 
 	auto outter_block_ast = alloc.make<Block>();
-	outter_block_ast->m_body.push_back(convert_ast(&cst->m_declaration, alloc));
+	auto decl = convert_declaration(nullptr, cst->m_declaration, alloc);
+	auto heap_decl = alloc.make<Declaration>();
+	*heap_decl = std::move(decl);
+	outter_block_ast->m_body.push_back(heap_decl);
 	outter_block_ast->m_body.push_back(while_ast);
 
 	return outter_block_ast;

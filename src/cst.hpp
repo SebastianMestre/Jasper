@@ -240,7 +240,7 @@ struct IfElseStatement : public CST {
 };
 
 struct ForStatement : public CST {
-	Declaration m_declaration;
+	DeclarationData m_declaration;
 	CST* m_condition;
 	CST* m_action;
 	CST* m_body;
