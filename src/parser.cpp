@@ -39,11 +39,7 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 }
 
 ErrorReport make_located_error(string_view text, Token const* token) {
-	std::stringstream ss;
-	ss << "Parse error at " << token->m_line0 + 1 << ":" << token->m_col0 + 1
-	   << " : " << text;
-
-	return ErrorReport {ss.str()};
+	return make_located_error(text, token->m_source_location.start);
 }
 
 ErrorReport make_expected_error(string_view expected, Token const* found_token) {
