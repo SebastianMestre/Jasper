@@ -83,7 +83,7 @@ Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& dat
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args) {
+	for (auto& arg : cst->m_args.m_args) {
 		Declaration decl = convert_declaration(nullptr, arg, alloc);
 		decl.m_surrounding_function = ast;
 
@@ -98,7 +98,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args) {
+	for (auto& arg : cst->m_args.m_args) {
 		Declaration decl = convert_declaration(nullptr, arg, alloc);
 		decl.m_surrounding_function = ast;
 

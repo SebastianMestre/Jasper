@@ -77,6 +77,7 @@ struct Parser {
 	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
+	Writer<CST::FuncArguments> parse_function_arguments();
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
 	Writer<std::vector<CST::CST*>> parse_argument_list();
@@ -665,17 +666,11 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 	return make_writer<CST::CST*>(e);
 }
 
-/*
- * functions look like this:
- * fn (x : int, y, z : string) {
- *   print(x);
- * }
- */
-Writer<CST::CST*> Parser::parse_function() {
-	Writer<CST::CST*> result = {{"Failed to parse function"}};
+Writer<CST::FuncArguments> Parser::parse_function_arguments() {
 
-	REQUIRE(result, TokenTag::KEYWORD_FN);
-	REQUIRE(result, TokenTag::PAREN_OPEN);
+	auto open_paren = require(TokenTag::PAREN_OPEN);
+	if (!open_paren.ok())
+		return std::move(open_paren).error();
 
 	std::vector<CST::DeclarationData> args_data;
 	while (1) {
@@ -692,7 +687,8 @@ Writer<CST::CST*> Parser::parse_function() {
 			if (consume(TokenTag::DECLARE)) {
 				// optionally consume a type hint
 				auto type = parse_type_term();
-				CHECK_AND_RETURN(result, type);
+				if (!type.ok())
+					return std::move(type).error();
 				arg_data.m_type_hint = type.m_result;
 			}
 
@@ -709,15 +705,30 @@ Writer<CST::CST*> Parser::parse_function() {
 			} else {
 				// Anything else is unexpected input, so we
 				// report an error.
-				result.add_sub_error(make_expected_error("',' or ')'", peek()));
-				return result;
+				return make_expected_error("',' or ')'", peek());
 			}
 		} else {
-			result.add_sub_error(
-			    make_expected_error("an argument name (IDENTIFIER)", peek()));
-			return result;
+			return make_expected_error("an argument name (IDENTIFIER)", peek());
 		}
 	}
+
+	return make_writer(CST::FuncArguments {std::move(args_data)});
+}
+
+/*
+ * functions look like this:
+ * fn (x : int, y, z : string) {
+ *   print(x);
+ * }
+ */
+Writer<CST::CST*> Parser::parse_function() {
+	Writer<CST::CST*> result = {{"Failed to parse function"}};
+
+	REQUIRE(result, TokenTag::KEYWORD_FN);
+
+	auto func_args = parse_function_arguments();
+	if (!func_args.ok())
+		return std::move(func_args).error();
 
 	if (consume(TokenTag::ARROW)) {
 		auto expression = parse_expression();
@@ -725,7 +736,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator.make<CST::FunctionLiteral>();
 		e->m_body = expression.m_result;
-		e->m_args = std::move(args_data);
+		e->m_args = std::move(func_args.m_result);
 
 		return make_writer<CST::CST*>(e);
 	} else if (match(TokenTag::BRACE_OPEN)) {
@@ -734,7 +745,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator.make<CST::BlockFunctionLiteral>();
 		e->m_body = block.m_result;
-		e->m_args = std::move(args_data);
+		e->m_args = std::move(func_args.m_result);
 
 		return make_writer<CST::CST*>(e);
 	} else {

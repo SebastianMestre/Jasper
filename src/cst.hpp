@@ -113,9 +113,13 @@ struct ArrayLiteral : public CST {
 	    : CST {CSTTag::ArrayLiteral} {}
 };
 
+struct FuncArguments {
+	std::vector<DeclarationData> m_args;
+};
+
 struct BlockFunctionLiteral : public CST {
 	CST* m_body;
-	std::vector<DeclarationData> m_args;
+	FuncArguments m_args;
 
 	BlockFunctionLiteral()
 	    : CST {CSTTag::BlockFunctionLiteral} {}
@@ -123,7 +127,7 @@ struct BlockFunctionLiteral : public CST {
 
 struct FunctionLiteral : public CST {
 	CST* m_body;
-	std::vector<DeclarationData> m_args;
+	FuncArguments m_args;
 
 	FunctionLiteral()
 	    : CST {CSTTag::FunctionLiteral} {}
