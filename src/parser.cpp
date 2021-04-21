@@ -76,7 +76,7 @@ struct Parser {
 	Writer<CST::Declaration*> parse_declaration();
 	Writer<CST::FuncDeclaration*> parse_func_declaration();
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
-	Writer<CST::DeclarationData> parse_declaration_data();
+	Writer<CST::DeclarationData> parse_plain_declaration_data();
 
 	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
 	Writer<CST::CST*> parse_terminal();
@@ -267,7 +267,7 @@ Writer<CST::FuncDeclaration*> Parser::parse_func_declaration() {
 Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {
 	Writer<CST::PlainDeclaration*> result = {{"Failed to parse declaration"}};
 
-	auto decl_data = parse_declaration_data();
+	auto decl_data = parse_plain_declaration_data();
 	CHECK_AND_RETURN(result, decl_data);
 
 	auto p = m_cst_allocator.make<CST::PlainDeclaration>();
@@ -278,7 +278,7 @@ Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {
 
 
 
-Writer<CST::DeclarationData> Parser::parse_declaration_data() {
+Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
 	auto name = require(TokenTag::IDENTIFIER);
 	if (!name.ok())
 		return std::move(name).error();
@@ -890,7 +890,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 	REQUIRE(result, TokenTag::PAREN_OPEN);
 
 	// NOTE: handles semicolon already
-	auto declaration = parse_declaration_data();
+	auto declaration = parse_plain_declaration_data();
 	CHECK_AND_RETURN(result, declaration);
 
 	auto condition = parse_expression();
