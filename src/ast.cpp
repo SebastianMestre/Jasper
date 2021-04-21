@@ -15,9 +15,11 @@ InternedString const& Declaration::identifier_text() const {
 
 		auto cst = static_cast<CST::Declaration*>(m_cst);
 
-		Log::warning() << "No identifier on declaration, using token data as fallback: '" << cst->identifier() << "'";
+		auto found_identifier = cst->identifier_virtual();
 
-		return cst->identifier();
+		Log::warning() << "No identifier on declaration, using token data as fallback: '" << found_identifier << "'";
+
+		return found_identifier;
 	}
 
 	return m_identifier;
@@ -155,7 +157,7 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
+AST* convert_ast(CST::PlainDeclaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 	*ast = convert_declaration(cst, cst->m_data, alloc);
 	return ast;
@@ -165,7 +167,7 @@ AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 	auto ast = alloc.make<DeclarationList>();
 
 	for (auto& declaration : cst->m_declarations) {
-		auto decl = static_cast<Declaration*>(convert_ast(&declaration, alloc));
+		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
 		ast->m_declarations.push_back(std::move(*decl));
 	}
 
@@ -420,7 +422,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(WhileStatement);
 
 		DISPATCH(DeclarationList);
-		DISPATCH(Declaration);
+		DISPATCH(PlainDeclaration);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);

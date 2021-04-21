@@ -11,7 +11,8 @@
 	X(FunctionLiteral)                                                         \
                                                                                \
 	X(DeclarationList)                                                         \
-	X(Declaration)                                                             \
+	X(PlainDeclaration)                                                        \
+	X(FuncDeclaration)                                                         \
 	X(Identifier)                                                              \
 	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \
