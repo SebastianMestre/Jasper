@@ -279,7 +279,10 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 		    {case_name,
 		     MatchExpression::CaseData {std::move(declaration), expression}});
 
-		assert(insertion_result.second);
+		if (!insertion_result.second) {
+			// TODO: add location information
+			Log::fatal() << "Duplicate case in match expression";
+		}
 	}
 
 	ast->m_cases = std::move(cases);
