@@ -74,7 +74,7 @@ struct Parser {
 	Writer<CST::Identifier*> parse_identifier(bool types_allowed = false);
 
 	Writer<CST::Declaration*> parse_declaration();
-	Writer<CST::FuncDeclaration*> parse_func_declaration();
+	Writer<CST::Declaration*> parse_func_declaration();
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
 	Writer<CST::DeclarationData> parse_plain_declaration_data();
 
@@ -237,8 +237,8 @@ Writer<CST::Declaration*> Parser::parse_declaration() {
 	return make_expected_error("an identifier or 'fn'", peek());
 }
 
-Writer<CST::FuncDeclaration*> Parser::parse_func_declaration() {
-	Writer<CST::FuncDeclaration*> result = {{"Failed to parse function declaration"}};
+Writer<CST::Declaration*> Parser::parse_func_declaration() {
+	Writer<CST::Declaration*> result = {{"Failed to parse function declaration"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 
@@ -248,20 +248,38 @@ Writer<CST::FuncDeclaration*> Parser::parse_func_declaration() {
 	auto args = parse_function_arguments();
 	CHECK_AND_RETURN(result, identifier);
 
-	REQUIRE(result, TokenTag::ARROW);
+	if (consume(TokenTag::ARROW)) {
+		auto expression = parse_expression();
+		CHECK_AND_RETURN(result, expression);
 
-	auto expression = parse_expression();
-	CHECK_AND_RETURN(result, expression);
+		REQUIRE(result, TokenTag::SEMICOLON);
 
-	REQUIRE(result, TokenTag::SEMICOLON);
+		auto p = m_cst_allocator.make<CST::FuncDeclaration>();
 
-	auto p = m_cst_allocator.make<CST::FuncDeclaration>();
+		p->m_identifier = identifier.m_result;
+		p->m_args = std::move(args.m_result);
+		p->m_body = expression.m_result;
 
-	p->m_identifier = identifier.m_result;
-	p->m_args = std::move(args.m_result);
-	p->m_body = expression.m_result;
+		return make_writer(p);
+	}
 
-	return make_writer(p);
+	if (match(TokenTag::BRACE_OPEN)) {
+		auto block = parse_block();
+		CHECK_AND_RETURN(result, block);
+
+		REQUIRE(result, TokenTag::SEMICOLON);
+
+		auto p = m_cst_allocator.make<CST::BlockFuncDeclaration>();
+
+		p->m_identifier = identifier.m_result;
+		p->m_args = std::move(args.m_result);
+		p->m_body = block.m_result;
+
+		return make_writer(p);
+	}
+
+	result.add_sub_error(make_expected_error("'=>' or '{'", peek()));
+	return result;
 }
 
 Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {

@@ -79,6 +79,23 @@ struct FuncDeclaration : public Declaration {
 	    : Declaration {CSTTag::FuncDeclaration} {}
 };
 
+struct BlockFuncDeclaration : public Declaration {
+	Token const* m_identifier;
+	FuncArguments m_args;
+	Block* m_body;
+
+	InternedString const& identifier() const {
+		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	BlockFuncDeclaration()
+	    : Declaration {CSTTag::BlockFuncDeclaration} {}
+};
+
 struct DeclarationList : public CST {
 	std::vector<Declaration*> m_declarations;
 

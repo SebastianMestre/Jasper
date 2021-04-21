@@ -186,6 +186,19 @@ AST* convert_ast(CST::FuncDeclaration* cst, Allocator& alloc) {
 	return ast;
 }
 
+AST* convert_ast(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_and_wrap_block_in_seq_expr(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
+	return ast;
+}
+
 AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 	auto ast = alloc.make<DeclarationList>();
 
@@ -447,6 +460,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(DeclarationList);
 		DISPATCH(PlainDeclaration);
 		DISPATCH(FuncDeclaration);
+		DISPATCH(BlockFuncDeclaration);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
