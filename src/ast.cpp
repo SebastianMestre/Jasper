@@ -30,15 +30,11 @@ Token const* Identifier::token() const {
 }
 
 
-SequenceExpression* wrap_block_in_seq_expr(Block* block, Allocator& alloc) {
+SequenceExpression* convert_and_wrap_block_in_seq_expr(CST::Block* cst, Allocator& alloc) {
+	auto block = static_cast<Block*>(convert_ast(cst, alloc));
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = block;
 	return seq_expr;
-}
-
-SequenceExpression* convert_and_wrap_block_in_seq_expr(CST::Block* cst, Allocator& alloc) {
-	auto block = static_cast<Block*>(convert_ast(cst, alloc));
-	return wrap_block_in_seq_expr(block, alloc);
 }
 
 
