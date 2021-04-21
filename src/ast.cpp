@@ -15,7 +15,7 @@ InternedString const& Declaration::identifier_text() const {
 
 		auto cst = static_cast<CST::Declaration*>(m_cst);
 
-		auto found_identifier = cst->identifier_virtual();
+		auto const& found_identifier = cst->identifier_virtual();
 
 		Log::warning() << "No identifier on declaration, using token data as fallback: '" << found_identifier << "'";
 
@@ -160,6 +160,19 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 AST* convert_ast(CST::PlainDeclaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 	*ast = convert_declaration(cst, cst->m_data, alloc);
+	return ast;
+}
+
+AST* convert_ast(CST::FuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_ast(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
 	return ast;
 }
 
@@ -423,6 +436,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 
 		DISPATCH(DeclarationList);
 		DISPATCH(PlainDeclaration);
+		DISPATCH(FuncDeclaration);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);

@@ -65,8 +65,12 @@ struct FuncDeclaration : public Declaration {
 	FuncArguments m_args;
 	CST* m_body;
 
-	InternedString const& identifier_virtual() const override {
+	InternedString const& identifier() const {
 		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
 	}
 
 	FuncDeclaration()
