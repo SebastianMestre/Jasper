@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "./utils/interned_string.hpp"
 #include "cst_tag.hpp"
 #include "token.hpp"
 
@@ -23,13 +24,21 @@ struct CST {
 	virtual ~CST() = default;
 };
 
-struct Declaration : public CST {
+struct DeclarationData {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
 	CST* m_value {nullptr}; // can be nullptr
 
-	std::string const& identifier_text() const {
-		return m_identifier_token->m_text.str();
+	InternedString const& identifier() const {
+		return m_identifier_token->m_text;
+	}
+};
+
+struct Declaration : public CST {
+	DeclarationData m_data;
+
+	InternedString const& identifier() const {
+		return m_data.identifier();
 	}
 
 	Declaration()
@@ -104,9 +113,11 @@ struct ArrayLiteral : public CST {
 	    : CST {CSTTag::ArrayLiteral} {}
 };
 
+using FuncArguments = std::vector<DeclarationData>;
+
 struct BlockFunctionLiteral : public CST {
 	CST* m_body;
-	std::vector<Declaration> m_args;
+	FuncArguments m_args;
 
 	BlockFunctionLiteral()
 	    : CST {CSTTag::BlockFunctionLiteral} {}
@@ -114,7 +125,7 @@ struct BlockFunctionLiteral : public CST {
 
 struct FunctionLiteral : public CST {
 	CST* m_body;
-	std::vector<Declaration> m_args;
+	FuncArguments m_args;
 
 	FunctionLiteral()
 	    : CST {CSTTag::FunctionLiteral} {}
@@ -231,7 +242,7 @@ struct IfElseStatement : public CST {
 };
 
 struct ForStatement : public CST {
-	Declaration m_declaration;
+	DeclarationData m_declaration;
 	CST* m_condition;
 	CST* m_action;
 	CST* m_body;

@@ -59,9 +59,9 @@ namespace Frontend {
 	if (!declaration) {
 		// TODO: clean up how we build error reports
 		auto token = ast->token();
-		return {
-		    "at line " + std::to_string(token->m_line0 + 1) +
-		    " : accessed undeclared identifier '" + ast->text().str() + "'"};
+		return make_located_error(
+		    "accessed undeclared identifier '" + ast->text().str() + "'",
+		    token->m_source_location.start);
 	}
 
 	ast->m_declaration = declaration;

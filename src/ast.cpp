@@ -14,11 +14,10 @@ InternedString const& Declaration::identifier_text() const {
 			Log::fatal() << "No identifier string or fallback on declaration";
 
 		auto cst = static_cast<CST::Declaration*>(m_cst);
-		auto token = cst->m_identifier_token;
 
-		Log::warning() << "No identifier on declaration " << token->m_text << ": using token data as fallback";
+		Log::warning() << "No identifier on declaration, using token data as fallback: '" << cst->identifier() << "'";
 
-		return token->m_text;
+		return cst->identifier();
 	}
 
 	return m_identifier;
@@ -70,21 +69,36 @@ AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
+Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
+	Declaration decl;
+	decl.m_cst = cst;
+	decl.m_identifier = data.identifier();
+	if (data.m_type_hint)
+		decl.m_type_hint = convert_ast(data.m_type_hint, alloc);
+	if (data.m_value)
+		decl.m_value = convert_ast(data.m_value, alloc);
+	return decl;
+}
+
+std::vector<Declaration> convert_args(
+    CST::FuncArguments& cst_args,
+    FunctionLiteral* surrounding_function,
+    Allocator& alloc) {
+
+	std::vector<Declaration> result;
+	for (auto arg : cst_args) {
+		Declaration decl = convert_declaration(nullptr, arg, alloc);
+		decl.m_surrounding_function = surrounding_function;
+
+		result.push_back(std::move(decl));
+	}
+	return result;
+}
+
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args) {
-		Declaration decl;
-
-		decl.m_cst = &arg;
-		decl.m_identifier = arg.m_identifier_token->m_text;
-		if (arg.m_type_hint)
-			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
-		decl.m_surrounding_function = ast;
-
-		ast->m_args.push_back(std::move(decl));
-	}
-
+	ast->m_args = convert_args(cst->m_args, ast, alloc);
 	ast->m_body = convert_ast(cst->m_body, alloc);
 
 	return ast;
@@ -93,17 +107,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args) {
-		Declaration decl;
-
-		decl.m_cst = &arg;
-		decl.m_identifier = arg.m_identifier_token->m_text;
-		if (arg.m_type_hint)
-			decl.m_type_hint = convert_ast(arg.m_type_hint, alloc);
-		decl.m_surrounding_function = ast;
-
-		ast->m_args.push_back(std::move(decl));
-	}
+	ast->m_args = convert_args(cst->m_args, ast, alloc);
 
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
@@ -153,16 +157,7 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 
 AST* convert_ast(CST::Declaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
-
-	ast->m_cst = cst;
-	ast->m_identifier = cst->m_identifier_token->m_text;
-
-	if (cst->m_type_hint)
-		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
-
-	if (cst->m_value)
-		ast->m_value = convert_ast(cst->m_value, alloc);
-
+	*ast = convert_declaration(cst, cst->m_data, alloc);
 	return ast;
 }
 
@@ -330,7 +325,10 @@ AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
 	while_ast->m_condition = convert_ast(cst->m_condition, alloc);;
 
 	auto outter_block_ast = alloc.make<Block>();
-	outter_block_ast->m_body.push_back(convert_ast(&cst->m_declaration, alloc));
+	auto decl = convert_declaration(nullptr, cst->m_declaration, alloc);
+	auto heap_decl = alloc.make<Declaration>();
+	*heap_decl = std::move(decl);
+	outter_block_ast->m_body.push_back(heap_decl);
 	outter_block_ast->m_body.push_back(while_ast);
 
 	return outter_block_ast;

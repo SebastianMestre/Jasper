@@ -1,5 +1,6 @@
 #pragma once
 
+#include "source_location.hpp"
 #include "token_tag.hpp"
 #include "utils/interned_string.hpp"
 
@@ -9,8 +10,5 @@ struct Token {
 	/* source code representation of token */
 	InternedString m_text;
 
-	/* beggining of token in source */
-	int m_line0, m_col0;
-	/* end of token in source */
-	int m_line1, m_col1;
+	SourceRange m_source_location;
 };

@@ -25,15 +25,19 @@ void print_impl(DeclarationList* cst, int d) {
 	std::cout << ")";
 }
 
-void print_impl(Declaration* cst, int d) {
+void print(DeclarationData& data, int d) {
 	print_indentation(d);
-	std::cout << "(decl \"" << cst->identifier_text() << "\"\n";
+	std::cout << "(decl \"" << data.identifier() << "\"\n";
 
-	print(cst->m_type_hint, d + 6);
+	print(data.m_type_hint, d + 6);
 	std::cout << "\n";
 
-	print(cst->m_value, d + 6);
+	print(data.m_value, d + 6);
 	std::cout << ")";
+}
+
+void print_impl(Declaration* cst, int d) {
+	print(cst->m_data, d);
 }
 
 void print_impl(NumberLiteral* cst, int d) {
@@ -88,13 +92,17 @@ void print_impl(Block* cst, int d) {
 	std::cout << ")";
 }
 
+void print_impl(FuncArguments& args, int d) {
+	for (DeclarationData& arg : args) {
+		std::cout << "\n";
+		print(arg, d + indent_width);
+	}
+}
+
 void print_impl(BlockFunctionLiteral* cst, int d) {
 	print_indentation(d);
 	std::cout << "(function-literal (";
-	for (auto arg : cst->m_args) {
-		std::cout << "\n";
-		print(&arg, d + indent_width);
-	}
+	print_impl(cst->m_args, d);
 	std::cout << ")\n";
 
 	print(cst->m_body, d + indent_width);
@@ -105,10 +113,7 @@ void print_impl(BlockFunctionLiteral* cst, int d) {
 void print_impl(FunctionLiteral* cst, int d) {
 	print_indentation(d);
 	std::cout << "(short-function-literal (";
-	for (auto arg : cst->m_args) {
-		std::cout << "\n";
-		print(&arg, d + indent_width);
-	}
+	print_impl(cst->m_args, d);
 	std::cout << ")\n";
 
 	print(cst->m_body, d + indent_width);
@@ -219,7 +224,7 @@ void print_impl(IfElseStatement* cst, int d) {
 void print_impl(ForStatement* cst, int d) {
 	print_indentation(d);
 	std::cout << "(for-stmt\n";
-	print(&cst->m_declaration, d + indent_width);
+	print(cst->m_declaration, d + indent_width);
 	std::cout << "\n";
 	print(cst->m_condition, d + indent_width);
 	std::cout << "\n";
