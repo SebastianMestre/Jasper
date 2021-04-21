@@ -92,13 +92,17 @@ void print_impl(Block* cst, int d) {
 	std::cout << ")";
 }
 
-void print_impl(BlockFunctionLiteral* cst, int d) {
-	print_indentation(d);
-	std::cout << "(function-literal (";
-	for (DeclarationData& arg : cst->m_args) {
+void print_impl(FuncArguments& args, int d) {
+	for (DeclarationData& arg : args) {
 		std::cout << "\n";
 		print(arg, d + indent_width);
 	}
+}
+
+void print_impl(BlockFunctionLiteral* cst, int d) {
+	print_indentation(d);
+	std::cout << "(function-literal (";
+	print_impl(cst->m_args, d);
 	std::cout << ")\n";
 
 	print(cst->m_body, d + indent_width);
@@ -109,10 +113,7 @@ void print_impl(BlockFunctionLiteral* cst, int d) {
 void print_impl(FunctionLiteral* cst, int d) {
 	print_indentation(d);
 	std::cout << "(short-function-literal (";
-	for (auto arg : cst->m_args) {
-		std::cout << "\n";
-		print(arg, d + indent_width);
-	}
+	print_impl(cst->m_args, d);
 	std::cout << ")\n";
 
 	print(cst->m_body, d + indent_width);

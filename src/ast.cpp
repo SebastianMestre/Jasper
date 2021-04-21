@@ -80,16 +80,25 @@ Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& dat
 	return decl;
 }
 
+std::vector<Declaration> convert_args(
+    CST::FuncArguments& cst_args,
+    FunctionLiteral* surrounding_function,
+    Allocator& alloc) {
+
+	std::vector<Declaration> result;
+	for (auto arg : cst_args) {
+		Declaration decl = convert_declaration(nullptr, arg, alloc);
+		decl.m_surrounding_function = surrounding_function;
+
+		result.push_back(std::move(decl));
+	}
+	return result;
+}
+
 AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args.m_args) {
-		Declaration decl = convert_declaration(nullptr, arg, alloc);
-		decl.m_surrounding_function = ast;
-
-		ast->m_args.push_back(std::move(decl));
-	}
-
+	ast->m_args = convert_args(cst->m_args, ast, alloc);
 	ast->m_body = convert_ast(cst->m_body, alloc);
 
 	return ast;
@@ -98,12 +107,7 @@ AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
 AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
-	for (auto& arg : cst->m_args.m_args) {
-		Declaration decl = convert_declaration(nullptr, arg, alloc);
-		decl.m_surrounding_function = ast;
-
-		ast->m_args.push_back(std::move(decl));
-	}
+	ast->m_args = convert_args(cst->m_args, ast, alloc);
 
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
