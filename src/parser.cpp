@@ -85,7 +85,7 @@ struct Parser {
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
 	Writer<std::vector<CST::CST*>> parse_argument_list();
-	Writer<CST::CST*> parse_block();
+	Writer<CST::Block*> parse_block();
 	Writer<CST::CST*> parse_statement();
 	Writer<CST::CST*> parse_return_statement();
 	Writer<CST::CST*> parse_if_else_stmt_or_expr();
@@ -798,8 +798,8 @@ Writer<CST::CST*> Parser::parse_function() {
 	}
 }
 
-Writer<CST::CST*> Parser::parse_block() {
-	Writer<CST::CST*> result = {{"Failed to parse block statement"}};
+Writer<CST::Block*> Parser::parse_block() {
+	Writer<CST::Block*> result = {{"Failed to parse block statement"}};
 
 	REQUIRE(result, TokenTag::BRACE_OPEN);
 
@@ -827,7 +827,7 @@ Writer<CST::CST*> Parser::parse_block() {
 	auto e = m_cst_allocator.make<CST::Block>();
 	e->m_body = std::move(statements);
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_return_statement() {

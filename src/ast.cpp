@@ -29,6 +29,19 @@ Token const* Identifier::token() const {
 	return static_cast<CST::Identifier*>(m_cst)->m_token;
 }
 
+
+SequenceExpression* wrap_block_in_seq_expr(Block* block, Allocator& alloc) {
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = block;
+	return seq_expr;
+}
+
+SequenceExpression* convert_and_wrap_block_in_seq_expr(CST::Block* cst, Allocator& alloc) {
+	auto block = static_cast<Block*>(convert_ast(cst, alloc));
+	return wrap_block_in_seq_expr(block, alloc);
+}
+
+
 AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<IntegerLiteral>();
 	ast->m_value = std::stoi(cst->text());
@@ -110,10 +123,7 @@ AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	ast->m_args = convert_args(cst->m_args, ast, alloc);
-
-	auto seq_expr = alloc.make<SequenceExpression>();
-	seq_expr->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
-	ast->m_body = seq_expr;
+	ast->m_body = convert_and_wrap_block_in_seq_expr(cst->m_body, alloc);
 
 	return ast;
 }

@@ -25,6 +25,8 @@ struct CST {
 	virtual ~CST() = default;
 };
 
+struct Block;
+
 struct DeclarationData {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
@@ -146,7 +148,7 @@ struct ArrayLiteral : public CST {
 };
 
 struct BlockFunctionLiteral : public CST {
-	CST* m_body;
+	Block* m_body;
 	FuncArguments m_args;
 
 	BlockFunctionLiteral()
@@ -239,7 +241,6 @@ struct ConstructorExpression : public CST {
 	    : CST {CSTTag::ConstructorExpression} {}
 };
 
-struct Block;
 
 struct SequenceExpression : public CST {
 	Block* m_body;
