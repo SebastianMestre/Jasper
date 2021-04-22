@@ -30,7 +30,7 @@ Token const* Identifier::token() const {
 }
 
 
-SequenceExpression* convert_and_wrap_block_in_seq_expr(CST::Block* cst, Allocator& alloc) {
+SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
 	auto block = static_cast<Block*>(convert_ast(cst, alloc));
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = block;
@@ -119,7 +119,7 @@ AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	ast->m_args = convert_args(cst->m_args, ast, alloc);
-	ast->m_body = convert_and_wrap_block_in_seq_expr(cst->m_body, alloc);
+	ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
 
 	return ast;
 }
@@ -185,7 +185,7 @@ AST* convert_ast(CST::FuncDeclaration* cst, Allocator& alloc) {
 AST* convert_ast(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
 	auto func_ast = alloc.make<FunctionLiteral>();
 	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_and_wrap_block_in_seq_expr(cst->m_body, alloc);
+	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
 
 	auto ast = alloc.make<Declaration>();
 	ast->m_cst = cst;
