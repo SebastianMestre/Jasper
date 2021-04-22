@@ -22,5 +22,19 @@ cat := fn(a,c,d) => fn(b) => a + b + c + d;
 
 capture_order := fn() => cat("A","C","D")("B");
 
+fn second(x, y) => y;
+
+fn median_of_three(x, y, z) {
+	if (x < y) {
+		if (y < z) return y;
+		if (x < z) return z;
+		           return x;
+	} else {
+		if (x < z) return x;
+		if (y < z) return z;
+		           return y;
+	}
+};
+
 __invoke := fn() => 0;
 
