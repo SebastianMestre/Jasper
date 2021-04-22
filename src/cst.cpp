@@ -20,7 +20,7 @@ void print_impl(DeclarationList* cst, int d) {
 	std::cout << "(decl-list";
 	for (auto& decl : cst->m_declarations) {
 		std::cout << "\n";
-		print(&decl, d + indent_width);
+		print(decl, d + indent_width);
 	}
 	std::cout << ")";
 }
@@ -36,7 +36,7 @@ void print(DeclarationData& data, int d) {
 	std::cout << ")";
 }
 
-void print_impl(Declaration* cst, int d) {
+void print_impl(PlainDeclaration* cst, int d) {
 	print(cst->m_data, d);
 }
 
@@ -317,7 +317,7 @@ void print_impl(CST* cst, int d) {
 		DISPATCH(ConstructorExpression)
 
 		DISPATCH(DeclarationList)
-		DISPATCH(Declaration)
+		DISPATCH(PlainDeclaration)
 
 		DISPATCH(Block)
 		DISPATCH(ReturnStatement)

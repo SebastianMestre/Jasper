@@ -63,12 +63,18 @@ void interpreter_tests(Test::Tester& tests) {
 	        EQUALS("ternary_disambiguations", 1)
 	    }));
 
-	tests.add_test(std::make_unique<TestCase>("tests/function.jp",
+	tests.add_test(std::make_unique<TestCase>(
+	    "tests/function.jp",
 	    Testers {
 	        EQUALS("normal()", 3),
 	        EQUALS("curry()", 42),
-		EQUALS("I(42)", 42),
+	        EQUALS("I(42)", 42),
 	        EQUALS("capture_order()", "ABCD"),
+	        EQUALS("median_of_three(1,2,3)", 2),
+	        EQUALS("median_of_three(3,2,1)", 2),
+	        EQUALS("median_of_three(10,15,7)", 10),
+	        EQUALS("second(15,7)", 7),
+	        EQUALS("second(7,15)", 15),
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>("tests/recursion.jp",

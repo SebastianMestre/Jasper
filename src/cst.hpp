@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "./utils/interned_string.hpp"
 #include "cst_tag.hpp"
@@ -24,6 +25,8 @@ struct CST {
 	virtual ~CST() = default;
 };
 
+struct Block;
+
 struct DeclarationData {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
@@ -34,19 +37,67 @@ struct DeclarationData {
 	}
 };
 
+using FuncArguments = std::vector<DeclarationData>;
+
 struct Declaration : public CST {
+	// This function is very cold -- it's ok to use virtuals
+	virtual InternedString const& identifier_virtual() const = 0;
+
+	Declaration(CSTTag tag)
+		: CST {tag} {}
+};
+
+struct PlainDeclaration : public Declaration {
 	DeclarationData m_data;
 
 	InternedString const& identifier() const {
 		return m_data.identifier();
 	}
 
-	Declaration()
-	    : CST {CSTTag::Declaration} {}
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	PlainDeclaration()
+	    : Declaration {CSTTag::PlainDeclaration} {}
+};
+
+struct FuncDeclaration : public Declaration {
+	Token const* m_identifier;
+	FuncArguments m_args;
+	CST* m_body;
+
+	InternedString const& identifier() const {
+		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	FuncDeclaration()
+	    : Declaration {CSTTag::FuncDeclaration} {}
+};
+
+struct BlockFuncDeclaration : public Declaration {
+	Token const* m_identifier;
+	FuncArguments m_args;
+	Block* m_body;
+
+	InternedString const& identifier() const {
+		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	BlockFuncDeclaration()
+	    : Declaration {CSTTag::BlockFuncDeclaration} {}
 };
 
 struct DeclarationList : public CST {
-	std::vector<Declaration> m_declarations;
+	std::vector<Declaration*> m_declarations;
 
 	DeclarationList()
 	    : CST {CSTTag::DeclarationList} {}
@@ -113,10 +164,8 @@ struct ArrayLiteral : public CST {
 	    : CST {CSTTag::ArrayLiteral} {}
 };
 
-using FuncArguments = std::vector<DeclarationData>;
-
 struct BlockFunctionLiteral : public CST {
-	CST* m_body;
+	Block* m_body;
 	FuncArguments m_args;
 
 	BlockFunctionLiteral()
@@ -209,7 +258,6 @@ struct ConstructorExpression : public CST {
 	    : CST {CSTTag::ConstructorExpression} {}
 };
 
-struct Block;
 
 struct SequenceExpression : public CST {
 	Block* m_body;

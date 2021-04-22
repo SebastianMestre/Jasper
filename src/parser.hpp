@@ -23,6 +23,11 @@ struct Writer {
 	Writer& operator=(Writer const&) = default;
 	Writer& operator=(Writer&&) = default;
 
+	template <typename U>
+	Writer(Writer<U>&& o)
+	    : m_error {std::move(o.m_error)}
+	    , m_result {std::move(o.m_result)} {}
+
 	Writer(ErrorReport error)
 	    : m_error {std::move(error)} {}
 
