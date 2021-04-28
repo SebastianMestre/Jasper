@@ -137,7 +137,7 @@ AST* convert_pizza(CST::BinaryExpression* cst, Allocator& alloc) {
 	auto call_cst = static_cast<CST::CallExpression*>(cst->m_rhs);
 	ast->m_callee = convert_ast(call_cst->m_callee, alloc);
 	for (auto arg : call_cst->m_args)
-		convert_ast(arg, alloc);
+		ast->m_args.push_back(convert_ast(arg, alloc));
 
 	return ast;
 }

@@ -10,6 +10,9 @@ nullv := fn () { return null; };
 p_aux := fn(x) => x + 7;
 pizza := fn() => 6 |> p_aux();
 
+sum := fn(a, b) => a + b;
+issue261 := fn() => 10 |> sum(3);
+
 if_else_if := fn() {
 	i := 2;
 	if (i == 1)
