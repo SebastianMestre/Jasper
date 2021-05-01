@@ -11,10 +11,17 @@
 
 namespace TypeChecker {
 
-// NOTE(SMestre): This file duplicates a bit of what
-// match_identifiers does. However, I think that's the right
-// thing to do. At least, the alternatives I came up with
-// are quite a bit worse.
+// this function implements 'the value restriction', a technique
+// that enables type inference on mutable datatypes
+static bool is_value_expression(AST::AST* ast) {
+	switch (ast->type()) {
+	case ASTTag::FunctionLiteral:
+	case ASTTag::Identifier:
+		return true;
+	default:
+		return false;
+	}
+}
 
 static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
@@ -286,6 +293,10 @@ void print_information(AST::Declaration* ast, TypeChecker& tc) {
 
 void generalize(AST::Declaration* ast, TypeChecker& tc) {
 	assert(!ast->m_is_polymorphic);
+
+	assert(ast->m_value);
+	if (!is_value_expression(ast->m_value))
+		return;
 
 	ast->m_is_polymorphic = true;
 	ast->m_decl_type = tc.generalize(ast->m_value_type);
