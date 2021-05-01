@@ -11,18 +11,6 @@
 
 namespace TypeChecker {
 
-// this function implements 'the value restriction', a technique
-// that enables type inference on mutable datatypes
-static bool is_value_expression(AST::AST* ast) {
-	switch (ast->type()) {
-	case ASTTag::FunctionLiteral:
-	case ASTTag::Identifier:
-		return true;
-	default:
-		return false;
-	}
-}
-
 static void process_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
 // Literals
@@ -289,6 +277,18 @@ void print_information(AST::Declaration* ast, TypeChecker& tc) {
 	Log::info("The type is:");
 	tc.m_core.m_mono_core.print_node(poly_data.base);
 #endif
+}
+
+// this function implements 'the value restriction', a technique
+// that enables type inference on mutable datatypes
+static bool is_value_expression(AST::AST* ast) {
+	switch (ast->type()) {
+	case ASTTag::FunctionLiteral:
+	case ASTTag::Identifier:
+		return true;
+	default:
+		return false;
+	}
 }
 
 void generalize(AST::Declaration* ast, TypeChecker& tc) {
