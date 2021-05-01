@@ -295,13 +295,17 @@ void generalize(AST::Declaration* ast, TypeChecker& tc) {
 	assert(!ast->m_is_polymorphic);
 
 	assert(ast->m_value);
-	if (!is_value_expression(ast->m_value))
-		return;
 
-	ast->m_is_polymorphic = true;
-	ast->m_decl_type = tc.generalize(ast->m_value_type);
+	if (is_value_expression(ast->m_value)) {
+		ast->m_is_polymorphic = true;
+		ast->m_decl_type = tc.generalize(ast->m_value_type);
 
-	print_information(ast, tc);
+		print_information(ast, tc);
+	} else {
+		// if it's not a value expression, its free vars get bound
+		// to the environment instead of being generalized
+		tc.bind_free_vars(ast->m_value_type);
+	}
 }
 
 static void process_type_hint(AST::Declaration* ast, TypeChecker& tc) {
