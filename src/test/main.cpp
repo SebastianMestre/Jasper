@@ -38,20 +38,22 @@ void interpreter_tests(Test::Tester& tests) {
 	using TestCase = Test::InterpreterTestSet;
 	using Testers = std::vector<Test::Interpret>;
 
-	tests.add_test(std::make_unique<TestCase>("tests/basic_op.jp",
+	tests.add_test(std::make_unique<TestCase>(
+	    "tests/basic_op.jp",
 	    Testers {
-		EQUALS("int_val", 10),
-		EQUALS("float_val", 3.5),
-		EQUALS("string_val", "testing."),
-		EQUALS("int_div", 0),
-		EQUALS("float_div", 0.5),
-		IS_TRUE("litt()"),
-		IS_FALSE("litf()"),
-		IS_NULL("nullv()"),
+	        EQUALS("int_val", 10),
+	        EQUALS("float_val", 3.5),
+	        EQUALS("string_val", "testing."),
+	        EQUALS("int_div", 0),
+	        EQUALS("float_div", 0.5),
+	        IS_TRUE("litt()"),
+	        IS_FALSE("litf()"),
+	        IS_NULL("nullv()"),
 	        EQUALS("pizza()", 13),
-		IS_TRUE("if_else_if()"),
+			EQUALS("issue261()", 13),
+	        IS_TRUE("if_else_if()"),
 	        EQUALS("ternary()", 2),
-		EQUALS("array_access()", 12),
+	        EQUALS("array_access()", 12),
 	        EQUALS("a", 1),
 	        EQUALS("b", 1),
 	        EQUALS("c", 1),
@@ -60,7 +62,7 @@ void interpreter_tests(Test::Tester& tests) {
 	        EQUALS("f", -1.1),
 	        EQUALS("g", 1),
 	        EQUALS("h", 1.1),
-	        EQUALS("ternary_disambiguations", 1)
+	        EQUALS("ternary_disambiguations", 1),
 	    }));
 
 	tests.add_test(std::make_unique<TestCase>(
