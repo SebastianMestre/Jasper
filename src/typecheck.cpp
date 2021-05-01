@@ -305,11 +305,12 @@ void generalize(AST::Declaration* ast, TypeChecker& tc) {
 }
 
 static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc) {
-	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
-		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
-	}
+	if (!ast->m_type_hint)
+		return;
+
+	assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
+	auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
+	tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 }
 
 // typecheck the value and make the type of the decl equal
