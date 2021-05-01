@@ -23,7 +23,7 @@ static bool is_value_expression(AST::AST* ast) {
 	}
 }
 
-static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc);
+static void process_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
 // Literals
 
@@ -117,7 +117,7 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 
 		for (auto& arg : ast->m_args) {
 			arg.m_value_type = tc.new_var();
-			process_declaration_type_hint(&arg, tc);
+			process_type_hint(&arg, tc);
 			arg_types.push_back(arg.m_value_type);
 		}
 
@@ -219,7 +219,7 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 		// a typefunc, it should not ever get generalized. But we don't really
 		// do anything to prevent it.
 		case_data.m_declaration.m_value_type = tc.new_var();
-		process_declaration_type_hint(&case_data.m_declaration, tc);
+		process_type_hint(&case_data.m_declaration, tc);
 
 		// unify type of match with type of cases
 		typecheck(case_data.m_expression, tc);
@@ -304,7 +304,7 @@ void generalize(AST::Declaration* ast, TypeChecker& tc) {
 	print_information(ast, tc);
 }
 
-static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc) {
+static void process_type_hint(AST::Declaration* ast, TypeChecker& tc) {
 	if (!ast->m_type_hint)
 		return;
 
@@ -317,7 +317,7 @@ static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc
 // to its type
 // apply typehints if available
 void process_contents(AST::Declaration* ast, TypeChecker& tc) {
-	process_declaration_type_hint(ast, tc);
+	process_type_hint(ast, tc);
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
