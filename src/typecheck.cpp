@@ -11,12 +11,7 @@
 
 namespace TypeChecker {
 
-// NOTE(SMestre): This file duplicates a bit of what
-// match_identifiers does. However, I think that's the right
-// thing to do. At least, the alternatives I came up with
-// are quite a bit worse.
-
-static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc);
+static void process_type_hint(AST::Declaration* ast, TypeChecker& tc);
 
 // Literals
 
@@ -110,7 +105,7 @@ void typecheck(AST::FunctionLiteral* ast, TypeChecker& tc) {
 
 		for (auto& arg : ast->m_args) {
 			arg.m_value_type = tc.new_var();
-			process_declaration_type_hint(&arg, tc);
+			process_type_hint(&arg, tc);
 			arg_types.push_back(arg.m_value_type);
 		}
 
@@ -212,7 +207,7 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 		// a typefunc, it should not ever get generalized. But we don't really
 		// do anything to prevent it.
 		case_data.m_declaration.m_value_type = tc.new_var();
-		process_declaration_type_hint(&case_data.m_declaration, tc);
+		process_type_hint(&case_data.m_declaration, tc);
 
 		// unify type of match with type of cases
 		typecheck(case_data.m_expression, tc);
@@ -284,28 +279,49 @@ void print_information(AST::Declaration* ast, TypeChecker& tc) {
 #endif
 }
 
+// this function implements 'the value restriction', a technique
+// that enables type inference on mutable datatypes
+static bool is_value_expression(AST::AST* ast) {
+	switch (ast->type()) {
+	case ASTTag::FunctionLiteral:
+	case ASTTag::Identifier:
+		return true;
+	default:
+		return false;
+	}
+}
+
 void generalize(AST::Declaration* ast, TypeChecker& tc) {
 	assert(!ast->m_is_polymorphic);
 
-	ast->m_is_polymorphic = true;
-	ast->m_decl_type = tc.generalize(ast->m_value_type);
+	assert(ast->m_value);
 
-	print_information(ast, tc);
+	if (is_value_expression(ast->m_value)) {
+		ast->m_is_polymorphic = true;
+		ast->m_decl_type = tc.generalize(ast->m_value_type);
+
+		print_information(ast, tc);
+	} else {
+		// if it's not a value expression, its free vars get bound
+		// to the environment instead of being generalized
+		tc.bind_free_vars(ast->m_value_type);
+	}
 }
 
-static void process_declaration_type_hint(AST::Declaration* ast, TypeChecker& tc) {
-	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
-		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
-	}
+static void process_type_hint(AST::Declaration* ast, TypeChecker& tc) {
+	if (!ast->m_type_hint)
+		return;
+
+	assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
+	auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
+	tc.m_core.m_mono_core.unify(ast->m_value_type, handle->m_value);
 }
 
 // typecheck the value and make the type of the decl equal
 // to its type
 // apply typehints if available
 void process_contents(AST::Declaration* ast, TypeChecker& tc) {
-	process_declaration_type_hint(ast, tc);
+	process_type_hint(ast, tc);
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);

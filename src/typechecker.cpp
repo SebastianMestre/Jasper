@@ -186,6 +186,16 @@ PolyId TypeChecker::generalize(MonoId mono) {
 	return m_core.new_poly(base, std::move(new_vars));
 }
 
+void TypeChecker::bind_free_vars(MonoId mono) {
+	std::unordered_set<MonoId> free_vars;
+	m_core.gather_free_vars(mono, free_vars);
+	for (MonoId var : free_vars) {
+		if (!m_env.has_type_var(var)) {
+			m_env.current_scope().m_type_vars.insert(var);
+		}
+	}
+}
+
 // Hindley-Milner [App], modified for multiple argument functions.
 MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	MonoId return_type = m_core.m_mono_core.new_var();
