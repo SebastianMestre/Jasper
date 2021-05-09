@@ -3,6 +3,8 @@
 #include <iosfwd>
 #include <string>
 
+#include "string_view.hpp"
+
 struct StringSet;
 
 struct InternedString {
@@ -15,6 +17,7 @@ struct InternedString {
 	InternedString(InternedString const& other);
 	InternedString(char const* other);
 	InternedString(char const* other, size_t length);
+	explicit InternedString(string_view other);
 	explicit InternedString(std::string const& other);
 	explicit InternedString(std::string&& other);
 
@@ -62,5 +65,9 @@ template<> struct std::hash<InternedString> {
 		return (hash_bits >> 4) | (hash_bits << 60);
 	};
 };
+
+bool operator== (string_view lhs, InternedString const& rhs);
+
+bool operator== (InternedString const& lhs, string_view rhs);
 
 std::ostream& operator<<(std::ostream&, InternedString const&);

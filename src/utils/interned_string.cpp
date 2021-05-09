@@ -3,6 +3,7 @@
 #include "string_set.hpp"
 
 #include <cassert>
+#include <cstring>
 
 StringSet& InternedString::database() {
 	static StringSet values;
@@ -22,6 +23,9 @@ InternedString::InternedString(char const* other) {
 	m_data = &(*insertion_result.first);
 }
 
+InternedString::InternedString(string_view other)
+    : InternedString {other.data(), other.size()} {}
+
 InternedString::InternedString(std::string const& other) {
 	auto insertion_result = database().insert(other);
 	m_data = &(*insertion_result.first);
@@ -35,6 +39,16 @@ InternedString::InternedString(std::string&& other) {
 std::string const& InternedString::str() const {
 	assert(m_data);
 	return *m_data;
+}
+
+bool operator== (string_view lhs, InternedString const& rhs) {
+	if (rhs.is_null()) return false;
+	return lhs.size() == rhs.size() && memcmp(rhs.str().data(), lhs.data(), lhs.size()) == 0;
+}
+
+bool operator== (InternedString const& lhs, string_view rhs) {
+	if (lhs.is_null()) return false;
+	return lhs.size() == rhs.size() && memcmp(lhs.str().data(), rhs.data(), rhs.size()) == 0;
 }
 
 std::ostream& operator<<(std::ostream& o, InternedString const& is) {
