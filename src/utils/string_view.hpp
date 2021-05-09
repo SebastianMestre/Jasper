@@ -11,6 +11,9 @@ struct string_view {
 	string_view(const std::string&);
 	string_view(char const*, size_t size);
 
+	char const* data() {
+		return m_data;
+	}
 	int size() {
 		return m_size;
 	}
