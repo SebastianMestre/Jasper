@@ -4,12 +4,13 @@
 #include <cstdint>
 
 #include "../utils/string_view.hpp"
+#include "../utils/interned_string.hpp"
 
 static constexpr uint8_t nil = ~uint8_t(0);
 
 struct Trie {
 	struct Entry {
-		string_view text;
+		InternedString text;
 		int data;
 	};
 

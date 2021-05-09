@@ -35,6 +35,7 @@ struct Lexer {
 	bool consume_identifier_or_keyword();
 	bool consume_number();
 	void consume_token();
+	void push_token(TokenTag, InternedString);
 	void push_token(TokenTag, int);
 
 	std::pair<bool, TokenTag> is_keyword(InternedString const&);
@@ -128,13 +129,12 @@ char Lexer::char_at(int index) {
 	return index < int(m_source.size()) ? m_source[index] : '\0';
 }
 
-void Lexer::push_token(TokenTag tt, int width) {
-
-	char const* base_ptr = m_source.data() + m_source_index;
+void Lexer::push_token(TokenTag tag, InternedString string) {
+	int width = string.size();
 
 	Token t = {
-	    tt,
-	    InternedString(base_ptr, width),
+	    tag,
+	    string,
 	    m_current_line,
 	    m_current_column,
 	    m_current_line,
@@ -144,6 +144,11 @@ void Lexer::push_token(TokenTag tt, int width) {
 
 	m_source_index += width;
 	m_current_column += width;
+}
+
+void Lexer::push_token(TokenTag tag, int width) {
+	char const* base_ptr = m_source.data() + m_source_index;
+	push_token(tag, InternedString(base_ptr, width));
 }
 
 bool Lexer::consume_identifier_or_keyword() {
@@ -252,11 +257,17 @@ bool Lexer::consume_string() {
 }
 
 bool Lexer::consume_symbol() {
-	auto entry = m_symbols_trie.longest_prefix_of(string_view {
-	    m_source.data() + m_source_index, m_source.size() - m_source_index});
-	if (entry.text.begin() == nullptr)
+
+	auto base_ptr = m_source.data() + m_source_index;
+
+	auto entry = m_symbols_trie.longest_prefix_of(
+	    string_view {base_ptr, m_source.size() - m_source_index});
+
+	if (entry.text.is_null())
 		return false;
-	push_token(TokenTag(entry.data), entry.text.size());
+
+	push_token(TokenTag(entry.data), entry.text);
+
 	return true;
 }
 

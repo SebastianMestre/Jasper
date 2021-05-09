@@ -6,6 +6,9 @@
 struct StringSet;
 
 struct InternedString {
+	using const_iterator = char const*;
+	using iterator = const_iterator;
+
 	std::string const* m_data {nullptr};
 
 	InternedString() = default;
@@ -19,6 +22,10 @@ struct InternedString {
 		return !m_data;
 	}
 
+	size_t size() const {
+		return is_null() ? 0 : m_data->size();
+	}
+
 	bool operator==(InternedString const& other) const {
 		return m_data == other.m_data;
 	}
@@ -30,6 +37,22 @@ struct InternedString {
 	std::string const& str() const;
 
 	static StringSet& database();
+
+	const_iterator cbegin() const {
+		return m_data->data();
+	}
+
+	const_iterator cend() const {
+		return m_data->data() + m_data->size();
+	}
+
+	iterator begin() {
+		return cbegin();
+	}
+
+	iterator end() {
+		return cend();
+	}
 };
 
 // Specialize std::hash to implement hashing for this type
