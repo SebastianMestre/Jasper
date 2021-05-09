@@ -78,7 +78,8 @@ struct Parser {
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
 	Writer<CST::DeclarationData> parse_plain_declaration_data();
 
-	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
+	Writer<CST::CST*> parse_expression(int bp = 0);
+	Writer<CST::CST*> parse_expression(CST::CST* lhs, int bp = 0);
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
 	Writer<CST::FuncArguments> parse_function_arguments();
@@ -406,20 +407,23 @@ Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
 	return args;
 }
 
+Writer<CST::CST*> Parser::parse_expression(int bp) {
+	Writer<CST::CST*> result = {{"Failed to parse expression"}};
+
+	auto lhs = parse_terminal();
+	CHECK_AND_RETURN(result, lhs);
+
+	return parse_expression(lhs.m_result, bp);
+}
+
 /* The algorithm used here is called 'Pratt Parsing'
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
-	Writer<CST::CST*> result = {{"Failed to parse expression"}};
+Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
+	assert(lhs);
 
-	Writer<CST::CST*> lhs;
-	if (!parsed_lhs) {
-		lhs = parse_terminal();
-		CHECK_AND_RETURN(result, lhs);
-	} else {
-		lhs = make_writer(parsed_lhs);
-	}
+	Writer<CST::CST*> result = {{"Failed to parse expression"}};
 
 	while (1) {
 		auto op = peek();
@@ -452,9 +456,9 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			CHECK_AND_RETURN(result, args);
 
 			auto e = m_cst_allocator.make<CST::CallExpression>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -467,9 +471,9 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			REQUIRE(result, TokenTag::BRACKET_CLOSE);
 
 			auto e = m_cst_allocator.make<CST::IndexExpression>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_index = index.m_result;
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -479,9 +483,9 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			CHECK_AND_RETURN(result, args);
 
 			auto e = m_cst_allocator.make<CST::TypeTerm>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -491,9 +495,9 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			CHECK_AND_RETURN(result, member);
 
 			auto e = m_cst_allocator.make<CST::AccessExpression>();
-			e->m_record = lhs.m_result;
+			e->m_record = lhs;
 			e->m_member = member.m_result;
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -504,9 +508,9 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			CHECK_AND_RETURN(result, args);
 
 			auto e = m_cst_allocator.make<CST::ConstructorExpression>();
-			e->m_constructor = lhs.m_result;
+			e->m_constructor = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -516,13 +520,13 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 
 		auto e = m_cst_allocator.make<CST::BinaryExpression>();
 		e->m_op_token = op;
-		e->m_lhs = lhs.m_result;
+		e->m_lhs = lhs;
 		e->m_rhs = rhs.m_result;
 
-		lhs.m_result = e;
+		lhs = e;
 	}
 
-	return lhs;
+	return make_writer<CST::CST*>(lhs);
 }
 
 /* We say a terminal is any expression that is not an infix expression.
@@ -877,7 +881,7 @@ Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 		auto ternary = parse_ternary_expression(condition.m_result);
 		CHECK_AND_RETURN(result, ternary);
 
-		auto expression = parse_expression(0, ternary.m_result);
+		auto expression = parse_expression(ternary.m_result, 0);
 		CHECK_AND_RETURN(result, expression);
 		REQUIRE(result, TokenTag::SEMICOLON);
 
