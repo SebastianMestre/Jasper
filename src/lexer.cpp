@@ -38,7 +38,7 @@ struct Lexer {
 	void push_token(TokenTag, InternedString);
 	void push_token(TokenTag, int);
 
-	std::pair<bool, TokenTag> is_keyword(InternedString const&);
+	std::pair<bool, std::pair<InternedString, TokenTag>> is_keyword(string_view);
 
 	std::vector<char> m_source;
 	TokenArray& m_tokens;
@@ -167,15 +167,22 @@ bool Lexer::consume_identifier_or_keyword() {
 	m_current_column += len;
 
 	auto tag = TokenTag::IDENTIFIER;
-	auto text = InternedString {base_ptr, len};
+	auto text = string_view {base_ptr, len};
 
 	auto keyword_lookup = is_keyword(text);
-	if (keyword_lookup.first)
-		tag = keyword_lookup.second;
+
+	InternedString string;
+	if (keyword_lookup.first) {
+		tag = keyword_lookup.second.second;
+		string = keyword_lookup.second.first;
+	} else {
+		tag = TokenTag::IDENTIFIER;
+		string = InternedString(text);
+	}
 
 	m_tokens.push_back(
 	    {tag,
-	     std::move(text),
+	     string,
 	     m_current_line,
 	     m_current_column - int(len),
 	     m_current_line,
@@ -184,7 +191,7 @@ bool Lexer::consume_identifier_or_keyword() {
 	return true;
 }
 
-std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
+std::pair<bool, std::pair<InternedString, TokenTag>> Lexer::is_keyword(string_view str) {
 	// sorted by commonness (off the top of my head, probably inaccurate)
 	static std::pair<InternedString, TokenTag> const keywords[] = {
 		{{"if"}, TokenTag::KEYWORD_IF},
@@ -209,9 +216,9 @@ std::pair<bool, TokenTag> Lexer::is_keyword(InternedString const& str) {
 	// Still, it can be sped up by splitting based on first character or length.
 	for (auto const& keyword : keywords)
 		if (keyword.first == str)
-			return {true, keyword.second};
+			return {true, keyword};
 
-	return {false, TokenTag::END};
+	return {false, {}};
 }
 
 bool Lexer::consume_string() {
