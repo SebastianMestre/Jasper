@@ -2,6 +2,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <cstring>
 
 #include "string_view.hpp"
 
@@ -66,8 +67,14 @@ template<> struct std::hash<InternedString> {
 	};
 };
 
-bool operator== (string_view lhs, InternedString const& rhs);
+inline bool operator== (string_view lhs, InternedString const& rhs) {
+	if (rhs.is_null()) return false;
+	return lhs.size() == rhs.size() && memcmp(rhs.str().data(), lhs.data(), lhs.size()) == 0;
+}
 
-bool operator== (InternedString const& lhs, string_view rhs);
+inline bool operator== (InternedString const& lhs, string_view rhs) {
+	if (lhs.is_null()) return false;
+	return lhs.size() == rhs.size() && memcmp(lhs.str().data(), rhs.data(), rhs.size()) == 0;
+}
 
 std::ostream& operator<<(std::ostream&, InternedString const&);

@@ -14,7 +14,7 @@ struct string_view {
 	char const* data() {
 		return m_data;
 	}
-	int size() {
+	size_t size() {
 		return m_size;
 	}
 	char const* cbegin() const {
