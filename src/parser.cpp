@@ -77,8 +77,10 @@ struct Parser {
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
 	Writer<CST::DeclarationData> parse_plain_declaration_data();
 
+	Writer<CST::CST*> parse_full_expression(int bp = 0);
 	Writer<CST::CST*> parse_expression(int bp = 0);
 	Writer<CST::CST*> parse_expression(CST::CST* lhs, int bp = 0);
+
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
 	Writer<CST::FuncArguments> parse_function_arguments();
@@ -294,7 +296,7 @@ Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
 		return {make_expected_error("':' or ':='", peek())};
 	}
 
-	auto value = parse_expression();
+	auto value = parse_full_expression();
 	if (!value.ok())
 		return std::move(value).error();
 
@@ -384,12 +386,17 @@ Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
 	return args;
 }
 
-Writer<CST::CST*> Parser::parse_expression(int bp) {
+// This function just wraps the result of parse_expression in an extra layer of error when it fails
+Writer<CST::CST*> Parser::parse_full_expression(int bp) {
 	Writer<CST::CST*> result = {{"Failed to parse expression"}};
+	auto expr = parse_expression(bp);
+	CHECK_AND_RETURN(result, expr);
+	return expr;
+}
 
+Writer<CST::CST*> Parser::parse_expression(int bp) {
 	auto lhs = parse_terminal();
-	CHECK_AND_RETURN(result, lhs);
-
+	CHECK_AND_EXTRACT(lhs);
 	return parse_expression(lhs.m_result, bp);
 }
 
