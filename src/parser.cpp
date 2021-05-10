@@ -82,7 +82,8 @@ struct Parser {
 	Writer<CST::CST*> parse_expression(CST::CST* lhs, int bp = 0);
 
 	Writer<CST::CST*> parse_terminal();
-	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
+	Writer<CST::CST*> parse_ternary_expression();
+	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition);
 	Writer<CST::FuncArguments> parse_function_arguments();
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
@@ -641,20 +642,23 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	return make_expected_error("a literal, a conditional expression, or an identifier", token);
 }
 
-Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
+Writer<CST::CST*> Parser::parse_ternary_expression() {
 	Writer<CST::CST*> result = {{"Failed to parse ternary expression"}};
 
-	Writer<CST::CST*> condition;
-	if (!parsed_condition) {
-		REQUIRE(result, TokenTag::KEYWORD_IF);
-		REQUIRE(result, TokenTag::PAREN_OPEN);
+	REQUIRE(result, TokenTag::KEYWORD_IF);
+	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-		condition = parse_expression();
-		CHECK_AND_RETURN(result, condition);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
-	} else {
-		condition = make_writer(parsed_condition);
-	}
+	Writer<CST::CST*> condition = parse_expression();
+	CHECK_AND_RETURN(result, condition);
+	REQUIRE(result, TokenTag::PAREN_CLOSE);
+
+	return parse_ternary_expression(condition.m_result);
+}
+
+Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* condition) {
+	assert(condition);
+
+	Writer<CST::CST*> result = {{"Failed to parse ternary expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_THEN);
 
@@ -666,7 +670,7 @@ Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
 	CHECK_AND_RETURN(result, else_expr);
 
 	auto e = m_cst_allocator.make<CST::TernaryExpression>();
-	e->m_condition = condition.m_result;
+	e->m_condition = condition;
 	e->m_then_expr = then_expr.m_result;
 	e->m_else_expr = else_expr.m_result;
 
