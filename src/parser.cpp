@@ -65,7 +65,6 @@ struct Parser {
 	    : m_tokens {tokens}
 	    , m_cst_allocator {cst_allocator} {}
 
-	Writer<std::vector<CST::Declaration*>> parse_declaration_list(TokenTag);
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<CST::CST*> parse_top_level();
@@ -144,43 +143,18 @@ struct Parser {
 		return result;
 
 Writer<CST::CST*> Parser::parse_top_level() {
-	Writer<CST::CST*> result = {{"Failed to parse top level program"}};
-
-	auto declarations = parse_declaration_list(TokenTag::END);
-	CHECK_AND_RETURN(result, declarations);
-
-	auto e = m_cst_allocator.make<CST::DeclarationList>();
-	e->m_declarations = std::move(declarations.m_result);
-
-	return make_writer<CST::CST*>(e);
-}
-
-Writer<std::vector<CST::Declaration*>>
-Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<CST::Declaration*>> result = {{"Failed to parse declaration list"}};
+	Writer<CST::CST*> result = {{"Failed to parse program"}};
 
 	std::vector<CST::Declaration*> declarations;
-
-	while (1) {
-		auto p0 = peek();
-
-		if (p0->m_type == terminator)
-			break;
-
-		if (p0->m_type == TokenTag::END) {
-			result.add_sub_error(make_expected_error("a declaration", p0));
-			result.add_sub_error(make_expected_error(terminator, p0));
-
-			return result;
-		}
-
+	while (!match(TokenTag::END)) {
 		auto declaration = parse_declaration();
 		CHECK_AND_RETURN(result, declaration);
-
 		declarations.push_back(declaration.m_result);
 	}
 
-	return make_writer(std::move(declarations));
+	auto e = m_cst_allocator.make<CST::DeclarationList>();
+	e->m_declarations = std::move(declarations);
+	return make_writer<CST::CST*>(e);
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
