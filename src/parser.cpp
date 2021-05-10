@@ -399,9 +399,6 @@ Writer<CST::CST*> Parser::parse_expression(int bp) {
  */
 Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 	assert(lhs);
-
-	Writer<CST::CST*> result = {{"Failed to parse expression"}};
-
 	while (1) {
 		auto op = peek();
 
@@ -416,10 +413,8 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 			break;
 		}
 
-		if (not is_binary_operator(op->m_type)) {
-			result.add_sub_error(make_expected_error("a binary operator", op));
-			return result;
-		}
+		if (not is_binary_operator(op->m_type))
+			return make_expected_error("a binary operator", op);
 
 		auto op_bp = binding_power_of(op->m_type);
 		auto& lp = op_bp.left;
@@ -430,7 +425,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 
 		if (op->m_type == TokenTag::PAREN_OPEN) {
 			auto args = parse_argument_list();
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::CallExpression>();
 			e->m_callee = lhs;
@@ -444,8 +439,10 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 			advance_token_cursor();
 
 			auto index = parse_expression();
-			CHECK_AND_RETURN(result, index);
-			REQUIRE(result, TokenTag::BRACKET_CLOSE);
+			CHECK_AND_EXTRACT(index);
+
+			auto bracket_close = require(TokenTag::BRACKET_CLOSE);
+			CHECK_AND_EXTRACT(bracket_close);
 
 			auto e = m_cst_allocator.make<CST::IndexExpression>();
 			e->m_callee = lhs;
@@ -457,7 +454,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 
 		if (match(TokenTag::POLY_OPEN)) {
 			auto args = parse_type_term_arguments();
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::TypeTerm>();
 			e->m_callee = lhs;
@@ -469,7 +466,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 
 		if (consume(TokenTag::DOT)) {
 			auto member = require(TokenTag::IDENTIFIER);
-			CHECK_AND_RETURN(result, member);
+			CHECK_AND_EXTRACT(member);
 
 			auto e = m_cst_allocator.make<CST::AccessExpression>();
 			e->m_record = lhs;
@@ -482,7 +479,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		if (consume(TokenTag::BRACE_OPEN)) {
 			auto args =
 			    parse_expression_list(TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::ConstructorExpression>();
 			e->m_constructor = lhs;
@@ -510,8 +507,6 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
  * This is not what the term usually means in the literature.
  */
 Writer<CST::CST*> Parser::parse_terminal() {
-	Writer<CST::CST*> result = {{"Failed to parse terminal expression"}};
-
 	auto token = peek();
 
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
@@ -590,13 +585,13 @@ Writer<CST::CST*> Parser::parse_terminal() {
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
 		auto function = parse_function();
-		CHECK_AND_RETURN(result, function);
+		CHECK_AND_EXTRACT(function);
 		return function;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_IF) {
 		auto ternary = parse_ternary_expression();
-		CHECK_AND_RETURN(result, ternary);
+		CHECK_AND_EXTRACT(ternary);
 		return ternary;
 	}
 
@@ -604,14 +599,15 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	if (token->m_type == TokenTag::PAREN_OPEN) {
 		advance_token_cursor();
 		auto expr = parse_expression();
-		CHECK_AND_RETURN(result, expr);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
+		CHECK_AND_EXTRACT(expr);
+		auto paren = require(TokenTag::PAREN_CLOSE);
+		CHECK_AND_EXTRACT(paren);
 		return expr;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_ARRAY) {
 		auto array = parse_array_literal();
-		CHECK_AND_RETURN(result, array);
+		CHECK_AND_EXTRACT(array);
 		return array;
 	}
 
@@ -619,27 +615,23 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
 		auto type = parse_type_function();
-		CHECK_AND_RETURN(result, type);
+		CHECK_AND_EXTRACT(type);
 		return type;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_MATCH) {
 		auto match_expr = parse_match_expression();
-		CHECK_AND_RETURN(result, match_expr);
+		CHECK_AND_EXTRACT(match_expr);
 		return match_expr;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_SEQ) {
 		auto expr = parse_sequence_expression();
-		CHECK_AND_RETURN(result, expr);
+		CHECK_AND_EXTRACT(expr);
 		return expr;
 	}
 
-	result.add_sub_error(make_expected_error(TokenTag::KEYWORD_FN, token));
-	result.add_sub_error(make_expected_error(TokenTag::IDENTIFIER, token));
-	result.add_sub_error(make_expected_error(TokenTag::NUMBER, token));
-
-	return result;
+	return make_expected_error("a literal, a conditional expression, or an identifier", token);
 }
 
 Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
