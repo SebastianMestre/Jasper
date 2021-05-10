@@ -138,6 +138,10 @@ struct Parser {
 	if (handle_error(result, writer))                                          \
 		return result;
 
+#define CHECK_AND_EXTRACT(writer)                                              \
+	if (!writer.ok())                                                          \
+		return std::move(writer).error();
+
 #define REQUIRE(result, token)                                                 \
 	if (handle_error(result, require(token)))                                  \
 		return result;
@@ -159,7 +163,6 @@ Writer<CST::CST*> Parser::parse_top_level() {
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<CST::CST*>> result = {{"Failed to parse expression list"}};
 
 	std::vector<CST::CST*> expressions;
 
@@ -168,7 +171,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 
 	while (1) {
 		auto expression = parse_expression();
-		CHECK_AND_RETURN(result, expression);
+		CHECK_AND_EXTRACT(expression);
 
 		expressions.push_back(expression.m_result);
 
@@ -183,14 +186,14 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 					break;
 				}
 
-				result.add_sub_error(make_located_error(
-				    "Found trailing delimiter in expression list", p0));
-				return result;
+				return make_located_error(
+				    "Found trailing delimiter in expression list", p0);
 			}
 		} else if (p0->m_type == terminator) {
 			advance_token_cursor();
 			break;
 		} else {
+			Writer<std::vector<CST::CST*>> result = {{"Failed to parse expression list"}};
 			result.add_sub_error(make_expected_error(delimiter, p0));
 			result.add_sub_error(make_expected_error(terminator, p0));
 			return result;
