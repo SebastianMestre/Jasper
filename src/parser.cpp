@@ -720,42 +720,41 @@ Writer<CST::FuncParameters> Parser::parse_function_parameters() {
 		return std::move(open_paren).error();
 
 	std::vector<CST::DeclarationData> args_data;
+
+	if (consume(TokenTag::PAREN_CLOSE))
+		return make_writer(CST::FuncParameters {std::move(args_data)});
+
 	while (1) {
-		if (consume(TokenTag::PAREN_CLOSE)) {
+		if (!match(TokenTag::IDENTIFIER))
+			return make_expected_error("a parameter name", peek());
+
+		CST::DeclarationData arg_data;
+
+		// consume parameter name
+		arg_data.m_identifier_token = peek();
+		advance_token_cursor();
+
+		if (consume(TokenTag::DECLARE)) {
+			// optionally consume a type hint
+			auto type = parse_type_term();
+			CHECK_AND_EXTRACT(type);
+			arg_data.m_type_hint = type.m_result;
+		}
+
+		args_data.push_back(std::move(arg_data));
+
+		if (consume(TokenTag::COMMA)) {
+			// If we find a comma, we have to parse
+			// another parameter, so we loop again.
+			continue;
+		} else if (consume(TokenTag::PAREN_CLOSE)) {
+			// If we find a closing paren, we are done
+			// parsing parameters, so we stop.
 			break;
-		} else if (match(TokenTag::IDENTIFIER)) {
-			// consume argument name
-
-			CST::DeclarationData arg_data;
-
-			arg_data.m_identifier_token = peek();
-			advance_token_cursor();
-
-			if (consume(TokenTag::DECLARE)) {
-				// optionally consume a type hint
-				auto type = parse_type_term();
-				if (!type.ok())
-					return std::move(type).error();
-				arg_data.m_type_hint = type.m_result;
-			}
-
-			args_data.push_back(std::move(arg_data));
-
-			if (consume(TokenTag::COMMA)) {
-				// If we find a comma, we have to parse
-				// another argument, so we loop again.
-				continue;
-			} else if (consume(TokenTag::PAREN_CLOSE)) {
-				// If we find a closing paren, we are done
-				// parsing arguments, so we stop.
-				break;
-			} else {
-				// Anything else is unexpected input, so we
-				// report an error.
-				return make_expected_error("',' or ')'", peek());
-			}
 		} else {
-			return make_expected_error("an argument name (IDENTIFIER)", peek());
+			// Anything else is unexpected input, so we
+			// report an error.
+			return make_expected_error("',' or ')'", peek());
 		}
 	}
 
