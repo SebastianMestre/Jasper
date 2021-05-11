@@ -92,7 +92,7 @@ void print_impl(Block* cst, int d) {
 	std::cout << ")";
 }
 
-void print_impl(FuncArguments& args, int d) {
+void print_impl(FuncParameters& args, int d) {
 	for (DeclarationData& arg : args) {
 		std::cout << "\n";
 		print(arg, d + indent_width);

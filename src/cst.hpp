@@ -37,7 +37,7 @@ struct DeclarationData {
 	}
 };
 
-using FuncArguments = std::vector<DeclarationData>;
+using FuncParameters = std::vector<DeclarationData>;
 
 struct Declaration : public CST {
 	// This function is very cold -- it's ok to use virtuals
@@ -64,7 +64,7 @@ struct PlainDeclaration : public Declaration {
 
 struct FuncDeclaration : public Declaration {
 	Token const* m_identifier;
-	FuncArguments m_args;
+	FuncParameters m_args;
 	CST* m_body;
 
 	InternedString const& identifier() const {
@@ -81,7 +81,7 @@ struct FuncDeclaration : public Declaration {
 
 struct BlockFuncDeclaration : public Declaration {
 	Token const* m_identifier;
-	FuncArguments m_args;
+	FuncParameters m_args;
 	Block* m_body;
 
 	InternedString const& identifier() const {
@@ -166,7 +166,7 @@ struct ArrayLiteral : public CST {
 
 struct BlockFunctionLiteral : public CST {
 	Block* m_body;
-	FuncArguments m_args;
+	FuncParameters m_args;
 
 	BlockFunctionLiteral()
 	    : CST {CSTTag::BlockFunctionLiteral} {}
@@ -174,7 +174,7 @@ struct BlockFunctionLiteral : public CST {
 
 struct FunctionLiteral : public CST {
 	CST* m_body;
-	FuncArguments m_args;
+	FuncParameters m_args;
 
 	FunctionLiteral()
 	    : CST {CSTTag::FunctionLiteral} {}

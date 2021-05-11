@@ -65,7 +65,6 @@ struct Parser {
 	    : m_tokens {tokens}
 	    , m_cst_allocator {cst_allocator} {}
 
-	Writer<std::vector<CST::Declaration*>> parse_declaration_list(TokenTag);
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
 
 	Writer<CST::CST*> parse_top_level();
@@ -78,10 +77,14 @@ struct Parser {
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
 	Writer<CST::DeclarationData> parse_plain_declaration_data();
 
-	Writer<CST::CST*> parse_expression(int bp = 0, CST::CST* parsed_lhs = nullptr);
+	Writer<CST::CST*> parse_full_expression(int bp = 0);
+	Writer<CST::CST*> parse_expression(int bp = 0);
+	Writer<CST::CST*> parse_expression(CST::CST* lhs, int bp = 0);
+
 	Writer<CST::CST*> parse_terminal();
-	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition = nullptr);
-	Writer<CST::FuncArguments> parse_function_arguments();
+	Writer<CST::CST*> parse_ternary_expression();
+	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition);
+	Writer<CST::FuncParameters> parse_function_parameters();
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
 	Writer<std::vector<CST::CST*>> parse_argument_list();
@@ -138,53 +141,31 @@ struct Parser {
 	if (handle_error(result, writer))                                          \
 		return result;
 
+#define CHECK_AND_EXTRACT(writer)                                              \
+	if (!writer.ok())                                                          \
+		return std::move(writer).error();
+
 #define REQUIRE(result, token)                                                 \
 	if (handle_error(result, require(token)))                                  \
 		return result;
 
 Writer<CST::CST*> Parser::parse_top_level() {
-	Writer<CST::CST*> result = {{"Failed to parse top level program"}};
-
-	auto declarations = parse_declaration_list(TokenTag::END);
-	CHECK_AND_RETURN(result, declarations);
-
-	auto e = m_cst_allocator.make<CST::DeclarationList>();
-	e->m_declarations = std::move(declarations.m_result);
-
-	return make_writer<CST::CST*>(e);
-}
-
-Writer<std::vector<CST::Declaration*>>
-Parser::parse_declaration_list(TokenTag terminator) {
-	Writer<std::vector<CST::Declaration*>> result = {{"Failed to parse declaration list"}};
+	Writer<CST::CST*> result = {{"Failed to parse program"}};
 
 	std::vector<CST::Declaration*> declarations;
-
-	while (1) {
-		auto p0 = peek();
-
-		if (p0->m_type == terminator)
-			break;
-
-		if (p0->m_type == TokenTag::END) {
-			result.add_sub_error(make_expected_error("a declaration", p0));
-			result.add_sub_error(make_expected_error(terminator, p0));
-
-			return result;
-		}
-
+	while (!match(TokenTag::END)) {
 		auto declaration = parse_declaration();
 		CHECK_AND_RETURN(result, declaration);
-
 		declarations.push_back(declaration.m_result);
 	}
 
-	return make_writer(std::move(declarations));
+	auto e = m_cst_allocator.make<CST::DeclarationList>();
+	e->m_declarations = std::move(declarations);
+	return make_writer<CST::CST*>(e);
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-	Writer<std::vector<CST::CST*>> result = {{"Failed to parse expression list"}};
 
 	std::vector<CST::CST*> expressions;
 
@@ -193,7 +174,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 
 	while (1) {
 		auto expression = parse_expression();
-		CHECK_AND_RETURN(result, expression);
+		CHECK_AND_EXTRACT(expression);
 
 		expressions.push_back(expression.m_result);
 
@@ -208,14 +189,14 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 					break;
 				}
 
-				result.add_sub_error(make_located_error(
-				    "Found trailing delimiter in expression list", p0));
-				return result;
+				return make_located_error(
+				    "Found trailing delimiter in expression list", p0);
 			}
 		} else if (p0->m_type == terminator) {
 			advance_token_cursor();
 			break;
 		} else {
+			Writer<std::vector<CST::CST*>> result = {{"Failed to parse expression list"}};
 			result.add_sub_error(make_expected_error(delimiter, p0));
 			result.add_sub_error(make_expected_error(terminator, p0));
 			return result;
@@ -245,7 +226,7 @@ Writer<CST::Declaration*> Parser::parse_func_declaration() {
 	auto identifier = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, identifier);
 
-	auto args = parse_function_arguments();
+	auto args = parse_function_parameters();
 	CHECK_AND_RETURN(result, identifier);
 
 	if (consume(TokenTag::ARROW)) {
@@ -316,7 +297,7 @@ Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
 		return {make_expected_error("':' or ':='", peek())};
 	}
 
-	auto value = parse_expression();
+	auto value = parse_full_expression();
 	if (!value.ok())
 		return std::move(value).error();
 
@@ -406,21 +387,26 @@ Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
 	return args;
 }
 
+// This function just wraps the result of parse_expression in an extra layer of error when it fails
+Writer<CST::CST*> Parser::parse_full_expression(int bp) {
+	Writer<CST::CST*> result = {{"Failed to parse expression"}};
+	auto expr = parse_expression(bp);
+	CHECK_AND_RETURN(result, expr);
+	return expr;
+}
+
+Writer<CST::CST*> Parser::parse_expression(int bp) {
+	auto lhs = parse_terminal();
+	CHECK_AND_EXTRACT(lhs);
+	return parse_expression(lhs.m_result, bp);
+}
+
 /* The algorithm used here is called 'Pratt Parsing'
  * Here is an article with more information:
  * https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
  */
-Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
-	Writer<CST::CST*> result = {{"Failed to parse expression"}};
-
-	Writer<CST::CST*> lhs;
-	if (!parsed_lhs) {
-		lhs = parse_terminal();
-		CHECK_AND_RETURN(result, lhs);
-	} else {
-		lhs = make_writer(parsed_lhs);
-	}
-
+Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
+	assert(lhs);
 	while (1) {
 		auto op = peek();
 
@@ -435,10 +421,8 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			break;
 		}
 
-		if (not is_binary_operator(op->m_type)) {
-			result.add_sub_error(make_expected_error("a binary operator", op));
-			return result;
-		}
+		if (not is_binary_operator(op->m_type))
+			return make_expected_error("a binary operator", op);
 
 		auto op_bp = binding_power_of(op->m_type);
 		auto& lp = op_bp.left;
@@ -449,12 +433,12 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 
 		if (op->m_type == TokenTag::PAREN_OPEN) {
 			auto args = parse_argument_list();
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::CallExpression>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -463,37 +447,39 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 			advance_token_cursor();
 
 			auto index = parse_expression();
-			CHECK_AND_RETURN(result, index);
-			REQUIRE(result, TokenTag::BRACKET_CLOSE);
+			CHECK_AND_EXTRACT(index);
+
+			auto bracket_close = require(TokenTag::BRACKET_CLOSE);
+			CHECK_AND_EXTRACT(bracket_close);
 
 			auto e = m_cst_allocator.make<CST::IndexExpression>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_index = index.m_result;
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
 
 		if (match(TokenTag::POLY_OPEN)) {
 			auto args = parse_type_term_arguments();
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::TypeTerm>();
-			e->m_callee = lhs.m_result;
+			e->m_callee = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
 
 		if (consume(TokenTag::DOT)) {
 			auto member = require(TokenTag::IDENTIFIER);
-			CHECK_AND_RETURN(result, member);
+			CHECK_AND_EXTRACT(member);
 
 			auto e = m_cst_allocator.make<CST::AccessExpression>();
-			e->m_record = lhs.m_result;
+			e->m_record = lhs;
 			e->m_member = member.m_result;
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -501,12 +487,12 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 		if (consume(TokenTag::BRACE_OPEN)) {
 			auto args =
 			    parse_expression_list(TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
-			CHECK_AND_RETURN(result, args);
+			CHECK_AND_EXTRACT(args);
 
 			auto e = m_cst_allocator.make<CST::ConstructorExpression>();
-			e->m_constructor = lhs.m_result;
+			e->m_constructor = lhs;
 			e->m_args = std::move(args.m_result);
-			lhs.m_result = e;
+			lhs = e;
 
 			continue;
 		}
@@ -516,21 +502,19 @@ Writer<CST::CST*> Parser::parse_expression(int bp, CST::CST* parsed_lhs) {
 
 		auto e = m_cst_allocator.make<CST::BinaryExpression>();
 		e->m_op_token = op;
-		e->m_lhs = lhs.m_result;
+		e->m_lhs = lhs;
 		e->m_rhs = rhs.m_result;
 
-		lhs.m_result = e;
+		lhs = e;
 	}
 
-	return lhs;
+	return make_writer<CST::CST*>(lhs);
 }
 
 /* We say a terminal is any expression that is not an infix expression.
  * This is not what the term usually means in the literature.
  */
 Writer<CST::CST*> Parser::parse_terminal() {
-	Writer<CST::CST*> result = {{"Failed to parse terminal expression"}};
-
 	auto token = peek();
 
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
@@ -609,13 +593,13 @@ Writer<CST::CST*> Parser::parse_terminal() {
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
 		auto function = parse_function();
-		CHECK_AND_RETURN(result, function);
+		CHECK_AND_EXTRACT(function);
 		return function;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_IF) {
 		auto ternary = parse_ternary_expression();
-		CHECK_AND_RETURN(result, ternary);
+		CHECK_AND_EXTRACT(ternary);
 		return ternary;
 	}
 
@@ -623,14 +607,15 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	if (token->m_type == TokenTag::PAREN_OPEN) {
 		advance_token_cursor();
 		auto expr = parse_expression();
-		CHECK_AND_RETURN(result, expr);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
+		CHECK_AND_EXTRACT(expr);
+		auto paren = require(TokenTag::PAREN_CLOSE);
+		CHECK_AND_EXTRACT(paren);
 		return expr;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_ARRAY) {
 		auto array = parse_array_literal();
-		CHECK_AND_RETURN(result, array);
+		CHECK_AND_EXTRACT(array);
 		return array;
 	}
 
@@ -638,43 +623,42 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
 		auto type = parse_type_function();
-		CHECK_AND_RETURN(result, type);
+		CHECK_AND_EXTRACT(type);
 		return type;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_MATCH) {
 		auto match_expr = parse_match_expression();
-		CHECK_AND_RETURN(result, match_expr);
+		CHECK_AND_EXTRACT(match_expr);
 		return match_expr;
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_SEQ) {
 		auto expr = parse_sequence_expression();
-		CHECK_AND_RETURN(result, expr);
+		CHECK_AND_EXTRACT(expr);
 		return expr;
 	}
 
-	result.add_sub_error(make_expected_error(TokenTag::KEYWORD_FN, token));
-	result.add_sub_error(make_expected_error(TokenTag::IDENTIFIER, token));
-	result.add_sub_error(make_expected_error(TokenTag::NUMBER, token));
-
-	return result;
+	return make_expected_error("a literal, a conditional expression, or an identifier", token);
 }
 
-Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
+Writer<CST::CST*> Parser::parse_ternary_expression() {
 	Writer<CST::CST*> result = {{"Failed to parse ternary expression"}};
 
-	Writer<CST::CST*> condition;
-	if (!parsed_condition) {
-		REQUIRE(result, TokenTag::KEYWORD_IF);
-		REQUIRE(result, TokenTag::PAREN_OPEN);
+	REQUIRE(result, TokenTag::KEYWORD_IF);
+	REQUIRE(result, TokenTag::PAREN_OPEN);
 
-		condition = parse_expression();
-		CHECK_AND_RETURN(result, condition);
-		REQUIRE(result, TokenTag::PAREN_CLOSE);
-	} else {
-		condition = make_writer(parsed_condition);
-	}
+	Writer<CST::CST*> condition = parse_expression();
+	CHECK_AND_RETURN(result, condition);
+	REQUIRE(result, TokenTag::PAREN_CLOSE);
+
+	return parse_ternary_expression(condition.m_result);
+}
+
+Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* condition) {
+	assert(condition);
+
+	Writer<CST::CST*> result = {{"Failed to parse ternary expression"}};
 
 	REQUIRE(result, TokenTag::KEYWORD_THEN);
 
@@ -686,7 +670,7 @@ Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* parsed_condition) {
 	CHECK_AND_RETURN(result, else_expr);
 
 	auto e = m_cst_allocator.make<CST::TernaryExpression>();
-	e->m_condition = condition.m_result;
+	e->m_condition = condition;
 	e->m_then_expr = then_expr.m_result;
 	e->m_else_expr = else_expr.m_result;
 
@@ -729,53 +713,52 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 	return make_writer<CST::CST*>(e);
 }
 
-Writer<CST::FuncArguments> Parser::parse_function_arguments() {
+Writer<CST::FuncParameters> Parser::parse_function_parameters() {
 
 	auto open_paren = require(TokenTag::PAREN_OPEN);
 	if (!open_paren.ok())
 		return std::move(open_paren).error();
 
 	std::vector<CST::DeclarationData> args_data;
+
+	if (consume(TokenTag::PAREN_CLOSE))
+		return make_writer(CST::FuncParameters {std::move(args_data)});
+
 	while (1) {
-		if (consume(TokenTag::PAREN_CLOSE)) {
+		if (!match(TokenTag::IDENTIFIER))
+			return make_expected_error("a parameter name", peek());
+
+		CST::DeclarationData arg_data;
+
+		// consume parameter name
+		arg_data.m_identifier_token = peek();
+		advance_token_cursor();
+
+		if (consume(TokenTag::DECLARE)) {
+			// optionally consume a type hint
+			auto type = parse_type_term();
+			CHECK_AND_EXTRACT(type);
+			arg_data.m_type_hint = type.m_result;
+		}
+
+		args_data.push_back(std::move(arg_data));
+
+		if (consume(TokenTag::COMMA)) {
+			// If we find a comma, we have to parse
+			// another parameter, so we loop again.
+			continue;
+		} else if (consume(TokenTag::PAREN_CLOSE)) {
+			// If we find a closing paren, we are done
+			// parsing parameters, so we stop.
 			break;
-		} else if (match(TokenTag::IDENTIFIER)) {
-			// consume argument name
-
-			CST::DeclarationData arg_data;
-
-			arg_data.m_identifier_token = peek();
-			advance_token_cursor();
-
-			if (consume(TokenTag::DECLARE)) {
-				// optionally consume a type hint
-				auto type = parse_type_term();
-				if (!type.ok())
-					return std::move(type).error();
-				arg_data.m_type_hint = type.m_result;
-			}
-
-			args_data.push_back(std::move(arg_data));
-
-			if (consume(TokenTag::COMMA)) {
-				// If we find a comma, we have to parse
-				// another argument, so we loop again.
-				continue;
-			} else if (consume(TokenTag::PAREN_CLOSE)) {
-				// If we find a closing paren, we are done
-				// parsing arguments, so we stop.
-				break;
-			} else {
-				// Anything else is unexpected input, so we
-				// report an error.
-				return make_expected_error("',' or ')'", peek());
-			}
 		} else {
-			return make_expected_error("an argument name (IDENTIFIER)", peek());
+			// Anything else is unexpected input, so we
+			// report an error.
+			return make_expected_error("',' or ')'", peek());
 		}
 	}
 
-	return make_writer(CST::FuncArguments {std::move(args_data)});
+	return make_writer(CST::FuncParameters {std::move(args_data)});
 }
 
 /*
@@ -789,7 +772,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 
-	auto func_args = parse_function_arguments();
+	auto func_args = parse_function_parameters();
 	if (!func_args.ok())
 		return std::move(func_args).error();
 
@@ -877,7 +860,7 @@ Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 		auto ternary = parse_ternary_expression(condition.m_result);
 		CHECK_AND_RETURN(result, ternary);
 
-		auto expression = parse_expression(0, ternary.m_result);
+		auto expression = parse_expression(ternary.m_result, 0);
 		CHECK_AND_RETURN(result, expression);
 		REQUIRE(result, TokenTag::SEMICOLON);
 
