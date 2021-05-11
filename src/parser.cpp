@@ -84,7 +84,7 @@ struct Parser {
 	Writer<CST::CST*> parse_terminal();
 	Writer<CST::CST*> parse_ternary_expression();
 	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition);
-	Writer<CST::FuncArguments> parse_function_arguments();
+	Writer<CST::FuncParameters> parse_function_parameters();
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
 	Writer<std::vector<CST::CST*>> parse_argument_list();
@@ -226,7 +226,7 @@ Writer<CST::Declaration*> Parser::parse_func_declaration() {
 	auto identifier = require(TokenTag::IDENTIFIER);
 	CHECK_AND_RETURN(result, identifier);
 
-	auto args = parse_function_arguments();
+	auto args = parse_function_parameters();
 	CHECK_AND_RETURN(result, identifier);
 
 	if (consume(TokenTag::ARROW)) {
@@ -713,7 +713,7 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 	return make_writer<CST::CST*>(e);
 }
 
-Writer<CST::FuncArguments> Parser::parse_function_arguments() {
+Writer<CST::FuncParameters> Parser::parse_function_parameters() {
 
 	auto open_paren = require(TokenTag::PAREN_OPEN);
 	if (!open_paren.ok())
@@ -759,7 +759,7 @@ Writer<CST::FuncArguments> Parser::parse_function_arguments() {
 		}
 	}
 
-	return make_writer(CST::FuncArguments {std::move(args_data)});
+	return make_writer(CST::FuncParameters {std::move(args_data)});
 }
 
 /*
@@ -773,7 +773,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 
-	auto func_args = parse_function_arguments();
+	auto func_args = parse_function_parameters();
 	if (!func_args.ok())
 		return std::move(func_args).error();
 

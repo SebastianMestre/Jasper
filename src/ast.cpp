@@ -92,7 +92,7 @@ Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& dat
 }
 
 std::vector<Declaration> convert_args(
-    CST::FuncArguments& cst_args,
+    CST::FuncParameters& cst_args,
     FunctionLiteral* surrounding_function,
     Allocator& alloc) {
 
