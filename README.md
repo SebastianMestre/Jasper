@@ -25,39 +25,42 @@ For this purpose, Jasper has:
 
 Here is an example piece of "functional-style" code:
 
-```c++
+```rust
 fn greeting(name) =>
-	"Hello, "
-	+ (if (name == "")
-		then "friend"
-		else name)
-	+ "!";
+    "Hello, "
+    + (if (name == "")
+        then "friend"
+        else name)
+    + "!";
 ```
 
 It can also be written like this, in a more imperative style, and using
 some intermediate variables:
 
-```c++
+```rust
 fn greeting(name) {
-	if (name == "")
-		name = "friend";
-	prefix := "Hello, ";
-	suffix := "!";
-	return prefix + name + suffix;
+    if (name == "")
+        name = "friend";
+    prefix := "Hello, ";
+    suffix := "!";
+    return prefix + name + suffix;
 };
 ```
 
 or like this, mixing functional, and imperative style:
 
-```c++
+```rust
 fn greeting(name) =>
-	seq {
-		if (name == "")
-			return "friend";
-		return name;
-	}
-	|> (fn(name) => "Hello, " + name + "!")();
+    seq {
+        if (name == "")
+            return "friend";
+        return name;
+    }
+    |> (fn(name) => "Hello, " + name + "!")();
 ```
+
+you can find more examples in the `tests` directory.
+
 ## Using the interpreter
 
 First, you have to compile it using the following command:
