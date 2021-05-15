@@ -15,35 +15,51 @@ The aim of Jasper is to be:
 
 For this purpose, Jasper has:
 
+ - Sum types
+ - Record types
  - Type deduction
- - First class functions
+ - First class functions with closure
  - Consistent and context-free syntax
  - Syntactic sugar
  - Many others
 
-Here is an example piece of code:
+Here is an example piece of "functional-style" code:
 
-```c++
-or_default := fn(str, default) =>
-	(if str == ""
-		then default
-		else str);
+```rust
+fn greeting(name) =>
+    "Hello, "
+    + (if (name == "")
+        then "friend"
+        else name)
+    + "!";
+```
 
-make_greeting := fn(prefix, suffix) =>
-	fn(name) =>
-		prefix + name + suffix;
+It can also be written like this, in a more imperative style, and using
+some intermediate variables:
 
-say_hello := fn(name) {
-	greeting := make_greeting("Hello, ", "!");
-	return name
-		|> or_default("Friend")
-		|> greeting();
-};
-
-__invoke := fn() {
-	return say_hello("World");
+```rust
+fn greeting(name) {
+    if (name == "")
+        name = "friend";
+    prefix := "Hello, ";
+    suffix := "!";
+    return prefix + name + suffix;
 };
 ```
+
+or like this, mixing functional, and imperative style:
+
+```rust
+fn greeting(name) =>
+    seq {
+        if (name == "")
+            return "friend";
+        return name;
+    }
+    |> (fn(name) => "Hello, " + name + "!")();
+```
+
+you can find more examples in the `tests` directory.
 
 ## Using the interpreter
 
