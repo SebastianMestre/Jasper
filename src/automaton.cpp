@@ -47,47 +47,54 @@ namespace MainLexer {
 namespace EndStates {
 
 #define END_STATES                                                             \
-	X(Error)                                                                   \
-	X(Semicolon)                                                               \
-	X(Comma)                                                                   \
-	X(Dot)                                                                     \
-	X(LParen)                                                                  \
-	X(RParen)                                                                  \
-	X(LBrace)                                                                  \
-	X(RBrace)                                                                  \
-	X(LBracket)                                                                \
-	X(RBracket)                                                                \
-	X(Colon)                                                                   \
-	X(ColonEq)                                                                 \
-	X(LPoly)                                                                   \
-	X(RPoly)                                                                   \
-	X(Lt)                                                                      \
-	X(Lte)                                                                     \
-	X(Eq)                                                                      \
-	X(Plus)                                                                    \
-	X(PlusEq)                                                                  \
-	X(Minus)                                                                   \
-	X(MinusEq)                                                                 \
-	X(Pipe)                                                                    \
-	X(Pizza)                                                                   \
-	X(Assign)                                                                  \
-	X(Arrow)                                                                   \
-	X(Identifier)                                                              \
-	X(String)                                                                  \
-	X(Comment)                                                                 \
-	X(Integer)                                                                 \
-	X(Number)
+	X(Semicolon, SEMICOLON, ";")                                               \
+	X(Comma, COMMA, ",")                                                       \
+	X(Dot, DOT, ".")                                                           \
+	X(LParen, PAREN_OPEN, "(")                                                 \
+	X(RParen, PAREN_CLOSE, ")")                                                \
+	X(LBrace, BRACE_OPEN, "{")                                                 \
+	X(RBrace, BRACE_CLOSE, "}")                                                \
+	X(LBracket, BRACKET_OPEN, "[")                                             \
+	X(RBracket, BRACKET_CLOSE, "]")                                            \
+	X(Colon, DECLARE, ":")                                                     \
+	X(ColonEq, DECLARE_ASSIGN, ":=")                                           \
+	X(LPoly, POLY_OPEN, "<:")                                                  \
+	X(RPoly, POLY_CLOSE, ":>")                                                 \
+	X(Lt, LT, "<")                                                             \
+	X(Lte, LTE, "<=")                                                          \
+	X(Eq, EQUAL, "==")                                                         \
+	X(Plus, ADD, "+")                                                          \
+	X(PlusEq, ADD_TO, "+=")                                                    \
+	X(PlusPlus, INCREMENT, "++")                                               \
+	X(Minus, SUB, "-")                                                         \
+	X(MinusEq, SUB_TO, "-=")                                                   \
+	X(MinusMinus, DECREMENT, "--")                                             \
+	X(Pipe, IOR, "|")                                                          \
+	X(PipePipe, LOGIC_IOR, "||")                                               \
+	X(Pizza, PIZZA, "|>")                                                      \
+	X(Assign, ASSIGN, "=")                                                     \
+	X(Arrow, ARROW, "=>")                                                      \
+	X(Identifier, END, {})                                                     \
+	X(String, STRING, {})                                                      \
+	X(Comment, END, {})                                                        \
+	X(Integer, INTEGER, {})                                                    \
+	X(Number, NUMBER, {})
 
-#define X(name) name,
-enum Values { END_STATES Count };
+#define X(name, token_tag, string) name,
+enum Values { Error, END_STATES Count };
 #undef X
-#define X(name) #name,
-constexpr char const* end_states[] = { END_STATES };
+#define X(name, token_tag, string) #name,
+constexpr char const* end_states[] = { "Error", END_STATES };
 #undef X
 constexpr int last_fixed_string = Arrow;
-
-#undef END_STATES
 }
+#define X(name, token_tag, string) string,
+static InternedString fixed_strings[] = { END_STATES };
+#undef X
+#define X(name, token_tag, string) TokenTag::token_tag,
+constexpr TokenTag token_tags[] = { END_STATES };
+#undef X
+#undef END_STATES
 
 constexpr void init_transitions(Automaton& result) {
 	// TODO: CLRF, more error handling
@@ -166,19 +173,21 @@ constexpr void init_transitions(Automaton& result) {
 	add_transition(result, start, '+', saw_plus);
 	add_default_transition(result, saw_plus, Plus);
 	add_transition(result, saw_plus, '=', PlusEq);
+	add_transition(result, saw_plus, '+', PlusPlus);
 
 	// - -=
 	State saw_dash = new_state();
 	add_transition(result, start, '-', saw_dash);
 	add_default_transition(result, saw_dash, Minus);
 	add_transition(result, saw_dash, '=', MinusEq);
-
+	add_transition(result, saw_dash, '-', MinusMinus);
 
 	// | |>
 	State saw_pipe = new_state();
 	add_transition(result, start, '|', saw_pipe);
 	add_default_transition(result, saw_pipe, Pipe);
 	add_transition(result, saw_pipe, '>', Pizza);
+	add_transition(result, saw_pipe, '|', PipePipe);
 
 	// single char symbols
 	add_transition(result, start, ';', Semicolon);
@@ -220,65 +229,6 @@ constexpr Automaton make() {
 	init_offsets(result);
 	return result;
 }
-
-static InternedString fixed_strings[] = {
-	";",
-	",",
-	".",
-	"(",
-	")",
-	"{",
-	"}",
-	"[",
-	"]",
-	":",
-	":=",
-	"<:",
-	":>",
-	"<",
-	"<=",
-	"==",
-	"+",
-	"+=",
-	"-",
-	"-=",
-	"|",
-	"|>",
-	"=",
-	"=>",
-};
-
-static TokenTag token_tags[] = {
-	TokenTag::SEMICOLON,
-	TokenTag::COMMA,
-	TokenTag::DOT,
-	TokenTag::PAREN_OPEN,
-	TokenTag::PAREN_CLOSE,
-	TokenTag::BRACE_OPEN,
-	TokenTag::BRACE_CLOSE,
-	TokenTag::BRACKET_OPEN,
-	TokenTag::BRACKET_CLOSE,
-	TokenTag::DECLARE,
-	TokenTag::DECLARE_ASSIGN,
-	TokenTag::POLY_OPEN,
-	TokenTag::POLY_CLOSE,
-	TokenTag::LT,
-	TokenTag::LTE,
-	TokenTag::EQUAL,
-	TokenTag::ADD,
-	TokenTag::ADD_TO,
-	TokenTag::SUB,
-	TokenTag::SUB_TO,
-	TokenTag::IOR,
-	TokenTag::PIZZA,
-	TokenTag::ASSIGN,
-	TokenTag::ARROW,
-	TokenTag::END, // identifier
-	TokenTag::STRING,
-	TokenTag::END, // comment
-	TokenTag::INTEGER,
-	TokenTag::NUMBER,
-};
 
 }
 
