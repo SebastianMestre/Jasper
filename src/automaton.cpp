@@ -221,31 +221,63 @@ constexpr Automaton make() {
 	return result;
 }
 
-static std::pair<InternedString, TokenTag> symbols[] = {
-	{";", TokenTag::SEMICOLON },
-	{",", TokenTag::COMMA },
-	{".", TokenTag::DOT },
-	{"(", TokenTag::PAREN_OPEN },
-	{")", TokenTag::PAREN_CLOSE },
-	{"{", TokenTag::BRACE_OPEN },
-	{"}", TokenTag::BRACE_CLOSE },
-	{"[", TokenTag::BRACKET_OPEN },
-	{"]", TokenTag::BRACKET_CLOSE },
-	{":", TokenTag::DECLARE },
-	{":=", TokenTag::DECLARE_ASSIGN },
-	{"<:", TokenTag::POLY_OPEN },
-	{":>", TokenTag::POLY_CLOSE },
-	{"<", TokenTag::LT },
-	{"<=", TokenTag::LTE },
-	{"==", TokenTag::EQUAL },
-	{"+", TokenTag::ADD },
-	{"+=", TokenTag::ADD_TO },
-	{"-", TokenTag::SUB },
-	{"-=", TokenTag::SUB_TO },
-	{"|", TokenTag::IOR },
-	{"|>", TokenTag::PIZZA },
-	{"=", TokenTag::ASSIGN },
-	{"=>", TokenTag::ARROW },
+static InternedString fixed_strings[] = {
+	";",
+	",",
+	".",
+	"(",
+	")",
+	"{",
+	"}",
+	"[",
+	"]",
+	":",
+	":=",
+	"<:",
+	":>",
+	"<",
+	"<=",
+	"==",
+	"+",
+	"+=",
+	"-",
+	"-=",
+	"|",
+	"|>",
+	"=",
+	"=>",
+};
+
+static TokenTag token_tags[] = {
+	TokenTag::SEMICOLON,
+	TokenTag::COMMA,
+	TokenTag::DOT,
+	TokenTag::PAREN_OPEN,
+	TokenTag::PAREN_CLOSE,
+	TokenTag::BRACE_OPEN,
+	TokenTag::BRACE_CLOSE,
+	TokenTag::BRACKET_OPEN,
+	TokenTag::BRACKET_CLOSE,
+	TokenTag::DECLARE,
+	TokenTag::DECLARE_ASSIGN,
+	TokenTag::POLY_OPEN,
+	TokenTag::POLY_CLOSE,
+	TokenTag::LT,
+	TokenTag::LTE,
+	TokenTag::EQUAL,
+	TokenTag::ADD,
+	TokenTag::ADD_TO,
+	TokenTag::SUB,
+	TokenTag::SUB_TO,
+	TokenTag::IOR,
+	TokenTag::PIZZA,
+	TokenTag::ASSIGN,
+	TokenTag::ARROW,
+	TokenTag::END, // identifier
+	TokenTag::STRING,
+	TokenTag::END, // comment
+	TokenTag::INTEGER,
+	TokenTag::NUMBER,
 };
 
 }
@@ -284,25 +316,43 @@ constexpr char const* end_states[] = { END_STATES };
 
 }
 
-static std::pair<InternedString, TokenTag> keywords[] = {
-	{"if", TokenTag::KEYWORD_IF },
-	{"for", TokenTag::KEYWORD_FOR},
-	{"else", TokenTag::KEYWORD_ELSE},
-	{"fn", TokenTag::KEYWORD_FN},
-	{"then", TokenTag::KEYWORD_THEN},
-	{"return", TokenTag::KEYWORD_RETURN},
-	{"while", TokenTag::KEYWORD_WHILE},
-	{"match", TokenTag::KEYWORD_MATCH},
-	{"true", TokenTag::KEYWORD_TRUE},
-	{"false", TokenTag::KEYWORD_FALSE},
-	{"array", TokenTag::KEYWORD_ARRAY},
-	{"null", TokenTag::KEYWORD_NULL},
-	{"seq", TokenTag::KEYWORD_SEQ},
-	{"tuple", TokenTag::KEYWORD_TUPLE},
-	{"struct", TokenTag::KEYWORD_STRUCT},
-	{"union", TokenTag::KEYWORD_UNION},
+static TokenTag token_tags[] = {
+	TokenTag::KEYWORD_IF,
+	TokenTag::KEYWORD_FOR,
+	TokenTag::KEYWORD_ELSE,
+	TokenTag::KEYWORD_FN,
+	TokenTag::KEYWORD_THEN,
+	TokenTag::KEYWORD_RETURN,
+	TokenTag::KEYWORD_WHILE,
+	TokenTag::KEYWORD_MATCH,
+	TokenTag::KEYWORD_TRUE,
+	TokenTag::KEYWORD_FALSE,
+	TokenTag::KEYWORD_ARRAY,
+	TokenTag::KEYWORD_NULL,
+	TokenTag::KEYWORD_SEQ,
+	TokenTag::KEYWORD_TUPLE,
+	TokenTag::KEYWORD_STRUCT,
+	TokenTag::KEYWORD_UNION,
 };
 
+static InternedString fixed_strings[] = {
+	"if",
+	"for",
+	"else",
+	"fn",
+	"then",
+	"return",
+	"while",
+	"match",
+	"true",
+	"false",
+	"array",
+	"null",
+	"seq",
+	"tuple",
+	"struct",
+	"union",
+};
 
 constexpr Automaton make() {
 #define new_state() (--state_counter)
@@ -352,14 +402,13 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 		ta.push_back({
 			TokenTag::IDENTIFIER,
 			InternedString(str.begin(), str.size()),
-			0,0,0,0
+			0, 0, 0, 0
 		});
 	} else {
-		auto& pair = KeywordLexer::keywords[state - 1];
 		ta.push_back({
-			pair.second,
-			pair.first,
-			0,0,0,0,
+			KeywordLexer::token_tags[state - 1],
+			KeywordLexer::fixed_strings[state - 1],
+			0, 0, 0, 0,
 		});
 	}
 }
@@ -384,21 +433,19 @@ TokenArray tokenize(char const* p) {
 
 		p += a.offset[state];
 
-		if(state < MainLexer::EndStates::last_fixed_string) {
-			auto const& pair = MainLexer::symbols[state - 1];
+		if(state <= MainLexer::EndStates::last_fixed_string) {
 			ta.push_back({
-				pair.second,
-				pair.first,
-				0,0,0,0
+				MainLexer::token_tags[state - 1],
+				MainLexer::fixed_strings[state - 1],
+				0, 0, 0, 0
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p-p0));
 		} else {
-			// TODO: fix tag
 			ta.push_back({
-				static_cast<TokenTag>(state),
+				MainLexer::token_tags[state - 1],
 				InternedString(p0, p-p0),
-				0,0,0,0
+				0, 0, 0, 0
 			});
 		}
 
