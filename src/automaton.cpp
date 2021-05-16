@@ -237,72 +237,37 @@ namespace KeywordLexer {
 namespace EndStates {
 
 #define END_STATES                                                             \
-	X(Error)                                                                   \
-	X(If)                                                                      \
-	X(For)                                                                     \
-	X(Else)                                                                    \
-	X(Fn)                                                                      \
-	X(Then)                                                                    \
-	X(Return)                                                                  \
-	X(While)                                                                   \
-	X(Match)                                                                   \
-	X(True)                                                                    \
-	X(False)                                                                   \
-	X(Array)                                                                   \
-	X(Null)                                                                    \
-	X(Seq)                                                                     \
-	X(Tuple)                                                                   \
-	X(Struct)                                                                  \
-	X(Union)
+	X(If, KEYWORD_IF, "if")                                                    \
+	X(For, KEYWORD_FOR, "for")                                                 \
+	X(Else, KEYWORD_ELSE, "else")                                              \
+	X(Fn, KEYWORD_FN, "fn")                                                    \
+	X(Then, KEYWORD_THEN, "then")                                              \
+	X(Return, KEYWORD_RETURN, "return")                                        \
+	X(While, KEYWORD_WHILE, "while")                                           \
+	X(Match, KEYWORD_MATCH, "match")                                           \
+	X(True, KEYWORD_TRUE, "true")                                              \
+	X(False, KEYWORD_FALSE, "false")                                           \
+	X(Array, KEYWORD_ARRAY, "array")                                           \
+	X(Null, KEYWORD_NULL, "null")                                              \
+	X(Seq, KEYWORD_SEQ, "seq")                                                 \
+	X(Tuple, KEYWORD_TUPLE, "tuple")                                           \
+	X(Struct, KEYWORD_STRUCT, "struct")                                        \
+	X(Union, KEYWORD_UNION, "union")
 
-#define X(name) name,
-enum Values { END_STATES Count };
+#define X(name, token_tag, string) name,
+enum Values { Error, END_STATES Count };
 #undef X
-#define X(name) #name,
-constexpr char const* end_states[] = { END_STATES };
+#define X(name, token_tag, string) #name,
+constexpr char const* end_states[] = { "Error", END_STATES };
 #undef X
-
-#undef END_STATES
-
 }
-
-static TokenTag token_tags[] = {
-	TokenTag::KEYWORD_IF,
-	TokenTag::KEYWORD_FOR,
-	TokenTag::KEYWORD_ELSE,
-	TokenTag::KEYWORD_FN,
-	TokenTag::KEYWORD_THEN,
-	TokenTag::KEYWORD_RETURN,
-	TokenTag::KEYWORD_WHILE,
-	TokenTag::KEYWORD_MATCH,
-	TokenTag::KEYWORD_TRUE,
-	TokenTag::KEYWORD_FALSE,
-	TokenTag::KEYWORD_ARRAY,
-	TokenTag::KEYWORD_NULL,
-	TokenTag::KEYWORD_SEQ,
-	TokenTag::KEYWORD_TUPLE,
-	TokenTag::KEYWORD_STRUCT,
-	TokenTag::KEYWORD_UNION,
-};
-
-static InternedString fixed_strings[] = {
-	"if",
-	"for",
-	"else",
-	"fn",
-	"then",
-	"return",
-	"while",
-	"match",
-	"true",
-	"false",
-	"array",
-	"null",
-	"seq",
-	"tuple",
-	"struct",
-	"union",
-};
+#define X(name, token_tag, string) TokenTag::token_tag,
+constexpr TokenTag token_tags[] = { END_STATES };
+#undef X
+#define X(name, token_tag, string) string,
+static InternedString fixed_strings[] = { END_STATES };
+#undef X
+#undef END_STATES
 
 constexpr Automaton make() {
 #define new_state() (--state_counter)
