@@ -404,5 +404,6 @@ TokenArray tokenize(char const* p) {
 
 		while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
 	}
+	ta.push_back({TokenTag::END, InternedString(), 0, 0, 0, 0});
 	return ta;
 }
