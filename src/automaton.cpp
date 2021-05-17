@@ -400,8 +400,9 @@ TokenArray tokenize(char const* p) {
 	TokenArray ta;
 	while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
 	while (*p != '\0') {
+		char const* const p0 = p;
+
 		int state = state_count - 1;
-		char const* p0 = p;
 		while (MainLexer::EndStates::Count < state) {
 			state = a.go(state, *p++);
 		}
@@ -420,19 +421,19 @@ TokenArray tokenize(char const* p) {
 				{{p0 - code_start}, {p - code_start}}
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
-			push_identifier_or_keyword(ka, ta, string_view(p0, p-p0));
+			push_identifier_or_keyword(ka, ta, string_view(p0, p - p0));
 		} else if(state == MainLexer::EndStates::Comment) {
 			// do nothing.
 		} else if(state == MainLexer::EndStates::String) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0+1, p-p0-2),
+				InternedString(p0 + 1, p - p0 - 2),
 				{{p0 - code_start}, {p - code_start}}
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0, p-p0),
+				InternedString(p0, p - p0),
 				{{p0 - code_start}, {p - code_start}}
 			});
 		}
