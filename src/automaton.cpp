@@ -389,6 +389,11 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 }
 
 TokenArray tokenize(char const* p) {
+	// Implementation detail: We store indices into the source buffer
+	// in the source_locations at first, then resolve them in another pass.
+
+	char const* const code_start = p;
+
 	constexpr Automaton a = MainLexer::make();
 	constexpr Automaton ka = KeywordLexer::make();
 
@@ -412,7 +417,7 @@ TokenArray tokenize(char const* p) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				MainLexer::fixed_strings[state - 1],
-				0, 0, 0, 0
+				{{p0 - code_start}, {p - code_start}}
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p-p0));
@@ -422,18 +427,57 @@ TokenArray tokenize(char const* p) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0+1, p-p0-2),
-				0, 0, 0, 0
+				{{p0 - code_start}, {p - code_start}}
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0, p-p0),
-				0, 0, 0, 0
+				{{p0 - code_start}, {p - code_start}}
 			});
 		}
 
 		while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
 	}
-	ta.push_back({TokenTag::END, InternedString(), 0, 0, 0, 0});
+	ta.push_back({TokenTag::END, InternedString()});
+
+	// resolve source locations
+	{
+		int const real_token_count = ta.size() - 1;
+		int code_idx = 0;
+		int line = 0;
+		int col = 0;
+		for (int i = 0; i < real_token_count; ++i) {
+			auto& token = ta.at(i);
+
+			int code_idx1 = token.m_source_location.start.line;
+			int code_idx2 = token.m_source_location.end.line;
+
+			for (; code_idx < code_idx1; ++code_idx) {
+				if (code_start[code_idx] == '\n') {
+					line += 1;
+					col = 0;
+				} else {
+					col += 1;
+				}
+			}
+
+			token.m_source_location.start.line = line;
+			token.m_source_location.start.col = col;
+
+			for (; code_idx < code_idx2; ++code_idx) {
+				if (code_start[code_idx] == '\n') {
+					line += 1;
+					col = 0;
+				} else {
+					col += 1;
+				}
+			}
+
+			token.m_source_location.end.line = line;
+			token.m_source_location.end.col = col;
+		}
+	}
+
 	return ta;
 }
