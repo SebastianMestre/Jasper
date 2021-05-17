@@ -28,6 +28,7 @@ COMMON_TARGETS := \
 	utils/string_set \
 	utils/string_view \
 	ast \
+	automaton \
 	compile_time_environment \
 	compute_offsets \
 	cst \

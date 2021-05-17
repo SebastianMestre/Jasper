@@ -2,10 +2,10 @@
 
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../automaton.hpp"
 #include "../compute_offsets.hpp"
 #include "../cst_allocator.hpp"
 #include "../ct_eval.hpp"
-#include "../lexer.hpp"
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
@@ -22,7 +22,7 @@ namespace Interpreter {
 
 ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
 
-	TokenArray const ta = tokenize(source);
+	TokenArray const ta = tokenize(source.c_str());
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_program(ta, cst_allocator);
@@ -83,7 +83,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 // into account the rest of the program that's already been processed, before
 // this is run
 Value* eval_expression(const std::string& expr, Interpreter& env) {
-	TokenArray const ta = tokenize(expr);
+	TokenArray const ta = tokenize(expr.c_str());
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_expression(ta, cst_allocator);

@@ -3,12 +3,12 @@
 #include <sstream>
 #include <string>
 
-#include "../cst_allocator.hpp"
-#include "../parser.hpp"
-#include "../lexer.hpp"
-#include "../token_array.hpp"
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../automaton.hpp"
+#include "../cst_allocator.hpp"
+#include "../parser.hpp"
+#include "../token_array.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"
