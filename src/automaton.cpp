@@ -47,33 +47,52 @@ namespace MainLexer {
 namespace EndStates {
 
 #define END_STATES                                                             \
-	X(Semicolon, SEMICOLON, ";")                                               \
-	X(Comma, COMMA, ",")                                                       \
-	X(Dot, DOT, ".")                                                           \
-	X(LParen, PAREN_OPEN, "(")                                                 \
-	X(RParen, PAREN_CLOSE, ")")                                                \
-	X(LBrace, BRACE_OPEN, "{")                                                 \
-	X(RBrace, BRACE_CLOSE, "}")                                                \
-	X(LBracket, BRACKET_OPEN, "[")                                             \
-	X(RBracket, BRACKET_CLOSE, "]")                                            \
-	X(Colon, DECLARE, ":")                                                     \
-	X(ColonEq, DECLARE_ASSIGN, ":=")                                           \
-	X(LPoly, POLY_OPEN, "<:")                                                  \
-	X(RPoly, POLY_CLOSE, ":>")                                                 \
-	X(Lt, LT, "<")                                                             \
-	X(Lte, LTE, "<=")                                                          \
-	X(Eq, EQUAL, "==")                                                         \
 	X(Plus, ADD, "+")                                                          \
 	X(PlusEq, ADD_TO, "+=")                                                    \
 	X(PlusPlus, INCREMENT, "++")                                               \
 	X(Minus, SUB, "-")                                                         \
 	X(MinusEq, SUB_TO, "-=")                                                   \
 	X(MinusMinus, DECREMENT, "--")                                             \
+	X(Star, MUL, "*")                                                          \
+	X(StarEq, MUL_TO, "*=")                                                    \
+	X(Slash, DIV, "/")                                                         \
+	X(SlashEq, DIV_TO, "/=")                                                   \
 	X(Pipe, IOR, "|")                                                          \
+	X(PipeEq, IOR_TO, "|=")                                                    \
 	X(PipePipe, LOGIC_IOR, "||")                                               \
-	X(Pizza, PIZZA, "|>")                                                      \
+	X(Amp, AND, "&")                                                           \
+	X(AmpEq, AND_TO, "&=")                                                     \
+	X(AmpAmp, LOGIC_AND, "&&")                                                 \
+	X(Caret, XOR, "^")                                                         \
+	X(CaretEq, XOR_TO, "^=")                                                   \
+                                                                               \
+	X(Colon, DECLARE, ":")                                                     \
+	X(ColonEq, DECLARE_ASSIGN, ":=")                                           \
 	X(Assign, ASSIGN, "=")                                                     \
+	X(Lt, LT, "<")                                                             \
+	X(Lte, LTE, "<=")                                                          \
+	X(Eq, EQUAL, "==")                                                         \
+	X(Gte, GTE, ">=")                                                          \
+	X(Gt, GT, ">")                                                             \
+	X(BangEq, NOT_EQUAL, "!=")                                                 \
+	X(Bang, LOGIC_COMPL, "!")                                                  \
+	X(Tilde, COMPL, "~")                                                       \
 	X(Arrow, ARROW, "=>")                                                      \
+	X(Pizza, PIZZA, "|>")                                                      \
+	X(Semicolon, SEMICOLON, ";")                                               \
+	X(Comma, COMMA, ",")                                                       \
+	X(Dot, DOT, ".")                                                           \
+	X(At, AT, "@")                                                             \
+                                                                               \
+	X(LParen, PAREN_OPEN, "(")                                                 \
+	X(RParen, PAREN_CLOSE, ")")                                                \
+	X(LBrace, BRACE_OPEN, "{")                                                 \
+	X(RBrace, BRACE_CLOSE, "}")                                                \
+	X(LBracket, BRACKET_OPEN, "[")                                             \
+	X(RBracket, BRACKET_CLOSE, "]")                                            \
+	X(LPoly, POLY_OPEN, "<:")                                                  \
+	X(RPoly, POLY_CLOSE, ":>")                                                 \
+                                                                               \
 	X(Identifier, END, {})                                                     \
 	X(String, STRING, {})                                                      \
 	X(Comment, END, {})                                                        \
@@ -86,7 +105,7 @@ enum Values { Error, END_STATES Count };
 #define X(name, token_tag, string) #name,
 constexpr char const* end_states[] = { "Error", END_STATES };
 #undef X
-constexpr int last_fixed_string = Arrow;
+constexpr int last_fixed_string = RPoly;
 }
 #define X(name, token_tag, string) string,
 static InternedString fixed_strings[] = { END_STATES };
@@ -126,14 +145,16 @@ constexpr void init_transitions(Automaton& result) {
 	add_default_transition(result, saw_open_string, saw_open_string);
 	add_transition(result, saw_open_string, '"', String);
 
-	// comments
+	// / /= comments
 	State saw_slash = new_state();
 	State saw_comment_marker = new_state();
 	add_transition(result, start, '/', saw_slash);
+	add_default_transition(result, saw_slash, Slash);
 	add_transition(result, saw_slash, '/', saw_comment_marker);
+	add_transition(result, saw_slash, '=', SlashEq);
 	add_default_transition(result, saw_comment_marker, saw_comment_marker);
 	add_transition(result, saw_comment_marker, '\n', Comment);
-	add_transition(result, saw_comment_marker, EOF, Comment);
+	add_transition(result, saw_comment_marker, '\0', Comment);
 
 	// numbers
 	State saw_digit = new_state();
@@ -147,12 +168,18 @@ constexpr void init_transitions(Automaton& result) {
 	add_default_transition(result, saw_decimal_digit, Number);
 	for (char c = '0'; c <= '9'; ++c) add_transition(result, saw_decimal_digit, c, saw_decimal_digit);
 
-	// = ==
+	// = == =>
 	State saw_eq = new_state();
 	add_transition(result, start, '=', saw_eq);
 	add_default_transition(result, saw_eq, Assign);
 	add_transition(result, saw_eq, '=', Eq);
 	add_transition(result, saw_eq, '>', Arrow);
+
+	// ! !=
+	State saw_bang = new_state();
+	add_transition(result, start, '!', saw_bang);
+	add_default_transition(result, saw_bang, Bang);
+	add_transition(result, saw_bang, '=', BangEq);
 
 	// : := :>
 	State saw_colon = new_state();
@@ -168,26 +195,52 @@ constexpr void init_transitions(Automaton& result) {
 	add_transition(result, saw_lt, '=', Lte);
 	add_transition(result, saw_lt, ':', LPoly);
 
-	// + +=
+	// > >=
+	State saw_gt = new_state();
+	add_transition(result, start, '>', saw_gt);
+	add_default_transition(result, saw_gt, Gt);
+	add_transition(result, saw_gt, '=', Gte);
+
+	// + += ++
 	State saw_plus = new_state();
 	add_transition(result, start, '+', saw_plus);
 	add_default_transition(result, saw_plus, Plus);
 	add_transition(result, saw_plus, '=', PlusEq);
 	add_transition(result, saw_plus, '+', PlusPlus);
 
-	// - -=
+	// - -= --
 	State saw_dash = new_state();
 	add_transition(result, start, '-', saw_dash);
 	add_default_transition(result, saw_dash, Minus);
 	add_transition(result, saw_dash, '=', MinusEq);
 	add_transition(result, saw_dash, '-', MinusMinus);
 
-	// | |>
+	// * *=
+	State saw_star = new_state();
+	add_transition(result, start, '*', saw_star);
+	add_default_transition(result, saw_star, Star);
+	add_transition(result, saw_star, '=', StarEq);
+
+	// | |> || |=
 	State saw_pipe = new_state();
 	add_transition(result, start, '|', saw_pipe);
 	add_default_transition(result, saw_pipe, Pipe);
-	add_transition(result, saw_pipe, '>', Pizza);
+	add_transition(result, saw_pipe, '=', PipeEq);
 	add_transition(result, saw_pipe, '|', PipePipe);
+	add_transition(result, saw_pipe, '>', Pizza);
+
+	// & && &=
+	State saw_amp = new_state();
+	add_transition(result, start, '&', saw_amp);
+	add_default_transition(result, saw_amp, Amp);
+	add_transition(result, saw_amp, '=', AmpEq);
+	add_transition(result, saw_amp, '&', AmpAmp);
+
+	// ^ ^=
+	State saw_caret = new_state();
+	add_transition(result, start, '^', saw_caret);
+	add_default_transition(result, saw_caret, Caret);
+	add_transition(result, saw_caret, '=', CaretEq);
 
 	// single char symbols
 	add_transition(result, start, ';', Semicolon);
@@ -199,6 +252,8 @@ constexpr void init_transitions(Automaton& result) {
 	add_transition(result, start, '}', RBrace);
 	add_transition(result, start, '[', LBracket);
 	add_transition(result, start, ']', RBracket);
+	add_transition(result, start, '~', Tilde);
+	add_transition(result, start, '@', At);
 
 #undef new_state
 }
@@ -211,12 +266,17 @@ constexpr void init_offsets(Automaton& result) {
 		Integer,
 		Number,
 		Colon,
-		Lt,
-		Assign,
-		Plus,
 		Assign,
 		Pipe,
+		Amp,
+		Bang,
+		Caret,
+		Plus,
 		Minus,
+		Star,
+		Slash,
+		Lt,
+		Gt,
 	};
 
 	for (State state : states_that_need_to_step_back_after_completing)
@@ -334,7 +394,7 @@ TokenArray tokenize(char const* p) {
 
 	TokenArray ta;
 	while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
-	while (*p != EOF) {
+	while (*p != '\0') {
 		int state = state_count - 1;
 		char const* p0 = p;
 		while (MainLexer::EndStates::Count < state) {
@@ -356,6 +416,8 @@ TokenArray tokenize(char const* p) {
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p-p0));
+		} else if(state == MainLexer::EndStates::Comment) {
+			// do nothing.
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
