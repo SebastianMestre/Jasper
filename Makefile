@@ -16,7 +16,6 @@ COMMON_DIR := .
 COMMON_TARGETS := \
 	algorithms/tarjan_solver \
 	algorithms/unification \
-	algorithms/trie \
 	log/basic_stream \
 	log/log \
 	log/stream \
@@ -34,7 +33,6 @@ COMMON_TARGETS := \
 	cst \
 	ct_eval \
 	error_report \
-	lexer \
 	match_identifiers \
 	metacheck \
 	parser \
