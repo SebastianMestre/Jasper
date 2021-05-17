@@ -418,6 +418,12 @@ TokenArray tokenize(char const* p) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p-p0));
 		} else if(state == MainLexer::EndStates::Comment) {
 			// do nothing.
+		} else if(state == MainLexer::EndStates::String) {
+			ta.push_back({
+				MainLexer::token_tags[state - 1],
+				InternedString(p0+1, p-p0-2),
+				0, 0, 0, 0
+			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
