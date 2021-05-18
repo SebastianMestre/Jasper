@@ -1,22 +1,18 @@
 #pragma once
 
-#define TEST_STATUS_TAGS \
-	X(Ok) \
-	X(Error) \
-	X(Fail) \
-	X(Empty) \
+#define TEST_STATUS_TAGS                                                       \
+	X(Ok)                                                                      \
+	X(Error)                                                                   \
+	X(Fail)                                                                    \
+	X(Empty)                                                                   \
 	X(MissingFile)
 
 #define X(name) #name,
-constexpr const char* test_status_string[] = {
-	TEST_STATUS_TAGS
-};
+constexpr const char* test_status_string[] = {TEST_STATUS_TAGS};
 #undef X
 
 #define X(name) name,
-enum class TestStatusTag {
-	TEST_STATUS_TAGS
-};
+enum class TestStatusTag { TEST_STATUS_TAGS };
 #undef X
 
 #undef TEST_STATUS_TAGS
