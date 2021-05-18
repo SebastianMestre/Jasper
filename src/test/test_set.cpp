@@ -37,9 +37,9 @@ TestReport InterpreterTestSet::execute() {
 		settings.dump_cst = m_dump;
 
 		for (auto* f : m_testers) {
-			ExitStatusTag answer = Interpreter::execute(file_content.str(), settings, f);
+			ExitStatus answer = Interpreter::execute(file_content.str(), settings, f);
 
-			if (ExitStatusTag::Ok != answer)
+			if (ExitStatus::Ok != answer)
 				return {TestStatus::Fail};
 		}
 	} catch (const std::exception& e) {

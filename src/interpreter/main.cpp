@@ -41,11 +41,11 @@ int main(int argc, char** argv) {
 
 	Interpreter::ExecuteSettings settings;
 
-	ExitStatusTag exit_code = execute(
+	ExitStatus exit_code = execute(
 	    source,
 	    settings,
 	    +[](Interpreter::Interpreter& env,
-	        Frontend::SymbolTable& context) -> ExitStatusTag {
+	        Frontend::SymbolTable& context) -> ExitStatus {
 		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		    // this means we need to create a call expression node to run the program.
 		    // TODO: We need to clean this up
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 				    std::cout << "(nullptr)\n";
 		    }
 
-		    return ExitStatusTag::Ok;
+		    return ExitStatus::Ok;
 	    });
 
 	return static_cast<int>(exit_code);
