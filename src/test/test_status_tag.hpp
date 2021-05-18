@@ -1,6 +1,6 @@
 #pragma once
 
-#define TEST_STATUS_TAGS                                                       \
+#define TEST_STATUS                                                            \
 	X(Ok)                                                                      \
 	X(Error)                                                                   \
 	X(Fail)                                                                    \
@@ -8,16 +8,16 @@
 	X(MissingFile)
 
 #define X(name) #name,
-constexpr const char* test_status_string[] = {TEST_STATUS_TAGS};
+constexpr const char* test_status_string[] = {TEST_STATUS};
 #undef X
 
 #define X(name) name,
-enum class TestStatusTag { TEST_STATUS_TAGS };
+enum class TestStatus { TEST_STATUS };
 #undef X
 
-#undef TEST_STATUS_TAGS
+#undef TEST_STATUS
 
 struct TestReport {
-	TestStatusTag m_code;
+	TestStatus m_code;
 	std::string m_msg;
 };

@@ -167,10 +167,10 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        if (cov[0] != cov[1] || cov[0] != cov[2])
 			        return {
-			            TestStatusTag::Fail,
+			            TestStatus::Fail,
 			            "All vertices in a 3-cycle should be in the same SCC"};
 
-		        return {TestStatusTag::Ok};
+		        return {TestStatus::Ok};
 	        },
 	        +[]() -> TestReport {
 		        TarjanSolver solver(2);
@@ -179,14 +179,14 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 
 		        auto const& cov = solver.component_of_vertices();
 		        if (cov[0] == cov[1])
-			        return {TestStatusTag::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
+			        return {TestStatus::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
 
 		        if (cov[0] < cov[1])
 			        return {
-			            TestStatusTag::Fail,
+			            TestStatus::Fail,
 			            "SCCs should be in reverse topological sort."};
 
-		        return {TestStatusTag::Ok};
+		        return {TestStatus::Ok};
 	        }}));
 }
 
@@ -200,18 +200,18 @@ void string_set_tests(Test::Tester& tester) {
 		    StringSet s;
 		    s.insert("AAA");
 		    if (!s.includes("AAA"))
-			    return {TestStatusTag::Fail, "AAA is not in the set after inserting it"};
+			    return {TestStatus::Fail, "AAA is not in the set after inserting it"};
 
 		    s.insert("BBB");
 		    if (!s.includes("AAA"))
 			    return {
-			        TestStatusTag::Fail,
+			        TestStatus::Fail,
 			        "AAA is no longer in the set after inserting BBB"};
 
 		    if (!s.includes("BBB"))
-			    return {TestStatusTag::Fail, "BBB is not in the set after inserting it"};
+			    return {TestStatus::Fail, "BBB is not in the set after inserting it"};
 
-		    return {TestStatusTag::Ok};
+		    return {TestStatus::Ok};
 	    }}));
 }
 
@@ -222,7 +222,7 @@ int main() {
 	string_set_tests(tests);
 	interpreter_tests(tests);
 	auto test_result = tests.execute();
-	if (test_result.m_code != TestStatusTag::Ok)
+	if (test_result.m_code != TestStatus::Ok)
 		return 1;
 	return 0;
 }

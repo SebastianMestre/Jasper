@@ -29,30 +29,30 @@ void Tester::add_tests(std::vector<Own<TestSet>> tss) {
 TestReport Tester::execute() {
 	std::vector<std::string> reports;
 
-	auto veredict = TestStatusTag::Ok;
+	auto veredict = TestStatus::Ok;
 
 	for (int i = 0; i < m_test_sets.size(); ++i) {
 		TestReport ts_answer = m_test_sets[i]->execute();
 
 		switch (ts_answer.m_code) {
-		case TestStatusTag::Ok:
+		case TestStatus::Ok:
 			std::cout << '.';
 			break;
-		case TestStatusTag::Error:
-			veredict = TestStatusTag::Error;
+		case TestStatus::Error:
+			veredict = TestStatus::Error;
 			std::cout << 'E';
 			break;
-		case TestStatusTag::Fail:
-			if (veredict != TestStatusTag::Error)
-				veredict = TestStatusTag::Fail;
+		case TestStatus::Fail:
+			if (veredict != TestStatus::Error)
+				veredict = TestStatus::Fail;
 			std::cout << 'F';
 			break;
-		case TestStatusTag::Empty:
-			if (veredict != TestStatusTag::Error && veredict != TestStatusTag::Fail)
-				veredict = TestStatusTag::Empty;
+		case TestStatus::Empty:
+			if (veredict != TestStatus::Error && veredict != TestStatus::Fail)
+				veredict = TestStatus::Empty;
 			std::cout << 'R';
 			break;
-		case TestStatusTag::MissingFile:
+		case TestStatus::MissingFile:
 			std::cout << '?';
 			break;
 		default:
