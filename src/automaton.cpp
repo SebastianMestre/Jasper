@@ -413,7 +413,14 @@ TokenArray tokenize(char const* p) {
 	constexpr Automaton ka = KeywordLexer::make();
 
 	TokenArray ta;
-	while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
+
+	auto eat_whitespace = [&] {
+		while (*p == ' ' || *p == '\t' || *p == '\n') {
+			p += 1;
+		}
+	};
+
+	eat_whitespace();
 	while (*p != '\0') {
 		char const* const p0 = p;
 
@@ -453,7 +460,7 @@ TokenArray tokenize(char const* p) {
 			});
 		}
 
-		while (*p == ' ' || *p == '\t' || *p == '\n') ++p;
+		eat_whitespace();
 	}
 	ta.push_back({TokenTag::END, InternedString()});
 
