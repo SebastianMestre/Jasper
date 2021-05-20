@@ -29,6 +29,10 @@ constexpr void add_transition(Automaton& a, State src, unsigned char c, State ds
 	a.transition[src][c] = dst;
 }
 
+constexpr void add_self_transition(Automaton& a, State src, unsigned char c) {
+	add_transition(a, src, c, src);
+}
+
 constexpr void add_string(Automaton& a, int& state_counter, State end_state, char const* str) {
 #define new_state() (--state_counter)
 	int state = state_count - 1;
@@ -141,9 +145,9 @@ constexpr void init_transitions(Automaton& result) {
 	for (char c = 'A'; c <= 'Z'; ++c) add_transition(result, start, c, saw_id_char);
 	add_default_transition(result, saw_id_char, Identifier);
 	add_transition(result, saw_id_char, '_', saw_id_char);
-	for (char c = 'a'; c <= 'z'; ++c) add_transition(result, saw_id_char, c, saw_id_char);
-	for (char c = 'A'; c <= 'Z'; ++c) add_transition(result, saw_id_char, c, saw_id_char);
-	for (char c = '0'; c <= '9'; ++c) add_transition(result, saw_id_char, c, saw_id_char);
+	for (char c = 'a'; c <= 'z'; ++c) add_self_transition(result, saw_id_char, c);
+	for (char c = 'A'; c <= 'Z'; ++c) add_self_transition(result, saw_id_char, c);
+	for (char c = '0'; c <= '9'; ++c) add_self_transition(result, saw_id_char, c);
 
 	// String literals
 	State saw_open_string = new_state();
@@ -168,11 +172,11 @@ constexpr void init_transitions(Automaton& result) {
 	State saw_decimal_digit = new_state();
 	for (char c = '0'; c <= '9'; ++c) add_transition(result, start, c, saw_digit);
 	add_default_transition(result, saw_digit, Integer);
-	for (char c = '0'; c <= '9'; ++c) add_transition(result, saw_digit, c, saw_digit);
+	for (char c = '0'; c <= '9'; ++c) add_self_transition(result, saw_digit, c);
 	add_transition(result, saw_digit, '.', saw_number_dot);
 	for (char c = '0'; c <= '9'; ++c) add_transition(result, saw_number_dot, c, saw_decimal_digit);
 	add_default_transition(result, saw_decimal_digit, Number);
-	for (char c = '0'; c <= '9'; ++c) add_transition(result, saw_decimal_digit, c, saw_decimal_digit);
+	for (char c = '0'; c <= '9'; ++c) add_self_transition(result, saw_decimal_digit, c);
 
 	// = == =>
 	State saw_eq = new_state();
