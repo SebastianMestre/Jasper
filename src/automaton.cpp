@@ -102,17 +102,23 @@ namespace EndStates {
 #define X(name, token_tag, string) name,
 enum Values { Error, END_STATES Count };
 #undef X
+
 #define X(name, token_tag, string) #name,
 constexpr char const* end_states[] = { "Error", END_STATES };
 #undef X
+
 constexpr int last_fixed_string = RPoly;
-}
+
+} // namespace EndStates
+
 #define X(name, token_tag, string) string,
 static InternedString fixed_strings[] = { END_STATES };
 #undef X
+
 #define X(name, token_tag, string) TokenTag::token_tag,
 constexpr TokenTag token_tags[] = { END_STATES };
 #undef X
+
 #undef END_STATES
 
 constexpr void init_transitions(Automaton& result) {
@@ -290,7 +296,7 @@ constexpr Automaton make() {
 	return result;
 }
 
-}
+} // namespace MainLexer
 
 namespace KeywordLexer {
 
@@ -317,16 +323,21 @@ namespace EndStates {
 #define X(name, token_tag, string) name,
 enum Values { Error, END_STATES Count };
 #undef X
+
 #define X(name, token_tag, string) #name,
 constexpr char const* end_states[] = { "Error", END_STATES };
 #undef X
-}
+
+} // namespace EndStates
+
 #define X(name, token_tag, string) TokenTag::token_tag,
 constexpr TokenTag token_tags[] = { END_STATES };
 #undef X
+
 #define X(name, token_tag, string) string,
 static InternedString fixed_strings[] = { END_STATES };
 #undef X
+
 #undef END_STATES
 
 constexpr Automaton make() {
@@ -358,7 +369,7 @@ constexpr Automaton make() {
 #undef new_state
 }
 
-}
+} // namespace KeywordLexer
 
 static void print_error(char const* p) {
 	printf("Error -- last two chars are: %c%c\n", *(p-2), *(p-1));
