@@ -470,32 +470,30 @@ TokenArray tokenize(char const* p) {
 		int code_idx = 0;
 		int line = 0;
 		int col = 0;
+
+		auto advance_until = [&] (int end_idx) {
+			for (; code_idx < end_idx; ++code_idx) {
+				if (code_start[code_idx] == '\n') {
+					line += 1;
+					col = 0;
+				} else {
+					col += 1;
+				}
+			}
+		};
+
 		for (int i = 0; i < real_token_count; ++i) {
 			auto& token = ta.at(i);
 
 			int code_idx1 = token.m_source_location.start.line;
 			int code_idx2 = token.m_source_location.end.line;
 
-			for (; code_idx < code_idx1; ++code_idx) {
-				if (code_start[code_idx] == '\n') {
-					line += 1;
-					col = 0;
-				} else {
-					col += 1;
-				}
-			}
+			advance_until(code_idx1);
 
 			token.m_source_location.start.line = line;
 			token.m_source_location.start.col = col;
 
-			for (; code_idx < code_idx2; ++code_idx) {
-				if (code_start[code_idx] == '\n') {
-					line += 1;
-					col = 0;
-				} else {
-					col += 1;
-				}
-			}
+			advance_until(code_idx2);
 
 			token.m_source_location.end.line = line;
 			token.m_source_location.end.col = col;
