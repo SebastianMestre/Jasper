@@ -5,8 +5,8 @@
 
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
-#include "../automaton.hpp"
 #include "../cst_allocator.hpp"
+#include "../lexer.hpp"
 #include "../parser.hpp"
 #include "../token_array.hpp"
 #include "eval.hpp"

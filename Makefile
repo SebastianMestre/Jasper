@@ -27,12 +27,12 @@ COMMON_TARGETS := \
 	utils/string_set \
 	utils/string_view \
 	ast \
-	automaton \
 	compile_time_environment \
 	compute_offsets \
 	cst \
 	ct_eval \
 	error_report \
+	lexer \
 	match_identifiers \
 	metacheck \
 	parser \
