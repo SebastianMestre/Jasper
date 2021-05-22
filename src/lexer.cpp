@@ -8,30 +8,15 @@
 #include <cstdio>
 #include <cstring>
 
-constexpr void add_default_transition(Automaton& a, State src, State dst) {
-	for (int i = 256; i--;)
-		a.transition[src][i] = dst;
-}
-
-constexpr void add_transition(Automaton& a, State src, unsigned char c, State dst) {
-	a.transition[src][c] = dst;
-}
-
-constexpr void add_self_transition(Automaton& a, State src, unsigned char c) {
-	add_transition(a, src, c, src);
-}
-
-constexpr void add_string(Automaton& a, int& state_counter, State end_state, char const* str) {
-#define new_state() (--state_counter)
+constexpr void add_string(AutomatonBuilder& builder, char const* str, State end_state) {
 	int state = state_count - 1;
 	while (*str) {
 		if (*(str+1) == '\0')
-			add_transition(a, state, *str, end_state);
-		else if (a.go(state, *str) == 0)
-			add_transition(a, state, *str, new_state());
-		state = a.go(state, *str++);
+			builder.transition(state, *str, end_state);
+		else if (builder.automaton.go(state, *str) == 0)
+			builder.transition(state, *str, builder.new_state());
+		state = builder.automaton.go(state, *str++);
 	}
-#undef new_state
 }
 
 namespace MainLexer {
@@ -351,32 +336,28 @@ static InternedString fixed_strings[] = { END_STATES };
 #undef END_STATES
 
 constexpr Automaton make() {
-#define new_state() (--state_counter)
-	Automaton a{};
+	AutomatonBuilder builder{};
 
-	int state_counter = state_count;
+	int start_state = builder.new_state();
 
-	int start_state = new_state();
+	add_string(builder, "if", EndStates::If);
+	add_string(builder, "for", EndStates::For);
+	add_string(builder, "else", EndStates::Else);
+	add_string(builder, "fn", EndStates::Fn);
+	add_string(builder, "then", EndStates::Then);
+	add_string(builder, "return", EndStates::Return);
+	add_string(builder, "while", EndStates::While);
+	add_string(builder, "match", EndStates::Match);
+	add_string(builder, "true", EndStates::True);
+	add_string(builder, "false", EndStates::False);
+	add_string(builder, "array", EndStates::Array);
+	add_string(builder, "null", EndStates::Null);
+	add_string(builder, "seq", EndStates::Seq);
+	add_string(builder, "tuple", EndStates::Tuple);
+	add_string(builder, "struct", EndStates::Struct);
+	add_string(builder, "union", EndStates::Union);
 
-	add_string(a, state_counter, EndStates::If, "if");
-	add_string(a, state_counter, EndStates::For, "for");
-	add_string(a, state_counter, EndStates::Else, "else");
-	add_string(a, state_counter, EndStates::Fn, "fn");
-	add_string(a, state_counter, EndStates::Then, "then");
-	add_string(a, state_counter, EndStates::Return, "return");
-	add_string(a, state_counter, EndStates::While, "while");
-	add_string(a, state_counter, EndStates::Match, "match");
-	add_string(a, state_counter, EndStates::True, "true");
-	add_string(a, state_counter, EndStates::False, "false");
-	add_string(a, state_counter, EndStates::Array, "array");
-	add_string(a, state_counter, EndStates::Null, "null");
-	add_string(a, state_counter, EndStates::Seq, "seq");
-	add_string(a, state_counter, EndStates::Tuple, "tuple");
-	add_string(a, state_counter, EndStates::Struct, "struct");
-	add_string(a, state_counter, EndStates::Union, "union");
-
-	return a;
-#undef new_state
+	return builder.automaton;
 }
 
 } // namespace KeywordLexer
