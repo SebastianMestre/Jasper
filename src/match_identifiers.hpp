@@ -7,16 +7,14 @@ struct AST;
 struct Declaration;
 }
 
-template<typename T>
-struct ChunkedArray;
-
 namespace Frontend {
+
+struct SymbolTable;
 
 /*
  * Matches every identifier in the given ast with a declaration.
  * This also includes captures in a closure.
  */
-[[nodiscard]] ErrorReport match_identifiers(
-    AST::AST* ast, ChunkedArray<AST::Declaration>&);
+[[nodiscard]] ErrorReport match_identifiers(AST::AST* ast, SymbolTable&);
 
 } // namespace Frontend

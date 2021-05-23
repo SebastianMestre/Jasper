@@ -9,6 +9,7 @@
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
+#include "../symbol_table.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
 #include "../typechecker.hpp"
@@ -49,7 +50,11 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 	TypeChecker::TypeChecker tc{ast_allocator};
 
 	{
-		auto err = Frontend::match_identifiers(ast, tc.m_builtin_declarations);
+		Frontend::SymbolTable context;
+		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
+			for (auto& decl : bucket)
+				context.declare(&decl);
+		auto err = Frontend::match_identifiers(ast, context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;
@@ -74,6 +79,7 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 
 	return runner_exit_code;
 }
+
 
 // FIXME: This does not handle seq-expressions, or inline definitions of
 // functions, because it does not call `match_identifiers` or `compute_offsets`.

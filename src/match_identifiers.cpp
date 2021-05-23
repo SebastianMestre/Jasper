@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "./log/log.hpp"
-#include "./utils/chunked_array.hpp"
 #include "./utils/interned_string.hpp"
 #include "ast.hpp"
 #include "error_report.hpp"
@@ -302,14 +301,6 @@ namespace Frontend {
 #undef DO_NOTHING
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in match_identifiers '" << ast_string[int(ast->type())] << "'";
-}
-
-ErrorReport match_identifiers(AST::AST* ast, ChunkedArray<AST::Declaration>& builtins) {
-	SymbolTable st;
-	for (auto& bucket : builtins.m_buckets)
-		for (auto& decl : bucket)
-			st.declare(&decl);
-	return match_identifiers(ast, st);
 }
 
 #undef CHECK_AND_RETURN
