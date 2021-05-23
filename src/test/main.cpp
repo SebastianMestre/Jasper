@@ -10,28 +10,33 @@
 #include "tester.hpp"
 
 #define EQUALS(expr, value)                                                    \
-	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
-		return Assert::equals(eval_expression(expr, env), value);      \
+	+[](Interpreter::Interpreter& env,                                         \
+	    Frontend::SymbolTable& context) -> ExitStatusTag {                     \
+		return Assert::equals(eval_expression(expr, env, context), value);     \
 	}
 
 #define IS_TRUE(expr)                                                          \
-	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
-		return Assert::is_true(eval_expression(expr, env));            \
+	+[](Interpreter::Interpreter& env,                                         \
+	    Frontend::SymbolTable& context) -> ExitStatusTag {                     \
+		return Assert::is_true(eval_expression(expr, env, context));           \
 	}
 
 #define IS_FALSE(expr)                                                         \
-	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
-		return Assert::is_false(eval_expression(expr, env));           \
+	+[](Interpreter::Interpreter& env,                                         \
+	    Frontend::SymbolTable& context) -> ExitStatusTag {                     \
+		return Assert::is_false(eval_expression(expr, env, context));          \
 	}
 
 #define IS_NULL(expr)                                                          \
-	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
-		return Assert::is_null(eval_expression(expr, env));            \
+	+[](Interpreter::Interpreter& env,                                         \
+	    Frontend::SymbolTable& context) -> ExitStatusTag {                     \
+		return Assert::is_null(eval_expression(expr, env, context));           \
 	}
 
-#define ARRAY_OF_SIZE(expr, size)                                              \
-	+[](Interpreter::Interpreter& env) -> ExitStatusTag {                  \
-		return Assert::array_of_size(eval_expression(expr, env), size);\
+#define ARRAY_OF_SIZE(expr, size)                                                \
+	+[](Interpreter::Interpreter& env,                                           \
+	    Frontend::SymbolTable& context) -> ExitStatusTag {                       \
+		return Assert::array_of_size(eval_expression(expr, env, context), size); \
 	}
 
 void interpreter_tests(Test::Tester& tests) {

@@ -21,8 +21,11 @@
 
 namespace Interpreter {
 
-ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runner* runner) {
-
+ExitStatusTag execute(
+	std::string const& source,
+	ExecuteSettings settings,
+	Runner* runner
+) {
 	TokenArray const ta = tokenize(source.c_str());
 
 	CST::Allocator cst_allocator;
@@ -48,9 +51,9 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 
 	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};
+	Frontend::SymbolTable context;
 
 	{
-		Frontend::SymbolTable context;
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
@@ -68,6 +71,7 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 		ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
 	}
+
 	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
@@ -75,9 +79,7 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 	declare_native_functions(env);
 	eval(ast, env);
 
-	ExitStatusTag runner_exit_code = runner(env);
-
-	return runner_exit_code;
+	return runner(env, context);
 }
 
 
@@ -86,7 +88,11 @@ ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runne
 // Note that we can't just call match_identifiers, because that wouldn't take
 // into account the rest of the program that's already been processed, before
 // this is run
-Value* eval_expression(const std::string& expr, Interpreter& env) {
+Value* eval_expression(
+	const std::string& expr,
+	Interpreter& env,
+	Frontend::SymbolTable& context
+) {
 	TokenArray const ta = tokenize(expr.c_str());
 
 	CST::Allocator cst_allocator;
@@ -96,6 +102,16 @@ Value* eval_expression(const std::string& expr, Interpreter& env) {
 
 	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
+
+	{
+		auto err = Frontend::match_identifiers(ast, context);
+		if (!err.ok()) {
+			err.print();
+			return nullptr;
+		}
+	}
+
+	TypeChecker::compute_offsets(ast, 0);
 
 	// TODO?: return a gc_ptr
 	eval(ast, env);

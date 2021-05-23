@@ -10,6 +10,10 @@ namespace Interpreter {
 struct Interpreter;
 }
 
+namespace Frontend {
+struct SymbolTable;
+}
+
 namespace Test {
 
 struct TestSet {
@@ -18,7 +22,7 @@ struct TestSet {
 	virtual ~TestSet() = default;
 };
 
-using Interpret = ExitStatusTag (*)(Interpreter::Interpreter&);
+using Interpret = ExitStatusTag (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
 
 struct InterpreterTestSet : public TestSet {
 

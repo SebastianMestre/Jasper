@@ -1,8 +1,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "test_set.hpp"
 #include "../interpreter/execute.hpp"
+#include "../symbol_table.hpp"
+#include "test_set.hpp"
 
 namespace Test {
 
