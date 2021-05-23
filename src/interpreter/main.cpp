@@ -38,8 +38,10 @@ int main(int argc, char** argv) {
 
 	std::string source = file_content.str();
 
+	Interpreter::ExecuteSettings settings;
+
 	ExitStatusTag exit_code = execute(
-	    source, false, +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	    source, settings, +[](Interpreter::Interpreter& env) -> ExitStatusTag {
 		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		    // this means we need to create a call expression node to run the program.
 		    // TODO: We need to clean this up

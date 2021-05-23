@@ -20,7 +20,7 @@
 
 namespace Interpreter {
 
-ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
+ExitStatusTag execute(std::string const& source, ExecuteSettings settings, Runner* runner) {
 
 	TokenArray const ta = tokenize(source.c_str());
 
@@ -34,7 +34,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	auto cst = parse_result.m_result;
 
-	if (dump_cst)
+	if (settings.dump_cst)
 		print(cst, 1);
 
 	// Can this even happen? parse_program should always either return a
@@ -58,9 +58,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
 
-	// TODO: expose this flag
-	constexpr bool run_typechecking = true;
-	if (run_typechecking) {
+	if (settings.typecheck) {
 		TypeChecker::metacheck(ast, tc);
 		ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
