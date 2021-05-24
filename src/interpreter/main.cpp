@@ -8,6 +8,7 @@
 #include "../cst_allocator.hpp"
 #include "../lexer.hpp"
 #include "../parser.hpp"
+#include "../symbol_table.hpp"
 #include "../token_array.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
@@ -38,8 +39,13 @@ int main(int argc, char** argv) {
 
 	std::string source = file_content.str();
 
+	Interpreter::ExecuteSettings settings;
+
 	ExitStatusTag exit_code = execute(
-	    source, false, +[](Interpreter::Interpreter& env) -> ExitStatusTag {
+	    source,
+	    settings,
+	    +[](Interpreter::Interpreter& env,
+	        Frontend::SymbolTable& context) -> ExitStatusTag {
 		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
 		    // this means we need to create a call expression node to run the program.
 		    // TODO: We need to clean this up

@@ -1,8 +1,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "test_set.hpp"
 #include "../interpreter/execute.hpp"
+#include "../symbol_table.hpp"
+#include "test_set.hpp"
 
 namespace Test {
 
@@ -32,8 +33,11 @@ TestReport InterpreterTestSet::execute() {
 		while (std::getline(in_fs, line))
 			file_content << line << '\n';
 
+		Interpreter::ExecuteSettings settings;
+		settings.dump_cst = m_dump;
+
 		for (auto* f : m_testers) {
-			ExitStatusTag answer = Interpreter::execute(file_content.str(), m_dump, f);
+			ExitStatusTag answer = Interpreter::execute(file_content.str(), settings, f);
 
 			if (ExitStatusTag::Ok != answer)
 				return {TestStatusTag::Fail};

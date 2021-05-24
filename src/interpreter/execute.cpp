@@ -9,6 +9,7 @@
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
+#include "../symbol_table.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
 #include "../typechecker.hpp"
@@ -20,8 +21,11 @@
 
 namespace Interpreter {
 
-ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) {
-
+ExitStatusTag execute(
+	std::string const& source,
+	ExecuteSettings settings,
+	Runner* runner
+) {
 	TokenArray const ta = tokenize(source.c_str());
 
 	CST::Allocator cst_allocator;
@@ -34,7 +38,7 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	auto cst = parse_result.m_result;
 
-	if (dump_cst)
+	if (settings.dump_cst)
 		print(cst, 1);
 
 	// Can this even happen? parse_program should always either return a
@@ -47,9 +51,13 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};
+	Frontend::SymbolTable context;
 
 	{
-		auto err = Frontend::match_identifiers(ast, tc.m_builtin_declarations);
+		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
+			for (auto& decl : bucket)
+				context.declare(&decl);
+		auto err = Frontend::match_identifiers(ast, context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatusTag::StaticError;
@@ -58,13 +66,12 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 
 	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
 
-	// TODO: expose this flag
-	constexpr bool run_typechecking = true;
-	if (run_typechecking) {
+	if (settings.typecheck) {
 		TypeChecker::metacheck(ast, tc);
 		ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
 	}
+
 	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
@@ -72,17 +79,20 @@ ExitStatusTag execute(std::string const& source, bool dump_cst, Runner* runner) 
 	declare_native_functions(env);
 	eval(ast, env);
 
-	ExitStatusTag runner_exit_code = runner(env);
-
-	return runner_exit_code;
+	return runner(env, context);
 }
+
 
 // FIXME: This does not handle seq-expressions, or inline definitions of
 // functions, because it does not call `match_identifiers` or `compute_offsets`.
 // Note that we can't just call match_identifiers, because that wouldn't take
 // into account the rest of the program that's already been processed, before
 // this is run
-Value* eval_expression(const std::string& expr, Interpreter& env) {
+Value* eval_expression(
+	const std::string& expr,
+	Interpreter& env,
+	Frontend::SymbolTable& context
+) {
 	TokenArray const ta = tokenize(expr.c_str());
 
 	CST::Allocator cst_allocator;
@@ -92,6 +102,16 @@ Value* eval_expression(const std::string& expr, Interpreter& env) {
 
 	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
+
+	{
+		auto err = Frontend::match_identifiers(ast, context);
+		if (!err.ok()) {
+			err.print();
+			return nullptr;
+		}
+	}
+
+	TypeChecker::compute_offsets(ast, 0);
 
 	// TODO?: return a gc_ptr
 	eval(ast, env);

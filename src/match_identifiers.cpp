@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "./log/log.hpp"
-#include "./utils/chunked_array.hpp"
 #include "./utils/interned_string.hpp"
 #include "ast.hpp"
 #include "error_report.hpp"
@@ -67,7 +66,9 @@ namespace Frontend {
 	ast->m_declaration = declaration;
 	ast->m_surrounding_function = env.current_function();
 
-	env.current_top_level_declaration()->m_references.insert(declaration);
+	auto top_level_decl = env.current_top_level_declaration();
+	if (top_level_decl)
+		top_level_decl->m_references.insert(declaration);
 
 	if (declaration->is_global()) {
 		ast->m_origin = AST::Identifier::Origin::Global;
@@ -302,14 +303,6 @@ namespace Frontend {
 #undef DO_NOTHING
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in match_identifiers '" << ast_string[int(ast->type())] << "'";
-}
-
-ErrorReport match_identifiers(AST::AST* ast, ChunkedArray<AST::Declaration>& builtins) {
-	SymbolTable st;
-	for (auto& bucket : builtins.m_buckets)
-		for (auto& decl : bucket)
-			st.declare(&decl);
-	return match_identifiers(ast, st);
 }
 
 #undef CHECK_AND_RETURN
