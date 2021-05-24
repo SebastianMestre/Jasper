@@ -2,10 +2,10 @@
 
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
-#include "../automaton.hpp"
 #include "../compute_offsets.hpp"
 #include "../cst_allocator.hpp"
 #include "../ct_eval.hpp"
+#include "../lexer.hpp"
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
