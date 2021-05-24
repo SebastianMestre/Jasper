@@ -22,15 +22,11 @@
 	X(RecordConstructor)
 
 #define X(name) #name,
-constexpr const char* value_string[] = {
-	VALUE_TAGS
-};
+constexpr const char* value_string[] = {VALUE_TAGS};
 #undef X
 
 #define X(name) name,
-enum class ValueTag {
-	VALUE_TAGS
-};
+enum class ValueTag { VALUE_TAGS };
 #undef X
 
 #undef VALUE_TAGS

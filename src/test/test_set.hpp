@@ -22,7 +22,7 @@ struct TestSet {
 	virtual ~TestSet() = default;
 };
 
-using Interpret = ExitStatusTag (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
+using Interpret = ExitStatus (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
 
 struct InterpreterTestSet : public TestSet {
 

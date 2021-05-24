@@ -20,12 +20,12 @@ InterpreterTestSet::InterpreterTestSet(std::string s, std::vector<Interpret> tfs
 
 TestReport InterpreterTestSet::execute() {
 	if (m_testers.empty())
-		return {TestStatusTag::Empty};
+		return {TestStatus::Empty};
 
 	try {
 		std::ifstream in_fs(m_source_file);
 		if (!in_fs.good())
-			return {TestStatusTag::MissingFile};
+			return {TestStatus::MissingFile};
 
 		std::stringstream file_content;
 		std::string line;
@@ -37,16 +37,16 @@ TestReport InterpreterTestSet::execute() {
 		settings.dump_cst = m_dump;
 
 		for (auto* f : m_testers) {
-			ExitStatusTag answer = Interpreter::execute(file_content.str(), settings, f);
+			ExitStatus answer = Interpreter::execute(file_content.str(), settings, f);
 
-			if (ExitStatusTag::Ok != answer)
-				return {TestStatusTag::Fail};
+			if (ExitStatus::Ok != answer)
+				return {TestStatus::Fail};
 		}
 	} catch (const std::exception& e) {
-		return {TestStatusTag::Error, e.what()};
+		return {TestStatus::Error, e.what()};
 	}
 
-	return {TestStatusTag::Ok};
+	return {TestStatus::Ok};
 }
 
 NormalTestSet::NormalTestSet() {}
@@ -59,21 +59,21 @@ NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
 
 TestReport NormalTestSet::execute() {
 	if (m_testers.empty())
-		return {TestStatusTag::Empty};
+		return {TestStatus::Empty};
 
 	try {
 		for (auto* test : m_testers) {
 			auto report = test();
 
 			// FUTURE: Accumulate failed tests
-			if (report.m_code != TestStatusTag::Ok)
+			if (report.m_code != TestStatus::Ok)
 				return report;
 		}
 	} catch (std::exception const& e) {
-		return {TestStatusTag::Error, e.what()};
+		return {TestStatus::Error, e.what()};
 	}
 
-	return {TestStatusTag::Ok};
+	return {TestStatus::Ok};
 }
 
 } // namespace Test

@@ -12,7 +12,7 @@ namespace Interpreter {
 struct Interpreter;
 struct Value;
 
-using Runner = auto(Interpreter&, Frontend::SymbolTable&) -> ExitStatusTag;
+using Runner = auto(Interpreter&, Frontend::SymbolTable&) -> ExitStatus;
 
 struct ExecuteSettings {
 	bool dump_cst {false};
@@ -20,7 +20,7 @@ struct ExecuteSettings {
 };
 
 // returns an exit status
-ExitStatusTag execute(
+ExitStatus execute(
 	std::string const& source,
 	ExecuteSettings settings,
 	Runner* runner

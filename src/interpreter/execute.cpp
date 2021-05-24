@@ -21,7 +21,7 @@
 
 namespace Interpreter {
 
-ExitStatusTag execute(
+ExitStatus execute(
 	std::string const& source,
 	ExecuteSettings settings,
 	Runner* runner
@@ -33,7 +33,7 @@ ExitStatusTag execute(
 
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
-		return ExitStatusTag::ParseError;
+		return ExitStatus::ParseError;
 	}
 
 	auto cst = parse_result.m_result;
@@ -44,7 +44,7 @@ ExitStatusTag execute(
 	// Can this even happen? parse_program should always either return a
 	// DeclarationList or an error
 	if (cst->type() != CSTTag::DeclarationList)
-		return ExitStatusTag::TopLevelTypeError;
+		return ExitStatus::TopLevelTypeError;
 
 	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
@@ -60,7 +60,7 @@ ExitStatusTag execute(
 		auto err = Frontend::match_identifiers(ast, context);
 		if (!err.ok()) {
 			err.print();
-			return ExitStatusTag::StaticError;
+			return ExitStatus::StaticError;
 		}
 	}
 

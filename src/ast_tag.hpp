@@ -1,6 +1,6 @@
 #pragma once
 
-#define AST_TAGS                                                         \
+#define AST_TAGS                                                               \
 	X(NumberLiteral)                                                           \
 	X(IntegerLiteral)                                                          \
 	X(StringLiteral)                                                           \
