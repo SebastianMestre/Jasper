@@ -333,32 +333,19 @@ constexpr TokenTag token_tags[] = { END_STATES };
 static InternedString fixed_strings[] = { END_STATES };
 #undef X
 
-#undef END_STATES
-
 constexpr Automaton make() {
 	AutomatonBuilder builder{};
 
 	int start_state = builder.new_state();
 
-	add_string(builder, "if", EndStates::If);
-	add_string(builder, "for", EndStates::For);
-	add_string(builder, "else", EndStates::Else);
-	add_string(builder, "fn", EndStates::Fn);
-	add_string(builder, "then", EndStates::Then);
-	add_string(builder, "return", EndStates::Return);
-	add_string(builder, "while", EndStates::While);
-	add_string(builder, "match", EndStates::Match);
-	add_string(builder, "true", EndStates::True);
-	add_string(builder, "false", EndStates::False);
-	add_string(builder, "array", EndStates::Array);
-	add_string(builder, "null", EndStates::Null);
-	add_string(builder, "seq", EndStates::Seq);
-	add_string(builder, "tuple", EndStates::Tuple);
-	add_string(builder, "struct", EndStates::Struct);
-	add_string(builder, "union", EndStates::Union);
+#define X(name, token_tag, string) add_string(builder, string, EndStates::name);
+	END_STATES
+#undef X
 
 	return builder.automaton;
 }
+
+#undef END_STATES
 
 } // namespace KeywordLexer
 
