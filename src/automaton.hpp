@@ -9,7 +9,6 @@ struct Range {
 };
 
 struct Automaton {
-	int offset[state_count] {};
 	State transition[state_count][256] {};
 
 	constexpr State go(State s, unsigned char c) const {
@@ -30,8 +29,18 @@ struct AutomatonBuilder {
 			return *this;
 		}
 
+		constexpr StateProxy& self_transition(unsigned char c) {
+			builder.transition(state, c, state);
+			return *this;
+		}
+
 		constexpr StateProxy& transition(Range r, State dst) {
 			builder.transition(state, r, dst);
+			return *this;
+		}
+
+		constexpr StateProxy& self_transition(Range r) {
+			builder.transition(state, r, state);
 			return *this;
 		}
 

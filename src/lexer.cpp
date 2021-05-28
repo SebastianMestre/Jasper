@@ -107,45 +107,30 @@ constexpr void init_transitions(AutomatonBuilder& builder) {
 		builder.default_transition(i, Error);
 
 	State start = builder.new_state();
-	State saw_id_char = builder.new_state();
 	State saw_open_string = builder.new_state();
-	State saw_slash = builder.new_state();
 	State saw_comment_marker = builder.new_state();
-	State saw_digit = builder.new_state();
 	State saw_number_dot = builder.new_state();
-	State saw_decimal_digit = builder.new_state();
-	State saw_eq = builder.new_state();
-	State saw_bang = builder.new_state();
-	State saw_colon = builder.new_state();
-	State saw_lt = builder.new_state();
-	State saw_gt = builder.new_state();
-	State saw_plus = builder.new_state();
-	State saw_dash = builder.new_state();
-	State saw_star = builder.new_state();
-	State saw_pipe = builder.new_state();
-	State saw_amp = builder.new_state();
-	State saw_caret = builder.new_state();
 
 	builder
 
 	.from_state(start)
-		.transition('_', saw_id_char)
-		.transition(Range {'a', 'z'}, saw_id_char)
-		.transition(Range {'A', 'Z'}, saw_id_char)
+		.transition('_', Identifier)
+		.transition(Range {'a', 'z'}, Identifier)
+		.transition(Range {'A', 'Z'}, Identifier)
 		.transition('"', saw_open_string)
-		.transition(Range {'0', '9'}, saw_digit)
-		.transition('/', saw_slash)
-		.transition('=', saw_eq)
-		.transition('!', saw_bang)
-		.transition(':', saw_colon)
-		.transition('<', saw_lt)
-		.transition('>', saw_gt)
-		.transition('+', saw_plus)
-		.transition('-', saw_dash)
-		.transition('*', saw_star)
-		.transition('|', saw_pipe)
-		.transition('&', saw_amp)
-		.transition('^', saw_caret)
+		.transition(Range {'0', '9'}, Integer)
+		.transition('/', Slash)
+		.transition('=', Assign)
+		.transition('!', Bang)
+		.transition(':', Colon)
+		.transition('<', Lt)
+		.transition('>', Gt)
+		.transition('+', Plus)
+		.transition('-', Minus)
+		.transition('*', Star)
+		.transition('|', Pipe)
+		.transition('&', Amp)
+		.transition('^', Caret)
 	// simple single char tokens
 		.transition(';', Semicolon)
 		.transition(',', Comma)
@@ -160,12 +145,11 @@ constexpr void init_transitions(AutomatonBuilder& builder) {
 		.transition('@', At)
 
 	// Identifiers
-	.from_state(saw_id_char)
-		.default_transition(Identifier)
-		.transition('_', saw_id_char)
-		.transition(Range {'a', 'z'}, saw_id_char)
-		.transition(Range {'A', 'Z'}, saw_id_char)
-		.transition(Range {'0', '9'}, saw_id_char)
+	.from_state(Identifier)
+		.self_transition('_')
+		.self_transition(Range {'a', 'z'})
+		.self_transition(Range {'A', 'Z'})
+		.self_transition(Range {'0', '9'})
 
 	// String literals
 	.from_state(saw_open_string)
@@ -173,19 +157,16 @@ constexpr void init_transitions(AutomatonBuilder& builder) {
 		.transition('"', String)
 
 	// numeric literals
-	.from_state(saw_digit)
-		.default_transition(Integer)
-		.transition(Range {'0', '9'}, saw_digit)
+	.from_state(Integer)
+		.self_transition(Range {'0', '9'})
 		.transition('.', saw_number_dot)
 	.from_state(saw_number_dot)
-		.transition(Range {'0', '9'}, saw_decimal_digit)
-	.from_state(saw_decimal_digit)
-		.default_transition(Number)
-		.transition(Range {'0', '9'}, saw_decimal_digit)
+		.transition(Range {'0', '9'}, Number)
+	.from_state(Number)
+		.self_transition(Range {'0', '9'})
 
 	// slash (/) tokens, including comments
-	.from_state(saw_slash)
-		.default_transition(Slash)
+	.from_state(Slash)
 		.transition('=', SlashEq)
 		.transition('/', saw_comment_marker)
 	.from_state(saw_comment_marker)
@@ -194,100 +175,63 @@ constexpr void init_transitions(AutomatonBuilder& builder) {
 		.transition('\0', Comment)
 
 	// equal sign (=) tokens
-	.from_state(saw_eq)
-		.default_transition(Assign)
+	.from_state(Assign)
 		.transition('=', Eq)
 		.transition('>', Arrow)
 
 	// bang (!) tokens
-	.from_state(saw_bang)
-		.default_transition(Bang)
+	.from_state(Bang)
 		.transition('=', BangEq)
 
 	// colon (:) tokens
-	.from_state(saw_colon)
-		.default_transition(Colon)
+	.from_state(Colon)
 		.transition('=', ColonEq)
 		.transition('>', RPoly)
 
 	// less-than (<) tokens
-	.from_state(saw_lt)
-		.default_transition(Lt)
+	.from_state(Lt)
 		.transition('=', Lte)
 		.transition(':', LPoly)
 
 	// greater-than (>) tokens
-	.from_state(saw_gt)
-		.default_transition(Gt)
+	.from_state(Gt)
 		.transition('=', Gte)
 
 	// plus (+) tokens
-	.from_state(saw_plus)
-		.default_transition(Plus)
+	.from_state(Plus)
 		.transition('=', PlusEq)
 		.transition('+', PlusPlus)
 
 	// dash (-) tokens
-	.from_state(saw_dash)
-		.default_transition(Minus)
+	.from_state(Minus)
 		.transition('=', MinusEq)
 		.transition('-', MinusMinus)
 
 	// start (*) tokens
-	.from_state(saw_star)
-		.default_transition(Star)
+	.from_state(Star)
 		.transition('=', StarEq)
 
 	// pipe (|) tokens
-	.from_state(saw_pipe)
-		.default_transition(Pipe)
+	.from_state(Pipe)
 		.transition('=', PipeEq)
 		.transition('|', PipePipe)
 		.transition('>', Pizza)
 
 	// amp (&) tokens
-	.from_state(saw_amp)
-		.default_transition(Amp)
+	.from_state(Amp)
 		.transition('=', AmpEq)
 		.transition('&', AmpAmp)
 
 	// caret (^) tokens
-	.from_state(saw_caret)
-		.default_transition(Caret)
+	.from_state(Caret)
 		.transition('=', CaretEq)
 
 	;
 }
 
-constexpr void init_offsets(Automaton& result) {
-	using namespace EndStates;
-
-	State states_that_need_to_step_back_after_completing[] = {
-		Identifier,
-		Integer,
-		Number,
-		Colon,
-		Assign,
-		Pipe,
-		Amp,
-		Bang,
-		Caret,
-		Plus,
-		Minus,
-		Star,
-		Slash,
-		Lt,
-		Gt,
-	};
-
-	for (State state : states_that_need_to_step_back_after_completing)
-		result.offset[state] = -1;
-}
-
 constexpr Automaton make() {
 	AutomatonBuilder builder{};
 	init_transitions(builder);
-	init_offsets(builder.automaton);
 	return builder.automaton;
 }
 
@@ -333,32 +277,19 @@ constexpr TokenTag token_tags[] = { END_STATES };
 static InternedString fixed_strings[] = { END_STATES };
 #undef X
 
-#undef END_STATES
-
 constexpr Automaton make() {
 	AutomatonBuilder builder{};
 
 	int start_state = builder.new_state();
 
-	add_string(builder, "if", EndStates::If);
-	add_string(builder, "for", EndStates::For);
-	add_string(builder, "else", EndStates::Else);
-	add_string(builder, "fn", EndStates::Fn);
-	add_string(builder, "then", EndStates::Then);
-	add_string(builder, "return", EndStates::Return);
-	add_string(builder, "while", EndStates::While);
-	add_string(builder, "match", EndStates::Match);
-	add_string(builder, "true", EndStates::True);
-	add_string(builder, "false", EndStates::False);
-	add_string(builder, "array", EndStates::Array);
-	add_string(builder, "null", EndStates::Null);
-	add_string(builder, "seq", EndStates::Seq);
-	add_string(builder, "tuple", EndStates::Tuple);
-	add_string(builder, "struct", EndStates::Struct);
-	add_string(builder, "union", EndStates::Union);
+#define X(name, token_tag, string) add_string(builder, string, EndStates::name);
+	END_STATES
+#undef X
 
 	return builder.automaton;
 }
+
+#undef END_STATES
 
 } // namespace KeywordLexer
 
@@ -412,16 +343,18 @@ TokenArray tokenize(char const* p) {
 		char const* const p0 = p;
 
 		int state = state_count - 1;
-		while (MainLexer::EndStates::Count < state) {
-			state = a.go(state, *p++);
+		int new_state = a.go(state, *p++);
+		while (new_state != MainLexer::EndStates::Error) {
+			state = new_state;
+			new_state = a.go(state, *p++);
 		}
 
-		if (state == MainLexer::EndStates::Error) {
+		if (MainLexer::EndStates::Count <= state) {
 			print_error(p);
 			break;
 		}
 
-		p += a.offset[state];
+		p -= 1;
 
 		if(state <= MainLexer::EndStates::last_fixed_string) {
 			ta.push_back({
