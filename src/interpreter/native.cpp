@@ -221,6 +221,12 @@ Value* value_equals(ArgsType v, Interpreter& e) {
 	}
 }
 
+Value* value_not_equals(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_equals(v, e));
+	b->m_value = !b->m_value;
+	return b;
+}
+
 Value* value_less(ArgsType v, Interpreter& e) {
 	auto* lhs = value_of(v[0]);
 	auto* rhs = value_of(v[1]);
@@ -239,6 +245,23 @@ Value* value_less(ArgsType v, Interpreter& e) {
 		          << value_string[static_cast<int>(lhs->type())];
 		assert(0);
 	}
+}
+
+Value* value_greater_or_equal(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_less(v, e));
+	b->m_value = !b->m_value;
+	return b;
+}
+
+Value* value_greater(ArgsType v, Interpreter& e) {
+	std::swap(v[0], v[1]);
+	return value_less(v, e);
+}
+
+Value* value_less_or_equal(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_greater(v, e));
+	b->m_value = !b->m_value;
+	return b;
 }
 
 Value* value_assign(ArgsType v, Interpreter& e) {
@@ -275,68 +298,32 @@ Value* read_string(ArgsType v, Interpreter& e) {
 }
 
 void declare_native_functions(Interpreter& env) {
-	env.global_declare(
-	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
-
-	env.global_declare(
-	    "array_append",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_append)));
-
-	env.global_declare(
-	    "array_extend",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_extend)));
-
-	env.global_declare(
-	    "size", env.new_native_function(static_cast<NativeFunctionType*>(&size)));
-
-	env.global_declare(
-	    "array_join",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_join)));
-
-	env.global_declare(
-	    "array_at",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_at)));
-
-	env.global_declare(
-	    "+", env.new_native_function(static_cast<NativeFunctionType*>(&value_add)));
-	env.global_declare(
-	    "-", env.new_native_function(static_cast<NativeFunctionType*>(&value_sub)));
-	env.global_declare(
-	    "*", env.new_native_function(static_cast<NativeFunctionType*>(&value_mul)));
-	env.global_declare(
-	    "/", env.new_native_function(static_cast<NativeFunctionType*>(&value_div)));
-	env.global_declare(
-	    "<",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_less)));
-	env.global_declare(
-	    "=",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_assign)));
-	env.global_declare(
-	    "==",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_equals)));
-	env.global_declare(
-	    "^^",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicxor)));
-	env.global_declare(
-	    "&&",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicand)));
-	env.global_declare(
-	    "||",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicor)));
+	env.global_declare("print", env.new_native_function(print));
+	env.global_declare("array_append", env.new_native_function(array_append));
+	env.global_declare("array_extend", env.new_native_function(array_extend));
+	env.global_declare("size", env.new_native_function(size));
+	env.global_declare("array_join", env.new_native_function(array_join));
+	env.global_declare("array_at", env.new_native_function(array_at));
+	env.global_declare("+", env.new_native_function(value_add));
+	env.global_declare("-", env.new_native_function(value_sub));
+	env.global_declare("*", env.new_native_function(value_mul));
+	env.global_declare("/", env.new_native_function(value_div));
+	env.global_declare("<", env.new_native_function(value_less));
+	env.global_declare(">=", env.new_native_function(value_greater_or_equal));
+	env.global_declare(">", env.new_native_function(value_greater));
+	env.global_declare("<=", env.new_native_function(value_less_or_equal));
+	env.global_declare("=", env.new_native_function(value_assign));
+	env.global_declare("==", env.new_native_function(value_equals));
+	env.global_declare("!=", env.new_native_function(value_not_equals));
+	env.global_declare("^^", env.new_native_function(value_logicxor));
+	env.global_declare("&&", env.new_native_function(value_logicand));
+	env.global_declare("||", env.new_native_function(value_logicor));
 
 	// Input
-	env.global_declare(
-	    "read_integer",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_integer)));
-	env.global_declare(
-	    "read_number",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_number)));
-	env.global_declare(
-	    "read_string",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_string)));
-	env.global_declare(
-	    "read_line",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_line)));
+	env.global_declare("read_integer", env.new_native_function(read_integer));
+	env.global_declare("read_number", env.new_native_function(read_number));
+	env.global_declare("read_string", env.new_native_function(read_string));
+	env.global_declare("read_line", env.new_native_function(read_line));
 }
 
 #undef OP
