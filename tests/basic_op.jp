@@ -7,6 +7,15 @@ litt := fn () { return true; };
 litf := fn () { return false; };
 nullv := fn () { return null; };
 
+logic_ops := fn() {
+	answer := 1 >= 1 && 1 <= 1;
+	
+	if (1 > 1 || 1 != 1)
+		return false;
+
+	return answer;
+};
+
 p_aux := fn(x) => x + 7;
 pizza := fn() => 6 |> p_aux();
 
