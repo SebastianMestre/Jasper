@@ -119,7 +119,23 @@ TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator
 			auto poly_id = m_core.new_poly(term_mono_id, {var_id});
 
 			declare_builtin_value( "<", poly_id);
+			declare_builtin_value(">=", poly_id);
+			declare_builtin_value( ">", poly_id);
+			declare_builtin_value("<=", poly_id);
 			declare_builtin_value("==", poly_id);
+			declare_builtin_value("!=", poly_id);
+		}
+
+		{
+			auto term_mono_id = m_core.new_term(
+			    BuiltinType::Function,
+			    {mono_boolean(), mono_boolean(), mono_boolean()},
+			    "[builtin] (Bool, Bool) -> Bool");
+
+			auto poly_id = m_core.new_poly(term_mono_id, {});
+
+			declare_builtin_value("&&", poly_id);
+			declare_builtin_value("||", poly_id);
 		}
 
 		{
