@@ -330,6 +330,8 @@ bool is_binary_operator(TokenTag t) {
 	case TokenTag::GTE:
 	case TokenTag::EQUAL:
 	case TokenTag::NOT_EQUAL:
+	case TokenTag::LOGIC_AND:
+	case TokenTag::LOGIC_IOR:
 	case TokenTag::ASSIGN:
 	case TokenTag::DOT:
 	case TokenTag::PIZZA:
@@ -350,6 +352,8 @@ binding_power binding_power_of(TokenTag t) {
 	case TokenTag::ASSIGN:
 		return {10, 11};
 	case TokenTag::PIZZA:
+	case TokenTag::LOGIC_IOR:
+	case TokenTag::LOGIC_AND:
 		return {20, 21};
 	case TokenTag::LT:
 	case TokenTag::GT:
