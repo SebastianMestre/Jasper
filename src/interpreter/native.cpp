@@ -85,10 +85,6 @@ Value* array_at(ArgsType v, Interpreter& e) {
 	return array->m_value[index->m_value];
 }
 
-Value* dummy(ArgsType v, Interpreter& e) {
-	return e.null();
-}
-
 Value* value_add(ArgsType v, Interpreter& e) {
 	auto* lhs = value_of(v[0]);
 	auto* rhs = value_of(v[1]);
