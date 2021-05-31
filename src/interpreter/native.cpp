@@ -12,6 +12,9 @@
 
 namespace Interpreter {
 
+#define OP(type, lhs, op, rhs) \
+	static_cast<type*>(lhs)->m_value op static_cast<type*>(rhs)->m_value
+
 // TODO: All of these should return gc_ptr
 
 using ArgsType = Span<Value*>;
@@ -82,10 +85,6 @@ Value* array_at(ArgsType v, Interpreter& e) {
 	return array->m_value[index->m_value];
 }
 
-Value* dummy(ArgsType v, Interpreter& e) {
-	return e.null();
-}
-
 Value* value_add(ArgsType v, Interpreter& e) {
 	auto* lhs = value_of(v[0]);
 	auto* rhs = value_of(v[1]);
@@ -93,17 +92,11 @@ Value* value_add(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
-		    static_cast<Integer*>(lhs)->m_value +
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_integer_raw(OP(Integer, lhs, +, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
-		    static_cast<Float*>(lhs)->m_value +
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_float_raw(OP(Float, lhs, +, rhs));
 	case ValueTag::String:
-		return e.m_gc->new_string_raw(
-		    static_cast<String*>(lhs)->m_value +
-		    static_cast<String*>(rhs)->m_value);
+		return e.m_gc->new_string_raw(OP(String, lhs, +, rhs));
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs->type())];
@@ -118,13 +111,9 @@ Value* value_sub(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
-		    static_cast<Integer*>(lhs)->m_value -
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_integer_raw(OP(Integer, lhs, -, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
-		    static_cast<Float*>(lhs)->m_value -
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_float_raw(OP(Float, lhs, -, rhs));
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs->type())];
@@ -139,13 +128,9 @@ Value* value_mul(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
-		    static_cast<Integer*>(lhs)->m_value *
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_integer_raw(OP(Integer, lhs, *, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
-		    static_cast<Float*>(lhs)->m_value *
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_float_raw(OP(Float, lhs, *, rhs));
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
 		          << value_string[static_cast<int>(lhs->type())];
@@ -160,13 +145,9 @@ Value* value_div(ArgsType v, Interpreter& e) {
 	assert(lhs->type() == rhs->type());
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_integer_raw(
-		    static_cast<Integer*>(lhs)->m_value /
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_integer_raw(OP(Integer, lhs, /, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_float_raw(
-		    static_cast<Float*>(lhs)->m_value /
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_float_raw(OP(Float, lhs, /, rhs));
 	default:
 		std::cerr << "ERROR: can't divide values of type "
 		          << value_string[static_cast<int>(lhs->type())];
@@ -179,9 +160,7 @@ Value* value_logicand(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Boolean*>(lhs)->m_value and
-		    static_cast<Boolean*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, &&, rhs));
 	std::cerr << "ERROR: logical and operator not defined for types "
 	          << value_string[static_cast<int>(lhs->type())] << " and "
 	          << value_string[static_cast<int>(rhs->type())];
@@ -193,9 +172,7 @@ Value* value_logicor(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Boolean*>(lhs)->m_value or
-		    static_cast<Boolean*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, ||, rhs));
 	std::cerr << "ERROR: logical or operator not defined for types "
 	          << value_string[static_cast<int>(lhs->type())] << " and "
 	          << value_string[static_cast<int>(rhs->type())];
@@ -207,9 +184,7 @@ Value* value_logicxor(ArgsType v, Interpreter& e) {
 	auto* rhs = value_of(v[1]);
 
 	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Boolean*>(lhs)->m_value !=
-		    static_cast<Boolean*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, !=, rhs));
 	std::cerr << "ERROR: exclusive or operator not defined for types "
 	          << value_string[static_cast<int>(lhs->type())] << " and "
 	          << value_string[static_cast<int>(rhs->type())];
@@ -226,21 +201,13 @@ Value* value_equals(ArgsType v, Interpreter& e) {
 	case ValueTag::Null:
 		return e.m_gc->new_boolean_raw(true);
 	case ValueTag::Integer:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Integer*>(lhs)->m_value ==
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Integer, lhs, ==, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Float*>(lhs)->m_value ==
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Float, lhs, ==, rhs));
 	case ValueTag::String:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<String*>(lhs)->m_value ==
-		    static_cast<String*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(String, lhs, ==, rhs));
 	case ValueTag::Boolean:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Boolean*>(lhs)->m_value ==
-		    static_cast<Boolean*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, ==, rhs));
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
 		          << value_string[static_cast<int>(lhs->type())] << " and "
@@ -248,6 +215,12 @@ Value* value_equals(ArgsType v, Interpreter& e) {
 		assert(0);
 	}
 	}
+}
+
+Value* value_not_equals(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_equals(v, e));
+	b->m_value = !b->m_value;
+	return b;
 }
 
 Value* value_less(ArgsType v, Interpreter& e) {
@@ -258,22 +231,33 @@ Value* value_less(ArgsType v, Interpreter& e) {
 
 	switch (lhs->type()) {
 	case ValueTag::Integer:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Integer*>(lhs)->m_value <
-		    static_cast<Integer*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Integer, lhs, <, rhs));
 	case ValueTag::Float:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<Float*>(lhs)->m_value <
-		    static_cast<Float*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(Float, lhs, <, rhs));
 	case ValueTag::String:
-		return e.m_gc->new_boolean_raw(
-		    static_cast<String*>(lhs)->m_value <
-		    static_cast<String*>(rhs)->m_value);
+		return e.m_gc->new_boolean_raw(OP(String, lhs, <, rhs));
 	default:
 		std::cerr << "ERROR: can't compare values of type "
 		          << value_string[static_cast<int>(lhs->type())];
 		assert(0);
 	}
+}
+
+Value* value_greater_or_equal(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_less(v, e));
+	b->m_value = !b->m_value;
+	return b;
+}
+
+Value* value_greater(ArgsType v, Interpreter& e) {
+	std::swap(v[0], v[1]);
+	return value_less(v, e);
+}
+
+Value* value_less_or_equal(ArgsType v, Interpreter& e) {
+	Boolean* b = static_cast<Boolean*>(value_greater(v, e));
+	b->m_value = !b->m_value;
+	return b;
 }
 
 Value* value_assign(ArgsType v, Interpreter& e) {
@@ -310,68 +294,34 @@ Value* read_string(ArgsType v, Interpreter& e) {
 }
 
 void declare_native_functions(Interpreter& env) {
-	env.global_declare(
-	    "print", env.new_native_function(static_cast<NativeFunctionType*>(&print)));
-
-	env.global_declare(
-	    "array_append",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_append)));
-
-	env.global_declare(
-	    "array_extend",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_extend)));
-
-	env.global_declare(
-	    "size", env.new_native_function(static_cast<NativeFunctionType*>(&size)));
-
-	env.global_declare(
-	    "array_join",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_join)));
-
-	env.global_declare(
-	    "array_at",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&array_at)));
-
-	env.global_declare(
-	    "+", env.new_native_function(static_cast<NativeFunctionType*>(&value_add)));
-	env.global_declare(
-	    "-", env.new_native_function(static_cast<NativeFunctionType*>(&value_sub)));
-	env.global_declare(
-	    "*", env.new_native_function(static_cast<NativeFunctionType*>(&value_mul)));
-	env.global_declare(
-	    "/", env.new_native_function(static_cast<NativeFunctionType*>(&value_div)));
-	env.global_declare(
-	    "<",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_less)));
-	env.global_declare(
-	    "=",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_assign)));
-	env.global_declare(
-	    "==",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_equals)));
-	env.global_declare(
-	    "^^",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicxor)));
-	env.global_declare(
-	    "&&",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicand)));
-	env.global_declare(
-	    "||",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&value_logicor)));
+	env.global_declare("print", env.new_native_function(print));
+	env.global_declare("array_append", env.new_native_function(array_append));
+	env.global_declare("array_extend", env.new_native_function(array_extend));
+	env.global_declare("size", env.new_native_function(size));
+	env.global_declare("array_join", env.new_native_function(array_join));
+	env.global_declare("array_at", env.new_native_function(array_at));
+	env.global_declare("+", env.new_native_function(value_add));
+	env.global_declare("-", env.new_native_function(value_sub));
+	env.global_declare("*", env.new_native_function(value_mul));
+	env.global_declare("/", env.new_native_function(value_div));
+	env.global_declare("<", env.new_native_function(value_less));
+	env.global_declare(">=", env.new_native_function(value_greater_or_equal));
+	env.global_declare(">", env.new_native_function(value_greater));
+	env.global_declare("<=", env.new_native_function(value_less_or_equal));
+	env.global_declare("=", env.new_native_function(value_assign));
+	env.global_declare("==", env.new_native_function(value_equals));
+	env.global_declare("!=", env.new_native_function(value_not_equals));
+	env.global_declare("^^", env.new_native_function(value_logicxor));
+	env.global_declare("&&", env.new_native_function(value_logicand));
+	env.global_declare("||", env.new_native_function(value_logicor));
 
 	// Input
-	env.global_declare(
-	    "read_integer",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_integer)));
-	env.global_declare(
-	    "read_number",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_number)));
-	env.global_declare(
-	    "read_string",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_string)));
-	env.global_declare(
-	    "read_line",
-	    env.new_native_function(static_cast<NativeFunctionType*>(&read_line)));
+	env.global_declare("read_integer", env.new_native_function(read_integer));
+	env.global_declare("read_number", env.new_native_function(read_number));
+	env.global_declare("read_string", env.new_native_function(read_string));
+	env.global_declare("read_line", env.new_native_function(read_line));
 }
+
+#undef OP
 
 } // namespace Interpreter

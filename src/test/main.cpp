@@ -51,6 +51,7 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("string_val", "testing."),
 	            EQUALS("int_div", 0),
 	            EQUALS("float_div", 0.5),
+	            IS_TRUE("logic_ops()"),
 	            IS_TRUE("litt()"),
 	            IS_FALSE("litf()"),
 	            IS_NULL("nullv()"),
