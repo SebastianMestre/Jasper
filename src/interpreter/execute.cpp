@@ -115,8 +115,8 @@ Value* eval_expression(
 
 	// TODO?: return a gc_ptr
 	eval(ast, env);
-	auto value = env.m_stack.pop();
-	return value_of(value.get());
+	auto value = env.m_stack.pop_unsafe();
+	return value_of(value);
 }
 
 } // namespace Interpreter

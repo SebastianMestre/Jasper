@@ -37,37 +37,30 @@ void Stack::end_stack_region() {
 	m_stack.resize(m_stack_ptr);
 }
 
-void Stack::push(Value* ref){
+void Stack::push(Handle ref){
 	m_stack.push_back(ref);
 	m_stack_ptr += 1;
 }
 
+void Stack::push(Value* ref){
+	push(Handle{ref});
+}
+
 Value* Stack::pop_unsafe() {
-	Value* result = m_stack.back();
+	Handle result = m_stack.back();
 	m_stack.pop_back();
 	m_stack_ptr -= 1;
-	return result;
-}
-
-gc_ptr<Value> Stack::pop() {
-	gc_ptr<Value> result = {m_stack.back()};
-	m_stack.pop_back();
-	m_stack_ptr -= 1;
-	return result;
-}
-
-gc_ptr<Value> Stack::peek(int offset) {
-	return m_stack[m_stack.size() - 1 - offset];
+	return result.get();
 }
 
 Value*& Stack::access(int offset) {
-	return m_stack[m_stack.size() - 1 - offset];
+	return m_stack[m_stack.size() - 1 - offset].ptr;
 }
 
 Value*& Stack::frame_at(int offset) {
 	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack.size());
-	return m_stack[m_frame_ptr + offset];
+	return m_stack[m_frame_ptr + offset].ptr;
 }
 
 Span<Value*> Stack::frame_range(int offset, int length) {
@@ -75,7 +68,7 @@ Span<Value*> Stack::frame_range(int offset, int length) {
 		assert(m_frame_ptr + offset >= 0);
 		assert(m_frame_ptr + offset + length <= m_stack.size());
 	}
-	auto start_address = &m_stack[m_frame_ptr + offset];
+	auto start_address = &m_stack[m_frame_ptr + offset].ptr;
 	return {start_address, length};
 }
 

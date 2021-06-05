@@ -37,8 +37,8 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 	e.m_stack.push(ref.get());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
-		auto value = e.m_stack.pop();
-		ref->m_value = Handle{value_of(value.get())};
+		auto value = e.m_stack.pop_unsafe();
+		ref->m_value = Handle{value_of(value)};
 	}
 };
 
@@ -49,8 +49,8 @@ void eval(AST::DeclarationList* ast, Interpreter& e) {
 			auto ref = e.new_reference(e.null());
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
-			auto value = e.m_stack.pop();
-			ref->m_value = Handle{value_of(value.get())};
+			auto value = e.m_stack.pop_unsafe();
+			ref->m_value = Handle{value_of(value)};
 		}
 	}
 }
@@ -80,8 +80,10 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto value_handle = e.m_stack.pop();
-		result->append(rewrap(value_handle.get(), e).get());
+		auto ref_handle = e.new_reference(nullptr);
+		auto value = e.m_stack.pop_unsafe();
+		ref_handle->m_value = Handle{value};
+		result->append(ref_handle.get());
 	}
 	e.m_stack.push(result.get());
 }
@@ -121,8 +123,8 @@ void eval(AST::Block* ast, Interpreter& e) {
 void eval(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
-	auto value = e.m_stack.pop();
-	e.save_return_value(value_of(value.get()));
+	auto value = e.m_stack.pop_unsafe();
+	e.save_return_value(value_of(value));
 };
 
 auto is_callable_value(Value* v) -> bool {
@@ -179,12 +181,13 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_callee, e);
-	auto callee_handle = e.m_stack.pop();
-	auto* callee = value_as<Array>(callee_handle.get());
-
 	eval(ast->m_index, e);
-	auto index_handle = e.m_stack.pop();
-	auto* index = value_as<Integer>(index_handle.get());
+
+	auto index_ptr = e.m_stack.pop_unsafe();
+	auto* index = value_as<Integer>(index_ptr);
+
+	auto callee_ptr = e.m_stack.pop_unsafe();
+	auto* callee = value_as<Array>(callee_ptr);
 
 	e.m_stack.push(callee->at(index->m_value));
 };
@@ -193,8 +196,8 @@ void eval(AST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = e.m_stack.pop();
-	auto* condition = value_as<Boolean>(condition_handle.get());
+	auto condition_ptr = e.m_stack.pop_unsafe();
+	auto* condition = value_as<Boolean>(condition_ptr);
 
 	if (condition->m_value)
 		eval(ast->m_then_expr, e);
@@ -219,8 +222,8 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 
 void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
-	auto rec_handle = e.m_stack.pop();
-	auto rec = value_as<Record>(rec_handle.get());
+	auto rec_ptr = e.m_stack.pop_unsafe();
+	auto rec = value_as<Record>(rec_ptr);
 	e.m_stack.push(rec->m_value[ast->m_member]);
 }
 
@@ -252,42 +255,58 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::ConstructorExpression* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+
 	eval(ast->m_constructor, e);
-	auto constructor_handle = e.m_stack.pop();
-	auto constructor = value_of(constructor_handle.get());
+	auto constructor_ptr = e.m_stack.access(0);
+	auto constructor = value_of(constructor_ptr);
 
 	if (constructor->type() == ValueTag::RecordConstructor) {
 		auto record_constructor = static_cast<RecordConstructor*>(constructor);
 
 		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
+
+		// eval arguments
+		// arguments start at storage_point
 		int storage_point = e.m_stack.m_stack_ptr;
-		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i)
 			eval(ast->m_args[i], e);
 
+		// stack looks like
+		// ... | ctor | arg1 | ... | argn |
+
+		// store all arguments in record object
+		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i]);
+			    value_of(e.m_stack.m_stack[storage_point + i].get());
 		}
 		
+		// promote record object to heap
 		auto result = e.m_gc->new_record(std::move(record));
 
+		// pop arguments
 		while (e.m_stack.m_stack_ptr > storage_point)
-			e.m_stack.pop();
+			e.m_stack.pop_unsafe();
 
-		e.m_stack.push(result.get());
+		// replace ctor with record
+		e.m_stack.access(0) = result.get();
 	} else if (constructor->type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
 		assert(ast->m_args.size() == 1);
 
+		// stack looks like:
+		// ... | ctor | value |
+
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
 		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
-		// replace value with variant wrapper
-		e.m_stack.access(0) = result.get();
+		// replace ctor with variant, and pop value
+		e.m_stack.access(1) = result.get();
+		e.m_stack.pop_unsafe();
 	}
 }
 
@@ -301,8 +320,8 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = e.m_stack.pop();
-	auto* condition = value_as<Boolean>(condition_handle.get());
+	auto condition_ptr = e.m_stack.pop_unsafe();
+	auto* condition = value_as<Boolean>(condition_ptr);
 
 	if (condition->m_value)
 		eval_stmt(ast->m_body, e);
@@ -313,8 +332,8 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_handle = e.m_stack.pop();
-		auto* condition = value_as<Boolean>(condition_handle.get());
+		auto condition_ptr = e.m_stack.pop_unsafe();
+		auto* condition = value_as<Boolean>(condition_ptr);
 
 		if (!condition->m_value)
 			break;
