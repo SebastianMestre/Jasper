@@ -16,6 +16,15 @@
 
 namespace Interpreter {
 
+Handle value_of(Handle h) {
+	return Handle{value_of(h.get())};
+}
+
+template<typename T>
+T* value_as(Handle h) {
+	return value_as<T>(h.get());
+}
+
 static bool is_expression (AST::AST* ast) {
 	auto tag = ast->type();
 	auto tag_idx = static_cast<int>(tag);
@@ -38,7 +47,7 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
-		ref->m_value = Handle{value_of(value)};
+		ref->m_value = value_of(value);
 	}
 };
 
@@ -124,7 +133,7 @@ void eval(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_stack.pop_unsafe();
-	e.save_return_value(value_of(value));
+	e.save_return_value(value_of(value).get());
 };
 
 auto is_callable_value(Value* v) -> bool {
@@ -143,7 +152,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_stack.push(capture);
 
 	eval(callee->m_def->m_body, e);
-	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
+	e.m_stack.frame_at_(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(AST::CallExpression* ast, Interpreter& e) {
@@ -320,8 +329,8 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_ptr = e.m_stack.pop_unsafe();
-	auto* condition = value_as<Boolean>(condition_ptr);
+	auto condition_handle = e.m_stack.pop_unsafe();
+	auto* condition = value_as<Boolean>(condition_handle.get());
 
 	if (condition->m_value)
 		eval_stmt(ast->m_body, e);
@@ -332,8 +341,8 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_ptr = e.m_stack.pop_unsafe();
-		auto* condition = value_as<Boolean>(condition_ptr);
+		auto condition_handle = e.m_stack.pop_unsafe();
+		auto* condition = value_as<Boolean>(condition_handle.get());
 
 		if (!condition->m_value)
 			break;

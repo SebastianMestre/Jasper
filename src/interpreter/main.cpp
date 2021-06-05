@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 				eval(top_level_call, env);
 			    auto result = env.m_stack.pop_unsafe();
 
-			    if (result)
+			    if (result.get())
 				    Interpreter::print(result);
 			    else
 				    std::cout << "(nullptr)\n";

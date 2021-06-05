@@ -24,10 +24,12 @@ struct Stack {
 	void push(Handle ref);
 	void push(Value* val);
 
-	Value* pop_unsafe();
+	Handle pop_unsafe();
 
 	Value*& access(int offset);
+
 	Value*& frame_at(int offset);
+	Handle& frame_at_(int offset);
 	Span<Value*> frame_range(int offset, int length);
 };
 

@@ -46,21 +46,25 @@ void Stack::push(Value* ref){
 	push(Handle{ref});
 }
 
-Value* Stack::pop_unsafe() {
+Handle Stack::pop_unsafe() {
 	Handle result = m_stack.back();
 	m_stack.pop_back();
 	m_stack_ptr -= 1;
-	return result.get();
+	return result;
 }
 
 Value*& Stack::access(int offset) {
 	return m_stack[m_stack.size() - 1 - offset].ptr;
 }
 
-Value*& Stack::frame_at(int offset) {
+Handle& Stack::frame_at_(int offset) {
 	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack.size());
-	return m_stack[m_frame_ptr + offset].ptr;
+	return m_stack[m_frame_ptr + offset];
+}
+
+Value*& Stack::frame_at(int offset) {
+	return frame_at_(offset).ptr;
 }
 
 Span<Value*> Stack::frame_range(int offset, int length) {
