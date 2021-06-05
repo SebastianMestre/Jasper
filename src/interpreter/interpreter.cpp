@@ -146,7 +146,7 @@ gc_ptr<Error> Interpreter::new_error(std::string e) {
 
 gc_ptr<Reference> Interpreter::new_reference(Value* v) {
 	assert(
-	    v->type() != ValueTag::Reference &&
+	    (!v || v->type() != ValueTag::Reference) &&
 	    "References to references are not allowed.");
 	auto result = m_gc->new_reference(v);
 	run_gc_if_needed();

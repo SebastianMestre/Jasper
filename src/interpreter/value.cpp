@@ -171,7 +171,8 @@ void gc_visit(Reference* r) {
 		return;
 
 	r->m_visited = true;
-	gc_visit(r->m_value);
+	if (r->m_value.get())
+		gc_visit(r->m_value);
 }
 
 void gc_visit(Value* v) {

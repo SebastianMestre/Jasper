@@ -27,6 +27,7 @@ struct Stack {
 	Handle pop_unsafe();
 
 	Value*& access(int offset);
+	Handle& access_(int offset);
 
 	Value*& frame_at(int offset);
 	Handle& frame_at_(int offset);

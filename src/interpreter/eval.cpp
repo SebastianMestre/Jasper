@@ -145,6 +145,10 @@ auto is_callable_value(Value* v) -> bool {
 
 void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {
 
+	// stack looks like
+	// ... | callee | args1 ... |
+	//              ^~~ frame ptr
+
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
@@ -152,32 +156,61 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_stack.push(capture);
 
 	eval(callee->m_def->m_body, e);
+
+	// stack looks like
+	// ... | callee | args ... | captures ... | result
+	//              ^~~ frame ptr
+
+	// pop the result, and clobber the callee
 	e.m_stack.frame_at_(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(AST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
-	auto* callee = value_of(e.m_stack.access(0));
-	assert(is_callable_value(callee));
+
+	// NOTE: keep callee on the stack
+	auto callee = value_of(e.m_stack.access_(0));
+	assert(is_callable_value(callee.get()));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
 	int frame_start = e.m_stack.m_stack_ptr;
-	if (callee->type() == ValueTag::Function) {
+	if (callee.get()->type() == ValueTag::Function) {
 		for (auto expr : arglist) {
+			// put arg on stack
 			eval(expr, e);
-			e.m_stack.access(0) = rewrap(e.m_stack.access(0), e).get();
+
+			// stack:
+			// ... | &arg |
+			// heap:  |~~~~~> arg
+
+			// create ref to arg
+			auto ref_handle = e.new_reference(nullptr);
+			ref_handle->m_value = value_of(e.m_stack.access_(0));
+
+			// stack:
+			// ... | &arg |
+			// heap:  |~~~~~> arg
+			//            ref~~^
+
+			// put ref on stack
+			e.m_stack.access_(0) = Handle{ref_handle.get()};
+
+			// stack:
+			// ... | &ref |
+			// heap:  |       arg
+			//        |~> ref~~^
 		}
 		e.m_stack.start_stack_frame(frame_start);
-		eval_call_function(static_cast<Function*>(callee), arg_count, e);
-	} else if (callee->type() == ValueTag::NativeFunction) {
+		eval_call_function(callee.get_cast<Function>(), arg_count, e);
+	} else if (callee.get()->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist)
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
 		auto args = e.m_stack.frame_range(0, arg_count);
-		e.m_stack.frame_at(-1) = static_cast<NativeFunction*>(callee)->m_fptr(args, e);
+		e.m_stack.frame_at(-1) = callee.get_cast<NativeFunction>()->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
@@ -240,7 +273,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant = value_as<Variant>(e.m_stack.access(0));
+	auto variant = value_as<Variant>(e.m_stack.access_(0).get());
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
@@ -248,7 +281,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	e.m_stack.access(0) = rewrap(variant_value, e).get();
+	e.m_stack.access_(0) = Handle{rewrap(variant_value, e).get()};
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -259,7 +292,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 
 	// evil tinkering with the stack internals
 	// (we just delete the variant value from behind the result)
-	e.m_stack.access(1) = e.m_stack.access(0);
+	e.m_stack.access_(1) = e.m_stack.access_(0);
 	e.m_stack.pop_unsafe();
 }
 
@@ -267,8 +300,8 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	// NOTE: we leave the ctor on the stack for the time being
 
 	eval(ast->m_constructor, e);
-	auto constructor_ptr = e.m_stack.access(0);
-	auto constructor = value_of(constructor_ptr);
+	auto constructor_ptr = e.m_stack.access_(0);
+	auto constructor = value_of(constructor_ptr).get();
 
 	if (constructor->type() == ValueTag::RecordConstructor) {
 		auto record_constructor = static_cast<RecordConstructor*>(constructor);
@@ -300,7 +333,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_stack.pop_unsafe();
 
 		// replace ctor with record
-		e.m_stack.access(0) = result.get();
+		e.m_stack.access_(0) = Handle{result.get()};
 	} else if (constructor->type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
@@ -311,10 +344,10 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
+		    variant_constructor->m_constructor, value_of(e.m_stack.access_(0)).get());
 
 		// replace ctor with variant, and pop value
-		e.m_stack.access(1) = result.get();
+		e.m_stack.access_(1) = Handle{result.get()};
 		e.m_stack.pop_unsafe();
 	}
 }
