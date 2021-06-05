@@ -23,7 +23,7 @@ using ArgsType = Span<Value*>;
 Value* print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
 		print(value);
-	return e.null();
+	return e.null().get();
 }
 
 // array_append(arr, vals...) appends the values in vals to the array
@@ -262,7 +262,7 @@ Value* value_less_or_equal(ArgsType v, Interpreter& e) {
 
 Value* value_assign(ArgsType v, Interpreter& e) {
 	e.assign(v[0], v[1]);
-	return e.null();
+	return e.null().get();
 }
 
 Value* read_integer(ArgsType v, Interpreter& e) {

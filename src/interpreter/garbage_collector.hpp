@@ -41,6 +41,7 @@ struct GC {
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_reference(Value*) -> gc_ptr<Reference>;
+	auto new_reference(Handle) -> gc_ptr<Reference>;
 
 	auto new_integer_raw(int) -> Integer*;
 	auto new_float_raw(float) -> Float*;

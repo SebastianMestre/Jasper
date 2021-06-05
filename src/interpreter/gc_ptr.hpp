@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include "value.hpp"
 
 template <typename ValueType>
 struct gc_ptr {
@@ -59,5 +60,9 @@ struct gc_ptr {
 
 	ValueType* operator->() const {
 		return get();
+	}
+
+	Interpreter::Handle handle() {
+		return Interpreter::Handle {get()};
 	}
 };

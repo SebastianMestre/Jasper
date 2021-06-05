@@ -140,6 +140,10 @@ gc_ptr<Error> GC::new_error(std::string s) {
 }
 
 gc_ptr<Reference> GC::new_reference(Value* v) {
+	return new_reference(Handle{v});
+}
+
+gc_ptr<Reference> GC::new_reference(Handle v) {
 	auto result = new Reference(std::move(v));
 	m_blocks.push_back(result);
 	return result;

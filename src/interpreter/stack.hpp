@@ -22,7 +22,6 @@ struct Stack {
 	void end_stack_region();
 
 	void push(Handle ref);
-	void push(Value* val);
 
 	Handle pop_unsafe();
 

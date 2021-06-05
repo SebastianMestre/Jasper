@@ -42,10 +42,6 @@ void Stack::push(Handle ref){
 	m_stack_ptr += 1;
 }
 
-void Stack::push(Value* ref){
-	push(Handle{ref});
-}
-
 Handle Stack::pop_unsafe() {
 	Handle result = m_stack.back();
 	m_stack.pop_back();

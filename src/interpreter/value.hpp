@@ -145,6 +145,7 @@ struct NativeFunction : Value {
 struct Reference : Value {
 	Handle m_value;
 
+	Reference(Handle value);
 	Reference(Value* value);
 };
 

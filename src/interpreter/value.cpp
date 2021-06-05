@@ -90,9 +90,12 @@ NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : Value {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
 
-Reference::Reference(Value* value)
+Reference::Reference(Handle value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
+
+Reference::Reference(Value* value)
+    : Reference {Handle{value}} {}
 
 VariantConstructor::VariantConstructor(InternedString constructor)
     : Value {ValueTag::VariantConstructor}

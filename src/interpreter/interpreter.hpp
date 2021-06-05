@@ -32,7 +32,7 @@ struct Interpreter {
 	GC* m_gc;
 	std::vector<std::vector<AST::Declaration*>> const* m_declaration_order;
 	int m_gc_size_on_last_pass {64};
-	Value* m_return_value {nullptr};
+	Handle m_return_value {nullptr};
 	Scope m_global_scope;
 
 	Interpreter(
@@ -43,8 +43,8 @@ struct Interpreter {
 	    , m_gc {gc}
 	    , m_declaration_order {declaration_order} {}
 
-	void save_return_value(Value*);
-	Value* fetch_return_value();
+	void save_return_value(Handle);
+	Handle fetch_return_value();
 
 	void run_gc();
 	void run_gc_if_needed();
@@ -55,7 +55,7 @@ struct Interpreter {
 	Reference* global_access(const Identifier& i);
 	void assign(Value* dst, Value* src);
 
-	auto null() -> Null*;
+	auto null() -> Handle;
 	void push_integer(int);
 	void push_float(float);
 	void push_boolean(bool);
@@ -67,7 +67,9 @@ struct Interpreter {
 	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
+
 	auto new_reference(Value*) -> gc_ptr<Reference>;
+	auto new_reference(Handle) -> gc_ptr<Reference>;
 };
 
 } // namespace Interpreter
