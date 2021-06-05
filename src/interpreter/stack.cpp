@@ -53,12 +53,8 @@ Handle Stack::pop_unsafe() {
 	return result;
 }
 
-Handle& Stack::access_(int offset) {
+Handle& Stack::access(int offset) {
 	return m_stack[m_stack.size() - 1 - offset];
-}
-
-Value*& Stack::access(int offset) {
-	return access_(offset).ptr;
 }
 
 Handle& Stack::frame_at_(int offset) {

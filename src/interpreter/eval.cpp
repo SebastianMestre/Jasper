@@ -170,7 +170,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 
 	// NOTE: keep callee on the stack
-	auto callee = value_of(e.m_stack.access_(0));
+	auto callee = value_of(e.m_stack.access(0));
 	assert(is_callable_value(callee.get()));
 
 	auto& arglist = ast->m_args;
@@ -188,7 +188,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 			// create ref to arg
 			auto ref_handle = e.new_reference(nullptr);
-			ref_handle->m_value = value_of(e.m_stack.access_(0));
+			ref_handle->m_value = value_of(e.m_stack.access(0));
 
 			// stack:
 			// ... | &arg |
@@ -196,7 +196,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			//            ref~~^
 
 			// put ref on stack
-			e.m_stack.access_(0) = Handle{ref_handle.get()};
+			e.m_stack.access(0) = Handle{ref_handle.get()};
 
 			// stack:
 			// ... | &ref |
@@ -273,7 +273,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant = value_as<Variant>(e.m_stack.access_(0).get());
+	auto variant = value_as<Variant>(e.m_stack.access(0).get());
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
@@ -281,7 +281,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	e.m_stack.access_(0) = Handle{rewrap(variant_value, e).get()};
+	e.m_stack.access(0) = Handle{rewrap(variant_value, e).get()};
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -292,7 +292,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 
 	// evil tinkering with the stack internals
 	// (we just delete the variant value from behind the result)
-	e.m_stack.access_(1) = e.m_stack.access_(0);
+	e.m_stack.access(1) = e.m_stack.access(0);
 	e.m_stack.pop_unsafe();
 }
 
@@ -300,7 +300,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	// NOTE: we leave the ctor on the stack for the time being
 
 	eval(ast->m_constructor, e);
-	auto constructor_ptr = e.m_stack.access_(0);
+	auto constructor_ptr = e.m_stack.access(0);
 	auto constructor = value_of(constructor_ptr).get();
 
 	if (constructor->type() == ValueTag::RecordConstructor) {
@@ -333,7 +333,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_stack.pop_unsafe();
 
 		// replace ctor with record
-		e.m_stack.access_(0) = Handle{result.get()};
+		e.m_stack.access(0) = Handle{result.get()};
 	} else if (constructor->type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
@@ -344,10 +344,10 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, value_of(e.m_stack.access_(0)).get());
+		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)).get());
 
 		// replace ctor with variant, and pop value
-		e.m_stack.access_(1) = Handle{result.get()};
+		e.m_stack.access(1) = Handle{result.get()};
 		e.m_stack.pop_unsafe();
 	}
 }
