@@ -13,7 +13,7 @@ Value* value_of(Value* value) {
 
 	// try unboxing recursively?
 	auto ref = static_cast<Reference*>(value);
-	return ref->m_value;
+	return ref->m_value.get();
 }
 
 } // namespace Interpreter

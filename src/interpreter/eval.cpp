@@ -38,7 +38,7 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
-		ref->m_value = value_of(value.get());
+		ref->m_value = Handle{value_of(value.get())};
 	}
 };
 
@@ -50,7 +50,7 @@ void eval(AST::DeclarationList* ast, Interpreter& e) {
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop();
-			ref->m_value = value_of(value.get());
+			ref->m_value = Handle{value_of(value.get())};
 		}
 	}
 }

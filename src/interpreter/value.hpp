@@ -48,6 +48,26 @@ struct Value {
 	virtual ~Value() = default;
 };
 
+struct Handle {
+	Value* ptr;
+
+	Value& operator*() {
+		return *ptr;
+	};
+
+	Value* get() {
+		return ptr;
+	}
+
+	template <typename T>
+	T* get_cast() {
+		return static_cast<T*>(ptr);
+	}
+};
+
+void gc_visit(Handle);
+void print(Handle v, int d = 0);
+
 struct Null : Value {
 
 	Null();
@@ -123,7 +143,7 @@ struct NativeFunction : Value {
 };
 
 struct Reference : Value {
-	Value* m_value;
+	Handle m_value;
 
 	Reference(Value* value);
 };

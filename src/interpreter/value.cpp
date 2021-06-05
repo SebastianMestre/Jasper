@@ -208,6 +208,10 @@ void gc_visit(Value* v) {
 	}
 }
 
+void gc_visit(Handle h) {
+	return gc_visit(h.get());
+}
+
 // = === === print === === = //
 
 void print_spaces(int n) {
@@ -331,6 +335,10 @@ void print(Value* v, int d) {
 	case ValueTag::RecordConstructor:
 		return print(static_cast<RecordConstructor*>(v), d);
 	}
+}
+
+void print(Handle h, int d) {
+	return print(h.get(), d);
 }
 
 } // namespace Interpreter
