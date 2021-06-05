@@ -10,8 +10,11 @@ namespace Assert {
 
 ExitStatus of_type(Interpreter::Value* rv, ValueTag v_type) {
 
-	if (!rv)
+	if (!rv) {
+		if (v_type == ValueTag::Null)
+			return ExitStatus::Ok;
 		return ExitStatus::NullError;
+	}
 
 	if (rv->type() != v_type)
 		return ExitStatus::TypeError;

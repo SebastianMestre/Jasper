@@ -51,6 +51,18 @@ struct Value {
 };
 
 struct Handle {
+	Handle(Value* ptr)
+	    : tag {ptr ? ptr->type() : ValueTag::Null}
+	    , ptr {ptr} {}
+
+	Handle(std::nullptr_t)
+	    : tag {ValueTag::Null}
+	    , ptr {nullptr} {}
+
+	Handle()
+	    : tag {ValueTag::Null}
+	    , ptr {nullptr} {}
+
 	Value& operator*() {
 		return *ptr;
 	};
@@ -65,10 +77,14 @@ struct Handle {
 	}
 
 	ValueTag type() {
-		return ptr->type();
+		if (ptr) assert(ptr->type() == tag);
+		return tag;
 	}
 
+	ValueTag tag;
+	union {
 	Value* ptr;
+	};
 };
 
 void gc_visit(Handle);

@@ -81,7 +81,7 @@ void Interpreter::run_gc_if_needed(){
 
 
 Handle Interpreter::null() {
-	return Handle{m_gc->null()};
+	return Handle{nullptr};
 }
 
 void Interpreter::push_integer(int i) {

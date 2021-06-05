@@ -8,12 +8,10 @@
 namespace Interpreter {
 
 GC::GC() {
-	m_null = new Null;
 }
 
 GC::~GC() {
 	sweep_all();
-	delete m_null;
 }
 
 void GC::unmark_all() {
@@ -55,10 +53,6 @@ void GC::sweep_all() {
 
 void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
-}
-
-Null* GC::null() {
-	return m_null;
 }
 
 gc_ptr<Variant> GC::new_variant(InternedString constructor, Value* v) {

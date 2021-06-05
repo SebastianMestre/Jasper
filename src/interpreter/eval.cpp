@@ -345,7 +345,6 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
-	assert(e.m_return_value.get());
 	e.m_stack.push(e.fetch_return_value());
 }
 

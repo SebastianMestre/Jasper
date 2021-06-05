@@ -10,9 +10,6 @@ namespace Interpreter {
 struct Error;
 
 struct GC {
-  private:
-	Null* m_null;
-
   public:
 	std::vector<Value*> m_blocks;
 	std::vector<Value*> m_roots;
@@ -27,8 +24,6 @@ struct GC {
 	int size () { return m_blocks.size(); }
 
 	void add_root(Value* new_root);
-
-	auto null() -> Null*;
 
 	auto new_variant(InternedString constructor, Value* v) -> gc_ptr<Variant>;
 	auto new_record(RecordType) -> gc_ptr<Record>;
