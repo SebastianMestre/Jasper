@@ -23,11 +23,11 @@ struct Handle;
 
 using Identifier = InternedString;
 using StringType = std::string;
-using RecordType = std::unordered_map<Identifier, Value*>;
+using RecordType = std::unordered_map<Identifier, Handle>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Value*;
-using CapturesType = std::vector<Value*>; // TODO: store references instead of values
+using CapturesType = std::vector<Reference*>;
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
@@ -114,7 +114,7 @@ struct Array : Value {
 	Array(ArrayType l);
 
 	void append(Reference* v);
-	Value* at(int position);
+	Reference* at(int position);
 };
 
 struct Record : Value {
@@ -123,8 +123,8 @@ struct Record : Value {
 	Record();
 	Record(RecordType);
 
-	void addMember(Identifier const& id, Value* v);
-	Value* getMember(Identifier const& id);
+	void addMember(Identifier const& id, Handle v);
+	Handle getMember(Identifier const& id);
 };
 
 struct Variant : Value {

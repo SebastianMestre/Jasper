@@ -43,7 +43,7 @@ void Array::append(Reference* v) {
 	m_value.push_back(v);
 }
 
-Value* Array::at(int position) {
+Reference* Array::at(int position) {
 	if (position < 0 or position >= int(m_value.size())) {
 		// TODO: return RangeError
 		return nullptr;
@@ -58,15 +58,15 @@ Record::Record(RecordType o)
     : Value(ValueTag::Record)
     , m_value(std::move(o)) {}
 
-void Record::addMember(Identifier const& id, Value* v) {
+void Record::addMember(Identifier const& id, Handle v) {
 	m_value[id] = v;
 }
 
-Value* Record::getMember(Identifier const& id) {
+Handle Record::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
 		// TODO: return RangeError
-		return nullptr;
+		return {nullptr};
 	} else {
 		return it->second;
 	}

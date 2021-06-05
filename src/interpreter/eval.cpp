@@ -313,7 +313,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i].get());
+			    value_of(e.m_stack.m_stack[storage_point + i]);
 		}
 		
 		// promote record object to heap
@@ -386,7 +386,7 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 	RecordType constructors;
 	for(auto& constructor : ast->m_constructors) {
 		constructors.insert(
-		    {constructor, e.m_gc->new_variant_constructor_raw(constructor)});
+		    {constructor, Handle{e.m_gc->new_variant_constructor_raw(constructor)}});
 	}
 	auto result = e.new_record(std::move(constructors));
 	e.m_stack.push(result.handle());
