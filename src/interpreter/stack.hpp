@@ -27,7 +27,7 @@ struct Stack {
 
 	Handle& access(int offset);
 	Handle& frame_at(int offset);
-	Span<Value*> frame_range(int offset, int length);
+	Span<Handle> frame_range(int offset, int length);
 };
 
 } // namespace Interpreter

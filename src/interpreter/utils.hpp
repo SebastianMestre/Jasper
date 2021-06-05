@@ -23,6 +23,10 @@ template<> struct type_data<RecordConstructor> { static constexpr auto tag = Val
 
 Value* value_of(Value* value);
 
+inline Handle value_of(Handle h) {
+	return Handle{value_of(h.get())};
+}
+
 template<typename T>
 T* as(Value* x) {
 	static_assert(std::is_base_of<Value, T>::value, "T is not a subclass of Value");
@@ -35,6 +39,16 @@ template<typename T>
 T* value_as(Value* x) {
 	static_assert(std::is_base_of<Value, T>::value, "T is not a subclass of Value");
 	return as<T>(value_of(x));
+}
+
+template<typename T>
+T* as(Handle h) {
+	return as<T>(h.get());
+}
+
+template<typename T>
+T* value_as(Handle h) {
+	return value_as<T>(h.get());
 }
 
 } // namespace Interpreter

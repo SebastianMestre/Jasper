@@ -16,15 +16,6 @@
 
 namespace Interpreter {
 
-Handle value_of(Handle h) {
-	return Handle{value_of(h.get())};
-}
-
-template<typename T>
-T* value_as(Handle h) {
-	return value_as<T>(h.get());
-}
-
 static bool is_expression (AST::AST* ast) {
 	auto tag = ast->type();
 	auto tag_idx = static_cast<int>(tag);

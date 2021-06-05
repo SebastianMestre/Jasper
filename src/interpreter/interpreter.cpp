@@ -52,10 +52,10 @@ Handle Interpreter::fetch_return_value() {
 	return rv;
 }
 
-void Interpreter::assign(Value* dst, Value* src) {
+void Interpreter::assign(Handle dst, Handle src) {
 	// NOTE: copied by reference, matters if rhs is actually a reference
 	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
-	as<Reference>(dst)->m_value = Handle{value_of(src)};
+	as<Reference>(dst)->m_value = value_of(src);
 }
 
 

@@ -13,11 +13,11 @@
 namespace Interpreter {
 
 #define OP(type, lhs, op, rhs) \
-	static_cast<type*>(lhs)->m_value op static_cast<type*>(rhs)->m_value
+	(lhs).get_cast<type>()->m_value op (rhs).get_cast<type>()->m_value
 
-// TODO: All of these should return gc_ptr
+// TODO: All of these should return Handle
 
-using ArgsType = Span<Value*>;
+using ArgsType = Span<Handle>;
 
 // print(vals...) prints the values or references in vals
 Value* print(ArgsType v, Interpreter& e) {
@@ -86,11 +86,11 @@ Value* array_at(ArgsType v, Interpreter& e) {
 }
 
 Value* value_add(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
-	switch (lhs->type()) {
+	assert(lhs.type() == rhs.type());
+	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return e.m_gc->new_integer_raw(OP(Integer, lhs, +, rhs));
 	case ValueTag::Float:
@@ -99,105 +99,105 @@ Value* value_add(ArgsType v, Interpreter& e) {
 		return e.m_gc->new_string_raw(OP(String, lhs, +, rhs));
 	default:
 		std::cerr << "ERROR: can't add values of type "
-		          << value_string[static_cast<int>(lhs->type())];
+		          << value_string[static_cast<int>(lhs.type())];
 		assert(0);
 	}
 }
 
 Value* value_sub(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
-	switch (lhs->type()) {
+	assert(lhs.type() == rhs.type());
+	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return e.m_gc->new_integer_raw(OP(Integer, lhs, -, rhs));
 	case ValueTag::Float:
 		return e.m_gc->new_float_raw(OP(Float, lhs, -, rhs));
 	default:
 		std::cerr << "ERROR: can't add values of type "
-		          << value_string[static_cast<int>(lhs->type())];
+		          << value_string[static_cast<int>(lhs.type())];
 		assert(0);
 	}
 }
 
 Value* value_mul(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
-	switch (lhs->type()) {
+	assert(lhs.type() == rhs.type());
+	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return e.m_gc->new_integer_raw(OP(Integer, lhs, *, rhs));
 	case ValueTag::Float:
 		return e.m_gc->new_float_raw(OP(Float, lhs, *, rhs));
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
-		          << value_string[static_cast<int>(lhs->type())];
+		          << value_string[static_cast<int>(lhs.type())];
 		assert(0);
 	}
 }
 
 Value* value_div(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
-	switch (lhs->type()) {
+	assert(lhs.type() == rhs.type());
+	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return e.m_gc->new_integer_raw(OP(Integer, lhs, /, rhs));
 	case ValueTag::Float:
 		return e.m_gc->new_float_raw(OP(Float, lhs, /, rhs));
 	default:
 		std::cerr << "ERROR: can't divide values of type "
-		          << value_string[static_cast<int>(lhs->type())];
+		          << value_string[static_cast<int>(lhs.type())];
 		assert(0);
 	}
 }
 
 Value* value_logicand(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
+	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, &&, rhs));
 	std::cerr << "ERROR: logical and operator not defined for types "
-	          << value_string[static_cast<int>(lhs->type())] << " and "
-	          << value_string[static_cast<int>(rhs->type())];
+	          << value_string[static_cast<int>(lhs.type())] << " and "
+	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
 Value* value_logicor(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
+	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, ||, rhs));
 	std::cerr << "ERROR: logical or operator not defined for types "
-	          << value_string[static_cast<int>(lhs->type())] << " and "
-	          << value_string[static_cast<int>(rhs->type())];
+	          << value_string[static_cast<int>(lhs.type())] << " and "
+	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
 Value* value_logicxor(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	if (lhs->type() == ValueTag::Boolean and rhs->type() == ValueTag::Boolean)
+	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, !=, rhs));
 	std::cerr << "ERROR: exclusive or operator not defined for types "
-	          << value_string[static_cast<int>(lhs->type())] << " and "
-	          << value_string[static_cast<int>(rhs->type())];
+	          << value_string[static_cast<int>(lhs.type())] << " and "
+	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
 Value* value_equals(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
+	assert(lhs.type() == rhs.type());
 
-	switch (lhs->type()) {
+	switch (lhs.type()) {
 	case ValueTag::Null:
 		return e.m_gc->new_boolean_raw(true);
 	case ValueTag::Integer:
@@ -210,8 +210,8 @@ Value* value_equals(ArgsType v, Interpreter& e) {
 		return e.m_gc->new_boolean_raw(OP(Boolean, lhs, ==, rhs));
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
-		          << value_string[static_cast<int>(lhs->type())] << " and "
-		          << value_string[static_cast<int>(rhs->type())];
+		          << value_string[static_cast<int>(lhs.type())] << " and "
+		          << value_string[static_cast<int>(rhs.type())];
 		assert(0);
 	}
 	}
@@ -224,12 +224,12 @@ Value* value_not_equals(ArgsType v, Interpreter& e) {
 }
 
 Value* value_less(ArgsType v, Interpreter& e) {
-	auto* lhs = value_of(v[0]);
-	auto* rhs = value_of(v[1]);
+	auto lhs = value_of(v[0]);
+	auto rhs = value_of(v[1]);
 
-	assert(lhs->type() == rhs->type());
+	assert(lhs.type() == rhs.type());
 
-	switch (lhs->type()) {
+	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return e.m_gc->new_boolean_raw(OP(Integer, lhs, <, rhs));
 	case ValueTag::Float:
@@ -238,7 +238,7 @@ Value* value_less(ArgsType v, Interpreter& e) {
 		return e.m_gc->new_boolean_raw(OP(String, lhs, <, rhs));
 	default:
 		std::cerr << "ERROR: can't compare values of type "
-		          << value_string[static_cast<int>(lhs->type())];
+		          << value_string[static_cast<int>(lhs.type())];
 		assert(0);
 	}
 }

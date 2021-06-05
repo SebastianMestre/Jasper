@@ -53,7 +53,7 @@ struct Interpreter {
 	void global_declare_direct(const Identifier& i, Reference* v);
 	void global_declare(const Identifier& i, Value* v);
 	Reference* global_access(const Identifier& i);
-	void assign(Value* dst, Value* src);
+	void assign(Handle dst, Handle src);
 
 	auto null() -> Handle;
 	void push_integer(int);

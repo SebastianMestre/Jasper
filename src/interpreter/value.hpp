@@ -19,12 +19,14 @@ struct Interpreter;
 
 struct Reference;
 
+struct Handle;
+
 using Identifier = InternedString;
 using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value*>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
+using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Value*;
 using CapturesType = std::vector<Value*>; // TODO: store references instead of values
 
 // Returns the value pointed to by a reference
@@ -49,8 +51,6 @@ struct Value {
 };
 
 struct Handle {
-	Value* ptr;
-
 	Value& operator*() {
 		return *ptr;
 	};
@@ -63,6 +63,12 @@ struct Handle {
 	T* get_cast() {
 		return static_cast<T*>(ptr);
 	}
+
+	ValueTag type() {
+		return ptr->type();
+	}
+
+	Value* ptr;
 };
 
 void gc_visit(Handle);
