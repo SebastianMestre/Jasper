@@ -57,14 +57,10 @@ Handle& Stack::access(int offset) {
 	return m_stack[m_stack.size() - 1 - offset];
 }
 
-Handle& Stack::frame_at_(int offset) {
+Handle& Stack::frame_at(int offset) {
 	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack.size());
 	return m_stack[m_frame_ptr + offset];
-}
-
-Value*& Stack::frame_at(int offset) {
-	return frame_at_(offset).ptr;
 }
 
 Span<Value*> Stack::frame_range(int offset, int length) {

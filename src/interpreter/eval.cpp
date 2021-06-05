@@ -162,7 +162,7 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 	//              ^~~ frame ptr
 
 	// pop the result, and clobber the callee
-	e.m_stack.frame_at_(-1) = e.m_stack.pop_unsafe();
+	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(AST::CallExpression* ast, Interpreter& e) {
@@ -210,7 +210,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
 		auto args = e.m_stack.frame_range(0, arg_count);
-		e.m_stack.frame_at(-1) = callee.get_cast<NativeFunction>()->m_fptr(args, e);
+		e.m_stack.frame_at(-1) = Handle{callee.get_cast<NativeFunction>()->m_fptr(args, e)};
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
@@ -255,7 +255,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = as<Reference>(value);
+		captures[offset] = as<Reference>(value.get());
 	}
 
 	auto result = e.new_function(ast, std::move(captures));

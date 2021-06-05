@@ -27,9 +27,7 @@ struct Stack {
 	Handle pop_unsafe();
 
 	Handle& access(int offset);
-
-	Value*& frame_at(int offset);
-	Handle& frame_at_(int offset);
+	Handle& frame_at(int offset);
 	Span<Value*> frame_range(int offset, int length);
 };
 
