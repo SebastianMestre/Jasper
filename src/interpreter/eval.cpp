@@ -133,7 +133,7 @@ void eval(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_stack.pop_unsafe();
-	e.save_return_value(value_of(value).get());
+	e.save_return_value(value_of(value));
 };
 
 auto is_callable_value(Value* v) -> bool {
