@@ -201,7 +201,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
 		auto args = e.m_stack.frame_range(0, arg_count);
-		e.m_stack.frame_at(-1) = Handle{callee.get_cast<NativeFunction>()->m_fptr(args, e)};
+		e.m_stack.frame_at(-1) = callee.get_cast<NativeFunction>()->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}

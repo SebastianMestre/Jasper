@@ -26,7 +26,7 @@ using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Handle>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Value*;
+using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Handle;
 using CapturesType = std::vector<Reference*>;
 
 // Returns the value pointed to by a reference
