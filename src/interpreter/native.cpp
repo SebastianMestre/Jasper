@@ -294,32 +294,32 @@ Value* read_string(ArgsType v, Interpreter& e) {
 }
 
 void declare_native_functions(Interpreter& env) {
-	env.global_declare("print", env.new_native_function(print));
-	env.global_declare("array_append", env.new_native_function(array_append));
-	env.global_declare("array_extend", env.new_native_function(array_extend));
-	env.global_declare("size", env.new_native_function(size));
-	env.global_declare("array_join", env.new_native_function(array_join));
-	env.global_declare("array_at", env.new_native_function(array_at));
-	env.global_declare("+", env.new_native_function(value_add));
-	env.global_declare("-", env.new_native_function(value_sub));
-	env.global_declare("*", env.new_native_function(value_mul));
-	env.global_declare("/", env.new_native_function(value_div));
-	env.global_declare("<", env.new_native_function(value_less));
-	env.global_declare(">=", env.new_native_function(value_greater_or_equal));
-	env.global_declare(">", env.new_native_function(value_greater));
-	env.global_declare("<=", env.new_native_function(value_less_or_equal));
-	env.global_declare("=", env.new_native_function(value_assign));
-	env.global_declare("==", env.new_native_function(value_equals));
-	env.global_declare("!=", env.new_native_function(value_not_equals));
-	env.global_declare("^^", env.new_native_function(value_logicxor));
-	env.global_declare("&&", env.new_native_function(value_logicand));
-	env.global_declare("||", env.new_native_function(value_logicor));
+	env.global_declare("print", env.new_native_function(print).get());
+	env.global_declare("array_append", env.new_native_function(array_append).get());
+	env.global_declare("array_extend", env.new_native_function(array_extend).get());
+	env.global_declare("size", env.new_native_function(size).get());
+	env.global_declare("array_join", env.new_native_function(array_join).get());
+	env.global_declare("array_at", env.new_native_function(array_at).get());
+	env.global_declare("+", env.new_native_function(value_add).get());
+	env.global_declare("-", env.new_native_function(value_sub).get());
+	env.global_declare("*", env.new_native_function(value_mul).get());
+	env.global_declare("/", env.new_native_function(value_div).get());
+	env.global_declare("<", env.new_native_function(value_less).get());
+	env.global_declare(">=", env.new_native_function(value_greater_or_equal).get());
+	env.global_declare(">", env.new_native_function(value_greater).get());
+	env.global_declare("<=", env.new_native_function(value_less_or_equal).get());
+	env.global_declare("=", env.new_native_function(value_assign).get());
+	env.global_declare("==", env.new_native_function(value_equals).get());
+	env.global_declare("!=", env.new_native_function(value_not_equals).get());
+	env.global_declare("^^", env.new_native_function(value_logicxor).get());
+	env.global_declare("&&", env.new_native_function(value_logicand).get());
+	env.global_declare("||", env.new_native_function(value_logicor).get());
 
 	// Input
-	env.global_declare("read_integer", env.new_native_function(read_integer));
-	env.global_declare("read_number", env.new_native_function(read_number));
-	env.global_declare("read_string", env.new_native_function(read_string));
-	env.global_declare("read_line", env.new_native_function(read_line));
+	env.global_declare("read_integer", env.new_native_function(read_integer).get());
+	env.global_declare("read_number", env.new_native_function(read_number).get());
+	env.global_declare("read_string", env.new_native_function(read_string).get());
+	env.global_declare("read_line", env.new_native_function(read_line).get());
 }
 
 #undef OP

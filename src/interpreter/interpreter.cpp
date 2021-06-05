@@ -35,10 +35,6 @@ void Interpreter::global_declare(const Identifier& i, Value* v) {
 	global_declare_direct(i, r.get());
 }
 
-void Interpreter::global_declare(const Identifier& i, gc_ptr<Value> v) {
-	global_declare(i, v.get());
-}
-
 Reference* Interpreter::global_access(const Identifier& i) {
 	return m_global_scope.access(i);
 }
