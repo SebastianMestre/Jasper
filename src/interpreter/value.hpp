@@ -48,7 +48,7 @@ struct Value {
 };
 
 inline bool is_heap_type(ValueTag tag) {
-	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer;
+	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer && tag != ValueTag::Float;
 }
 
 struct Handle {
@@ -103,8 +103,10 @@ struct Handle {
 	}
 
 	ValueTag type() {
-		if (is_heap_type(tag))
+		if (is_heap_type(tag)) {
+			assert(ptr);
 			assert(ptr->type() == tag);
+		}
 		return tag;
 	}
 
