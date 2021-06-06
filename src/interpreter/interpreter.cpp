@@ -28,8 +28,8 @@ void Interpreter::global_declare_direct(const Identifier& i, Reference* r) {
 	m_global_scope.declare(i, r);
 }
 
-void Interpreter::global_declare(const Identifier& i, Value* v) {
-	if (v->type() == ValueTag::Reference)
+void Interpreter::global_declare(const Identifier& i, Handle v) {
+	if (v.type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
 	auto r = new_reference(v);
 	global_declare_direct(i, r.get());
@@ -59,7 +59,7 @@ Handle Interpreter::fetch_return_value() {
 void Interpreter::assign(Handle dst, Handle src) {
 	// NOTE: copied by reference, matters if rhs is actually a reference
 	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
-	as<Reference>(dst)->m_value = value_of(src);
+	dst.get_cast<Reference>()->m_value = value_of(src);
 }
 
 
@@ -89,12 +89,12 @@ Handle Interpreter::null() {
 }
 
 void Interpreter::push_integer(int i) {
-	m_stack.push(Handle{m_gc->new_integer_raw(i)});
+	m_stack.push(Handle{i});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_float(float f) {
-	m_stack.push(Handle{m_gc->new_float_raw(f)});
+	m_stack.push(Handle{f});
 	run_gc_if_needed();
 }
 

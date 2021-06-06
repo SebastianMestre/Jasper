@@ -6,18 +6,6 @@
 
 namespace Interpreter {
 
-Integer::Integer()
-    : Value(ValueTag::Integer) {}
-Integer::Integer(int v)
-    : Value(ValueTag::Integer)
-    , m_value(v) {}
-
-Float::Float()
-    : Value(ValueTag::Float) {}
-Float::Float(float v)
-    : Value(ValueTag::Float)
-    , m_value(v) {}
-
 String::String()
     : Value(ValueTag::String) {}
 String::String(std::string s)
@@ -67,7 +55,7 @@ Variant::Variant(InternedString constructor)
     : Value(ValueTag::Variant)
     , m_constructor(constructor) {}
 
-Variant::Variant(InternedString constructor, Value* v)
+Variant::Variant(InternedString constructor, Handle v)
     : Value(ValueTag::Variant)
     , m_constructor(constructor)
     , m_inner_value(v) {}
@@ -85,9 +73,6 @@ Reference::Reference(Handle value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
-Reference::Reference(Value* value)
-    : Reference {Handle{value}} {}
-
 VariantConstructor::VariantConstructor(InternedString constructor)
     : Value {ValueTag::VariantConstructor}
     , m_constructor {constructor} {}
@@ -96,12 +81,6 @@ RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
     : Value {ValueTag::RecordConstructor}
     , m_keys {std::move(keys)} {}
 
-void gc_visit(Integer* v) {
-	v->m_visited = true;
-}
-void gc_visit(Float* v) {
-	v->m_visited = true;
-}
 void gc_visit(String* v) {
 	v->m_visited = true;
 }
@@ -159,16 +138,11 @@ void gc_visit(Reference* r) {
 		return;
 
 	r->m_visited = true;
-	if (r->m_value.get())
-		gc_visit(r->m_value);
+	gc_visit(r->m_value);
 }
 
 void gc_visit(Value* v) {
 	switch (v->type()) {
-	case ValueTag::Integer:
-		return gc_visit(static_cast<Integer*>(v));
-	case ValueTag::Float:
-		return gc_visit(static_cast<Float*>(v));
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
 	case ValueTag::Error:
@@ -193,7 +167,8 @@ void gc_visit(Value* v) {
 }
 
 void gc_visit(Handle h) {
-	return gc_visit(h.get());
+	if (is_heap_type(h.type()))
+		return gc_visit(h.get());
 }
 
 // = === === print === === = //
@@ -203,14 +178,14 @@ void print_spaces(int n) {
 		std::cout << ' ';
 }
 
-void print(Integer const* v, int d) {
+void print(int v, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(ValueTag::Integer)] << ' ' << v << '\n';
 }
 
-void print(Float* v, int d) {
+void print(float v, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(ValueTag::Float)] << ' ' << v << '\n';
 }
 
 void print(String* v, int d) {
@@ -285,10 +260,6 @@ void print(VariantConstructor* l, int d) {
 void print(Value* v, int d) {
 
 	switch (v->type()) {
-	case ValueTag::Integer:
-		return print(static_cast<Integer*>(v), d);
-	case ValueTag::Float:
-		return print(static_cast<Float*>(v), d);
 	case ValueTag::String:
 		return print(static_cast<String*>(v), d);
 	case ValueTag::Error:
@@ -318,6 +289,10 @@ void print(Handle h, int d) {
 	switch (h.type()) {
 	case ValueTag::Boolean:
 		return print(h.as_boolean, d);
+	case ValueTag::Integer:
+		return print(h.as_integer, d);
+	case ValueTag::Float:
+		return print(h.as_float, d);
 	case ValueTag::Null:
 		print_spaces(d);
 		return void(std::cout << "(null)\n");

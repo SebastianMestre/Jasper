@@ -52,7 +52,7 @@ struct Interpreter {
 
 	// Binds a global name to the given reference
 	void global_declare_direct(const Identifier& i, Reference* v);
-	void global_declare(const Identifier& i, Value* v);
+	void global_declare(const Identifier& i, Handle v);
 	Reference* global_access(const Identifier& i);
 	void assign(Handle dst, Handle src);
 
