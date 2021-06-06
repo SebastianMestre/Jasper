@@ -32,6 +32,7 @@ struct Interpreter {
 	GC* m_gc;
 	std::vector<std::vector<AST::Declaration*>> const* m_declaration_order;
 	int m_gc_size_on_last_pass {64};
+	bool m_returning{false};
 	Handle m_return_value {nullptr};
 	Scope m_global_scope;
 

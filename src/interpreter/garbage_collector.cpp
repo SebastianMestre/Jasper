@@ -95,16 +95,6 @@ Float* GC::new_float_raw(float f) {
 	return result;
 }
 
-gc_ptr<Boolean> GC::new_boolean(bool b) {
-	return new_boolean_raw(b);
-}
-
-Boolean* GC::new_boolean_raw(bool b) {
-	auto result = new Boolean(b);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<String> GC::new_string(std::string s) {
 	return new_string_raw(std::move(s));
 }

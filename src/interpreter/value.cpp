@@ -6,9 +6,6 @@
 
 namespace Interpreter {
 
-Null::Null()
-    : Value(ValueTag::Null) {}
-
 Integer::Integer()
     : Value(ValueTag::Integer) {}
 Integer::Integer(int v)
@@ -20,12 +17,6 @@ Float::Float()
 Float::Float(float v)
     : Value(ValueTag::Float)
     , m_value(v) {}
-
-Boolean::Boolean()
-    : Value(ValueTag::Boolean) {}
-Boolean::Boolean(bool b)
-    : Value(ValueTag::Boolean)
-    , m_value(b) {}
 
 String::String()
     : Value(ValueTag::String) {}
@@ -105,9 +96,6 @@ RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
     : Value {ValueTag::RecordConstructor}
     , m_keys {std::move(keys)} {}
 
-void gc_visit(Null* v) {
-	v->m_visited = true;
-}
 void gc_visit(Integer* v) {
 	v->m_visited = true;
 }
@@ -115,9 +103,6 @@ void gc_visit(Float* v) {
 	v->m_visited = true;
 }
 void gc_visit(String* v) {
-	v->m_visited = true;
-}
-void gc_visit(Boolean* v) {
 	v->m_visited = true;
 }
 void gc_visit(Error* v) {
@@ -179,18 +164,13 @@ void gc_visit(Reference* r) {
 }
 
 void gc_visit(Value* v) {
-
 	switch (v->type()) {
-	case ValueTag::Null:
-		return gc_visit(static_cast<Null*>(v));
 	case ValueTag::Integer:
 		return gc_visit(static_cast<Integer*>(v));
 	case ValueTag::Float:
 		return gc_visit(static_cast<Float*>(v));
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
-	case ValueTag::Boolean:
-		return gc_visit(static_cast<Boolean*>(v));
 	case ValueTag::Error:
 		return gc_visit(static_cast<Error*>(v));
 	case ValueTag::Array:
@@ -228,11 +208,6 @@ void print(Integer const* v, int d) {
 	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
 }
 
-void print(Null* v, int d) {
-	print_spaces(d);
-	std::cout << value_string[int(v->type())] << '\n';
-}
-
 void print(Float* v, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
@@ -244,9 +219,9 @@ void print(String* v, int d) {
 	          << '"' << '\n';
 }
 
-void print(Boolean* v, int d) {
+void print(bool b, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(v->type())] << ' ' << v->m_value << '\n';
+	std::cout << value_string[int(ValueTag::Boolean)] << ' ' << b << '\n';
 }
 
 void print(Error* v, int d) {
@@ -310,16 +285,12 @@ void print(VariantConstructor* l, int d) {
 void print(Value* v, int d) {
 
 	switch (v->type()) {
-	case ValueTag::Null:
-		return print(static_cast<Null*>(v), d);
 	case ValueTag::Integer:
 		return print(static_cast<Integer*>(v), d);
 	case ValueTag::Float:
 		return print(static_cast<Float*>(v), d);
 	case ValueTag::String:
 		return print(static_cast<String*>(v), d);
-	case ValueTag::Boolean:
-		return print(static_cast<Boolean*>(v), d);
 	case ValueTag::Error:
 		return print(static_cast<Error*>(v), d);
 	case ValueTag::Array:
@@ -342,7 +313,15 @@ void print(Value* v, int d) {
 }
 
 void print(Handle h, int d) {
-	return print(h.get(), d);
+	if (is_heap_type(h.type()))
+		return print(h.get(), d);
+	switch (h.type()) {
+	case ValueTag::Boolean:
+		return print(h.as_boolean, d);
+	case ValueTag::Null:
+		print_spaces(d);
+		return void(std::cout << "(null)\n");
+	}
 }
 
 } // namespace Interpreter

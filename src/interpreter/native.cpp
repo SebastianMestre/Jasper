@@ -12,8 +12,11 @@
 
 namespace Interpreter {
 
-#define OP(type, lhs, op, rhs) \
+#define OP(type, lhs, op, rhs)                                                 \
 	(lhs).get_cast<type>()->m_value op (rhs).get_cast<type>()->m_value
+
+#define OP_(field, lhs, op, rhs)                                               \
+	(lhs).field op (rhs).field
 
 // TODO: All of these should return Handle
 
@@ -160,7 +163,7 @@ Handle value_logicand(ArgsType v, Interpreter& e) {
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {e.m_gc->new_boolean_raw(OP(Boolean, lhs, &&, rhs))};
+		return {OP_(as_boolean, lhs, &&, rhs)};
 	std::cerr << "ERROR: logical and operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
@@ -172,7 +175,7 @@ Handle value_logicor(ArgsType v, Interpreter& e) {
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {e.m_gc->new_boolean_raw(OP(Boolean, lhs, ||, rhs))};
+		return {OP_(as_boolean, lhs, ||, rhs)};
 	std::cerr << "ERROR: logical or operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
@@ -184,7 +187,7 @@ Handle value_logicxor(ArgsType v, Interpreter& e) {
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {e.m_gc->new_boolean_raw(OP(Boolean, lhs, !=, rhs))};
+		return {OP_(as_boolean, lhs, !=, rhs)};
 	std::cerr << "ERROR: exclusive or operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
@@ -199,15 +202,15 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 
 	switch (lhs.type()) {
 	case ValueTag::Null:
-		return {e.m_gc->new_boolean_raw(true)};
+		return {true};
 	case ValueTag::Integer:
-		return {e.m_gc->new_boolean_raw(OP(Integer, lhs, ==, rhs))};
+		return {OP(Integer, lhs, ==, rhs)};
 	case ValueTag::Float:
-		return {e.m_gc->new_boolean_raw(OP(Float, lhs, ==, rhs))};
+		return {OP(Float, lhs, ==, rhs)};
 	case ValueTag::String:
-		return {e.m_gc->new_boolean_raw(OP(String, lhs, ==, rhs))};
+		return {OP(String, lhs, ==, rhs)};
 	case ValueTag::Boolean:
-		return {e.m_gc->new_boolean_raw(OP(Boolean, lhs, ==, rhs))};
+		return {OP_(as_boolean, lhs, ==, rhs)};
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
 		          << value_string[static_cast<int>(lhs.type())] << " and "
@@ -218,9 +221,8 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 }
 
 Handle value_not_equals(ArgsType v, Interpreter& e) {
-	Boolean* b = value_equals(v, e).get_cast<Boolean>();
-	b->m_value = !b->m_value;
-	return {b};
+	bool b = value_equals(v, e).as_boolean;
+	return {bool(!b)};
 }
 
 Handle value_less(ArgsType v, Interpreter& e) {
@@ -231,11 +233,11 @@ Handle value_less(ArgsType v, Interpreter& e) {
 
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {e.m_gc->new_boolean_raw(OP(Integer, lhs, <, rhs))};
+		return {bool(OP(Integer, lhs, <, rhs))};
 	case ValueTag::Float:
-		return {e.m_gc->new_boolean_raw(OP(Float, lhs, <, rhs))};
+		return {bool(OP(Float, lhs, <, rhs))};
 	case ValueTag::String:
-		return {e.m_gc->new_boolean_raw(OP(String, lhs, <, rhs))};
+		return {bool(OP(String, lhs, <, rhs))};
 	default:
 		std::cerr << "ERROR: can't compare values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -244,20 +246,18 @@ Handle value_less(ArgsType v, Interpreter& e) {
 }
 
 Handle value_greater_or_equal(ArgsType v, Interpreter& e) {
-	Boolean* b = value_less(v, e).get_cast<Boolean>();
-	b->m_value = !b->m_value;
-	return {b};
+	bool b = value_less(v, e).as_boolean;
+	return {bool(!b)};
 }
 
 Handle value_greater(ArgsType v, Interpreter& e) {
-	std::swap(v[0], v[1]);
-	return value_less(v, e);
+	Handle args[2] = {v[1], v[0]}; // arguments are swapped
+	return value_less(Span<Handle> {args, 2}, e);
 }
 
 Handle value_less_or_equal(ArgsType v, Interpreter& e) {
-	Boolean* b = value_greater(v, e).get_cast<Boolean>();
-	b->m_value = !b->m_value;
-	return {b};
+	bool b = value_greater(v, e).as_boolean;
+	return bool(!b);
 }
 
 Handle value_assign(ArgsType v, Interpreter& e) {

@@ -41,14 +41,18 @@ Reference* Interpreter::global_access(const Identifier& i) {
 
 
 void Interpreter::save_return_value(Handle v) {
-	// check if not stepping on another value
-	assert(!m_return_value.get());
+	// ensure we are not in a return sequence already
+	assert(!m_returning);
+	m_returning = true;
 	m_return_value = v;
 }
 
 Handle Interpreter::fetch_return_value() {
+	// ensure we were in a return sequence
+	assert(m_returning);
+	m_returning = false;
 	Handle rv = m_return_value;
-	m_return_value.ptr = nullptr;
+	m_return_value = Handle{};
 	return rv;
 }
 
@@ -95,7 +99,7 @@ void Interpreter::push_float(float f) {
 }
 
 void Interpreter::push_boolean(bool b) {
-	m_stack.push(Handle{m_gc->new_boolean_raw(b)});
+	m_stack.push(Handle{b});
 	run_gc_if_needed();
 }
 

@@ -58,7 +58,7 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("pizza()", 13),
 	            EQUALS("issue261()", 13),
 	            IS_TRUE("if_else_if()"),
-	            EQUALS("ternary()", 2),
+	            EQUALS("ternary()", 2), //
 	            EQUALS("array_access()", 12),
 	            EQUALS("a", 1),
 	            EQUALS("b", 1),

@@ -50,6 +50,10 @@ struct Value {
 	virtual ~Value() = default;
 };
 
+inline bool is_heap_type(ValueTag tag) {
+	return tag != ValueTag::Null && tag != ValueTag::Boolean;
+}
+
 struct Handle {
 	Handle(Value* ptr)
 	    : tag {ptr ? ptr->type() : ValueTag::Null}
@@ -58,6 +62,10 @@ struct Handle {
 	Handle(std::nullptr_t)
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
+
+	Handle(bool boolean)
+	    : tag {ValueTag::Boolean}
+	    , as_boolean {boolean} {}
 
 	Handle()
 	    : tag {ValueTag::Null}
@@ -73,27 +81,25 @@ struct Handle {
 
 	template <typename T>
 	T* get_cast() {
+		assert(is_heap_type(tag));
 		return static_cast<T*>(ptr);
 	}
 
 	ValueTag type() {
-		if (ptr) assert(ptr->type() == tag);
+		if (is_heap_type(tag))
+			assert(ptr->type() == tag);
 		return tag;
 	}
 
 	ValueTag tag;
 	union {
 	Value* ptr;
+	bool as_boolean;
 	};
 };
 
 void gc_visit(Handle);
 void print(Handle v, int d = 0);
-
-struct Null : Value {
-
-	Null();
-};
 
 struct Integer : Value {
 	int m_value = 0;
@@ -107,13 +113,6 @@ struct Float : Value {
 
 	Float();
 	Float(float v);
-};
-
-struct Boolean : Value {
-	bool m_value = false;
-
-	Boolean();
-	Boolean(bool b);
 };
 
 struct String : Value {

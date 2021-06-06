@@ -4,16 +4,16 @@
 
 namespace Interpreter {
 
-Value* value_of(Value* value) {
-	if (!value)
-		return value;
+Handle value_of(Handle h) {
+	if (!is_heap_type(h.type()))
+		return h;
 
-	if (value->type() != ValueTag::Reference)
-		return value;
+	if (h.type() != ValueTag::Reference)
+		return h;
 
 	// try unboxing recursively?
-	auto ref = static_cast<Reference*>(value);
-	return ref->m_value.get();
+	auto ref = h.get_cast<Reference>();
+	return ref->m_value;
 }
 
 } // namespace Interpreter

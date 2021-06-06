@@ -229,10 +229,10 @@ void eval(AST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_ptr = e.m_stack.pop_unsafe();
-	auto* condition = value_as<Boolean>(condition_ptr);
+	auto condition_handle = value_of(e.m_stack.pop_unsafe());
+	auto condition = condition_handle.as_boolean; // FIXME: assert on correct type
 
-	if (condition->m_value)
+	if (condition)
 		eval(ast->m_then_expr, e);
 	else
 		eval(ast->m_else_expr, e);
@@ -345,6 +345,8 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
+	if (!e.m_returning)
+		e.save_return_value(Handle {});
 	e.m_stack.push(e.fetch_return_value());
 }
 
@@ -352,10 +354,10 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = e.m_stack.pop_unsafe();
-	auto* condition = value_as<Boolean>(condition_handle.get());
+	auto condition_handle = value_of(e.m_stack.pop_unsafe());
+	bool condition = condition_handle.as_boolean; // FIXME: assert on correct type
 
-	if (condition->m_value)
+	if (condition)
 		eval_stmt(ast->m_body, e);
 	else if (ast->m_else_body)
 		eval_stmt(ast->m_else_body, e);
@@ -364,10 +366,10 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_handle = e.m_stack.pop_unsafe();
-		auto* condition = value_as<Boolean>(condition_handle.get());
+		auto condition_handle = value_of(e.m_stack.pop_unsafe());
+		auto condition = condition_handle.as_boolean; // FIXME: assert on correct type
 
-		if (!condition->m_value)
+		if (!condition)
 			break;
 
 		eval_stmt(ast->m_body, e);

@@ -30,7 +30,6 @@ struct GC {
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_integer(int) -> gc_ptr<Integer>;
 	auto new_float(float) -> gc_ptr<Float>;
-	auto new_boolean(bool) -> gc_ptr<Boolean>;
 	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
 	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
@@ -40,7 +39,6 @@ struct GC {
 
 	auto new_integer_raw(int) -> Integer*;
 	auto new_float_raw(float) -> Float*;
-	auto new_boolean_raw(bool) -> Boolean*;
 	auto new_string_raw(std::string) -> String*;
 	auto new_variant_constructor_raw(InternedString) -> VariantConstructor*;
 	auto new_record_constructor_raw(std::vector<InternedString>) -> RecordConstructor*;
