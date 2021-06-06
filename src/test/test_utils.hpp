@@ -63,7 +63,8 @@ ExitStatus equals(Handle rv, std::string const& expected) {
 }
 
 ExitStatus equals(Handle rv, int expected) {
-	return detail::scalar_equals<Interpreter::Integer, int>(rv, ValueTag::Integer, expected);
+	return detail::scalar_equals_fn(
+	    rv, ValueTag::Integer, expected, [](Handle h) { return h.as_integer; });
 }
 
 ExitStatus equals(Handle rv, float expected) {

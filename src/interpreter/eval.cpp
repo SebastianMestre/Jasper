@@ -122,11 +122,8 @@ void eval(AST::ReturnStatement* ast, Interpreter& e) {
 	e.save_return_value(value_of(value));
 };
 
-auto is_callable_value(Value* v) -> bool {
-	if (!v)
-		return false;
-	auto type = v->type();
-	return type == ValueTag::Function || type == ValueTag::NativeFunction;
+auto is_callable_type(ValueTag t) -> bool {
+	return t == ValueTag::Function || t == ValueTag::NativeFunction;
 }
 
 void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
@@ -147,13 +144,13 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 	// NOTE: keep callee on the stack
 	auto callee = value_of(e.m_stack.access(0));
-	assert(is_callable_value(callee.get()));
+	assert(is_callable_type(callee.type()));
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
 	int frame_start = e.m_stack.m_stack_ptr;
-	if (callee.get()->type() == ValueTag::Function) {
+	if (callee.type() == ValueTag::Function) {
 		for (auto expr : arglist) {
 			// put arg on stack
 			eval(expr, e);
@@ -169,7 +166,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 		// pop the result of the function, and clobber the callee
 		e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
-	} else if (callee.get()->type() == ValueTag::NativeFunction) {
+	} else if (callee.type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist)
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
@@ -191,13 +188,12 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 	eval(ast->m_index, e);
 
-	auto index_ptr = e.m_stack.pop_unsafe();
-	auto* index = value_as<Integer>(index_ptr);
+	auto index = e.m_stack.pop_unsafe().get_integer();
 
 	auto callee_ptr = e.m_stack.pop_unsafe();
 	auto* callee = value_as<Array>(callee_ptr);
 
-	e.m_stack.push(Handle{callee->at(index->m_value)});
+	e.m_stack.push(Handle{callee->at(index)});
 };
 
 void eval(AST::TernaryExpression* ast, Interpreter& e) {
@@ -220,7 +216,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = as<Reference>(value.get());
+		captures[offset] = as<Reference>(value);
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
@@ -238,16 +234,16 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_matchee, e);
 
-	auto variant = value_as<Variant>(e.m_stack.access(0).get());
+	auto variant = value_as<Variant>(e.m_stack.access(0));
 
 	auto constructor = variant->m_constructor;
-	auto variant_value = variant->m_inner_value;
+	auto variant_value = value_of(variant->m_inner_value);
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
 	auto ref = e.new_reference(nullptr);
-	ref->m_value = value_of(variant_value);
+	ref->m_value = variant_value;
 	e.m_stack.access(0) = ref.handle();
 	
 	auto case_it = ast->m_cases.find(constructor);
@@ -267,11 +263,10 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	// NOTE: we leave the ctor on the stack for the time being
 
 	eval(ast->m_constructor, e);
-	auto constructor_ptr = e.m_stack.access(0);
-	auto constructor = value_of(constructor_ptr).get();
+	auto constructor = value_of(e.m_stack.access(0));
 
-	if (constructor->type() == ValueTag::RecordConstructor) {
-		auto record_constructor = static_cast<RecordConstructor*>(constructor);
+	if (constructor.type() == ValueTag::RecordConstructor) {
+		auto record_constructor = constructor.get_cast<RecordConstructor>();
 
 		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
@@ -298,14 +293,14 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		// replace ctor with record
 		e.m_stack.access(0) = Handle{result.get()};
-	} else if (constructor->type() == ValueTag::VariantConstructor) {
-		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
+	} else if (constructor.type() == ValueTag::VariantConstructor) {
+		auto variant_constructor = constructor.get_cast<VariantConstructor>();
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)).get());
+		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
 		// replace ctor with variant, and pop value
 		e.m_stack.access(1) = Handle{result.get()};

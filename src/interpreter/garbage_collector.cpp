@@ -55,7 +55,7 @@ void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
-gc_ptr<Variant> GC::new_variant(InternedString constructor, Value* v) {
+gc_ptr<Variant> GC::new_variant(InternedString constructor, Handle v) {
 	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
 	return result;
@@ -71,16 +71,6 @@ gc_ptr<Record> GC::new_record(RecordType declarations) {
 gc_ptr<Array> GC::new_list(ArrayType elements) {
 	auto result = new Array;
 	result->m_value = std::move(elements);
-	m_blocks.push_back(result);
-	return result;
-}
-
-gc_ptr<Integer> GC::new_integer(int i) {
-	return new_integer_raw(i);
-}
-
-Integer* GC::new_integer_raw(int i) {
-	auto result = new Integer(i);
 	m_blocks.push_back(result);
 	return result;
 }

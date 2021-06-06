@@ -89,7 +89,7 @@ Handle Interpreter::null() {
 }
 
 void Interpreter::push_integer(int i) {
-	m_stack.push(Handle{m_gc->new_integer_raw(i)});
+	m_stack.push(Handle{i});
 	run_gc_if_needed();
 }
 

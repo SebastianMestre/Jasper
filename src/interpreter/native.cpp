@@ -58,7 +58,7 @@ Handle size(ArgsType v, Interpreter& e) {
 	assert(v.size() == 1);
 	Array* array = value_as<Array>(v[0]);
 
-	return {e.m_gc->new_integer_raw(array->m_value.size())};
+	return {int(array->m_value.size())};
 }
 
 // array_join(array, string) returns a string with
@@ -72,7 +72,7 @@ Handle array_join(ArgsType v, Interpreter& e) {
 	std::stringstream result;
 	for (unsigned int i = 0; i < array->m_value.size(); i++) {
 		if (i > 0) result << sep->m_value;
-		result << value_as<Integer>(array->m_value[i])->m_value;
+		result << array->m_value[i]->m_value.get_integer();
 	}
 	return {e.m_gc->new_string_raw(result.str())};
 }
@@ -82,10 +82,10 @@ Handle array_at(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	Array* array = value_as<Array>(v[0]);
-	Integer* index = value_as<Integer>(v[1]);
-	assert(index->m_value >= 0);
-	assert(index->m_value < array->m_value.size());
-	return {array->m_value[index->m_value]};
+	int index = v[1].get_integer();
+	assert(index >= 0);
+	assert(index < array->m_value.size());
+	return {array->m_value[index]};
 }
 
 Handle value_add(ArgsType v, Interpreter& e) {
@@ -95,7 +95,7 @@ Handle value_add(ArgsType v, Interpreter& e) {
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {e.m_gc->new_integer_raw(OP(Integer, lhs, +, rhs))};
+		return {OP_(as_integer, lhs, +, rhs)};
 	case ValueTag::Float:
 		return {e.m_gc->new_float_raw(OP(Float, lhs, +, rhs))};
 	case ValueTag::String:
@@ -114,7 +114,7 @@ Handle value_sub(ArgsType v, Interpreter& e) {
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {e.m_gc->new_integer_raw(OP(Integer, lhs, -, rhs))};
+		return {OP_(as_integer, lhs, -, rhs)};
 	case ValueTag::Float:
 		return {e.m_gc->new_float_raw(OP(Float, lhs, -, rhs))};
 	default:
@@ -131,7 +131,7 @@ Handle value_mul(ArgsType v, Interpreter& e) {
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {e.m_gc->new_integer_raw(OP(Integer, lhs, *, rhs))};
+		return {OP_(as_integer, lhs, *, rhs)};
 	case ValueTag::Float:
 		return {e.m_gc->new_float_raw(OP(Float, lhs, *, rhs))};
 	default:
@@ -148,7 +148,7 @@ Handle value_div(ArgsType v, Interpreter& e) {
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {e.m_gc->new_integer_raw(OP(Integer, lhs, /, rhs))};
+		return {OP_(as_integer, lhs, /, rhs)};
 	case ValueTag::Float:
 		return {e.m_gc->new_float_raw(OP(Float, lhs, /, rhs))};
 	default:
@@ -204,7 +204,7 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 	case ValueTag::Null:
 		return {true};
 	case ValueTag::Integer:
-		return {OP(Integer, lhs, ==, rhs)};
+		return {OP_(as_integer, lhs, ==, rhs)};
 	case ValueTag::Float:
 		return {OP(Float, lhs, ==, rhs)};
 	case ValueTag::String:
@@ -233,7 +233,7 @@ Handle value_less(ArgsType v, Interpreter& e) {
 
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {bool(OP(Integer, lhs, <, rhs))};
+		return {bool(OP_(as_integer, lhs, <, rhs))};
 	case ValueTag::Float:
 		return {bool(OP(Float, lhs, <, rhs))};
 	case ValueTag::String:
@@ -269,7 +269,7 @@ Handle read_integer(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	int result;
 	std::cin >> result;
-	return {e.m_gc->new_integer_raw(result)};
+	return {result};
 }
 
 Handle read_number(ArgsType v, Interpreter& e) {

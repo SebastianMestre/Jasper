@@ -16,9 +16,7 @@ struct FunctionLiteral;
 namespace Interpreter {
 
 struct Interpreter;
-
 struct Reference;
-
 struct Handle;
 
 using Identifier = InternedString;
@@ -29,7 +27,6 @@ using FunctionType = AST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Handle;
 using CapturesType = std::vector<Reference*>;
 
-// Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
 void gc_visit(Value*);
 
@@ -51,7 +48,7 @@ struct Value {
 };
 
 inline bool is_heap_type(ValueTag tag) {
-	return tag != ValueTag::Null && tag != ValueTag::Boolean;
+	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer;
 }
 
 struct Handle {
@@ -67,6 +64,10 @@ struct Handle {
 	    : tag {ValueTag::Boolean}
 	    , as_boolean {boolean} {}
 
+	Handle(int integer)
+	    : tag {ValueTag::Integer}
+	    , as_integer {integer} {}
+
 	Handle()
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
@@ -80,9 +81,11 @@ struct Handle {
 	}
 
 	template <typename T>
-	T* get_cast() {
-		assert(is_heap_type(tag));
-		return static_cast<T*>(ptr);
+	T* get_cast();
+
+	int get_integer() {
+		assert(tag == ValueTag::Integer);
+		return as_integer;
 	}
 
 	bool get_boolean() {
@@ -100,18 +103,12 @@ struct Handle {
 	union {
 	Value* ptr;
 	bool as_boolean;
+	int as_integer;
 	};
 };
 
 void gc_visit(Handle);
 void print(Handle v, int d = 0);
-
-struct Integer : Value {
-	int m_value = 0;
-
-	Integer();
-	Integer(int v);
-};
 
 struct Float : Value {
 	float m_value = 0.0;
@@ -149,10 +146,10 @@ struct Record : Value {
 
 struct Variant : Value {
 	InternedString m_constructor;
-	Value* m_inner_value {nullptr}; // empty constructor
+	Handle m_inner_value {nullptr}; // empty constructor
 
 	Variant(InternedString constructor);
-	Variant(InternedString constructor, Value* v);
+	Variant(InternedString constructor, Handle v);
 };
 
 struct Function : Value {
@@ -186,5 +183,28 @@ struct RecordConstructor : Value {
 
 	RecordConstructor(std::vector<InternedString> keys);
 };
+
+template<typename T>
+struct type_data;
+
+template<> struct type_data<Float> { static constexpr auto tag = ValueTag::Float; };
+template<> struct type_data<String> { static constexpr auto tag = ValueTag::String; };
+template<> struct type_data<Array> { static constexpr auto tag = ValueTag::Array; };
+template<> struct type_data<Record> { static constexpr auto tag = ValueTag::Record; };
+template<> struct type_data<Variant> { static constexpr auto tag = ValueTag::Variant; };
+template<> struct type_data<Function> { static constexpr auto tag = ValueTag::Function; };
+template<> struct type_data<NativeFunction> { static constexpr auto tag = ValueTag::NativeFunction; };
+template<> struct type_data<Reference> { static constexpr auto tag = ValueTag::Reference; };
+template<> struct type_data<VariantConstructor> { static constexpr auto tag = ValueTag::VariantConstructor; };
+template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };
+
+template <typename T>
+inline T* Handle::get_cast() {
+	static_assert(std::is_base_of<Value, T>::value, "T is not a subclass of Value");
+	assert(is_heap_type(tag));
+	assert(tag == type_data<T>::tag);
+	assert(ptr);
+	return static_cast<T*>(ptr);
+}
 
 } // namespace Interpreter
