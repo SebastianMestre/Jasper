@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
 
 				eval(top_level_call, env);
-			    auto result = env.m_stack.pop();
+			    auto result = env.m_stack.pop_unsafe();
 
-			    if (result)
-				    Interpreter::print(result.get());
+			    if (result.get())
+				    Interpreter::print(result);
 			    else
 				    std::cout << "(nullptr)\n";
 		    }

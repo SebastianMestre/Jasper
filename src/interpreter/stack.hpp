@@ -10,7 +10,7 @@ namespace Interpreter {
 struct Stack {
 	int m_frame_ptr {0};
 	int m_stack_ptr {0};
-	std::vector<Value*> m_stack;
+	std::vector<Handle> m_stack;
 	std::vector<int> m_fp_stack;
 	std::vector<int> m_sp_stack;
 
@@ -21,16 +21,13 @@ struct Stack {
 	void start_stack_region();
 	void end_stack_region();
 
-	void push(Value* val);
+	void push(Handle ref);
 
-	Value* pop_unsafe();
-	gc_ptr<Value> pop();
+	Handle pop_unsafe();
 
-	gc_ptr<Value> peek(int offset = 0);
-
-	Value*& access(int offset);
-	Value*& frame_at(int offset);
-	Span<Value*> frame_range(int offset, int length);
+	Handle& access(int offset);
+	Handle& frame_at(int offset);
+	Span<Handle> frame_range(int offset, int length);
 };
 
 } // namespace Interpreter

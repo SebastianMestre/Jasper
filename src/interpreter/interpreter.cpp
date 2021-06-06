@@ -35,28 +35,28 @@ void Interpreter::global_declare(const Identifier& i, Value* v) {
 	global_declare_direct(i, r.get());
 }
 
-void Interpreter::global_declare(const Identifier& i, gc_ptr<Value> v) {
-	global_declare(i, v.get());
-}
-
 Reference* Interpreter::global_access(const Identifier& i) {
 	return m_global_scope.access(i);
 }
 
 
-void Interpreter::save_return_value(Value* v) {
-	// check if not stepping on another value
-	assert(!m_return_value);
+void Interpreter::save_return_value(Handle v) {
+	// ensure we are not in a return sequence already
+	assert(!m_returning);
+	m_returning = true;
 	m_return_value = v;
 }
 
-Value* Interpreter::fetch_return_value() {
-	Value* rv = m_return_value;
-	m_return_value = nullptr;
+Handle Interpreter::fetch_return_value() {
+	// ensure we were in a return sequence
+	assert(m_returning);
+	m_returning = false;
+	Handle rv = m_return_value;
+	m_return_value = Handle{};
 	return rv;
 }
 
-void Interpreter::assign(Value* dst, Value* src) {
+void Interpreter::assign(Handle dst, Handle src) {
 	// NOTE: copied by reference, matters if rhs is actually a reference
 	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
 	as<Reference>(dst)->m_value = value_of(src);
@@ -84,37 +84,37 @@ void Interpreter::run_gc_if_needed(){
 }
 
 
-Null* Interpreter::null() {
-	return m_gc->null();
+Handle Interpreter::null() {
+	return Handle{nullptr};
 }
 
 void Interpreter::push_integer(int i) {
-	m_stack.push(m_gc->new_integer_raw(i));
+	m_stack.push(Handle{m_gc->new_integer_raw(i)});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_float(float f) {
-	m_stack.push(m_gc->new_float_raw(f));
+	m_stack.push(Handle{m_gc->new_float_raw(f)});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_boolean(bool b) {
-	m_stack.push(m_gc->new_boolean_raw(b));
+	m_stack.push(Handle{b});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_string(std::string s) {
-	m_stack.push(m_gc->new_string_raw(std::move(s)));
+	m_stack.push(Handle{m_gc->new_string_raw(std::move(s))});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_variant_constructor(InternedString constructor) {
-	m_stack.push(m_gc->new_variant_constructor_raw(constructor));
+	m_stack.push(Handle{m_gc->new_variant_constructor_raw(constructor)});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
-	m_stack.push(m_gc->new_record_constructor_raw(std::move(keys)));
+	m_stack.push(Handle{m_gc->new_record_constructor_raw(std::move(keys))});
 	run_gc_if_needed();
 }
 
@@ -148,9 +148,9 @@ gc_ptr<Error> Interpreter::new_error(std::string e) {
 	return result;
 }
 
-gc_ptr<Reference> Interpreter::new_reference(Value* v) {
+gc_ptr<Reference> Interpreter::new_reference(Handle v) {
 	assert(
-	    v->type() != ValueTag::Reference &&
+	    v.type() != ValueTag::Reference &&
 	    "References to references are not allowed.");
 	auto result = m_gc->new_reference(v);
 	run_gc_if_needed();

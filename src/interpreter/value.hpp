@@ -19,13 +19,15 @@ struct Interpreter;
 
 struct Reference;
 
+struct Handle;
+
 using Identifier = InternedString;
 using StringType = std::string;
-using RecordType = std::unordered_map<Identifier, Value*>;
+using RecordType = std::unordered_map<Identifier, Handle>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Value*>, Interpreter&) -> Value*;
-using CapturesType = std::vector<Value*>; // TODO: store references instead of values
+using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Handle;
+using CapturesType = std::vector<Reference*>;
 
 // Returns the value pointed to by a reference
 void print(Value* v, int d = 0);
@@ -48,10 +50,61 @@ struct Value {
 	virtual ~Value() = default;
 };
 
-struct Null : Value {
+inline bool is_heap_type(ValueTag tag) {
+	return tag != ValueTag::Null && tag != ValueTag::Boolean;
+}
 
-	Null();
+struct Handle {
+	Handle(Value* ptr)
+	    : tag {ptr ? ptr->type() : ValueTag::Null}
+	    , ptr {ptr} {}
+
+	Handle(std::nullptr_t)
+	    : tag {ValueTag::Null}
+	    , ptr {nullptr} {}
+
+	Handle(bool boolean)
+	    : tag {ValueTag::Boolean}
+	    , as_boolean {boolean} {}
+
+	Handle()
+	    : tag {ValueTag::Null}
+	    , ptr {nullptr} {}
+
+	Value& operator*() {
+		return *ptr;
+	};
+
+	Value* get() {
+		return ptr;
+	}
+
+	template <typename T>
+	T* get_cast() {
+		assert(is_heap_type(tag));
+		return static_cast<T*>(ptr);
+	}
+
+	bool get_boolean() {
+		assert(tag == ValueTag::Boolean);
+		return as_boolean;
+	}
+
+	ValueTag type() {
+		if (is_heap_type(tag))
+			assert(ptr->type() == tag);
+		return tag;
+	}
+
+	ValueTag tag;
+	union {
+	Value* ptr;
+	bool as_boolean;
+	};
 };
+
+void gc_visit(Handle);
+void print(Handle v, int d = 0);
 
 struct Integer : Value {
 	int m_value = 0;
@@ -65,13 +118,6 @@ struct Float : Value {
 
 	Float();
 	Float(float v);
-};
-
-struct Boolean : Value {
-	bool m_value = false;
-
-	Boolean();
-	Boolean(bool b);
 };
 
 struct String : Value {
@@ -88,7 +134,7 @@ struct Array : Value {
 	Array(ArrayType l);
 
 	void append(Reference* v);
-	Value* at(int position);
+	Reference* at(int position);
 };
 
 struct Record : Value {
@@ -97,8 +143,8 @@ struct Record : Value {
 	Record();
 	Record(RecordType);
 
-	void addMember(Identifier const& id, Value* v);
-	Value* getMember(Identifier const& id);
+	void addMember(Identifier const& id, Handle v);
+	Handle getMember(Identifier const& id);
 };
 
 struct Variant : Value {
@@ -123,8 +169,9 @@ struct NativeFunction : Value {
 };
 
 struct Reference : Value {
-	Value* m_value;
+	Handle m_value;
 
+	Reference(Handle value);
 	Reference(Value* value);
 };
 

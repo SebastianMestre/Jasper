@@ -88,7 +88,7 @@ ExitStatus execute(
 // Note that we can't just call match_identifiers, because that wouldn't take
 // into account the rest of the program that's already been processed, before
 // this is run
-Value* eval_expression(
+Handle eval_expression(
 	const std::string& expr,
 	Interpreter& env,
 	Frontend::SymbolTable& context
@@ -115,8 +115,8 @@ Value* eval_expression(
 
 	// TODO?: return a gc_ptr
 	eval(ast, env);
-	auto value = env.m_stack.pop();
-	return value_of(value.get());
+	auto value = env.m_stack.pop_unsafe();
+	return value_of(value);
 }
 
 } // namespace Interpreter

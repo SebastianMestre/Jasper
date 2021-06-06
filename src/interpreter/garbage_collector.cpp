@@ -8,12 +8,10 @@
 namespace Interpreter {
 
 GC::GC() {
-	m_null = new Null;
 }
 
 GC::~GC() {
 	sweep_all();
-	delete m_null;
 }
 
 void GC::unmark_all() {
@@ -57,10 +55,6 @@ void GC::add_root(Value* new_root) {
 	m_roots.push_back(new_root);
 }
 
-Null* GC::null() {
-	return m_null;
-}
-
 gc_ptr<Variant> GC::new_variant(InternedString constructor, Value* v) {
 	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
@@ -101,16 +95,6 @@ Float* GC::new_float_raw(float f) {
 	return result;
 }
 
-gc_ptr<Boolean> GC::new_boolean(bool b) {
-	return new_boolean_raw(b);
-}
-
-Boolean* GC::new_boolean_raw(bool b) {
-	auto result = new Boolean(b);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<String> GC::new_string(std::string s) {
 	return new_string_raw(std::move(s));
 }
@@ -140,6 +124,10 @@ gc_ptr<Error> GC::new_error(std::string s) {
 }
 
 gc_ptr<Reference> GC::new_reference(Value* v) {
+	return new_reference(Handle{v});
+}
+
+gc_ptr<Reference> GC::new_reference(Handle v) {
 	auto result = new Reference(std::move(v));
 	m_blocks.push_back(result);
 	return result;

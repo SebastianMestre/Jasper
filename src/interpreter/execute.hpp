@@ -1,6 +1,7 @@
 #pragma once
 
 #include "exit_status_tag.hpp"
+#include "value.hpp"
 #include <string>
 
 namespace Frontend {
@@ -27,7 +28,7 @@ ExitStatus execute(
 );
 
 // evaluates an expression and returns the resulting value
-Value* eval_expression(
+Handle eval_expression(
 	const std::string& expr,
 	Interpreter& env,
 	Frontend::SymbolTable&
