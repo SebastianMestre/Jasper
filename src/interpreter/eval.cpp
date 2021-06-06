@@ -216,7 +216,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = as<Reference>(value);
+		captures[offset] = value.get_cast<Reference>();
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
