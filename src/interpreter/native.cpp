@@ -97,7 +97,7 @@ Handle value_add(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, +, rhs)};
 	case ValueTag::Float:
-		return {e.m_gc->new_float_raw(OP(Float, lhs, +, rhs))};
+		return {OP_(as_float, lhs, +, rhs)};
 	case ValueTag::String:
 		return {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
 	default:
@@ -116,7 +116,7 @@ Handle value_sub(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, -, rhs)};
 	case ValueTag::Float:
-		return {e.m_gc->new_float_raw(OP(Float, lhs, -, rhs))};
+		return {OP_(as_float, lhs, -, rhs)};
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -133,7 +133,7 @@ Handle value_mul(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, *, rhs)};
 	case ValueTag::Float:
-		return {e.m_gc->new_float_raw(OP(Float, lhs, *, rhs))};
+		return {OP_(as_float, lhs, *, rhs)};
 	default:
 		std::cerr << "ERROR: can't multiply values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -150,7 +150,7 @@ Handle value_div(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, /, rhs)};
 	case ValueTag::Float:
-		return {e.m_gc->new_float_raw(OP(Float, lhs, /, rhs))};
+		return {OP_(as_float, lhs, /, rhs)};
 	default:
 		std::cerr << "ERROR: can't divide values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -206,7 +206,7 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, ==, rhs)};
 	case ValueTag::Float:
-		return {OP(Float, lhs, ==, rhs)};
+		return {OP_(as_float, lhs, ==, rhs)};
 	case ValueTag::String:
 		return {OP(String, lhs, ==, rhs)};
 	case ValueTag::Boolean:
@@ -235,7 +235,7 @@ Handle value_less(ArgsType v, Interpreter& e) {
 	case ValueTag::Integer:
 		return {bool(OP_(as_integer, lhs, <, rhs))};
 	case ValueTag::Float:
-		return {bool(OP(Float, lhs, <, rhs))};
+		return {bool(OP_(as_float, lhs, <, rhs))};
 	case ValueTag::String:
 		return {bool(OP(String, lhs, <, rhs))};
 	default:
@@ -276,7 +276,7 @@ Handle read_number(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	float result;
 	std::cin >> result;
-	return {e.m_gc->new_float_raw(result)};
+	return {result};
 }
 
 Handle read_line(ArgsType v, Interpreter& e) {

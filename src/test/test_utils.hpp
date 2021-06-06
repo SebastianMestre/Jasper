@@ -68,7 +68,8 @@ ExitStatus equals(Handle rv, int expected) {
 }
 
 ExitStatus equals(Handle rv, float expected) {
-	return detail::scalar_equals<Interpreter::Float, float>(rv, ValueTag::Float, expected);
+	return detail::scalar_equals_fn(
+	    rv, ValueTag::Float, expected, [](Handle h) { return h.as_float; });
 }
 
 // NOTE: allows literals to be used (e.g. 3.5), may need to change in the future?

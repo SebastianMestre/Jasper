@@ -75,16 +75,6 @@ gc_ptr<Array> GC::new_list(ArrayType elements) {
 	return result;
 }
 
-gc_ptr<Float> GC::new_float(float f) {
-	return new_float_raw(f);
-}
-
-Float* GC::new_float_raw(float f) {
-	auto result = new Float(f);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<String> GC::new_string(std::string s) {
 	return new_string_raw(std::move(s));
 }

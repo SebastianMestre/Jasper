@@ -68,6 +68,10 @@ struct Handle {
 	    : tag {ValueTag::Integer}
 	    , as_integer {integer} {}
 
+	Handle(float number)
+	    : tag {ValueTag::Float}
+	    , as_float {number} {}
+
 	Handle()
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
@@ -88,6 +92,11 @@ struct Handle {
 		return as_integer;
 	}
 
+	float get_float() {
+		assert(tag == ValueTag::Float);
+		return as_float;
+	}
+
 	bool get_boolean() {
 		assert(tag == ValueTag::Boolean);
 		return as_boolean;
@@ -104,18 +113,12 @@ struct Handle {
 	Value* ptr;
 	bool as_boolean;
 	int as_integer;
+	float as_float;
 	};
 };
 
 void gc_visit(Handle);
 void print(Handle v, int d = 0);
-
-struct Float : Value {
-	float m_value = 0.0;
-
-	Float();
-	Float(float v);
-};
 
 struct String : Value {
 	std::string m_value = "";
@@ -187,7 +190,6 @@ struct RecordConstructor : Value {
 template<typename T>
 struct type_data;
 
-template<> struct type_data<Float> { static constexpr auto tag = ValueTag::Float; };
 template<> struct type_data<String> { static constexpr auto tag = ValueTag::String; };
 template<> struct type_data<Array> { static constexpr auto tag = ValueTag::Array; };
 template<> struct type_data<Record> { static constexpr auto tag = ValueTag::Record; };

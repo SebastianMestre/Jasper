@@ -94,7 +94,7 @@ void Interpreter::push_integer(int i) {
 }
 
 void Interpreter::push_float(float f) {
-	m_stack.push(Handle{m_gc->new_float_raw(f)});
+	m_stack.push(Handle{f});
 	run_gc_if_needed();
 }
 
