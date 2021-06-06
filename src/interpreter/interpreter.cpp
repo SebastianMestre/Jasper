@@ -28,8 +28,8 @@ void Interpreter::global_declare_direct(const Identifier& i, Reference* r) {
 	m_global_scope.declare(i, r);
 }
 
-void Interpreter::global_declare(const Identifier& i, Value* v) {
-	if (v->type() == ValueTag::Reference)
+void Interpreter::global_declare(const Identifier& i, Handle v) {
+	if (v.type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
 	auto r = new_reference(v);
 	global_declare_direct(i, r.get());
