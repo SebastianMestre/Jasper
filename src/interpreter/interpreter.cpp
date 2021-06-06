@@ -150,16 +150,7 @@ gc_ptr<Error> Interpreter::new_error(std::string e) {
 
 gc_ptr<Reference> Interpreter::new_reference(Handle v) {
 	assert(
-	    (!v.get() || v.get()->type() != ValueTag::Reference) &&
-	    "References to references are not allowed.");
-	auto result = m_gc->new_reference(v);
-	run_gc_if_needed();
-	return result;
-}
-
-gc_ptr<Reference> Interpreter::new_reference(Value* v) {
-	assert(
-	    (!v || v->type() != ValueTag::Reference) &&
+	    v.type() != ValueTag::Reference &&
 	    "References to references are not allowed.");
 	auto result = m_gc->new_reference(v);
 	run_gc_if_needed();

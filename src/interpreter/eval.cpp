@@ -29,7 +29,7 @@ static void eval_stmt(AST::AST* ast, Interpreter& e) {
 }
 
 void eval(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(e.null());
+	auto ref = e.new_reference(nullptr);
 	e.m_stack.push(ref.handle());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
@@ -158,11 +158,9 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			// put arg on stack
 			eval(expr, e);
 
-			// create ref to arg
+			// wrap arg in reference
 			auto ref = e.new_reference(nullptr);
 			ref->m_value = value_of(e.m_stack.access(0));
-
-			// put ref on stack
 			e.m_stack.access(0) = ref.handle();
 		}
 		e.m_stack.start_stack_frame(frame_start);
