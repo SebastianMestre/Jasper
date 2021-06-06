@@ -136,10 +136,6 @@ auto is_callable_value(Value* v) -> bool {
 
 void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {
 
-	// stack looks like
-	// ... | callee | args1 ... |
-	//              ^~~ frame ptr
-
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
@@ -147,10 +143,6 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 		e.m_stack.push(Handle{capture});
 
 	eval(callee->m_def->m_body, e);
-
-	// stack looks like
-	// ... | callee | args ... | captures ... | result
-	//              ^~~ frame ptr
 
 	// pop the result, and clobber the callee
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
@@ -173,26 +165,12 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			// put arg on stack
 			eval(expr, e);
 
-			// stack:
-			// ... | &arg |
-			// heap:  |~~~~~> arg
-
 			// create ref to arg
 			auto ref_handle = e.new_reference(nullptr);
 			ref_handle->m_value = value_of(e.m_stack.access(0));
 
-			// stack:
-			// ... | &arg |
-			// heap:  |~~~~~> arg
-			//            ref~~^
-
 			// put ref on stack
 			e.m_stack.access(0) = Handle{ref_handle.get()};
-
-			// stack:
-			// ... | &ref |
-			// heap:  |       arg
-			//        |~> ref~~^
 		}
 		e.m_stack.start_stack_frame(frame_start);
 		eval_call_function(callee.get_cast<Function>(), arg_count, e);
@@ -306,9 +284,6 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		for (int i = 0; i < ast->m_args.size(); ++i)
 			eval(ast->m_args[i], e);
 
-		// stack looks like
-		// ... | ctor | arg1 | ... | argn |
-
 		// store all arguments in record object
 		RecordType record;
 		for (int i = 0; i < ast->m_args.size(); ++i) {
@@ -329,9 +304,6 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		auto variant_constructor = static_cast<VariantConstructor*>(constructor);
 
 		assert(ast->m_args.size() == 1);
-
-		// stack looks like:
-		// ... | ctor | value |
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
