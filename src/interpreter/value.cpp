@@ -73,9 +73,6 @@ Reference::Reference(Handle value)
     : Value {ValueTag::Reference}
     , m_value {value} {}
 
-Reference::Reference(Value* value)
-    : Reference {Handle{value}} {}
-
 VariantConstructor::VariantConstructor(InternedString constructor)
     : Value {ValueTag::VariantConstructor}
     , m_constructor {constructor} {}
