@@ -22,14 +22,10 @@ static bool is_expression (AST::AST* ast) {
 	return tag_idx < static_cast<int>(ASTTag::Block);
 }
 
-void eval_stmt(AST::AST* ast, Interpreter& e) {
+static void eval_stmt(AST::AST* ast, Interpreter& e) {
 	eval(ast, e);
 	if (is_expression(ast))
 		e.m_stack.pop_unsafe();
-}
-
-gc_ptr<Reference> rewrap(Value* x, Interpreter& e) {
-	return e.new_reference(value_of(x));
 }
 
 void eval(AST::Declaration* ast, Interpreter& e) {
@@ -50,7 +46,7 @@ void eval(AST::DeclarationList* ast, Interpreter& e) {
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
-			ref->m_value = Handle{value_of(value)};
+			ref->m_value = value_of(value);
 		}
 	}
 }
@@ -80,10 +76,9 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto ref_handle = e.new_reference(nullptr);
-		auto value = e.m_stack.pop_unsafe();
-		ref_handle->m_value = Handle{value};
-		result->append(ref_handle.get());
+		auto ref = e.new_reference(nullptr);
+		ref->m_value = value_of(e.m_stack.pop_unsafe());
+		result->append(ref.get());
 	}
 	e.m_stack.push(result.handle());
 }
@@ -114,7 +109,7 @@ void eval(AST::Block* ast, Interpreter& e) {
 	e.m_stack.start_stack_region();
 	for (auto stmt : ast->m_body) {
 		eval_stmt(stmt, e);
-		if (e.m_return_value.get())
+		if (e.m_returning)
 			break;
 	}
 	e.m_stack.end_stack_region();
@@ -134,7 +129,7 @@ auto is_callable_value(Value* v) -> bool {
 	return type == ValueTag::Function || type == ValueTag::NativeFunction;
 }
 
-void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) {
+void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
@@ -144,8 +139,6 @@ void eval_call_function(gc_ptr<Function> callee, int arg_count, Interpreter& e) 
 
 	eval(callee->m_def->m_body, e);
 
-	// pop the result, and clobber the callee
-	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 }
 
 void eval(AST::CallExpression* ast, Interpreter& e) {
@@ -166,19 +159,25 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			eval(expr, e);
 
 			// create ref to arg
-			auto ref_handle = e.new_reference(nullptr);
-			ref_handle->m_value = value_of(e.m_stack.access(0));
+			auto ref = e.new_reference(nullptr);
+			ref->m_value = value_of(e.m_stack.access(0));
 
 			// put ref on stack
-			e.m_stack.access(0) = Handle{ref_handle.get()};
+			e.m_stack.access(0) = ref.handle();
 		}
 		e.m_stack.start_stack_frame(frame_start);
+
 		eval_call_function(callee.get_cast<Function>(), arg_count, e);
+
+		// pop the result of the function, and clobber the callee
+		e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 	} else if (callee.get()->type() == ValueTag::NativeFunction) {
 		for (auto expr : arglist)
 			eval(expr, e);
 		e.m_stack.start_stack_frame(frame_start);
 		auto args = e.m_stack.frame_range(0, arg_count);
+
+		// compute the result of the function, and clobber the callee
 		e.m_stack.frame_at(-1) = callee.get_cast<NativeFunction>()->m_fptr(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
@@ -207,8 +206,7 @@ void eval(AST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = value_of(e.m_stack.pop_unsafe());
-	auto condition = condition_handle.as_boolean; // FIXME: assert on correct type
+	auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
 
 	if (condition)
 		eval(ast->m_then_expr, e);
@@ -250,7 +248,9 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	e.m_stack.access(0) = Handle{rewrap(variant_value, e).get()};
+	auto ref = e.new_reference(nullptr);
+	ref->m_value = value_of(variant_value);
+	e.m_stack.access(0) = ref.handle();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -326,8 +326,7 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition_handle = value_of(e.m_stack.pop_unsafe());
-	bool condition = condition_handle.as_boolean; // FIXME: assert on correct type
+	bool condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
 
 	if (condition)
 		eval_stmt(ast->m_body, e);
@@ -338,15 +337,14 @@ void eval(AST::IfElseStatement* ast, Interpreter& e) {
 void eval(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition_handle = value_of(e.m_stack.pop_unsafe());
-		auto condition = condition_handle.as_boolean; // FIXME: assert on correct type
+		auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
 
 		if (!condition)
 			break;
 
 		eval_stmt(ast->m_body, e);
 
-		if (e.m_return_value.get())
+		if (e.m_returning)
 			break;
 	}
 };

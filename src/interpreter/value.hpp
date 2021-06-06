@@ -85,6 +85,11 @@ struct Handle {
 		return static_cast<T*>(ptr);
 	}
 
+	bool get_boolean() {
+		assert(tag == ValueTag::Boolean);
+		return as_boolean;
+	}
+
 	ValueTag type() {
 		if (is_heap_type(tag))
 			assert(ptr->type() == tag);
