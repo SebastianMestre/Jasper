@@ -1,26 +1,6 @@
 #include <vector>
 #include <cassert>
 
-/*
-
-a := x.y;
-
-a : var 1
-x : var 2
-
-add_attr(dot_target)
-unify(a.t, DotResult(x.t))
-
-fn find(tid) {
-	t := nodes[tid]
-	match(t) {
-		var { idx } => if (idx == tid) then idx else find(idx);
-		dotTarget:q
-	}
-}
-
-*/
-
 enum class Tag {
 	Var,       // computed
 	DotResult, // computed
@@ -28,10 +8,6 @@ enum class Tag {
 	Mono, // constant
 	Ctor, // constant
 	Func, // constant
-};
-
-struct Attrs {
-	bool is_dot_target {false};
 };
 
 struct Node {
@@ -65,7 +41,6 @@ struct unifier {
 	Tag tag(int idx) {
 		return nodes[idx].tag;
 	}
-
 
 	void register_dot_target(int idx) {
 		// TODO: maybe assign dot target to every intermediate step if var?
