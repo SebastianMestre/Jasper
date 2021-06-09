@@ -7,15 +7,15 @@
 namespace Interpreter {
 
 String::String()
-    : Value(ValueTag::String) {}
+    : GcCell(ValueTag::String) {}
 String::String(std::string s)
-    : Value(ValueTag::String)
+    : GcCell(ValueTag::String)
     , m_value(std::move(s)) {}
 
 Array::Array()
-    : Value(ValueTag::Array) {}
+    : GcCell(ValueTag::Array) {}
 Array::Array(ArrayType l)
-    : Value(ValueTag::Array)
+    : GcCell(ValueTag::Array)
     , m_value(std::move(l)) {}
 
 void Array::append(Reference* v) {
@@ -32,9 +32,9 @@ Reference* Array::at(int position) {
 }
 
 Record::Record()
-    : Value(ValueTag::Record) {}
+    : GcCell(ValueTag::Record) {}
 Record::Record(RecordType o)
-    : Value(ValueTag::Record)
+    : GcCell(ValueTag::Record)
     , m_value(std::move(o)) {}
 
 void Record::addMember(Identifier const& id, Handle v) {
@@ -52,33 +52,33 @@ Handle Record::getMember(Identifier const& id) {
 }
 
 Variant::Variant(InternedString constructor)
-    : Value(ValueTag::Variant)
+    : GcCell(ValueTag::Variant)
     , m_constructor(constructor) {}
 
 Variant::Variant(InternedString constructor, Handle v)
-    : Value(ValueTag::Variant)
+    : GcCell(ValueTag::Variant)
     , m_constructor(constructor)
     , m_inner_value(v) {}
 
 Function::Function(FunctionType def, CapturesType captures)
-    : Value(ValueTag::Function)
+    : GcCell(ValueTag::Function)
     , m_def(def)
     , m_captures(std::move(captures)) {}
 
 NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : Value {ValueTag::NativeFunction}
+    : GcCell {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
 
 Reference::Reference(Handle value)
-    : Value {ValueTag::Reference}
+    : GcCell {ValueTag::Reference}
     , m_value {value} {}
 
 VariantConstructor::VariantConstructor(InternedString constructor)
-    : Value {ValueTag::VariantConstructor}
+    : GcCell {ValueTag::VariantConstructor}
     , m_constructor {constructor} {}
 
 RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
-    : Value {ValueTag::RecordConstructor}
+    : GcCell {ValueTag::RecordConstructor}
     , m_keys {std::move(keys)} {}
 
 void gc_visit(String* v) {
@@ -141,7 +141,7 @@ void gc_visit(Reference* r) {
 	gc_visit(r->m_value);
 }
 
-void gc_visit(Value* v) {
+void gc_visit(GcCell* v) {
 	switch (v->type()) {
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
@@ -257,7 +257,7 @@ void print(VariantConstructor* l, int d) {
 	std::cout << "VariantConstructor\n";
 }
 
-void print(Value* v, int d) {
+void print(GcCell* v, int d) {
 
 	switch (v->type()) {
 	case ValueTag::String:

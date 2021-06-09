@@ -11,7 +11,6 @@ struct SymbolTable;
 namespace Interpreter {
 
 struct Interpreter;
-struct Value;
 
 using Runner = auto(Interpreter&, Frontend::SymbolTable&) -> ExitStatus;
 

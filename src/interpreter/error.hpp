@@ -4,7 +4,7 @@
 
 namespace Interpreter {
 
-struct Error : Value {
+struct Error : GcCell {
 	std::string m_error;
 
 	Error();
