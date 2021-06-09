@@ -7,6 +7,7 @@
 #include "../utils/interned_string.hpp"
 #include "../utils/span.hpp"
 #include "value_tag.hpp"
+#include "gc_cell.hpp"
 
 namespace AST {
 struct FunctionLiteral;
@@ -14,7 +15,6 @@ struct FunctionLiteral;
 
 namespace Interpreter {
 
-struct GcCell;
 struct Interpreter;
 struct Reference;
 struct Value;
@@ -26,26 +26,6 @@ using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
 using NativeFunctionType = auto(Span<Value>, Interpreter&) -> Value;
 using CapturesType = std::vector<Reference*>;
-
-void print(GcCell* v, int d = 0);
-void gc_visit(GcCell*);
-
-struct GcCell {
-  protected:
-	ValueTag m_type;
-
-  public:
-	bool m_visited = false;
-	int m_cpp_refcount = 0;
-
-	GcCell(ValueTag type)
-	    : m_type(type) {}
-	ValueTag type() const {
-		return m_type;
-	}
-
-	virtual ~GcCell() = default;
-};
 
 inline bool is_heap_type(ValueTag tag) {
 	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer && tag != ValueTag::Float;

@@ -81,23 +81,23 @@ RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
     : GcCell {ValueTag::RecordConstructor}
     , m_keys {std::move(keys)} {}
 
-void gc_visit(String* v) {
+static void gc_visit(String* v) {
 	v->m_visited = true;
 }
-void gc_visit(Error* v) {
+static void gc_visit(Error* v) {
 	v->m_visited = true;
 }
-void gc_visit(NativeFunction* v) {
+static void gc_visit(NativeFunction* v) {
 	v->m_visited = true;
 }
-void gc_visit(VariantConstructor* v) {
+static void gc_visit(VariantConstructor* v) {
 	v->m_visited = true;
 }
-void gc_visit(RecordConstructor* v) {
+static void gc_visit(RecordConstructor* v) {
 	v->m_visited = true;
 }
 
-void gc_visit(Array* l) {
+static void gc_visit(Array* l) {
 	if (l->m_visited)
 		return;
 
@@ -107,7 +107,7 @@ void gc_visit(Array* l) {
 	}
 }
 
-void gc_visit(Record* o) {
+static void gc_visit(Record* o) {
 	if (o->m_visited)
 		return;
 
@@ -116,7 +116,7 @@ void gc_visit(Record* o) {
 		gc_visit(child.second);
 }
 
-void gc_visit(Variant* u) {
+static void gc_visit(Variant* u) {
 	if (u->m_visited)
 		return;
 
@@ -124,7 +124,7 @@ void gc_visit(Variant* u) {
 	gc_visit(u->m_inner_value);
 }
 
-void gc_visit(Function* f) {
+static void gc_visit(Function* f) {
 	if (f->m_visited)
 		return;
 
@@ -133,7 +133,7 @@ void gc_visit(Function* f) {
 		gc_visit(capture);
 }
 
-void gc_visit(Reference* r) {
+static void gc_visit(Reference* r) {
 	if (r->m_visited)
 		return;
 
@@ -141,7 +141,7 @@ void gc_visit(Reference* r) {
 	gc_visit(r->m_value);
 }
 
-void gc_visit(GcCell* v) {
+static void gc_visit(GcCell* v) {
 	switch (v->type()) {
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
@@ -163,6 +163,8 @@ void gc_visit(GcCell* v) {
 		return gc_visit(static_cast<VariantConstructor*>(v));
 	case ValueTag::RecordConstructor:
 		return gc_visit(static_cast<RecordConstructor*>(v));
+	default:
+		assert(0);
 	}
 }
 
@@ -178,34 +180,34 @@ void print_spaces(int n) {
 		std::cout << ' ';
 }
 
-void print(int v, int d) {
+static void print(int v, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(ValueTag::Integer)] << ' ' << v << '\n';
 }
 
-void print(float v, int d) {
+static void print(float v, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(ValueTag::Float)] << ' ' << v << '\n';
 }
 
-void print(String* v, int d) {
+static void print(String* v, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(v->type())] << ' ' << '"' << v->m_value
 	          << '"' << '\n';
 }
 
-void print(bool b, int d) {
+static void print(bool b, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(ValueTag::Boolean)] << ' ' << b << '\n';
 }
 
-void print(Error* v, int d) {
+static void print(Error* v, int d) {
 	// TODO
 	print_spaces(d);
 	std::cout << value_string[int(v->type())] << '\n';
 }
 
-void print(Record* o, int d) {
+static void print(Record* o, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(o->type())] << '\n';
 	for (auto& kv : o->m_value){
@@ -215,25 +217,25 @@ void print(Record* o, int d) {
 	}
 }
 
-void print(Variant* m, int d) {
+static void print(Variant* m, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(m->type())] << " " << m->m_constructor << '\n';
 	print(m->m_inner_value, d);
 }
 
-void print(Function* f, int d) {
+static void print(Function* f, int d) {
 	// TODO
 	print_spaces(d);
 	std::cout << value_string[int(f->type())] << '\n';
 }
 
-void print(NativeFunction* f, int d) {
+static void print(NativeFunction* f, int d) {
 	// TODO
 	print_spaces(d);
 	std::cout << value_string[int(f->type())] << '\n';
 }
 
-void print(Array* l, int d) {
+static void print(Array* l, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(l->type())] << '\n';
 	for (auto* child : l->m_value) {
@@ -241,23 +243,23 @@ void print(Array* l, int d) {
 	}
 }
 
-void print(Reference* l, int d) {
+static void print(Reference* l, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(l->type())] << '\n';
 	print(l->m_value, d + 1);
 }
 
-void print(RecordConstructor* l, int d) {
+static void print(RecordConstructor* l, int d) {
 	print_spaces(d);
 	std::cout << "RecordConstructor\n";
 }
 
-void print(VariantConstructor* l, int d) {
+static void print(VariantConstructor* l, int d) {
 	print_spaces(d);
 	std::cout << "VariantConstructor\n";
 }
 
-void print(GcCell* v, int d) {
+static void print(GcCell* v, int d) {
 
 	switch (v->type()) {
 	case ValueTag::String:
@@ -280,6 +282,8 @@ void print(GcCell* v, int d) {
 		return print(static_cast<VariantConstructor*>(v), d);
 	case ValueTag::RecordConstructor:
 		return print(static_cast<RecordConstructor*>(v), d);
+	default:
+		assert(0);
 	}
 }
 
@@ -296,6 +300,8 @@ void print(Value h, int d) {
 	case ValueTag::Null:
 		print_spaces(d);
 		return void(std::cout << "(null)\n");
+	default:
+		assert(0);
 	}
 }
 
