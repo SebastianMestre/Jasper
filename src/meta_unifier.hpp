@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <cassert>
 
@@ -16,7 +18,7 @@ struct Node {
 	bool is_dot_target{false};
 };
 
-struct unifier {
+struct MetaUnifier {
 	// TODO: handle dot targets
 
 	std::vector<Node> nodes;
