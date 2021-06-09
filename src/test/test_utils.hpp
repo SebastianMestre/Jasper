@@ -8,11 +8,11 @@
 
 namespace Assert {
 
-using Interpreter::Handle;
+using Interpreter::Value;
 
 namespace detail {
 
-ExitStatus of_type(Interpreter::Handle h, ValueTag tag) {
+ExitStatus of_type(Interpreter::Value h, ValueTag tag) {
 	if (h.type() != tag)
 		return ExitStatus::TypeError;
 
@@ -20,7 +20,7 @@ ExitStatus of_type(Interpreter::Handle h, ValueTag tag) {
 }
 
 template <typename RuntimeValue, typename NativeValue>
-ExitStatus scalar_equals(Handle rv, const ValueTag v_type, const NativeValue& expected) {
+ExitStatus scalar_equals(Value rv, const ValueTag v_type, const NativeValue& expected) {
 	ExitStatus fail = of_type(rv, v_type);
 
 	if (ExitStatus::Ok != fail)
@@ -35,7 +35,7 @@ ExitStatus scalar_equals(Handle rv, const ValueTag v_type, const NativeValue& ex
 
 template <typename NativeValue, typename Getter>
 ExitStatus scalar_equals_fn(
-    Handle rv,
+    Value rv,
     const ValueTag v_type,
     const NativeValue& expected,
     Getter getter
@@ -51,45 +51,45 @@ ExitStatus scalar_equals_fn(
 	return ExitStatus::Ok;
 }
 
-ExitStatus bool_equals(Handle rv, bool expected) {
+ExitStatus bool_equals(Value rv, bool expected) {
 	return scalar_equals_fn(
-	    rv, ValueTag::Boolean, expected, [](Handle h) { return h.as_boolean; });
+	    rv, ValueTag::Boolean, expected, [](Value h) { return h.as_boolean; });
 }
 
 } // namespace detail
 
-ExitStatus equals(Handle rv, std::string const& expected) {
+ExitStatus equals(Value rv, std::string const& expected) {
 	return detail::scalar_equals<Interpreter::String, std::string>(rv, ValueTag::String, expected);
 }
 
-ExitStatus equals(Handle rv, int expected) {
+ExitStatus equals(Value rv, int expected) {
 	return detail::scalar_equals_fn(
-	    rv, ValueTag::Integer, expected, [](Handle h) { return h.as_integer; });
+	    rv, ValueTag::Integer, expected, [](Value h) { return h.as_integer; });
 }
 
-ExitStatus equals(Handle rv, float expected) {
+ExitStatus equals(Value rv, float expected) {
 	return detail::scalar_equals_fn(
-	    rv, ValueTag::Float, expected, [](Handle h) { return h.as_float; });
+	    rv, ValueTag::Float, expected, [](Value h) { return h.as_float; });
 }
 
 // NOTE: allows literals to be used (e.g. 3.5), may need to change in the future?
-ExitStatus equals(Handle rv, double expected) {
+ExitStatus equals(Value rv, double expected) {
 	return equals(rv, float(expected));
 }
 
-ExitStatus is_true(Handle rv) {
+ExitStatus is_true(Value rv) {
 	return detail::bool_equals(rv, true);
 }
 
-ExitStatus is_false(Handle rv) {
+ExitStatus is_false(Value rv) {
 	return detail::bool_equals(rv, false);
 }
 
-ExitStatus is_null(Handle rv) {
+ExitStatus is_null(Value rv) {
 	return detail::of_type(rv, ValueTag::Null);
 }
 
-ExitStatus array_of_size(Handle rv, unsigned int size) {
+ExitStatus array_of_size(Value rv, unsigned int size) {
 	return ExitStatus::Ok;
 	ExitStatus fail = detail::of_type(rv, ValueTag::Array);
 

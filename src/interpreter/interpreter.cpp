@@ -28,7 +28,7 @@ void Interpreter::global_declare_direct(const Identifier& i, Reference* r) {
 	m_global_scope.declare(i, r);
 }
 
-void Interpreter::global_declare(const Identifier& i, Handle v) {
+void Interpreter::global_declare(const Identifier& i, Value v) {
 	if (v.type() == ValueTag::Reference)
 		assert(0 && "declared a reference!");
 	auto r = new_reference(v);
@@ -40,23 +40,23 @@ Reference* Interpreter::global_access(const Identifier& i) {
 }
 
 
-void Interpreter::save_return_value(Handle v) {
+void Interpreter::save_return_value(Value v) {
 	// ensure we are not in a return sequence already
 	assert(!m_returning);
 	m_returning = true;
 	m_return_value = v;
 }
 
-Handle Interpreter::fetch_return_value() {
+Value Interpreter::fetch_return_value() {
 	// ensure we were in a return sequence
 	assert(m_returning);
 	m_returning = false;
-	Handle rv = m_return_value;
-	m_return_value = Handle{};
+	Value rv = m_return_value;
+	m_return_value = Value{};
 	return rv;
 }
 
-void Interpreter::assign(Handle dst, Handle src) {
+void Interpreter::assign(Value dst, Value src) {
 	// NOTE: copied by reference, matters if rhs is actually a reference
 	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
 	dst.get_cast<Reference>()->m_value = value_of(src);
@@ -84,37 +84,37 @@ void Interpreter::run_gc_if_needed(){
 }
 
 
-Handle Interpreter::null() {
-	return Handle{nullptr};
+Value Interpreter::null() {
+	return Value{nullptr};
 }
 
 void Interpreter::push_integer(int i) {
-	m_stack.push(Handle{i});
+	m_stack.push(Value{i});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_float(float f) {
-	m_stack.push(Handle{f});
+	m_stack.push(Value{f});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_boolean(bool b) {
-	m_stack.push(Handle{b});
+	m_stack.push(Value{b});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_string(std::string s) {
-	m_stack.push(Handle{m_gc->new_string_raw(std::move(s))});
+	m_stack.push(Value{m_gc->new_string_raw(std::move(s))});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_variant_constructor(InternedString constructor) {
-	m_stack.push(Handle{m_gc->new_variant_constructor_raw(constructor)});
+	m_stack.push(Value{m_gc->new_variant_constructor_raw(constructor)});
 	run_gc_if_needed();
 }
 
 void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
-	m_stack.push(Handle{m_gc->new_record_constructor_raw(std::move(keys))});
+	m_stack.push(Value{m_gc->new_record_constructor_raw(std::move(keys))});
 	run_gc_if_needed();
 }
 
@@ -148,7 +148,7 @@ gc_ptr<Error> Interpreter::new_error(std::string e) {
 	return result;
 }
 
-gc_ptr<Reference> Interpreter::new_reference(Handle v) {
+gc_ptr<Reference> Interpreter::new_reference(Value v) {
 	assert(
 	    v.type() != ValueTag::Reference &&
 	    "References to references are not allowed.");

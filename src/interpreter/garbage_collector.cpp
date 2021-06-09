@@ -55,7 +55,7 @@ void GC::add_root(GcCell* new_root) {
 	m_roots.push_back(new_root);
 }
 
-gc_ptr<Variant> GC::new_variant(InternedString constructor, Handle v) {
+gc_ptr<Variant> GC::new_variant(InternedString constructor, Value v) {
 	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
 	return result;
@@ -103,7 +103,7 @@ gc_ptr<Error> GC::new_error(std::string s) {
 	return result;
 }
 
-gc_ptr<Reference> GC::new_reference(Handle v) {
+gc_ptr<Reference> GC::new_reference(Value v) {
 	auto result = new Reference(std::move(v));
 	m_blocks.push_back(result);
 	return result;

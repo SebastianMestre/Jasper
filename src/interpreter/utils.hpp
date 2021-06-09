@@ -6,10 +6,10 @@
 
 namespace Interpreter {
 
-Handle value_of(Handle value);
+Value value_of(Value value);
 
 template<typename T>
-T* value_as(Handle h) {
+T* value_as(Value h) {
 	static_assert(std::is_base_of<GcCell, T>::value, "T is not a subclass of GcCell");
 	return value_of(h).get_cast<T>();
 }

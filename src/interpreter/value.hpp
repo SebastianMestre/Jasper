@@ -17,14 +17,14 @@ namespace Interpreter {
 struct GcCell;
 struct Interpreter;
 struct Reference;
-struct Handle;
+struct Value;
 
 using Identifier = InternedString;
 using StringType = std::string;
-using RecordType = std::unordered_map<Identifier, Handle>;
+using RecordType = std::unordered_map<Identifier, Value>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Handle>, Interpreter&) -> Handle;
+using NativeFunctionType = auto(Span<Value>, Interpreter&) -> Value;
 using CapturesType = std::vector<Reference*>;
 
 void print(GcCell* v, int d = 0);
@@ -51,28 +51,28 @@ inline bool is_heap_type(ValueTag tag) {
 	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer && tag != ValueTag::Float;
 }
 
-struct Handle {
-	Handle(GcCell* ptr)
+struct Value {
+	Value(GcCell* ptr)
 	    : tag {ptr ? ptr->type() : ValueTag::Null}
 	    , ptr {ptr} {}
 
-	Handle(std::nullptr_t)
+	Value(std::nullptr_t)
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
 
-	Handle(bool boolean)
+	Value(bool boolean)
 	    : tag {ValueTag::Boolean}
 	    , as_boolean {boolean} {}
 
-	Handle(int integer)
+	Value(int integer)
 	    : tag {ValueTag::Integer}
 	    , as_integer {integer} {}
 
-	Handle(float number)
+	Value(float number)
 	    : tag {ValueTag::Float}
 	    , as_float {number} {}
 
-	Handle()
+	Value()
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
 
@@ -121,8 +121,8 @@ struct Handle {
 	};
 };
 
-void gc_visit(Handle);
-void print(Handle v, int d = 0);
+void gc_visit(Value);
+void print(Value v, int d = 0);
 
 struct String : GcCell {
 	std::string m_value = "";
@@ -147,16 +147,16 @@ struct Record : GcCell {
 	Record();
 	Record(RecordType);
 
-	void addMember(Identifier const& id, Handle v);
-	Handle getMember(Identifier const& id);
+	void addMember(Identifier const& id, Value v);
+	Value getMember(Identifier const& id);
 };
 
 struct Variant : GcCell {
 	InternedString m_constructor;
-	Handle m_inner_value {nullptr}; // empty constructor
+	Value m_inner_value {nullptr}; // empty constructor
 
 	Variant(InternedString constructor);
-	Variant(InternedString constructor, Handle v);
+	Variant(InternedString constructor, Value v);
 };
 
 struct Function : GcCell {
@@ -173,9 +173,9 @@ struct NativeFunction : GcCell {
 };
 
 struct Reference : GcCell {
-	Handle m_value;
+	Value m_value;
 
-	Reference(Handle value);
+	Reference(Value value);
 };
 
 struct VariantConstructor : GcCell {
@@ -204,7 +204,7 @@ template<> struct type_data<VariantConstructor> { static constexpr auto tag = Va
 template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };
 
 template <typename T>
-inline T* Handle::get_cast() {
+inline T* Value::get_cast() {
 	static_assert(std::is_base_of<GcCell, T>::value, "T is not a subclass of GcCell");
 	assert(is_heap_type(tag));
 	assert(tag == type_data<T>::tag);

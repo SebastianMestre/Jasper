@@ -62,7 +62,7 @@ struct gc_ptr {
 		return get();
 	}
 
-	Interpreter::Handle handle() {
-		return Interpreter::Handle {get()};
+	Interpreter::Value as_value() {
+		return Interpreter::Value {get()};
 	}
 };

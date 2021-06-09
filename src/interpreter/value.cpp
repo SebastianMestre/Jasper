@@ -37,11 +37,11 @@ Record::Record(RecordType o)
     : GcCell(ValueTag::Record)
     , m_value(std::move(o)) {}
 
-void Record::addMember(Identifier const& id, Handle v) {
+void Record::addMember(Identifier const& id, Value v) {
 	m_value[id] = v;
 }
 
-Handle Record::getMember(Identifier const& id) {
+Value Record::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
 		// TODO: return RangeError
@@ -55,7 +55,7 @@ Variant::Variant(InternedString constructor)
     : GcCell(ValueTag::Variant)
     , m_constructor(constructor) {}
 
-Variant::Variant(InternedString constructor, Handle v)
+Variant::Variant(InternedString constructor, Value v)
     : GcCell(ValueTag::Variant)
     , m_constructor(constructor)
     , m_inner_value(v) {}
@@ -69,7 +69,7 @@ NativeFunction::NativeFunction(NativeFunctionType* fptr)
     : GcCell {ValueTag::NativeFunction}
     , m_fptr {fptr} {}
 
-Reference::Reference(Handle value)
+Reference::Reference(Value value)
     : GcCell {ValueTag::Reference}
     , m_value {value} {}
 
@@ -166,7 +166,7 @@ void gc_visit(GcCell* v) {
 	}
 }
 
-void gc_visit(Handle h) {
+void gc_visit(Value h) {
 	if (is_heap_type(h.type()))
 		return gc_visit(h.get());
 }
@@ -283,7 +283,7 @@ void print(GcCell* v, int d) {
 	}
 }
 
-void print(Handle h, int d) {
+void print(Value h, int d) {
 	if (is_heap_type(h.type()))
 		return print(h.get(), d);
 	switch (h.type()) {

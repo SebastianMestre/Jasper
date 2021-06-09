@@ -13,7 +13,6 @@
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"
-#include "gc_ptr.hpp"
 #include "interpreter.hpp"
 #include "value.hpp"
 

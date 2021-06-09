@@ -18,19 +18,17 @@ namespace Interpreter {
 #define OP_(field, lhs, op, rhs)                                               \
 	(lhs).field op (rhs).field
 
-// TODO: All of these should return Handle
-
-using ArgsType = Span<Handle>;
+using ArgsType = Span<Value>;
 
 // print(vals...) prints the values or references in vals
-Handle print(ArgsType v, Interpreter& e) {
+Value print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
 		print(value);
 	return e.null();
 }
 
 // array_append(arr, vals...) appends the values in vals to the array
-Handle array_append(ArgsType v, Interpreter& e) {
+Value array_append(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
 	Array* array = value_as<Array>(v[0]);
@@ -42,7 +40,7 @@ Handle array_append(ArgsType v, Interpreter& e) {
 
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
-Handle array_extend(ArgsType v, Interpreter& e) {
+Value array_extend(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	Array* arr1 = value_as<Array>(v[0]);
@@ -53,7 +51,7 @@ Handle array_extend(ArgsType v, Interpreter& e) {
 }
 
 // size(array) returns the size of the array
-Handle size(ArgsType v, Interpreter& e) {
+Value size(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
 	Array* array = value_as<Array>(v[0]);
@@ -63,7 +61,7 @@ Handle size(ArgsType v, Interpreter& e) {
 
 // array_join(array, string) returns a string with
 // the array values separated by the string element
-Handle array_join(ArgsType v, Interpreter& e) {
+Value array_join(ArgsType v, Interpreter& e) {
 	// TODO make it more general
 	// TODO proper error handling
 	assert(v.size() == 2);
@@ -78,7 +76,7 @@ Handle array_join(ArgsType v, Interpreter& e) {
 }
 
 // array_at(array, int i) returns the i-th element of the given array
-Handle array_at(ArgsType v, Interpreter& e) {
+Value array_at(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	Array* array = value_as<Array>(v[0]);
@@ -88,7 +86,7 @@ Handle array_at(ArgsType v, Interpreter& e) {
 	return {array->m_value[index]};
 }
 
-Handle value_add(ArgsType v, Interpreter& e) {
+Value value_add(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -107,7 +105,7 @@ Handle value_add(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_sub(ArgsType v, Interpreter& e) {
+Value value_sub(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -124,7 +122,7 @@ Handle value_sub(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_mul(ArgsType v, Interpreter& e) {
+Value value_mul(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -141,7 +139,7 @@ Handle value_mul(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_div(ArgsType v, Interpreter& e) {
+Value value_div(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -158,7 +156,7 @@ Handle value_div(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_logicand(ArgsType v, Interpreter& e) {
+Value value_logicand(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -170,7 +168,7 @@ Handle value_logicand(ArgsType v, Interpreter& e) {
 	assert(0);
 }
 
-Handle value_logicor(ArgsType v, Interpreter& e) {
+Value value_logicor(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -182,7 +180,7 @@ Handle value_logicor(ArgsType v, Interpreter& e) {
 	assert(0);
 }
 
-Handle value_logicxor(ArgsType v, Interpreter& e) {
+Value value_logicxor(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -194,7 +192,7 @@ Handle value_logicxor(ArgsType v, Interpreter& e) {
 	assert(0);
 }
 
-Handle value_equals(ArgsType v, Interpreter& e) {
+Value value_equals(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -220,12 +218,12 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_not_equals(ArgsType v, Interpreter& e) {
+Value value_not_equals(ArgsType v, Interpreter& e) {
 	bool b = value_equals(v, e).as_boolean;
 	return {bool(!b)};
 }
 
-Handle value_less(ArgsType v, Interpreter& e) {
+Value value_less(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -245,48 +243,48 @@ Handle value_less(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_greater_or_equal(ArgsType v, Interpreter& e) {
+Value value_greater_or_equal(ArgsType v, Interpreter& e) {
 	bool b = value_less(v, e).as_boolean;
 	return {bool(!b)};
 }
 
-Handle value_greater(ArgsType v, Interpreter& e) {
-	Handle args[2] = {v[1], v[0]}; // arguments are swapped
-	return value_less(Span<Handle> {args, 2}, e);
+Value value_greater(ArgsType v, Interpreter& e) {
+	Value args[2] = {v[1], v[0]}; // arguments are swapped
+	return value_less(Span<Value> {args, 2}, e);
 }
 
-Handle value_less_or_equal(ArgsType v, Interpreter& e) {
+Value value_less_or_equal(ArgsType v, Interpreter& e) {
 	bool b = value_greater(v, e).as_boolean;
 	return bool(!b);
 }
 
-Handle value_assign(ArgsType v, Interpreter& e) {
+Value value_assign(ArgsType v, Interpreter& e) {
 	e.assign(v[0], v[1]);
 	return e.null();
 }
 
-Handle read_integer(ArgsType v, Interpreter& e) {
+Value read_integer(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	int result;
 	std::cin >> result;
 	return {result};
 }
 
-Handle read_number(ArgsType v, Interpreter& e) {
+Value read_number(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	float result;
 	std::cin >> result;
 	return {result};
 }
 
-Handle read_line(ArgsType v, Interpreter& e) {
+Value read_line(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::getline(std::cin, result);
 	return {e.m_gc->new_string_raw(std::move(result))};
 }
 
-Handle read_string(ArgsType v, Interpreter& e) {
+Value read_string(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::cin >> result;

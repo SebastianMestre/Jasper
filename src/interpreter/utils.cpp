@@ -4,7 +4,7 @@
 
 namespace Interpreter {
 
-Handle value_of(Handle h) {
+Value value_of(Value h) {
 	if (!is_heap_type(h.type()))
 		return h;
 
