@@ -18,9 +18,6 @@ static void gc_visit(String* v) {
 static void gc_visit(Error* v) {
 	v->m_visited = true;
 }
-static void gc_visit(NativeFunction* v) {
-	v->m_visited = true;
-}
 static void gc_visit(VariantConstructor* v) {
 	v->m_visited = true;
 }
@@ -86,8 +83,6 @@ static void gc_visit(GcCell* v) {
 		return gc_visit(static_cast<Variant*>(v));
 	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
-	case ValueTag::NativeFunction:
-		return gc_visit(static_cast<NativeFunction*>(v));
 	case ValueTag::Reference:
 		return gc_visit(static_cast<Reference*>(v));
 	case ValueTag::VariantConstructor:

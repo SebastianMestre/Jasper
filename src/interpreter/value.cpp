@@ -65,10 +65,6 @@ Function::Function(FunctionType def, CapturesType captures)
     , m_def(def)
     , m_captures(std::move(captures)) {}
 
-NativeFunction::NativeFunction(NativeFunctionType* fptr)
-    : GcCell {ValueTag::NativeFunction}
-    , m_fptr {fptr} {}
-
 Reference::Reference(Value value)
     : GcCell {ValueTag::Reference}
     , m_value {value} {}
@@ -141,7 +137,7 @@ static void print(Function* f, int d) {
 static void print(NativeFunction* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_string[int(f->type())] << '\n';
+	std::cout << value_string[int(ValueTag::NativeFunction)] << '\n';
 }
 
 static void print(Array* l, int d) {
@@ -183,8 +179,6 @@ static void print(GcCell* v, int d) {
 		return print(static_cast<Variant*>(v), d);
 	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
-	case ValueTag::NativeFunction:
-		return print(static_cast<NativeFunction*>(v), d);
 	case ValueTag::Reference:
 		return print(static_cast<Reference*>(v), d);
 	case ValueTag::VariantConstructor:
@@ -206,6 +200,8 @@ void print(Value h, int d) {
 		return print(h.as_integer, d);
 	case ValueTag::Float:
 		return print(h.as_float, d);
+	case ValueTag::NativeFunction:
+		return print(h.as_native_func, d);
 	case ValueTag::Null:
 		print_spaces(d);
 		return void(std::cout << "(null)\n");

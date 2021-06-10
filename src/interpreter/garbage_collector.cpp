@@ -88,12 +88,6 @@ gc_ptr<Function> GC::new_function(FunctionType def, CapturesType captures) {
 	return result;
 }
 
-gc_ptr<NativeFunction> GC::new_native_function(NativeFunctionType* fptr) {
-	auto result = new NativeFunction(fptr);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<Error> GC::new_error(std::string s) {
 	auto result = new Error(std::move(s));
 	m_blocks.push_back(result);

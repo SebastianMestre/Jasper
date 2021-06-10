@@ -24,11 +24,13 @@ using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value>;
 using ArrayType = std::vector<Reference*>;
 using FunctionType = AST::FunctionLiteral*;
-using NativeFunctionType = auto(Span<Value>, Interpreter&) -> Value;
+using NativeFunction = auto(Span<Value>, Interpreter&) -> Value;
 using CapturesType = std::vector<Reference*>;
 
 inline bool is_heap_type(ValueTag tag) {
-	return tag != ValueTag::Null && tag != ValueTag::Boolean && tag != ValueTag::Integer && tag != ValueTag::Float;
+	return tag != ValueTag::Null && tag != ValueTag::Boolean &&
+	       tag != ValueTag::Integer && tag != ValueTag::Float &&
+		   tag != ValueTag::NativeFunction;
 }
 
 struct Value {
@@ -51,6 +53,10 @@ struct Value {
 	explicit Value(float number)
 	    : tag {ValueTag::Float}
 	    , as_float {number} {}
+
+	explicit Value(NativeFunction* func)
+	    : tag {ValueTag::NativeFunction}
+	    , as_native_func {func} {}
 
 	Value()
 	    : tag {ValueTag::Null}
@@ -84,6 +90,11 @@ struct Value {
 		return as_boolean;
 	}
 
+	NativeFunction* get_native_func() {
+		assert(tag == ValueTag::NativeFunction);
+		return as_native_func;
+	}
+
 	ValueTag type() {
 		if (is_heap_type(tag)) {
 			assert(ptr);
@@ -98,6 +109,7 @@ struct Value {
 	bool as_boolean;
 	int as_integer;
 	float as_float;
+	NativeFunction* as_native_func;
 	};
 };
 
@@ -145,12 +157,6 @@ struct Function : GcCell {
 	Function(FunctionType, CapturesType);
 };
 
-struct NativeFunction : GcCell {
-	NativeFunctionType* m_fptr;
-
-	NativeFunction(NativeFunctionType* = nullptr);
-};
-
 struct Reference : GcCell {
 	Value m_value;
 
@@ -177,7 +183,6 @@ template<> struct type_data<Array> { static constexpr auto tag = ValueTag::Array
 template<> struct type_data<Record> { static constexpr auto tag = ValueTag::Record; };
 template<> struct type_data<Variant> { static constexpr auto tag = ValueTag::Variant; };
 template<> struct type_data<Function> { static constexpr auto tag = ValueTag::Function; };
-template<> struct type_data<NativeFunction> { static constexpr auto tag = ValueTag::NativeFunction; };
 template<> struct type_data<Reference> { static constexpr auto tag = ValueTag::Reference; };
 template<> struct type_data<VariantConstructor> { static constexpr auto tag = ValueTag::VariantConstructor; };
 template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };

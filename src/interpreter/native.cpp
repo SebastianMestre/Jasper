@@ -292,8 +292,8 @@ Value read_string(ArgsType v, Interpreter& e) {
 }
 
 void declare_native_functions(Interpreter& env) {
-	auto declare = [&](char const* name, NativeFunctionType func) {
-		env.global_declare(name, env.new_native_function(func).as_value());
+	auto declare = [&](char const* name, NativeFunction* func) {
+		env.global_declare(name, Value {func});
 	};
 
 	declare("print", print);

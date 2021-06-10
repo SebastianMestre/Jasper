@@ -137,12 +137,6 @@ gc_ptr<Function> Interpreter::new_function(FunctionType def, CapturesType s) {
 	return result;
 }
 
-gc_ptr<NativeFunction> Interpreter::new_native_function(NativeFunctionType* fptr) {
-	auto result = m_gc->new_native_function(fptr);
-	run_gc_if_needed();
-	return result;
-}
-
 gc_ptr<Error> Interpreter::new_error(std::string e) {
 	auto result = m_gc->new_error(e);
 	run_gc_if_needed();

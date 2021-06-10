@@ -30,7 +30,6 @@ struct GC {
 	auto new_list(ArrayType) -> gc_ptr<Array>;
 	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
-	auto new_native_function(NativeFunctionType*) -> gc_ptr<NativeFunction>;
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_reference(Value) -> gc_ptr<Reference>;
 
