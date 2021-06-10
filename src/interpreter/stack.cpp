@@ -37,29 +37,29 @@ void Stack::end_stack_region() {
 	m_stack.resize(m_stack_ptr);
 }
 
-void Stack::push(Handle ref){
+void Stack::push(Value ref){
 	m_stack.push_back(ref);
 	m_stack_ptr += 1;
 }
 
-Handle Stack::pop_unsafe() {
-	Handle result = m_stack.back();
+Value Stack::pop_unsafe() {
+	Value result = m_stack.back();
 	m_stack.pop_back();
 	m_stack_ptr -= 1;
 	return result;
 }
 
-Handle& Stack::access(int offset) {
+Value& Stack::access(int offset) {
 	return m_stack[m_stack.size() - 1 - offset];
 }
 
-Handle& Stack::frame_at(int offset) {
+Value& Stack::frame_at(int offset) {
 	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack.size());
 	return m_stack[m_frame_ptr + offset];
 }
 
-Span<Handle> Stack::frame_range(int offset, int length) {
+Span<Value> Stack::frame_range(int offset, int length) {
 	if (length > 0) {
 		assert(m_frame_ptr + offset >= 0);
 		assert(m_frame_ptr + offset + length <= m_stack.size());

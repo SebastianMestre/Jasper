@@ -11,7 +11,6 @@ struct SymbolTable;
 namespace Interpreter {
 
 struct Interpreter;
-struct Value;
 
 using Runner = auto(Interpreter&, Frontend::SymbolTable&) -> ExitStatus;
 
@@ -28,7 +27,7 @@ ExitStatus execute(
 );
 
 // evaluates an expression and returns the resulting value
-Handle eval_expression(
+Value eval_expression(
 	const std::string& expr,
 	Interpreter& env,
 	Frontend::SymbolTable&

@@ -16,54 +16,52 @@ namespace Interpreter {
 	(lhs).get_cast<type>()->m_value op (rhs).get_cast<type>()->m_value
 
 #define OP_(field, lhs, op, rhs)                                               \
-	(lhs).field op (rhs).field
+	Value {(lhs).field op (rhs).field}
 
-// TODO: All of these should return Handle
-
-using ArgsType = Span<Handle>;
+using ArgsType = Span<Value>;
 
 // print(vals...) prints the values or references in vals
-Handle print(ArgsType v, Interpreter& e) {
+Value print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
 		print(value);
 	return e.null();
 }
 
 // array_append(arr, vals...) appends the values in vals to the array
-Handle array_append(ArgsType v, Interpreter& e) {
+Value array_append(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
 	Array* array = value_as<Array>(v[0]);
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(e.new_reference(value_of(v[i])).get());
 	}
-	return {array};
+	return Value {array};
 }
 
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
-Handle array_extend(ArgsType v, Interpreter& e) {
+Value array_extend(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	Array* arr1 = value_as<Array>(v[0]);
 	Array* arr2 = value_as<Array>(v[1]);
 	arr1->m_value.insert(
 	    arr1->m_value.end(), arr2->m_value.begin(), arr2->m_value.end());
-	return {arr1};
+	return Value {arr1};
 }
 
 // size(array) returns the size of the array
-Handle size(ArgsType v, Interpreter& e) {
+Value size(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
 	Array* array = value_as<Array>(v[0]);
 
-	return {int(array->m_value.size())};
+	return Value {int(array->m_value.size())};
 }
 
 // array_join(array, string) returns a string with
 // the array values separated by the string element
-Handle array_join(ArgsType v, Interpreter& e) {
+Value array_join(ArgsType v, Interpreter& e) {
 	// TODO make it more general
 	// TODO proper error handling
 	assert(v.size() == 2);
@@ -74,32 +72,32 @@ Handle array_join(ArgsType v, Interpreter& e) {
 		if (i > 0) result << sep->m_value;
 		result << array->m_value[i]->m_value.get_integer();
 	}
-	return {e.m_gc->new_string_raw(result.str())};
+	return Value{e.m_gc->new_string_raw(result.str())};
 }
 
 // array_at(array, int i) returns the i-th element of the given array
-Handle array_at(ArgsType v, Interpreter& e) {
+Value array_at(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
 	Array* array = value_as<Array>(v[0]);
 	int index = v[1].get_integer();
 	assert(index >= 0);
 	assert(index < array->m_value.size());
-	return {array->m_value[index]};
+	return Value{array->m_value[index]};
 }
 
-Handle value_add(ArgsType v, Interpreter& e) {
+Value value_add(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {OP_(as_integer, lhs, +, rhs)};
+		return OP_(as_integer, lhs, +, rhs);
 	case ValueTag::Float:
-		return {OP_(as_float, lhs, +, rhs)};
+		return OP_(as_float, lhs, +, rhs);
 	case ValueTag::String:
-		return {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
+		return Value {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
 	default:
 		std::cerr << "ERROR: can't add values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -107,7 +105,7 @@ Handle value_add(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_sub(ArgsType v, Interpreter& e) {
+Value value_sub(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -124,7 +122,7 @@ Handle value_sub(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_mul(ArgsType v, Interpreter& e) {
+Value value_mul(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -141,7 +139,7 @@ Handle value_mul(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_div(ArgsType v, Interpreter& e) {
+Value value_div(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -158,43 +156,43 @@ Handle value_div(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_logicand(ArgsType v, Interpreter& e) {
+Value value_logicand(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {OP_(as_boolean, lhs, &&, rhs)};
+		return OP_(as_boolean, lhs, &&, rhs);
 	std::cerr << "ERROR: logical and operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
-Handle value_logicor(ArgsType v, Interpreter& e) {
+Value value_logicor(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {OP_(as_boolean, lhs, ||, rhs)};
+		return OP_(as_boolean, lhs, ||, rhs);
 	std::cerr << "ERROR: logical or operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
-Handle value_logicxor(ArgsType v, Interpreter& e) {
+Value value_logicxor(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
-		return {OP_(as_boolean, lhs, !=, rhs)};
+		return OP_(as_boolean, lhs, !=, rhs);
 	std::cerr << "ERROR: exclusive or operator not defined for types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
 	assert(0);
 }
 
-Handle value_equals(ArgsType v, Interpreter& e) {
+Value value_equals(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -202,15 +200,15 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 
 	switch (lhs.type()) {
 	case ValueTag::Null:
-		return {true};
+		return Value {true};
 	case ValueTag::Integer:
-		return {OP_(as_integer, lhs, ==, rhs)};
+		return OP_(as_integer, lhs, ==, rhs);
 	case ValueTag::Float:
-		return {OP_(as_float, lhs, ==, rhs)};
+		return OP_(as_float, lhs, ==, rhs);
 	case ValueTag::String:
-		return {OP(String, lhs, ==, rhs)};
+		return Value {OP(String, lhs, ==, rhs)};
 	case ValueTag::Boolean:
-		return {OP_(as_boolean, lhs, ==, rhs)};
+		return OP_(as_boolean, lhs, ==, rhs);
 	default: {
 		std::cerr << "ERROR: can't compare equality of types "
 		          << value_string[static_cast<int>(lhs.type())] << " and "
@@ -220,12 +218,12 @@ Handle value_equals(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_not_equals(ArgsType v, Interpreter& e) {
+Value value_not_equals(ArgsType v, Interpreter& e) {
 	bool b = value_equals(v, e).as_boolean;
-	return {bool(!b)};
+	return Value {bool(!b)};
 }
 
-Handle value_less(ArgsType v, Interpreter& e) {
+Value value_less(ArgsType v, Interpreter& e) {
 	auto lhs = value_of(v[0]);
 	auto rhs = value_of(v[1]);
 
@@ -233,11 +231,11 @@ Handle value_less(ArgsType v, Interpreter& e) {
 
 	switch (lhs.type()) {
 	case ValueTag::Integer:
-		return {bool(OP_(as_integer, lhs, <, rhs))};
+		return OP_(as_integer, lhs, <, rhs);
 	case ValueTag::Float:
-		return {bool(OP_(as_float, lhs, <, rhs))};
+		return OP_(as_float, lhs, <, rhs);
 	case ValueTag::String:
-		return {bool(OP(String, lhs, <, rhs))};
+		return Value {OP(String, lhs, <, rhs)};
 	default:
 		std::cerr << "ERROR: can't compare values of type "
 		          << value_string[static_cast<int>(lhs.type())];
@@ -245,81 +243,85 @@ Handle value_less(ArgsType v, Interpreter& e) {
 	}
 }
 
-Handle value_greater_or_equal(ArgsType v, Interpreter& e) {
+Value value_greater_or_equal(ArgsType v, Interpreter& e) {
 	bool b = value_less(v, e).as_boolean;
-	return {bool(!b)};
+	return Value {bool(!b)};
 }
 
-Handle value_greater(ArgsType v, Interpreter& e) {
-	Handle args[2] = {v[1], v[0]}; // arguments are swapped
-	return value_less(Span<Handle> {args, 2}, e);
+Value value_greater(ArgsType v, Interpreter& e) {
+	Value args[2] = {v[1], v[0]}; // arguments are swapped
+	return value_less(Span<Value> {args, 2}, e);
 }
 
-Handle value_less_or_equal(ArgsType v, Interpreter& e) {
+Value value_less_or_equal(ArgsType v, Interpreter& e) {
 	bool b = value_greater(v, e).as_boolean;
-	return bool(!b);
+	return Value {bool(!b)};
 }
 
-Handle value_assign(ArgsType v, Interpreter& e) {
+Value value_assign(ArgsType v, Interpreter& e) {
 	e.assign(v[0], v[1]);
 	return e.null();
 }
 
-Handle read_integer(ArgsType v, Interpreter& e) {
+Value read_integer(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	int result;
 	std::cin >> result;
-	return {result};
+	return Value {result};
 }
 
-Handle read_number(ArgsType v, Interpreter& e) {
+Value read_number(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	float result;
 	std::cin >> result;
-	return {result};
+	return Value {result};
 }
 
-Handle read_line(ArgsType v, Interpreter& e) {
+Value read_line(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::getline(std::cin, result);
-	return {e.m_gc->new_string_raw(std::move(result))};
+	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 
-Handle read_string(ArgsType v, Interpreter& e) {
+Value read_string(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	std::string result;
 	std::cin >> result;
-	return {e.m_gc->new_string_raw(std::move(result))};
+	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 
 void declare_native_functions(Interpreter& env) {
-	env.global_declare("print", env.new_native_function(print).get());
-	env.global_declare("array_append", env.new_native_function(array_append).get());
-	env.global_declare("array_extend", env.new_native_function(array_extend).get());
-	env.global_declare("size", env.new_native_function(size).get());
-	env.global_declare("array_join", env.new_native_function(array_join).get());
-	env.global_declare("array_at", env.new_native_function(array_at).get());
-	env.global_declare("+", env.new_native_function(value_add).get());
-	env.global_declare("-", env.new_native_function(value_sub).get());
-	env.global_declare("*", env.new_native_function(value_mul).get());
-	env.global_declare("/", env.new_native_function(value_div).get());
-	env.global_declare("<", env.new_native_function(value_less).get());
-	env.global_declare(">=", env.new_native_function(value_greater_or_equal).get());
-	env.global_declare(">", env.new_native_function(value_greater).get());
-	env.global_declare("<=", env.new_native_function(value_less_or_equal).get());
-	env.global_declare("=", env.new_native_function(value_assign).get());
-	env.global_declare("==", env.new_native_function(value_equals).get());
-	env.global_declare("!=", env.new_native_function(value_not_equals).get());
-	env.global_declare("^^", env.new_native_function(value_logicxor).get());
-	env.global_declare("&&", env.new_native_function(value_logicand).get());
-	env.global_declare("||", env.new_native_function(value_logicor).get());
+	auto declare = [&](char const* name, NativeFunction* func) {
+		env.global_declare(name, Value {func});
+	};
+
+	declare("print", print);
+	declare("array_append", array_append);
+	declare("array_extend", array_extend);
+	declare("size", size);
+	declare("array_join", array_join);
+	declare("array_at", array_at);
+	declare("+", value_add);
+	declare("-", value_sub);
+	declare("*", value_mul);
+	declare("/", value_div);
+	declare("<", value_less);
+	declare(">=", value_greater_or_equal);
+	declare(">", value_greater);
+	declare("<=", value_less_or_equal);
+	declare("=", value_assign);
+	declare("==", value_equals);
+	declare("!=", value_not_equals);
+	declare("^^", value_logicxor);
+	declare("&&", value_logicand);
+	declare("||", value_logicor);
 
 	// Input
-	env.global_declare("read_integer", env.new_native_function(read_integer).get());
-	env.global_declare("read_number", env.new_native_function(read_number).get());
-	env.global_declare("read_string", env.new_native_function(read_string).get());
-	env.global_declare("read_line", env.new_native_function(read_line).get());
+	declare("read_integer", read_integer);
+	declare("read_number", read_number);
+	declare("read_string", read_string);
+	declare("read_line", read_line);
 }
 
 #undef OP

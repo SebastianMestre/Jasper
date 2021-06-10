@@ -88,7 +88,7 @@ ExitStatus execute(
 // Note that we can't just call match_identifiers, because that wouldn't take
 // into account the rest of the program that's already been processed, before
 // this is run
-Handle eval_expression(
+Value eval_expression(
 	const std::string& expr,
 	Interpreter& env,
 	Frontend::SymbolTable& context
@@ -107,7 +107,7 @@ Handle eval_expression(
 		auto err = Frontend::match_identifiers(ast, context);
 		if (!err.ok()) {
 			err.print();
-			return nullptr;
+			return env.null();
 		}
 	}
 

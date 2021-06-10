@@ -29,8 +29,8 @@ static void eval_stmt(AST::AST* ast, Interpreter& e) {
 }
 
 void eval(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(nullptr);
-	e.m_stack.push(ref.handle());
+	auto ref = e.new_reference(Value {nullptr});
+	e.m_stack.push(ref.as_value());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
@@ -76,11 +76,11 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto ref = e.new_reference(nullptr);
+		auto ref = e.new_reference(Value {nullptr});
 		ref->m_value = value_of(e.m_stack.pop_unsafe());
 		result->append(ref.get());
 	}
-	e.m_stack.push(result.handle());
+	e.m_stack.push(result.as_value());
 }
 
 void eval(AST::Identifier* ast, Interpreter& e) {
@@ -101,7 +101,7 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
 		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset));
 	} else {
-		e.m_stack.push(Handle{e.global_access(ast->text())});
+		e.m_stack.push(Value{e.global_access(ast->text())});
 	}
 };
 
@@ -132,7 +132,7 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 	assert(callee->m_def->m_args.size() == arg_count);
 
 	for (auto capture : callee->m_captures)
-		e.m_stack.push(Handle{capture});
+		e.m_stack.push(Value{capture});
 
 	eval(callee->m_def->m_body, e);
 
@@ -156,9 +156,9 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			eval(expr, e);
 
 			// wrap arg in reference
-			auto ref = e.new_reference(nullptr);
+			auto ref = e.new_reference(Value {nullptr});
 			ref->m_value = value_of(e.m_stack.access(0));
-			e.m_stack.access(0) = ref.handle();
+			e.m_stack.access(0) = ref.as_value();
 		}
 		e.m_stack.start_stack_frame(frame_start);
 
@@ -173,7 +173,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 		auto args = e.m_stack.frame_range(0, arg_count);
 
 		// compute the result of the function, and clobber the callee
-		e.m_stack.frame_at(-1) = callee.get_cast<NativeFunction>()->m_fptr(args, e);
+		e.m_stack.frame_at(-1) = callee.get_native_func()(args, e);
 	} else {
 		Log::fatal("Attempted to call a non function at runtime");
 	}
@@ -193,7 +193,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	auto callee_ptr = e.m_stack.pop_unsafe();
 	auto* callee = value_as<Array>(callee_ptr);
 
-	e.m_stack.push(Handle{callee->at(index)});
+	e.m_stack.push(Value{callee->at(index)});
 };
 
 void eval(AST::TernaryExpression* ast, Interpreter& e) {
@@ -220,14 +220,14 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
-	e.m_stack.push(result.handle());
+	e.m_stack.push(result.as_value());
 };
 
 void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_record, e);
 	auto rec_ptr = e.m_stack.pop_unsafe();
 	auto rec = value_as<Record>(rec_ptr);
-	e.m_stack.push(Handle{rec->m_value[ast->m_member]});
+	e.m_stack.push(Value{rec->m_value[ast->m_member]});
 }
 
 void eval(AST::MatchExpression* ast, Interpreter& e) {
@@ -242,9 +242,9 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(nullptr);
+	auto ref = e.new_reference(Value {nullptr});
 	ref->m_value = variant_value;
-	e.m_stack.access(0) = ref.handle();
+	e.m_stack.access(0) = ref.as_value();
 	
 	auto case_it = ast->m_cases.find(constructor);
 	// TODO: proper error handling
@@ -292,7 +292,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 			e.m_stack.pop_unsafe();
 
 		// replace ctor with record
-		e.m_stack.access(0) = Handle{result.get()};
+		e.m_stack.access(0) = Value{result.get()};
 	} else if (constructor.type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = constructor.get_cast<VariantConstructor>();
 
@@ -303,7 +303,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
 		// replace ctor with variant, and pop value
-		e.m_stack.access(1) = Handle{result.get()};
+		e.m_stack.access(1) = Value{result.get()};
 		e.m_stack.pop_unsafe();
 	}
 }
@@ -311,7 +311,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
 	if (!e.m_returning)
-		e.save_return_value(Handle {});
+		e.save_return_value(Value {});
 	e.m_stack.push(e.fetch_return_value());
 }
 
@@ -350,10 +350,10 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 	RecordType constructors;
 	for(auto& constructor : ast->m_constructors) {
 		constructors.insert(
-		    {constructor, Handle{e.m_gc->new_variant_constructor_raw(constructor)}});
+		    {constructor, Value{e.m_gc->new_variant_constructor_raw(constructor)}});
 	}
 	auto result = e.new_record(std::move(constructors));
-	e.m_stack.push(result.handle());
+	e.m_stack.push(result.as_value());
 }
 
 void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {

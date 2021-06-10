@@ -21,15 +21,12 @@ void GC::unmark_all() {
 }
 
 void GC::mark_roots() {
-	for (auto* root : m_roots) {
-		gc_visit(root);
-	}
+	for (auto* root : m_roots)
+		root->visit();
 
-	for (auto* val : m_blocks) {
-		if (val->m_cpp_refcount != 0) {
-			gc_visit(val);
-		}
-	}
+	for (auto* val : m_blocks)
+		if (val->m_cpp_refcount != 0)
+			val->visit();
 }
 
 void GC::sweep() {
@@ -40,7 +37,7 @@ void GC::sweep() {
 		}
 	}
 
-	auto is_null = [&](Value* p) { return p == nullptr; };
+	auto is_null = [&](GcCell* p) { return p == nullptr; };
 
 	m_blocks.erase(
 	    std::remove_if(m_blocks.begin(), m_blocks.end(), is_null), m_blocks.end());
@@ -51,11 +48,11 @@ void GC::sweep_all() {
 	sweep();
 }
 
-void GC::add_root(Value* new_root) {
+void GC::add_root(GcCell* new_root) {
 	m_roots.push_back(new_root);
 }
 
-gc_ptr<Variant> GC::new_variant(InternedString constructor, Handle v) {
+gc_ptr<Variant> GC::new_variant(InternedString constructor, Value v) {
 	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
 	return result;
@@ -91,23 +88,13 @@ gc_ptr<Function> GC::new_function(FunctionType def, CapturesType captures) {
 	return result;
 }
 
-gc_ptr<NativeFunction> GC::new_native_function(NativeFunctionType* fptr) {
-	auto result = new NativeFunction(fptr);
-	m_blocks.push_back(result);
-	return result;
-}
-
 gc_ptr<Error> GC::new_error(std::string s) {
 	auto result = new Error(std::move(s));
 	m_blocks.push_back(result);
 	return result;
 }
 
-gc_ptr<Reference> GC::new_reference(Value* v) {
-	return new_reference(Handle{v});
-}
-
-gc_ptr<Reference> GC::new_reference(Handle v) {
+gc_ptr<Reference> GC::new_reference(Value v) {
 	auto result = new Reference(std::move(v));
 	m_blocks.push_back(result);
 	return result;

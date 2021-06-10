@@ -5,9 +5,9 @@
 namespace Interpreter {
 
 Error::Error()
-    : Value(ValueTag::Error) {}
+    : GcCell(ValueTag::Error) {}
 Error::Error(std::string message)
-    : Value(ValueTag::Error)
+    : GcCell(ValueTag::Error)
     , m_error(message) {}
 
 Error make_reference_error(const Identifier& i) {
