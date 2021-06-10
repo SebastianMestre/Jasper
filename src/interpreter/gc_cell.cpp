@@ -5,6 +5,8 @@
 
 namespace Interpreter {
 
+static void gc_visit(GcCell* v);
+
 static void gc_visit(Value h) {
 	if (is_heap_type(h.type()))
 		return gc_visit(h.get());
@@ -70,7 +72,7 @@ static void gc_visit(Reference* r) {
 	gc_visit(r->m_value);
 }
 
-void gc_visit(GcCell* v) {
+static void gc_visit(GcCell* v) {
 	switch (v->type()) {
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
@@ -95,6 +97,10 @@ void gc_visit(GcCell* v) {
 	default:
 		assert(0);
 	}
+}
+
+void GcCell::visit() {
+	return gc_visit(this);
 }
 
 } // namespace Interpreter

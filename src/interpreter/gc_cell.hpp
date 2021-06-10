@@ -19,9 +19,9 @@ struct GcCell {
 		return m_tag;
 	}
 
+	void visit();
+
 	virtual ~GcCell() = default;
 };
-
-void gc_visit(GcCell*);
 
 } // namespace Interpreter

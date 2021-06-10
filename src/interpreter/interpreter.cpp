@@ -69,10 +69,10 @@ void Interpreter::run_gc() {
 
 	for (auto p : m_stack.m_stack)
 		if (is_heap_type(p.type()))
-				gc_visit(p.get());
+				p.get()->visit();
 
 	for (auto& p : m_global_scope.m_declarations)
-		gc_visit(p.second);
+		p.second->visit();
 
 	m_gc->sweep();
 }
