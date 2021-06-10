@@ -44,11 +44,11 @@ struct Value {
 	    : tag {ValueTag::Boolean}
 	    , as_boolean {boolean} {}
 
-	Value(int integer)
+	explicit Value(int integer)
 	    : tag {ValueTag::Integer}
 	    , as_integer {integer} {}
 
-	Value(float number)
+	explicit Value(float number)
 	    : tag {ValueTag::Float}
 	    , as_float {number} {}
 

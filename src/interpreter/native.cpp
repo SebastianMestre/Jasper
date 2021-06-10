@@ -56,7 +56,7 @@ Value size(ArgsType v, Interpreter& e) {
 	assert(v.size() == 1);
 	Array* array = value_as<Array>(v[0]);
 
-	return {int(array->m_value.size())};
+	return Value {int(array->m_value.size())};
 }
 
 // array_join(array, string) returns a string with
@@ -235,7 +235,7 @@ Value value_less(ArgsType v, Interpreter& e) {
 	case ValueTag::Float:
 		return OP_(as_float, lhs, <, rhs);
 	case ValueTag::String:
-		return OP(String, lhs, <, rhs);
+		return Value {OP(String, lhs, <, rhs)};
 	default:
 		std::cerr << "ERROR: can't compare values of type "
 		          << value_string[static_cast<int>(lhs.type())];
