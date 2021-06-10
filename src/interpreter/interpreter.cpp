@@ -68,7 +68,8 @@ void Interpreter::run_gc() {
 	m_gc->mark_roots();
 
 	for (auto p : m_stack.m_stack)
-		gc_visit(p);
+		if (is_heap_type(p.type()))
+				gc_visit(p.get());
 
 	for (auto& p : m_global_scope.m_declarations)
 		gc_visit(p.second);

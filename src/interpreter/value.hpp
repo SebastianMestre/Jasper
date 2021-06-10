@@ -32,15 +32,15 @@ inline bool is_heap_type(ValueTag tag) {
 }
 
 struct Value {
-	Value(GcCell* ptr)
+	explicit Value(GcCell* ptr)
 	    : tag {ptr ? ptr->type() : ValueTag::Null}
 	    , ptr {ptr} {}
 
-	Value(std::nullptr_t)
+	explicit Value(std::nullptr_t)
 	    : tag {ValueTag::Null}
 	    , ptr {nullptr} {}
 
-	Value(bool boolean)
+	explicit Value(bool boolean)
 	    : tag {ValueTag::Boolean}
 	    , as_boolean {boolean} {}
 
@@ -101,7 +101,6 @@ struct Value {
 	};
 };
 
-void gc_visit(Value);
 void print(Value v, int d = 0);
 
 struct String : GcCell {

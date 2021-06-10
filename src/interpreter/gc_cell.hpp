@@ -2,6 +2,8 @@
 
 #include "value_tag.hpp"
 
+namespace Interpreter {
+
 struct GcCell {
   protected:
 	ValueTag m_tag;
@@ -19,3 +21,7 @@ struct GcCell {
 
 	virtual ~GcCell() = default;
 };
+
+void gc_visit(GcCell*);
+
+} // namespace Interpreter

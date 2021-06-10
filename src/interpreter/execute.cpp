@@ -107,7 +107,7 @@ Value eval_expression(
 		auto err = Frontend::match_identifiers(ast, context);
 		if (!err.ok()) {
 			err.print();
-			return nullptr;
+			return env.null();
 		}
 	}
 

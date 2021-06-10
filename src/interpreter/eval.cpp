@@ -29,7 +29,7 @@ static void eval_stmt(AST::AST* ast, Interpreter& e) {
 }
 
 void eval(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(nullptr);
+	auto ref = e.new_reference(Value {nullptr});
 	e.m_stack.push(ref.as_value());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
@@ -76,7 +76,7 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto ref = e.new_reference(nullptr);
+		auto ref = e.new_reference(Value {nullptr});
 		ref->m_value = value_of(e.m_stack.pop_unsafe());
 		result->append(ref.get());
 	}
@@ -156,7 +156,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 			eval(expr, e);
 
 			// wrap arg in reference
-			auto ref = e.new_reference(nullptr);
+			auto ref = e.new_reference(Value {nullptr});
 			ref->m_value = value_of(e.m_stack.access(0));
 			e.m_stack.access(0) = ref.as_value();
 		}
@@ -242,7 +242,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(nullptr);
+	auto ref = e.new_reference(Value {nullptr});
 	ref->m_value = variant_value;
 	e.m_stack.access(0) = ref.as_value();
 	
