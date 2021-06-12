@@ -20,7 +20,7 @@ bool MetaUnifier::is(int idx, Tag t) const {
 
 bool MetaUnifier::is_constant_tag(Tag tag) const {
 	return tag == Tag::Term || tag == Tag::Mono || tag == Tag::Ctor ||
-		tag == Tag::Func;
+	       tag == Tag::Func;
 }
 
 bool MetaUnifier::is_constant(int idx) const {
@@ -64,7 +64,8 @@ void MetaUnifier::turn_into(int idx, Tag tag) {
 	assert(tag != Tag::Var);
 
 	idx = dig_var(idx);
-	if (is(idx, Tag::Var)) { nodes[idx].tag = tag;
+	if (is(idx, Tag::Var)) {
+		nodes[idx].tag = tag;
 		return;
 	}
 
