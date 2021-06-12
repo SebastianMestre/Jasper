@@ -3,6 +3,12 @@
 #include <vector>
 #include <cassert>
 
+#include <iostream>
+
+namespace AST {
+struct Declaration;
+}
+
 enum class Tag {
 	Var,       // computed
 	DotResult, // computed
@@ -21,6 +27,7 @@ struct Node {
 struct MetaUnifier {
 	// TODO: handle dot targets
 
+	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
 	std::vector<Node> nodes;
 
 	bool is(int idx, Tag tag) const {
@@ -35,12 +42,16 @@ struct MetaUnifier {
 		return is(idx, Tag::Var) && nodes[idx].idx == idx;
 	}
 
-	bool is_constant(int idx) const {
-		return is(idx, Tag::Term) || is(idx, Tag::Mono) || is(idx, Tag::Ctor) ||
-		       is(idx, Tag::Func);
+	bool is_constant_tag(Tag tag) const {
+		return tag == Tag::Term || tag == Tag::Mono || tag == Tag::Ctor ||
+		       tag == Tag::Func;
 	}
 
-	Tag tag(int idx) {
+	bool is_constant(int idx) const {
+		return is_constant_tag(tag(idx));
+	}
+
+	Tag tag(int idx) const {
 		return nodes[idx].tag;
 	}
 
@@ -77,8 +88,7 @@ struct MetaUnifier {
 		assert(tag != Tag::Var);
 
 		idx = dig_var(idx);
-		if (is(idx, Tag::Var)) {
-			nodes[idx].tag = tag;
+		if (is(idx, Tag::Var)) { nodes[idx].tag = tag;
 			return;
 		}
 
@@ -128,15 +138,24 @@ struct MetaUnifier {
 	}
 
 	int create_const_node(Tag tag) {
-		return 0;
+		assert(is_constant_tag(tag));
+		int result = nodes.size();
+		nodes.push_back({tag, -1, false});
+		std::cerr << "MetaUnifier::create_const_node() => " << result << "\n";
+		return result;
 	}
 
 	int create_var_node() {
-		return 0;
+		int result = nodes.size();
+		nodes.push_back({Tag::Var, result, false});
+		return result;
 	}
 
 	int create_dot_node(int target) {
-		return 0;
+		int result = nodes.size();
+		nodes.push_back({Tag::DotResult, target, false});
+		register_dot_target(target);
+		return result;
 	}
 };
 

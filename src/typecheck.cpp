@@ -52,10 +52,11 @@ void typecheck(AST::Identifier* ast, TypeChecker& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
-	MetaTypeId meta_type = tc.m_core.m_meta_core.eval(declaration->m_meta_type);
+	auto& uf = tc.m_core.m_meta_core;
+	MetaTypeId meta_type = uf.eval(declaration->m_meta_type);
 	ast->m_meta_type = meta_type;
 
-	assert(meta_type == tc.meta_value());
+	assert(uf.is(meta_type, Tag::Term));
 
 	// here we implement the [var] rule
 	ast->m_value_type = declaration->m_is_polymorphic

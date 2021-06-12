@@ -175,7 +175,7 @@ static void metacheck(MetaUnifier& uf, AST::DeclarationList* ast) {
 		decl.m_meta_type = uf.create_var_node();
 
 	// TODO: get the declaration components
-	auto const& comps = std::vector<std::vector<AST::Declaration*>>{};
+	auto const& comps = *uf.comp;
 	for (auto const& comp : comps) {
 
 		for (auto decl : comp)
