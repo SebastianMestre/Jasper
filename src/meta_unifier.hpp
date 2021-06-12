@@ -32,16 +32,16 @@ struct MetaUnifier {
 	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
 	std::vector<Node> nodes;
 
-	bool is(int idx, Tag tag) const {
-		return nodes[idx].tag == tag;
+	Tag tag(int idx) const {
+		return nodes[idx].tag;
 	}
 
 	bool is_dot_target(int idx) const {
 		return nodes[idx].is_dot_target;
 	}
 
-	bool is_singleton_var(int idx) const {
-		return is(idx, Tag::Var) && nodes[idx].idx == idx;
+	bool is(int idx, Tag t) const {
+		return tag(idx) == t;
 	}
 
 	bool is_constant_tag(Tag tag) const {
@@ -53,8 +53,8 @@ struct MetaUnifier {
 		return is_constant_tag(tag(idx));
 	}
 
-	Tag tag(int idx) const {
-		return nodes[idx].tag;
+	bool is_singleton_var(int idx) const {
+		return is(idx, Tag::Var) && nodes[idx].idx == idx;
 	}
 
 	void register_dot_target(int idx) {
