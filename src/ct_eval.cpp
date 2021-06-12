@@ -322,7 +322,7 @@ AST::DeclarationList* ct_eval(
 			handle->m_value = tc.m_core.m_tf_core.new_var();
 			handle->m_syntax = decl.m_value;
 			decl.m_value = handle;
-		} else if (uf.is(meta_type, Tag::Ctor)) {
+		} else if (uf.is(meta_type, Tag::Mono)) {
 			auto handle = alloc.make<AST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
 			handle->m_syntax = decl.m_value;
