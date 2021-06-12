@@ -18,24 +18,29 @@ bool MetaUnifier::is(int idx, Tag t) const {
 	return tag(idx) == t;
 }
 
-bool MetaUnifier::is_constant_tag(Tag tag) const {
-	return tag == Tag::Term || tag == Tag::Mono || tag == Tag::Ctor ||
-	       tag == Tag::Func;
+bool MetaUnifier::is_constant(Tag t) const {
+	return t == Tag::Term || t == Tag::Mono || t == Tag::Ctor || t == Tag::Func;
 }
 
 bool MetaUnifier::is_constant(int idx) const {
-	return is_constant_tag(tag(idx));
+	return is_constant(tag(idx));
 }
 
 bool MetaUnifier::is_singleton_var(int idx) const {
 	return is(idx, Tag::Var) && nodes[idx].idx == idx;
 }
 
+// make idx be a var that points to target (unsafe)
+void MetaUnifier::turn_into_var(int idx, int target) {
+	assert(dig_var(target) == target);
+	nodes[idx].tag = Tag::Var;
+	nodes[idx].idx = target;
+}
+
 void MetaUnifier::register_dot_target(int idx) {
-	// TODO: maybe assign dot target to every intermediate step if var?
 	idx = dig_var(idx);
 
-	if (is(idx, Tag::Var)) {
+	if (is(idx, Tag::Term) || is(idx, Tag::Mono) || is(idx, Tag::Var)) {
 		nodes[idx].is_dot_target = true;
 		return;
 	}
@@ -45,18 +50,8 @@ void MetaUnifier::register_dot_target(int idx) {
 		turn_dot_result_into(idx, Tag::Term);
 		return;
 	}
-
-	if (is(idx, Tag::Mono)) {
-		nodes[idx].is_dot_target = true;
-		return;
-	}
-
-	if (is(idx, Tag::Term)) {
-		nodes[idx].is_dot_target = true;
-		return;
-	}
-
-	assert(0);
+	
+	Log::fatal() << "used dot operator on a constructor or typefunc";
 }
 
 void MetaUnifier::turn_into(int idx, Tag tag) {
@@ -118,41 +113,54 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	// FIXME: This code was written when I was very sleepy. Please, check
 	//        very carefully, and point out the suspicious bits.
 
-
 	idx1 = dig_var(idx1);
 	idx2 = dig_var(idx2);
 
-	if (!is(idx1, Tag::Var) && is(idx2, Tag::Var)) {
+	auto tag1 = tag(idx1);
+	auto tag2 = tag(idx2);
+
+	if (tag1 != Tag::Var && tag2 == Tag::Var) {
 		std::swap(idx1, idx2);
+		std::swap(tag1, tag2);
 	}
 
-	if (is(idx1, Tag::Var)) {
+	if (tag1 == Tag::Var) {
 		// TODO: occurs check
 		nodes[idx1].idx = idx2;
-	}
-
-	if (is_constant(idx1) && is_constant(idx2)) {
-		if (tag(idx1) != tag(idx2))
-			Log::fatal() << "bad unification";
-		// TODO: maybe turn one into var and point at the other?
-		// (so that if one of them becomes dot target, both do)
 		return;
 	}
 
-	if (is_constant(idx2)) {
+	if (is_constant(tag1) && is_constant(tag2)) {
+		if (tag1 != tag2)
+			Log::fatal() << "bad unification";
+		turn_into_var(idx1, idx2);
+		return;
+	}
+
+	if (is_constant(tag2)) {
 		std::swap(idx1, idx2);
+		std::swap(tag1, tag2);
 	}
 
-	if (is(idx2, Tag::DotResult)) {
-		turn_dot_result_into(idx2, tag(idx1));
-		// this is probably not ideal
+	if (is_constant(tag1) && tag2 == Tag::DotResult) {
+		turn_dot_result_into(idx2, tag1);
+		turn_into_var(idx1, idx2);
+		return;
 	}
 
-	// TODO: implement unify for two DotResult
+	if (tag1 == Tag::DotResult && tag2 == Tag::DotResult) {
+		int target1 = nodes[idx1].idx;
+		int target2 = nodes[idx2].idx;
+
+		unify(target1, target2);
+		turn_into_var(idx1, idx2);
+	}
+
+	assert(0 && "NOT REACHABLE");
 }
 
 int MetaUnifier::create_const_node(Tag tag) {
-	assert(is_constant_tag(tag));
+	assert(is_constant(tag));
 	int result = nodes.size();
 	nodes.push_back({tag, -1, false});
 	return result;
