@@ -16,7 +16,7 @@ static void process_type_hint(MetaUnifier& uf, AST::Declaration* ast) {
 static void process_declaration(MetaUnifier& uf, AST::Declaration* ast) {
 	process_type_hint(uf, ast);
 	metacheck(uf, ast->m_value);
-	// TODO uf.unify(ast->m_meta_type, ast->m_value->m_meta_type);
+	uf.unify(ast->m_meta_type, ast->m_value->m_meta_type);
 }
 
 // Literals

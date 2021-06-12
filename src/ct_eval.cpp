@@ -35,8 +35,7 @@ AST::FunctionLiteral* ct_eval(
 
 MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc);
 TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc);
-AST::Constructor* constructor_from_ast(
-    AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
+AST::Constructor* constructor_from_ast(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 AST::AST* ct_eval(
     AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
@@ -315,6 +314,10 @@ AST::DeclarationList* ct_eval(
 	auto& uf = tc.m_core.m_meta_core;
 
 	for (auto& decl : ast->m_declarations) {
+#if 0
+		std::cerr << "[ Pass 1 ] top level \"" << decl.m_identifier << "\"\n";
+#endif
+
 		int meta_type = uf.eval(decl.m_meta_type);
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
@@ -334,6 +337,15 @@ AST::DeclarationList* ct_eval(
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
 			int meta_type = uf.eval(decl->m_meta_type);
+
+#if 0
+			std::cerr << "[ Pass 2 ] top level \"" << decl->m_identifier << "\"\n";
+			std::cerr << "           metatype tag is: Tag(" << int(uf.tag(meta_type)) << ")\n";
+#endif
+
+			if (uf.is(meta_type, Tag::Var))
+				Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl->m_identifier << "\"";
+
 			if (uf.is(meta_type, Tag::Func)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
