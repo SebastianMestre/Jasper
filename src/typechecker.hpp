@@ -40,11 +40,6 @@ struct TypeChecker {
 	MonoId mono_string();
 	MonoId mono_boolean();
 	MonoId mono_unit();
-
-	MetaTypeId meta_value();
-	MetaTypeId meta_typefunc();
-	MetaTypeId meta_monotype();
-	MetaTypeId meta_constructor();
 };
 
 } // namespace TypeChecker

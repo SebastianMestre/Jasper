@@ -345,16 +345,18 @@ void typecheck(AST::DeclarationList* ast, TypeChecker& tc) {
 		bool non_type_in_component = false;
 		for (auto decl : decls) {
 
-			auto meta_type = tc.m_core.m_meta_core.eval(decl->m_meta_type);
-			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
+			auto& uf = tc.m_core.m_meta_core;
+			auto meta_type = uf.eval(decl->m_meta_type);
+			if (uf.is(meta_type, Tag::Func) || uf.is(meta_type, Tag::Mono))
 				type_in_component = true;
 
-			if (meta_type == tc.meta_value())
+			if (uf.is(meta_type, Tag::Term))
 				non_type_in_component = true;
 		}
 
 		// we don't deal with types and non-types in the same component.
-		assert(!(type_in_component && non_type_in_component));
+		if (type_in_component && non_type_in_component)
+			Log::fatal() << "found reference cycle with types and values";
 
 		if (type_in_component)
 			continue;

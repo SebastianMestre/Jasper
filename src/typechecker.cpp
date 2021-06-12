@@ -234,7 +234,7 @@ void TypeChecker::declare_builtin_typefunc(
 	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
 	handle->m_value = typefunc;
 	decl->m_value = handle;
-	decl->m_meta_type = meta_typefunc();
+	decl->m_meta_type = m_core.m_meta_core.create_const_node(Tag::Func);
 }
 
 void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_type) {
@@ -242,7 +242,7 @@ void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_
 
 	decl->m_decl_type = poly_type;
 	decl->m_is_polymorphic = true;
-	decl->m_meta_type = meta_value();
+	decl->m_meta_type = m_core.m_meta_core.create_const_node(Tag::Term);
 }
 
 MonoId TypeChecker::mono_int() {
@@ -263,22 +263,6 @@ MonoId TypeChecker::mono_boolean() {
 
 MonoId TypeChecker::mono_unit() {
 	return 4;
-}
-
-MetaTypeId TypeChecker::meta_value() {
-	return 0;
-}
-
-MetaTypeId TypeChecker::meta_typefunc() {
-	return 1;
-}
-
-MetaTypeId TypeChecker::meta_monotype() {
-	return 2;
-}
-
-MetaTypeId TypeChecker::meta_constructor() {
-	return 3;
 }
 
 } // namespace TypeChecker

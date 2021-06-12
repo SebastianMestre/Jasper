@@ -46,25 +46,25 @@ AST::AST* ct_eval(
 	assert(ast);
 	assert(ast->m_declaration);
 
-	MetaTypeId meta_type = tc.m_core.m_meta_core.eval(ast->m_meta_type);
+	auto& uf = tc.m_core.m_meta_core;
+	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
-	if (meta_type == tc.meta_value()) {
+	if (uf.is(meta_type, Tag::Term)) {
 		return ast;
-	} else if (meta_type == tc.meta_monotype()) {
+	} else if (uf.is(meta_type, Tag::Mono)) {
 		auto monotype = mono_type_from_ast(ast, tc);
 		auto handle = alloc.make<AST::MonoTypeHandle>();
 		handle->m_value = monotype;
 		handle->m_syntax = ast;
 		return handle;
-	} else if (meta_type == tc.meta_typefunc()) {
+	} else if (uf.is(meta_type, Tag::Func)) {
 		auto type_func = type_func_from_ast(ast, tc);
 		auto handle = alloc.make<AST::TypeFunctionHandle>();
 		handle->m_value = type_func;
 		handle->m_syntax = ast;
 		return handle;
 	} else {
-		// TODO: error
-		return ast;
+		Log::fatal() << "Incomplete type inference on identifier" << ast->text();
 	}
 }
 
@@ -97,9 +97,10 @@ AST::TernaryExpression* ct_eval(
 
 AST::AST* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	MetaTypeId metatype = tc.m_core.m_meta_core.eval(ast->m_meta_type);
+	auto& uf = tc.m_core.m_meta_core;
+	MetaTypeId metatype = uf.eval(ast->m_meta_type);
 	// TODO: support vars
-	if (metatype == tc.meta_constructor())
+	if (uf.is(metatype, Tag::Ctor))
 		return constructor_from_ast(ast, tc, alloc);
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
@@ -181,7 +182,10 @@ AST::ReturnStatement* ct_eval(
 // types
 
 TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
-	assert(tc.m_core.m_meta_core.eval(ast->m_meta_type) == tc.meta_typefunc());
+#ifndef NDEBUG
+	auto& uf = tc.m_core.m_meta_core;
+	assert(uf.is(uf.eval(ast->m_meta_type), Tag::Func));
+#endif
 	if (ast->type() == ASTTag::TypeFunctionHandle) {
 		return static_cast<AST::TypeFunctionHandle*>(ast)->m_value;
 	} else if (ast->type() == ASTTag::Identifier) {
@@ -226,12 +230,15 @@ TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
 
 		return result;
 	} else {
-		assert(0);
+		Log::fatal() << "Unexpected ast type used as typefunc";
 	}
 }
 
 MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
-	assert(tc.m_core.m_meta_core.eval(ast->m_meta_type) == tc.meta_monotype());
+#ifndef NDEBUG
+	auto& uf = tc.m_core.m_meta_core;
+	assert(uf.is(uf.eval(ast->m_meta_type), Tag::Mono));
+#endif
 	if (ast->type() == ASTTag::MonoTypeHandle) {
 		return static_cast<AST::MonoTypeHandle*>(ast)->m_value;
 	} else if (ast->type() == ASTTag::Identifier) {
@@ -252,19 +259,20 @@ MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
 		MonoId result = tc.m_core.new_term(type_function, std::move(args), "from ast");
 		return result;
 	} else {
-		assert(0);
+		Log::fatal() << "unexpected ast type used as type";
 	}
 }
 
 AST::Constructor* constructor_from_ast(
     AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	MetaTypeId meta = tc.m_core.m_meta_core.eval(ast->m_meta_type);
+	auto& uf = tc.m_core.m_meta_core;
+	MetaTypeId meta = uf.eval(ast->m_meta_type);
 	auto constructor = alloc.make<AST::Constructor>();
 	constructor->m_syntax = ast;
 
-	if (meta == tc.meta_monotype()) {
+	if (uf.is(meta, Tag::Mono)) {
 		constructor->m_mono = mono_type_from_ast(ast, tc);
-	} else if (meta == tc.meta_constructor()) {
+	} else if (uf.is(meta, Tag::Ctor)) {
 		assert(ast->type() == ASTTag::AccessExpression);
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
@@ -304,15 +312,17 @@ AST::Declaration* ct_eval(
 AST::DeclarationList* ct_eval(
     AST::DeclarationList* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
+	auto& uf = tc.m_core.m_meta_core;
+
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_core.m_meta_core.eval(decl.m_meta_type);
+		int meta_type = uf.eval(decl.m_meta_type);
 		// put a dummy var where required.
-		if (meta_type == tc.meta_typefunc()) {
+		if (uf.is(meta_type, Tag::Func)) {
 			auto handle = alloc.make<AST::TypeFunctionHandle>();
 			handle->m_value = tc.m_core.m_tf_core.new_var();
 			handle->m_syntax = decl.m_value;
 			decl.m_value = handle;
-		} else if (meta_type == tc.meta_monotype()) {
+		} else if (uf.is(meta_type, Tag::Ctor)) {
 			auto handle = alloc.make<AST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
 			handle->m_syntax = decl.m_value;
@@ -323,19 +333,19 @@ AST::DeclarationList* ct_eval(
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
-			int meta_type = tc.m_core.m_meta_core.eval(decl->m_meta_type);
-			if (meta_type == tc.meta_typefunc()) {
-				assert(!decl->m_type_hint && "type hint not allowed in type function declaration");
-				auto handle =
-					static_cast<AST::TypeFunctionHandle*>(decl->m_value);
+			int meta_type = uf.eval(decl->m_meta_type);
+			if (uf.is(meta_type, Tag::Func)) {
+				if (decl->m_type_hint)
+					Log::fatal() << "type hint not allowed in typefunc declaration";
 
+				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
 				TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc);
 				tc.m_core.m_tf_core.unify(tf, handle->m_value);
-			} else if (meta_type == tc.meta_monotype()) {
-				assert(!decl->m_type_hint && "type hint not allowed in monotype declaration");
-				auto handle =
-					static_cast<AST::MonoTypeHandle*>(decl->m_value);
+			} else if (uf.is(meta_type, Tag::Mono)) {
+				if (decl->m_type_hint)
+					Log::fatal() << "type hint not allowed in type declaration";
 
+				auto handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
 				MonoId mt = mono_type_from_ast(handle->m_syntax, tc);
 				tc.m_core.m_mono_core.unify(mt, handle->m_value);
 			} else {
