@@ -46,7 +46,7 @@ AST::AST* ct_eval(
 	assert(ast);
 	assert(ast->m_declaration);
 
-	MetaTypeId meta_type = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	MetaTypeId meta_type = tc.m_core.m_meta_core.eval(ast->m_meta_type);
 
 	if (meta_type == tc.meta_value()) {
 		return ast;
@@ -97,12 +97,12 @@ AST::TernaryExpression* ct_eval(
 
 AST::AST* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	MetaTypeId metatype = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	MetaTypeId metatype = tc.m_core.m_meta_core.eval(ast->m_meta_type);
 	// TODO: support vars
 	if (metatype == tc.meta_constructor())
 		return constructor_from_ast(ast, tc, alloc);
 
-	ast->m_record = ct_eval(ast->m_record, tc, alloc);
+	ast->m_target = ct_eval(ast->m_target, tc, alloc);
 	return ast;
 }
 
@@ -181,7 +181,7 @@ AST::ReturnStatement* ct_eval(
 // types
 
 TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
-	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_typefunc());
+	assert(tc.m_core.m_meta_core.eval(ast->m_meta_type) == tc.meta_typefunc());
 	if (ast->type() == ASTTag::TypeFunctionHandle) {
 		return static_cast<AST::TypeFunctionHandle*>(ast)->m_value;
 	} else if (ast->type() == ASTTag::Identifier) {
@@ -231,7 +231,7 @@ TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
 }
 
 MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
-	assert(tc.m_core.m_meta_core.find(ast->m_meta_type) == tc.meta_monotype());
+	assert(tc.m_core.m_meta_core.eval(ast->m_meta_type) == tc.meta_monotype());
 	if (ast->type() == ASTTag::MonoTypeHandle) {
 		return static_cast<AST::MonoTypeHandle*>(ast)->m_value;
 	} else if (ast->type() == ASTTag::Identifier) {
@@ -258,7 +258,7 @@ MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
 
 AST::Constructor* constructor_from_ast(
     AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	MetaTypeId meta = tc.m_core.m_meta_core.find(ast->m_meta_type);
+	MetaTypeId meta = tc.m_core.m_meta_core.eval(ast->m_meta_type);
 	auto constructor = alloc.make<AST::Constructor>();
 	constructor->m_syntax = ast;
 
@@ -277,7 +277,7 @@ AST::Constructor* constructor_from_ast(
 		MonoId dummy_monotype =
 		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
 
-		MonoId monotype = mono_type_from_ast(access->m_record, tc);
+		MonoId monotype = mono_type_from_ast(access->m_target, tc);
 
 		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
 
@@ -305,7 +305,7 @@ AST::DeclarationList* ct_eval(
     AST::DeclarationList* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = tc.m_core.m_meta_core.find(decl.m_meta_type);
+		int meta_type = tc.m_core.m_meta_core.eval(decl.m_meta_type);
 		// put a dummy var where required.
 		if (meta_type == tc.meta_typefunc()) {
 			auto handle = alloc.make<AST::TypeFunctionHandle>();
@@ -323,7 +323,7 @@ AST::DeclarationList* ct_eval(
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
-			int meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+			int meta_type = tc.m_core.m_meta_core.eval(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc()) {
 				assert(!decl->m_type_hint && "type hint not allowed in type function declaration");
 				auto handle =

@@ -102,11 +102,11 @@ void compute_offsets(AST::TernaryExpression* ast, int frame_offset) {
 }
 
 void compute_offsets(AST::AccessExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_record, frame_offset);
+	compute_offsets(ast->m_target, frame_offset);
 }
 
 void compute_offsets(AST::MatchExpression* ast, int frame_offset) {
-	compute_offsets(&ast->m_matchee, frame_offset);
+	compute_offsets(&ast->m_target, frame_offset);
 
 	for (auto& kv : ast->m_cases) {
 		auto& case_data = kv.second;

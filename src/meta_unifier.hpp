@@ -126,6 +126,18 @@ struct MetaUnifier {
 			return idx;
 		return nodes[idx].idx = dig_var(nodes[idx].idx);
 	}
+
+	int create_const_node(Tag tag) {
+		return 0;
+	}
+
+	int create_var_node() {
+		return 0;
+	}
+
+	int create_dot_node(int target) {
+		return 0;
+	}
 };
 
 

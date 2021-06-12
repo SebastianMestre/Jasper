@@ -4,10 +4,11 @@ namespace AST {
 struct AST;
 }
 
+struct MetaUnifier;
+
 namespace TypeChecker {
 
-struct TypeChecker;
 
-void metacheck(AST::AST* ast, TypeChecker& tc);
+void metacheck(MetaUnifier&, AST::AST*);
 
 }

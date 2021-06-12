@@ -9,11 +9,6 @@ namespace TypeChecker {
 TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator) {
 	// INVARIANT: we care only for the headers,
 	// wether something's a var or a term and which one
-	m_core.m_meta_core.new_term(-1); // 0 | value
-	m_core.m_meta_core.new_term(-1); // 1 | type func
-	m_core.m_meta_core.new_term(-1); // 2 | mono type
-	m_core.m_meta_core.new_term(-1); // 3 | constructor
-
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
 	m_core.new_builtin_type_function(0);  // 2  | float
@@ -179,7 +174,7 @@ MonoId TypeChecker::new_var() {
 }
 
 MetaTypeId TypeChecker::new_meta_var() {
-	return m_core.m_meta_core.new_var();
+	return m_core.m_meta_core.create_var_node();
 }
 
 // qualifies all free variables in the given monotype

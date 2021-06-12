@@ -52,7 +52,7 @@ void typecheck(AST::Identifier* ast, TypeChecker& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
-	MetaTypeId meta_type = tc.m_core.m_meta_core.find(declaration->m_meta_type);
+	MetaTypeId meta_type = tc.m_core.m_meta_core.eval(declaration->m_meta_type);
 	ast->m_meta_type = meta_type;
 
 	assert(meta_type == tc.meta_value());
@@ -171,7 +171,7 @@ void typecheck(AST::TernaryExpression* ast, TypeChecker& tc) {
 }
 
 void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_record, tc);
+	typecheck(ast->m_target, tc);
 
 	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
@@ -185,15 +185,15 @@ void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	    true);
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
 
-	tc.m_core.m_mono_core.unify(ast->m_record->m_value_type, term_type);
+	tc.m_core.m_mono_core.unify(ast->m_target->m_value_type, term_type);
 }
 
 void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
-	typecheck(&ast->m_matchee, tc);
+	typecheck(&ast->m_target, tc);
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
 		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, handle->m_value);
+		tc.m_core.m_mono_core.unify(ast->m_target.m_value_type, handle->m_value);
 	}
 
 	ast->m_value_type = tc.new_var();
@@ -228,7 +228,7 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
 	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match variant dummy");
-	tc.m_core.m_mono_core.unify(ast->m_matchee.m_value_type, term_type);
+	tc.m_core.m_mono_core.unify(ast->m_target.m_value_type, term_type);
 }
 
 void typecheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
@@ -345,7 +345,7 @@ void typecheck(AST::DeclarationList* ast, TypeChecker& tc) {
 		bool non_type_in_component = false;
 		for (auto decl : decls) {
 
-			auto meta_type = tc.m_core.m_meta_core.find(decl->m_meta_type);
+			auto meta_type = tc.m_core.m_meta_core.eval(decl->m_meta_type);
 			if (meta_type == tc.meta_typefunc() || meta_type == tc.meta_monotype())
 				type_in_component = true;
 

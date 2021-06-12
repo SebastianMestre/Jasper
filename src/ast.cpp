@@ -248,7 +248,7 @@ AST* convert_ast(CST::AccessExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<AccessExpression>();
 
 	ast->m_member = cst->m_member->m_text;
-	ast->m_record = convert_ast(cst->m_record, alloc);
+	ast->m_target = convert_ast(cst->m_record, alloc);
 
 	return ast;
 }
@@ -257,7 +257,7 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<MatchExpression>();
 
 	auto matchee = static_cast<Identifier*>(convert_ast(&cst->m_matchee, alloc));
-	ast->m_matchee = std::move(*matchee);
+	ast->m_target = std::move(*matchee);
 
 	if (cst->m_type_hint)
 		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
