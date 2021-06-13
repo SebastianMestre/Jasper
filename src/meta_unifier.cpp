@@ -39,9 +39,6 @@ bool MetaUnifier::occurs(int v, int i){
 	if (i == v)
 		return true;
 
-	if (is(i, Tag::Var))
-		return false;
-
 	if (is(i, Tag::DotResult))
 		if (occurs(v, nodes[i].target))
 			return true;
