@@ -5,6 +5,7 @@
 #include "ast.hpp"
 #include "ast_allocator.hpp"
 
+#include <iostream>
 #include <sstream>
 
 #include <cassert>
@@ -314,11 +315,16 @@ AST::DeclarationList* ct_eval(
 	auto& uf = tc.m_core.m_meta_core;
 
 	for (auto& decl : ast->m_declarations) {
+		int meta_type = uf.eval(decl.m_meta_type);
+
 #if 0
 		std::cerr << "[ Pass 1 ] top level \"" << decl.m_identifier << "\"\n";
+		std::cerr << "           metatype tag is: Tag(" << int(uf.tag(meta_type)) << ")\n";
 #endif
 
-		int meta_type = uf.eval(decl.m_meta_type);
+		if (!uf.is_constant(meta_type))
+			Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl.m_identifier << "\"";
+
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
 			auto handle = alloc.make<AST::TypeFunctionHandle>();
