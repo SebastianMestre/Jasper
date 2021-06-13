@@ -98,9 +98,10 @@ AST::TernaryExpression* ct_eval(
 AST::AST* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto& uf = tc.m_core.m_meta_core;
-	MetaTypeId metatype = uf.eval(ast->m_meta_type);
+	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
+
 	// TODO: support vars
-	if (uf.is(metatype, Tag::Ctor))
+	if (uf.is(meta_type, Tag::Ctor))
 		return constructor_from_ast(ast, tc, alloc);
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
