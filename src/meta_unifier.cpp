@@ -31,6 +31,24 @@ bool MetaUnifier::is_singleton_var(int idx) const {
 }
 
 
+bool MetaUnifier::occurs(int v, int i){
+	assert(is_singleton_var(v));
+
+	i = find(i);
+
+	if (i == v)
+		return true;
+
+	if (is(i, Tag::Var))
+		return false;
+
+	if (is(i, Tag::DotResult))
+		if (occurs(v, nodes[i].target))
+			return true;
+
+	return false;
+}
+
 int MetaUnifier::find(int idx) {
 	if (!is(idx, Tag::Var))
 		return idx;
@@ -59,6 +77,8 @@ void MetaUnifier::turn_into_var(int idx, int target) {
 
 void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
 	assert(is(idx, Tag::DotResult));
+
+	// maybe this assert is actually a legitimate error state?
 	assert(tag == Tag::Term || tag == Tag::Ctor);
 
 	nodes[idx].tag = tag;
@@ -107,13 +127,18 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	}
 
 	if (tag1 == Tag::Var) {
+		if (tag2 == Tag::DotResult) {
+			if (occurs(idx1, idx2))
+				Log::fatal() << "recursive unification";
+		}
+
 		turn_into_var(idx1, idx2);
 		return;
 	}
 
 	if (is_constant(tag1) && is_constant(tag2)) {
 		if (tag1 != tag2)
-			Log::fatal() << "bad unification";
+			Log::fatal() << "unified different concrete metatypes";
 		turn_into_var(idx1, idx2);
 		return;
 	}

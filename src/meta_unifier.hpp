@@ -35,11 +35,8 @@ struct MetaUnifier {
 	bool is_constant(Tag tag) const;
 	bool is_constant(int idx) const;
 
-	void register_dot_target(int idx);
 	void turn_into(int idx, Tag tag);
-	void turn_dot_result_into(int idx, Tag tag);
 	int eval(int idx);
-	int find(int idx);
 	void unify(int idx1, int idx2);
 
 	int make_const_node(Tag tag);
@@ -47,6 +44,11 @@ struct MetaUnifier {
 	int make_dot_node(int target);
 
 private:
+	void register_dot_target(int idx);
+	void turn_dot_result_into(int idx, Tag tag);
+	bool occurs(int var, int target);
+	int find(int idx);
+
 	void turn_into_var(int idx, int target);
 };
 
