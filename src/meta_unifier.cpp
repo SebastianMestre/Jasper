@@ -33,13 +33,13 @@ bool MetaUnifier::is_singleton_var(int idx) const {
 // make idx be a var that points to target (unsafe)
 void MetaUnifier::turn_into_var(int idx, int target) {
 	// TODO: propagate is_dot_target
-	assert(dig_var(target) == target);
+	assert(find(target) == target);
 	nodes[idx].tag = Tag::Var;
 	nodes[idx].target = target;
 }
 
 void MetaUnifier::register_dot_target(int idx) {
-	idx = dig_var(idx);
+	idx = find(idx);
 
 	if (is(idx, Tag::Ctor) || is(idx, Tag::Func))
 		Log::fatal() << "used dot operator on a constructor or typefunc";
@@ -51,7 +51,7 @@ void MetaUnifier::turn_into(int idx, Tag tag) {
 	assert(tag != Tag::DotResult);
 	assert(tag != Tag::Var);
 
-	idx = dig_var(idx);
+	idx = find(idx);
 	if (is(idx, Tag::Var)) {
 		nodes[idx].tag = tag;
 		return;
@@ -78,12 +78,12 @@ void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
 }
 
 int MetaUnifier::eval(int idx) {
-	idx = dig_var(idx);
+	idx = find(idx);
 
 	if (!is(idx, Tag::DotResult))
 		return idx;
 
-	int target = dig_var(nodes[idx].target);
+	int target = find(nodes[idx].target);
 
 	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
 		turn_dot_result_into(idx, Tag::Term);
@@ -94,12 +94,12 @@ int MetaUnifier::eval(int idx) {
 	return idx;
 }
 
-int MetaUnifier::dig_var(int idx) {
+int MetaUnifier::find(int idx) {
 	if (!is(idx, Tag::Var))
 		return idx;
 	if (nodes[idx].target == idx)
 		return idx;
-	return nodes[idx].target = dig_var(nodes[idx].target);
+	return nodes[idx].target = find(nodes[idx].target);
 }
 
 void MetaUnifier::unify(int idx1, int idx2) {
@@ -109,8 +109,8 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	// TODO: propagate is_dot_target
 	// TODO: occurs check
 
-	idx1 = dig_var(idx1);
-	idx2 = dig_var(idx2);
+	idx1 = find(idx1);
+	idx2 = find(idx2);
 
 	auto tag1 = tag(idx1);
 	auto tag2 = tag(idx2);
