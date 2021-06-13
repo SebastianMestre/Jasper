@@ -40,18 +40,10 @@ void MetaUnifier::turn_into_var(int idx, int target) {
 void MetaUnifier::register_dot_target(int idx) {
 	idx = dig_var(idx);
 
-	if (is(idx, Tag::Term) || is(idx, Tag::Mono) || is(idx, Tag::Var)) {
-		nodes[idx].is_dot_target = true;
-		return;
-	}
+	if (is(idx, Tag::Ctor) || is(idx, Tag::Func))
+		Log::fatal() << "used dot operator on a constructor or typefunc";
 
-	if (is(idx, Tag::DotResult)) {
-		nodes[idx].is_dot_target = true;
-		turn_dot_result_into(idx, Tag::Term);
-		return;
-	}
-	
-	Log::fatal() << "used dot operator on a constructor or typefunc";
+	nodes[idx].is_dot_target = true;
 }
 
 void MetaUnifier::turn_into(int idx, Tag tag) {
