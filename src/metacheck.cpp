@@ -22,11 +22,11 @@ static void process_declaration(MetaUnifier& uf, AST::Declaration* ast) {
 // Literals
 
 static void metacheck_scalar(MetaUnifier& uf, AST::AST* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 }
 
 static void metacheck(MetaUnifier& uf, AST::ArrayLiteral* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	for (auto& element : ast->m_elements) {
 		metacheck(uf, element);
@@ -35,14 +35,14 @@ static void metacheck(MetaUnifier& uf, AST::ArrayLiteral* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::FunctionLiteral* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	for (auto& arg : ast->m_args) {
 		if (arg.m_type_hint) {
 			metacheck(uf, arg.m_type_hint);
 			uf.turn_into(arg.m_type_hint->m_meta_type, Tag::Mono);
 		}
-		arg.m_meta_type = uf.create_const_node(Tag::Term);
+		arg.m_meta_type = uf.make_const_node(Tag::Term);
 	}
 
 	metacheck(uf, ast->m_body);
@@ -55,7 +55,7 @@ static void metacheck(MetaUnifier& uf, AST::Identifier* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::CallExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, ast->m_callee);
 	uf.turn_into(ast->m_callee->m_meta_type, Tag::Term);
@@ -67,7 +67,7 @@ static void metacheck(MetaUnifier& uf, AST::CallExpression* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::IndexExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, ast->m_callee);
 	uf.turn_into(ast->m_callee->m_meta_type, Tag::Term);
@@ -78,11 +78,11 @@ static void metacheck(MetaUnifier& uf, AST::IndexExpression* ast) {
 
 static void metacheck(MetaUnifier& uf, AST::AccessExpression* ast) {
 	metacheck(uf, ast->m_target);
-	ast->m_meta_type = uf.create_dot_node(ast->m_target->m_meta_type);
+	ast->m_meta_type = uf.make_dot_node(ast->m_target->m_meta_type);
 }
 
 static void metacheck(MetaUnifier& uf, AST::MatchExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, &ast->m_target);
 	uf.turn_into(ast->m_target.m_meta_type, Tag::Term);
@@ -95,7 +95,7 @@ static void metacheck(MetaUnifier& uf, AST::MatchExpression* ast) {
 	for (auto& kv : ast->m_cases) {
 		auto& case_data = kv.second;
 
-		case_data.m_declaration.m_meta_type = uf.create_const_node(Tag::Term);
+		case_data.m_declaration.m_meta_type = uf.make_const_node(Tag::Term);
 		process_type_hint(uf, &case_data.m_declaration);
 
 		metacheck(uf, case_data.m_expression);
@@ -104,7 +104,7 @@ static void metacheck(MetaUnifier& uf, AST::MatchExpression* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::TernaryExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, ast->m_condition);
 	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
@@ -120,7 +120,7 @@ static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
 	// TODO: maybe we should tag ast->m_constructor->m_meta_type
 	// as being target of a constructor invokation?
 
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, ast->m_constructor);
 
@@ -131,7 +131,7 @@ static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::SequenceExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Term);
+	ast->m_meta_type = uf.make_const_node(Tag::Term);
 	metacheck(uf, ast->m_body);
 }
 
@@ -166,13 +166,13 @@ static void metacheck(MetaUnifier& uf, AST::ReturnStatement* ast) {
 // Declarations
 
 static void metacheck(MetaUnifier& uf, AST::Declaration* ast) {
-	ast->m_meta_type = uf.create_var_node();
+	ast->m_meta_type = uf.make_var_node();
 	process_declaration(uf, ast);
 }
 
 static void metacheck(MetaUnifier& uf, AST::DeclarationList* ast) {
 	for (auto& decl : ast->m_declarations)
-		decl.m_meta_type = uf.create_var_node();
+		decl.m_meta_type = uf.make_var_node();
 
 	// TODO: get the declaration components
 	auto const& comps = *uf.comp;
@@ -195,7 +195,7 @@ static void metacheck(MetaUnifier& uf, AST::DeclarationList* ast) {
 // Type expressions
 
 static void metacheck(MetaUnifier& uf, AST::UnionExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Func);
+	ast->m_meta_type = uf.make_const_node(Tag::Func);
 
 	for (auto& type : ast->m_types) {
 		metacheck(uf, type);
@@ -204,7 +204,7 @@ static void metacheck(MetaUnifier& uf, AST::UnionExpression* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::StructExpression* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Func);
+	ast->m_meta_type = uf.make_const_node(Tag::Func);
 
 	for (auto& type : ast->m_types) {
 		metacheck(uf, type);
@@ -213,7 +213,7 @@ static void metacheck(MetaUnifier& uf, AST::StructExpression* ast) {
 }
 
 static void metacheck(MetaUnifier& uf, AST::TypeTerm* ast) {
-	ast->m_meta_type = uf.create_const_node(Tag::Mono);
+	ast->m_meta_type = uf.make_const_node(Tag::Mono);
 
 	metacheck(uf, ast->m_callee);
 	uf.turn_into(ast->m_callee->m_meta_type, Tag::Func);

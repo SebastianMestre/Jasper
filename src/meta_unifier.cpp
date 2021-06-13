@@ -154,20 +154,20 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	assert(0 && "NOT REACHABLE");
 }
 
-int MetaUnifier::create_const_node(Tag tag) {
+int MetaUnifier::make_const_node(Tag tag) {
 	assert(is_constant(tag));
 	int result = nodes.size();
 	nodes.push_back({tag, -1, false});
 	return result;
 }
 
-int MetaUnifier::create_var_node() {
+int MetaUnifier::make_var_node() {
 	int result = nodes.size();
 	nodes.push_back({Tag::Var, result, false});
 	return result;
 }
 
-int MetaUnifier::create_dot_node(int target) {
+int MetaUnifier::make_dot_node(int target) {
 	int result = nodes.size();
 	nodes.push_back({Tag::DotResult, target, false});
 	register_dot_target(target);

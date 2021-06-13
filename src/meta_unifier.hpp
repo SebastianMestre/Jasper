@@ -42,9 +42,9 @@ struct MetaUnifier {
 	int find(int idx);
 	void unify(int idx1, int idx2);
 
-	int create_const_node(Tag tag);
-	int create_var_node();
-	int create_dot_node(int target);
+	int make_const_node(Tag tag);
+	int make_var_node();
+	int make_dot_node(int target);
 
 private:
 	void turn_into_var(int idx, int target);

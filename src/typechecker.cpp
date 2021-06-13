@@ -174,7 +174,7 @@ MonoId TypeChecker::new_var() {
 }
 
 MetaTypeId TypeChecker::new_meta_var() {
-	return m_core.m_meta_core.create_var_node();
+	return m_core.m_meta_core.make_var_node();
 }
 
 // qualifies all free variables in the given monotype
@@ -234,7 +234,7 @@ void TypeChecker::declare_builtin_typefunc(
 	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
 	handle->m_value = typefunc;
 	decl->m_value = handle;
-	decl->m_meta_type = m_core.m_meta_core.create_const_node(Tag::Func);
+	decl->m_meta_type = m_core.m_meta_core.make_const_node(Tag::Func);
 }
 
 void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_type) {
@@ -242,7 +242,7 @@ void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_
 
 	decl->m_decl_type = poly_type;
 	decl->m_is_polymorphic = true;
-	decl->m_meta_type = m_core.m_meta_core.create_const_node(Tag::Term);
+	decl->m_meta_type = m_core.m_meta_core.make_const_node(Tag::Term);
 }
 
 MonoId TypeChecker::mono_int() {
