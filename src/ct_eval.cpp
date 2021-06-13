@@ -49,6 +49,9 @@ AST::AST* ct_eval(
 	auto& uf = tc.m_core.m_meta_core;
 	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
+	if (!uf.is_constant(meta_type))
+		Log::fatal() << "Incomplete type inference on identifier" << ast->text();
+
 	if (uf.is(meta_type, Tag::Term)) {
 		return ast;
 	} else if (uf.is(meta_type, Tag::Mono)) {
@@ -63,9 +66,9 @@ AST::AST* ct_eval(
 		handle->m_value = type_func;
 		handle->m_syntax = ast;
 		return handle;
-	} else {
-		Log::fatal() << "Incomplete type inference on identifier" << ast->text();
 	}
+
+	assert(0 && "UNREACHABLE");
 }
 
 AST::CallExpression* ct_eval(
