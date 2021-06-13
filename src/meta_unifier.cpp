@@ -32,10 +32,11 @@ bool MetaUnifier::is_singleton_var(int idx) const {
 
 // make idx be a var that points to target (unsafe)
 void MetaUnifier::turn_into_var(int idx, int target) {
-	// TODO: propagate is_dot_target
 	assert(find(target) == target);
 	nodes[idx].tag = Tag::Var;
 	nodes[idx].target = target;
+	if (nodes[idx].is_dot_target)
+		register_dot_target(target);
 }
 
 void MetaUnifier::register_dot_target(int idx) {
