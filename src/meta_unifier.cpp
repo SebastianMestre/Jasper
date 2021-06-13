@@ -48,8 +48,8 @@ void MetaUnifier::register_dot_target(int idx) {
 	nodes[idx].is_dot_target = true;
 }
 
-// make idx be a var that points to target (unsafe)
 void MetaUnifier::turn_into_var(int idx, int target) {
+	// make idx be a var that points to target (unsafe)
 	assert(find(target) == target);
 	nodes[idx].tag = Tag::Var;
 	nodes[idx].target = target;
@@ -84,7 +84,8 @@ void MetaUnifier::turn_into(int idx, Tag tag) {
 		return turn_dot_result_into(idx, tag);
 	}
 
-	assert(nodes[idx].tag == tag);
+	if (this->tag(idx) != tag)
+		Log::fatal() << "bad turn_into";
 }
 
 void MetaUnifier::unify(int idx1, int idx2) {
@@ -147,7 +148,7 @@ int MetaUnifier::eval(int idx) {
 	if (!is(idx, Tag::DotResult))
 		return idx;
 
-	int target = find(nodes[idx].target);
+	int target = eval(nodes[idx].target);
 
 	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
 		turn_dot_result_into(idx, Tag::Term);
