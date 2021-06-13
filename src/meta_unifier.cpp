@@ -149,6 +149,7 @@ void MetaUnifier::unify(int idx1, int idx2) {
 
 		unify(target1, target2);
 		turn_into_var(idx1, idx2);
+		return;
 	}
 
 	assert(0 && "NOT REACHABLE");
