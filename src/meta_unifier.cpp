@@ -71,10 +71,10 @@ void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
 	nodes[idx].tag = tag;
 
 	if (tag == Tag::Term)
-		turn_into(nodes[idx].target, Tag::Term);
+		return turn_into(nodes[idx].target, Tag::Term);
 
 	if (tag == Tag::Ctor)
-		turn_into(nodes[idx].target, Tag::Mono);
+		return turn_into(nodes[idx].target, Tag::Mono);
 }
 
 int MetaUnifier::eval(int idx) {
