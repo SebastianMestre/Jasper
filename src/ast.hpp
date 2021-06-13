@@ -188,7 +188,7 @@ struct IndexExpression : public AST {
 };
 
 struct AccessExpression : public AST {
-	AST* m_record;
+	AST* m_target;
 	InternedString m_member;
 
 	AccessExpression()
@@ -210,7 +210,7 @@ struct MatchExpression : public AST {
 		AST* m_expression;
 	};
 
-	Identifier m_matchee;
+	Identifier m_target;
 	AST* m_type_hint {nullptr};
 	std::unordered_map<InternedString, CaseData> m_cases;
 

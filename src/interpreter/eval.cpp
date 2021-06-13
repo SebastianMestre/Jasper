@@ -224,7 +224,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 };
 
 void eval(AST::AccessExpression* ast, Interpreter& e) {
-	eval(ast->m_record, e);
+	eval(ast->m_target, e);
 	auto rec_ptr = e.m_stack.pop_unsafe();
 	auto rec = value_as<Record>(rec_ptr);
 	e.m_stack.push(Value{rec->m_value[ast->m_member]});
@@ -232,7 +232,7 @@ void eval(AST::AccessExpression* ast, Interpreter& e) {
 
 void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
-	eval(&ast->m_matchee, e);
+	eval(&ast->m_target, e);
 
 	auto variant = value_as<Variant>(e.m_stack.access(0));
 

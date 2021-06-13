@@ -9,11 +9,6 @@ namespace TypeChecker {
 TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator) {
 	// INVARIANT: we care only for the headers,
 	// wether something's a var or a term and which one
-	m_core.m_meta_core.new_term(-1); // 0 | value
-	m_core.m_meta_core.new_term(-1); // 1 | type func
-	m_core.m_meta_core.new_term(-1); // 2 | mono type
-	m_core.m_meta_core.new_term(-1); // 3 | constructor
-
 	m_core.new_builtin_type_function(-1); // 0  | function
 	m_core.new_builtin_type_function(0);  // 1  | int
 	m_core.new_builtin_type_function(0);  // 2  | float
@@ -179,7 +174,7 @@ MonoId TypeChecker::new_var() {
 }
 
 MetaTypeId TypeChecker::new_meta_var() {
-	return m_core.m_meta_core.new_var();
+	return m_core.m_meta_core.make_var_node();
 }
 
 // qualifies all free variables in the given monotype
@@ -239,7 +234,7 @@ void TypeChecker::declare_builtin_typefunc(
 	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
 	handle->m_value = typefunc;
 	decl->m_value = handle;
-	decl->m_meta_type = meta_typefunc();
+	decl->m_meta_type = m_core.m_meta_core.make_const_node(Tag::Func);
 }
 
 void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_type) {
@@ -247,7 +242,7 @@ void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_
 
 	decl->m_decl_type = poly_type;
 	decl->m_is_polymorphic = true;
-	decl->m_meta_type = meta_value();
+	decl->m_meta_type = m_core.m_meta_core.make_const_node(Tag::Term);
 }
 
 MonoId TypeChecker::mono_int() {
@@ -268,22 +263,6 @@ MonoId TypeChecker::mono_boolean() {
 
 MonoId TypeChecker::mono_unit() {
 	return 4;
-}
-
-MetaTypeId TypeChecker::meta_value() {
-	return 0;
-}
-
-MetaTypeId TypeChecker::meta_typefunc() {
-	return 1;
-}
-
-MetaTypeId TypeChecker::meta_monotype() {
-	return 2;
-}
-
-MetaTypeId TypeChecker::meta_constructor() {
-	return 3;
 }
 
 } // namespace TypeChecker

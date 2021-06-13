@@ -173,12 +173,12 @@ namespace Frontend {
 }
 
 [[nodiscard]] ErrorReport match_identifiers(AST::AccessExpression* ast, SymbolTable& env) {
-	return match_identifiers(ast->m_record, env);
+	return match_identifiers(ast->m_target, env);
 }
 
 [[nodiscard]] ErrorReport match_identifiers(AST::MatchExpression* ast, SymbolTable& env) {
 
-	CHECK_AND_RETURN(match_identifiers(&ast->m_matchee, env));
+	CHECK_AND_RETURN(match_identifiers(&ast->m_target, env));
 
 	if (ast->m_type_hint)
 		CHECK_AND_RETURN(match_identifiers(ast->m_type_hint, env));

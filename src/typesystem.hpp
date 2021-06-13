@@ -5,8 +5,9 @@
 #include <vector>
 
 #include "algorithms/unification.hpp"
-#include "utils/interned_string.hpp"
+#include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
+#include "utils/interned_string.hpp"
 
 enum class TypeFunctionTag { Builtin, Variant, Tuple, Record };
 // Concrete type function. If it's a built-in, we use argument_count
@@ -42,7 +43,7 @@ struct TypeSystemCore {
 
 	std::vector<PolyData> poly_data;
 
-	Unification::Core m_meta_core;
+	MetaUnifier m_meta_core;
 
 	TypeSystemCore();
 
