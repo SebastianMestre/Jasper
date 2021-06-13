@@ -32,6 +32,7 @@ bool MetaUnifier::is_singleton_var(int idx) const {
 
 // make idx be a var that points to target (unsafe)
 void MetaUnifier::turn_into_var(int idx, int target) {
+	// TODO: propagate is_dot_target
 	assert(dig_var(target) == target);
 	nodes[idx].tag = Tag::Var;
 	nodes[idx].idx = target;
@@ -105,6 +106,9 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	// FIXME: This code was written when I was very sleepy. Please, check
 	//        very carefully, and point out the suspicious bits.
 
+	// TODO: propagate is_dot_target
+	// TODO: occurs check
+
 	idx1 = dig_var(idx1);
 	idx2 = dig_var(idx2);
 
@@ -117,8 +121,7 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	}
 
 	if (tag1 == Tag::Var) {
-		// TODO: occurs check
-		nodes[idx1].idx = idx2;
+		turn_into_var(idx1, idx2);
 		return;
 	}
 
@@ -129,7 +132,7 @@ void MetaUnifier::unify(int idx1, int idx2) {
 		return;
 	}
 
-	if (is_constant(tag2)) {
+	if (!is_constant(tag1) && is_constant(tag2)) {
 		std::swap(idx1, idx2);
 		std::swap(tag1, tag2);
 	}
