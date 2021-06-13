@@ -30,13 +30,13 @@ bool MetaUnifier::is_singleton_var(int idx) const {
 	return is(idx, Tag::Var) && nodes[idx].target == idx;
 }
 
-// make idx be a var that points to target (unsafe)
-void MetaUnifier::turn_into_var(int idx, int target) {
-	assert(find(target) == target);
-	nodes[idx].tag = Tag::Var;
-	nodes[idx].target = target;
-	if (nodes[idx].is_dot_target)
-		register_dot_target(target);
+
+int MetaUnifier::find(int idx) {
+	if (!is(idx, Tag::Var))
+		return idx;
+	if (nodes[idx].target == idx)
+		return idx;
+	return nodes[idx].target = find(nodes[idx].target);
 }
 
 void MetaUnifier::register_dot_target(int idx) {
@@ -46,6 +46,28 @@ void MetaUnifier::register_dot_target(int idx) {
 		Log::fatal() << "used dot operator on a constructor or typefunc";
 
 	nodes[idx].is_dot_target = true;
+}
+
+// make idx be a var that points to target (unsafe)
+void MetaUnifier::turn_into_var(int idx, int target) {
+	assert(find(target) == target);
+	nodes[idx].tag = Tag::Var;
+	nodes[idx].target = target;
+	if (nodes[idx].is_dot_target)
+		register_dot_target(target);
+}
+
+void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
+	assert(is(idx, Tag::DotResult));
+	assert(tag == Tag::Term || tag == Tag::Ctor);
+
+	nodes[idx].tag = tag;
+
+	if (tag == Tag::Term)
+		return turn_into(nodes[idx].target, Tag::Term);
+
+	if (tag == Tag::Ctor)
+		return turn_into(nodes[idx].target, Tag::Mono);
 }
 
 void MetaUnifier::turn_into(int idx, Tag tag) {
@@ -63,44 +85,6 @@ void MetaUnifier::turn_into(int idx, Tag tag) {
 	}
 
 	assert(nodes[idx].tag == tag);
-}
-
-void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
-	assert(is(idx, Tag::DotResult));
-	assert(tag == Tag::Term || tag == Tag::Ctor);
-
-	nodes[idx].tag = tag;
-
-	if (tag == Tag::Term)
-		return turn_into(nodes[idx].target, Tag::Term);
-
-	if (tag == Tag::Ctor)
-		return turn_into(nodes[idx].target, Tag::Mono);
-}
-
-int MetaUnifier::eval(int idx) {
-	idx = find(idx);
-
-	if (!is(idx, Tag::DotResult))
-		return idx;
-
-	int target = find(nodes[idx].target);
-
-	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
-		turn_dot_result_into(idx, Tag::Term);
-
-	if (is(target, Tag::Mono))
-		turn_dot_result_into(idx, Tag::Ctor);
-
-	return idx;
-}
-
-int MetaUnifier::find(int idx) {
-	if (!is(idx, Tag::Var))
-		return idx;
-	if (nodes[idx].target == idx)
-		return idx;
-	return nodes[idx].target = find(nodes[idx].target);
 }
 
 void MetaUnifier::unify(int idx1, int idx2) {
@@ -155,6 +139,25 @@ void MetaUnifier::unify(int idx1, int idx2) {
 
 	assert(0 && "NOT REACHABLE");
 }
+
+
+int MetaUnifier::eval(int idx) {
+	idx = find(idx);
+
+	if (!is(idx, Tag::DotResult))
+		return idx;
+
+	int target = find(nodes[idx].target);
+
+	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
+		turn_dot_result_into(idx, Tag::Term);
+
+	if (is(target, Tag::Mono))
+		turn_dot_result_into(idx, Tag::Ctor);
+
+	return idx;
+}
+
 
 int MetaUnifier::make_const_node(Tag tag) {
 	assert(is_constant(tag));
