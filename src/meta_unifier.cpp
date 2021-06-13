@@ -27,7 +27,7 @@ bool MetaUnifier::is_constant(int idx) const {
 }
 
 bool MetaUnifier::is_singleton_var(int idx) const {
-	return is(idx, Tag::Var) && nodes[idx].idx == idx;
+	return is(idx, Tag::Var) && nodes[idx].target == idx;
 }
 
 // make idx be a var that points to target (unsafe)
@@ -35,7 +35,7 @@ void MetaUnifier::turn_into_var(int idx, int target) {
 	// TODO: propagate is_dot_target
 	assert(dig_var(target) == target);
 	nodes[idx].tag = Tag::Var;
-	nodes[idx].idx = target;
+	nodes[idx].target = target;
 }
 
 void MetaUnifier::register_dot_target(int idx) {
@@ -71,10 +71,10 @@ void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
 	nodes[idx].tag = tag;
 
 	if (tag == Tag::Term)
-		turn_into(nodes[idx].idx, Tag::Term);
+		turn_into(nodes[idx].target, Tag::Term);
 
 	if (tag == Tag::Ctor)
-		turn_into(nodes[idx].idx, Tag::Mono);
+		turn_into(nodes[idx].target, Tag::Mono);
 }
 
 int MetaUnifier::eval(int idx) {
@@ -83,7 +83,7 @@ int MetaUnifier::eval(int idx) {
 	if (!is(idx, Tag::DotResult))
 		return idx;
 
-	int target = dig_var(nodes[idx].idx);
+	int target = dig_var(nodes[idx].target);
 
 	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
 		turn_dot_result_into(idx, Tag::Term);
@@ -97,9 +97,9 @@ int MetaUnifier::eval(int idx) {
 int MetaUnifier::dig_var(int idx) {
 	if (!is(idx, Tag::Var))
 		return idx;
-	if (nodes[idx].idx == idx)
+	if (nodes[idx].target == idx)
 		return idx;
-	return nodes[idx].idx = dig_var(nodes[idx].idx);
+	return nodes[idx].target = dig_var(nodes[idx].target);
 }
 
 void MetaUnifier::unify(int idx1, int idx2) {
@@ -144,8 +144,8 @@ void MetaUnifier::unify(int idx1, int idx2) {
 	}
 
 	if (tag1 == Tag::DotResult && tag2 == Tag::DotResult) {
-		int target1 = nodes[idx1].idx;
-		int target2 = nodes[idx2].idx;
+		int target1 = nodes[idx1].target;
+		int target2 = nodes[idx2].target;
 
 		unify(target1, target2);
 		turn_into_var(idx1, idx2);

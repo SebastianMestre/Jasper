@@ -17,7 +17,7 @@ enum class Tag {
 
 struct Node {
 	Tag tag;
-	int idx;
+	int target;
 	bool is_dot_target{false};
 };
 
