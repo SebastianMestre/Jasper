@@ -24,9 +24,6 @@ struct Node {
 struct MetaUnifier {
 	// TODO: handle dot targets
 
-	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
-	std::vector<Node> nodes;
-
 	Tag tag(int idx) const;
 	bool is_dot_target(int idx) const;
 
@@ -50,6 +47,10 @@ private:
 	int find(int idx);
 
 	void turn_into_var(int idx, int target);
+
+	std::vector<Node> nodes;
+public:
+	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
 };
 
 
