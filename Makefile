@@ -35,7 +35,6 @@ COMMON_TARGETS := \
 	lexer \
 	match_identifiers \
 	metacheck \
-	meta_unifier \
 	parser \
 	source_location \
 	symbol_table \

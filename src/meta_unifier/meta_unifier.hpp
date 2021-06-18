@@ -1,3 +1,5 @@
+#pragma once
+
 #include "log/log.hpp"
 
 #include "nodes.hpp"
@@ -12,7 +14,7 @@
 
 // INVARIANT1: relationships never point at a non-singleton variable
 // INVARIANT2: there are no cycles between variables
-struct Unifier {
+struct Engine {
 	Nodes nodes;
 	Relationships relationships;
 
