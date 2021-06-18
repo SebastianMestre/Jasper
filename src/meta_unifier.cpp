@@ -1,203 +1,109 @@
-#include "meta_unifier.hpp"
-
 #include "log/log.hpp"
 
-#include <iostream>
+#include "nodes.hpp"
+#include "relationships.hpp"
+
+#include <vector>
+#include <algorithm>
 
 #include <cassert>
 
-Tag MetaUnifier::tag(int idx) const {
-	return nodes[idx].tag;
-}
+// INVARIANT3: if (A IsDotResultOf B && A IsDotResultOf C) then B = C
 
-bool MetaUnifier::is_dot_target(int idx) const {
-	return nodes[idx].is_dot_target;
-}
+// INVARIANT1: relationships never point at a non-singleton variable
+// INVARIANT2: there are no cycles between variables
+struct Unifier {
+	Nodes nodes;
+	Relationships relationships;
 
-bool MetaUnifier::is(int idx, Tag t) const {
-	return tag(idx) == t;
-}
+	void unify(int idx1, int idx2) {
+		idx1 = nodes.find(idx1);
+		idx2 = nodes.find(idx2);
 
-bool MetaUnifier::is_constant(Tag t) const {
-	return t == Tag::Term || t == Tag::Mono || t == Tag::Ctor || t == Tag::Func;
-}
-
-bool MetaUnifier::is_constant(int idx) const {
-	return is_constant(tag(idx));
-}
-
-bool MetaUnifier::is_singleton_var(int idx) const {
-	return is(idx, Tag::Var) && nodes[idx].target == idx;
-}
-
-
-bool MetaUnifier::occurs(int v, int i){
-	assert(is_singleton_var(v));
-
-	i = find(i);
-
-	if (i == v)
-		return true;
-
-	if (is(i, Tag::DotResult))
-		if (occurs(v, nodes[i].target))
-			return true;
-
-	return false;
-}
-
-int MetaUnifier::find(int idx) {
-	if (!is(idx, Tag::Var))
-		return idx;
-	if (nodes[idx].target == idx)
-		return idx;
-	return nodes[idx].target = find(nodes[idx].target);
-}
-
-void MetaUnifier::register_dot_target(int idx) {
-	idx = find(idx);
-
-	if (is(idx, Tag::Ctor) || is(idx, Tag::Func))
-		Log::fatal() << "used dot operator on a constructor or typefunc";
-
-	nodes[idx].is_dot_target = true;
-}
-
-void MetaUnifier::turn_into_var(int idx, int target) {
-	// make idx be a var that points to target (unsafe)
-	assert(find(target) == target);
-	nodes[idx].tag = Tag::Var;
-	nodes[idx].target = target;
-	if (nodes[idx].is_dot_target)
-		register_dot_target(target);
-}
-
-void MetaUnifier::turn_dot_result_into(int idx, Tag tag) {
-	assert(is(idx, Tag::DotResult));
-
-	// maybe this assert is actually a legitimate error state?
-	assert(tag == Tag::Term || tag == Tag::Ctor);
-
-	nodes[idx].tag = tag;
-
-	if (tag == Tag::Term)
-		return turn_into(nodes[idx].target, Tag::Term);
-
-	if (tag == Tag::Ctor)
-		return turn_into(nodes[idx].target, Tag::Mono);
-}
-
-void MetaUnifier::turn_into(int idx, Tag tag) {
-	assert(tag != Tag::DotResult);
-	assert(tag != Tag::Var);
-
-	idx = find(idx);
-	if (is(idx, Tag::Var)) {
-		nodes[idx].tag = tag;
-		return;
+		// TODO: occurs check ?
+		relationships.transfer(idx1, idx2);
+		nodes.point_at(idx1, idx2);
 	}
 
-	if (is(idx, Tag::DotResult)) {
-		return turn_dot_result_into(idx, tag);
+	bool prove_error(int idx) {
+		// TODO: implement the following rules
+
+		// error(X) :- is_dot_result_of(X, Y), func(X).
+		// error(X) :- is_dot_result_of(Y, X), func(X).
+		// error(X) :- is_dot_result_of(Y, X), ctor(X).
+		// error(X) :- is_dot_result_of(X, Y), mono(X).
+
+		// error(X) :- mono(X), term(X)
+		// error(X) :- mono(X), func(X)
+		// error(X) :- mono(X), ctor(X)
+		// error(X) :- term(X), func(X)
+		// error(X) :- term(X), ctor(X)
+		// error(X) :- func(X), ctor(X)
+		return false;
 	}
 
-	if (this->tag(idx) != tag)
-		Log::fatal() << "bad turn_into";
-}
+	void infer(int X) {
+		// TODO: unlike a typical prolog implementation, this implementation
+		// does no backtracking or recursion. It might actually need to.
 
-void MetaUnifier::unify(int idx1, int idx2) {
-	// FIXME: This code was written when I was very sleepy. Please, check
-	//        very carefully, and point out the suspicious bits.
+		auto is_term = [&](int idx) -> bool {
+			return relationships.exists(Relationship::Tag::IsTerm, 0, idx);
+		};
 
-	// TODO: propagate is_dot_target
-	// TODO: occurs check
+		if (!is_term(X)) {
 
-	idx1 = find(idx1);
-	idx2 = find(idx2);
+			bool should_be_term = false;
 
-	auto tag1 = tag(idx1);
-	auto tag2 = tag(idx2);
+			// term(X) :- is_dot_result_of(X, Y), term(Y).
+			// X is term <= X is dot result of Y && Y is term
+			std::vector<int> dot_targets =
+			    relationships.gather(Relationship::Tag::IsDotResultOf, 0, 1, X);
+			for (int Y : dot_targets) {
+				if (should_be_term) break;
+				if (is_term(Y))
+					should_be_term = true;
+			}
 
-	if (tag1 != Tag::Var && tag2 == Tag::Var) {
-		std::swap(idx1, idx2);
-		std::swap(tag1, tag2);
-	}
+			// term(X) :- is_dot_result_of(Y, X), term(Y).
+			// X is term <= Y is dot result of X && Y is term
+			std::vector<int> dot_results =
+			    relationships.gather(Relationship::Tag::IsDotResultOf, 1, 0, X);
+			for (int Y : dot_results) {
+				if (should_be_term) break;
+				if (is_term(Y))
+					should_be_term = true;
+			}
 
-	if (tag1 == Tag::Var) {
-		if (tag2 == Tag::DotResult) {
-			if (occurs(idx1, idx2))
-				Log::fatal() << "recursive unification";
+			if (should_be_term)
+				relationships.create(Relationship::Tag::IsTerm, X);
 		}
 
-		turn_into_var(idx1, idx2);
-		return;
+		// TODO: implement the following rules
+		// ctor(X) :- is_dot_result_of(X, Y), mono(Y).
+		// mono(X) :- is_dot_result_of(Y, X), ctor(Y).
 	}
 
-	if (is_constant(tag1) && is_constant(tag2)) {
-		if (tag1 != tag2)
-			Log::fatal() << "unified different concrete metatypes";
-		turn_into_var(idx1, idx2);
-		return;
-	}
+	int eval(int idx) {
+		idx = nodes.find(idx);
 
-	if (!is_constant(tag1) && is_constant(tag2)) {
-		std::swap(idx1, idx2);
-		std::swap(tag1, tag2);
-	}
+		infer(idx);
 
-	if (is_constant(tag1) && tag2 == Tag::DotResult) {
-		turn_dot_result_into(idx2, tag1);
-		turn_into_var(idx1, idx2);
-		return;
-	}
+		if (prove_error(idx)) {
+			// TODO: more error checking
+			Log::fatal() << "contradiction";
+		}
 
-	if (tag1 == Tag::DotResult && tag2 == Tag::DotResult) {
-		int target1 = nodes[idx1].target;
-		int target2 = nodes[idx2].target;
-
-		unify(target1, target2);
-		turn_into_var(idx1, idx2);
-		return;
-	}
-
-	assert(0 && "NOT REACHABLE");
-}
-
-
-int MetaUnifier::eval(int idx) {
-	idx = find(idx);
-
-	if (!is(idx, Tag::DotResult))
 		return idx;
+	}
 
-	int target = eval(nodes[idx].target);
+	int create_var() {
+		return nodes.create_node();
+	}
 
-	if (is(target, Tag::Term) || is(target, Tag::DotResult) || is_dot_target(idx))
-		turn_dot_result_into(idx, Tag::Term);
-
-	if (is(target, Tag::Mono))
-		turn_dot_result_into(idx, Tag::Ctor);
-
-	return idx;
-}
-
-
-int MetaUnifier::make_const_node(Tag tag) {
-	assert(is_constant(tag));
-	int result = nodes.size();
-	nodes.push_back({tag, -1, false});
-	return result;
-}
-
-int MetaUnifier::make_var_node() {
-	int result = nodes.size();
-	nodes.push_back({Tag::Var, result, false});
-	return result;
-}
-
-int MetaUnifier::make_dot_node(int target) {
-	int result = nodes.size();
-	nodes.push_back({Tag::DotResult, target, false});
-	register_dot_target(target);
-	return result;
-}
+	void is_dot_result(int idx1, int idx2) {
+		// find the variables first, so that we uphold INVARIANT1
+		idx1 = nodes.find(idx1);
+		idx2 = nodes.find(idx2);
+		relationships.create(Relationship::Tag::IsDotResultOf, idx1, idx2);
+	}
+};
