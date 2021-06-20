@@ -1,4 +1,4 @@
-#include "tester.hpp"
+#include "test_set.hpp"
 
 #include <iostream>
 #include <memory>
@@ -12,23 +12,23 @@
 
 namespace Test {
 
-Tester::Tester(Test ts) {
+TestSet::TestSet(Test ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-Tester::Tester(std::vector<Test> tss)
+TestSet::TestSet(std::vector<Test> tss)
     : m_test_sets(std::move(tss)) {}
 
-void Tester::add_test(Test ts) {
+void TestSet::add_test(Test ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-void Tester::add_tests(std::vector<Test> tss) {
+void TestSet::add_tests(std::vector<Test> tss) {
 	for (int i = 0; i < tss.size(); ++i)
 		m_test_sets.push_back(std::move(tss[i]));
 }
 
-TestReport Tester::execute() {
+TestReport TestSet::execute() {
 
 	auto veredict = TestStatus::Ok;
 	std::vector<std::string> reports;

@@ -8,13 +8,13 @@
 
 namespace Test {
 
-struct Tester {
+struct TestSet {
 
 	std::vector<Test> m_test_sets;
 
-	Tester() = default;
-	Tester(Test);
-	Tester(std::vector<Test>);
+	TestSet() = default;
+	TestSet(Test);
+	TestSet(std::vector<Test>);
 
 	void add_test(Test);
 	void add_tests(std::vector<Test>);

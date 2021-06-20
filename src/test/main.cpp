@@ -5,11 +5,11 @@
 #include "../algorithms/tarjan_solver.hpp"
 #include "../interpreter/execute.hpp"
 #include "../utils/string_set.hpp"
+#include "interpreter_tests.hpp"
+#include "normal_test.hpp"
+#include "test_set.hpp"
 #include "test_status_tag.hpp"
 #include "test_utils.hpp"
-#include "tester.hpp"
-#include "normal_test.hpp"
-#include "interpreter_tests.hpp"
 
 #define EQUALS(expr, value)                                                    \
 	+[](Interpreter::Interpreter& env,                                         \
@@ -41,7 +41,7 @@
 		return Assert::array_of_size(eval_expression(expr, env, context), size); \
 	}
 
-void interpreter_tests(Test::Tester& tests) {
+void interpreter_tests(Test::TestSet& tests) {
 	    using TestCase = Test::InterpreterTestSet;
 	    using Testers = std::vector<Test::InterpreterTestSet::Interpret>;
 
@@ -148,8 +148,8 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("issue240_2", 8)}));
 }
 
-void tarjan_algorithm_tests(Test::Tester& tester) {
-	Test::Tester inner_tester;
+void tarjan_algorithm_tests(Test::TestSet& tester) {
+	Test::TestSet inner_tester;
 
 	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
 		TarjanSolver solver(3);
@@ -186,12 +186,12 @@ void tarjan_algorithm_tests(Test::Tester& tester) {
 	tester.add_test(std::move(inner_tester));
 }
 
-void allocator_tests(Test::Tester& tests) {
+void allocator_tests(Test::TestSet& tests) {
 	// TODO
 }
 
-void string_set_tests(Test::Tester& tester) {
-	Test::Tester inner_tester;
+void string_set_tests(Test::TestSet& tester) {
+	Test::TestSet inner_tester;
 	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
 		StringSet s;
 		s.insert("AAA");
@@ -212,7 +212,7 @@ void string_set_tests(Test::Tester& tester) {
 }
 
 int main() {
-	Test::Tester tests;
+	Test::TestSet tests;
 	tarjan_algorithm_tests(tests);
 	allocator_tests(tests);
 	string_set_tests(tests);
