@@ -43,10 +43,12 @@ TestReport Tester::execute() {
 		auto prefix_str = prefix.str();
 
 		for (auto& report_piece : report.m_pieces) {
-			report_piece.m_message.insert(
-			    report_piece.m_message.begin(),
-			    prefix_str.begin(),
-			    prefix_str.end());
+			if (!report_piece.m_message.empty()) {
+				report_piece.m_message.insert(
+				    report_piece.m_message.begin(),
+				    prefix_str.begin(),
+				    prefix_str.end());
+			}
 		}
 
 		full_report += report;
