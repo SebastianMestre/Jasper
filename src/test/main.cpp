@@ -41,7 +41,7 @@
 
 void interpreter_tests(Test::Tester& tests) {
 	    using TestCase = Test::InterpreterTestSet;
-	    using Testers = std::vector<Test::Interpret>;
+	    using Testers = std::vector<Test::InterpreterTestSet::Interpret>;
 
 	    tests.add_test(TestCase(
 	        "tests/basic_op.jp",

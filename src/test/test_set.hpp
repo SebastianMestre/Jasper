@@ -17,14 +17,8 @@ struct SymbolTable;
 
 namespace Test {
 
-struct ITestSet {
-	virtual TestReport execute() = 0;
-	virtual ~ITestSet() = default;
-};
-
-using Interpret = ExitStatus (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
-
-struct InterpreterTestSet : public ITestSet {
+struct InterpreterTestSet {
+	using Interpret = ExitStatus (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
 
 	std::string m_source_file;
 	std::vector<Interpret> m_testers;
@@ -34,10 +28,10 @@ struct InterpreterTestSet : public ITestSet {
 	InterpreterTestSet(std::string, Interpret);
 	InterpreterTestSet(std::string, std::vector<Interpret>);
 
-	TestReport execute() override;
+	TestReport execute();
 };
 
-struct NormalTestSet : public ITestSet {
+struct NormalTestSet {
 	using TestFunction = TestReport (*)();
 
 	NormalTestSet();
@@ -46,15 +40,32 @@ struct NormalTestSet : public ITestSet {
 
 	std::vector<TestFunction> m_testers;
 
-	TestReport execute() override;
+	TestReport execute();
 };
 
 struct TestSet {
+	struct ITestSet {
+		virtual TestReport execute() = 0;
+		virtual ~ITestSet() = default;
+	};
+
+	template <typename T>
+	struct TestSetImpl : ITestSet {
+		T x;
+
+		TestSetImpl(T x_)
+		    : x {std::move(x_)} {}
+
+		TestReport execute() override {
+			return x.execute();
+		}
+	};
+
 	std::unique_ptr<ITestSet> m_data;
 
 	template <typename T>
 	TestSet(T data)
-	    : m_data {std::make_unique<T>(std::move(data))} {}
+	    : m_data {std::make_unique<TestSetImpl<T>>(std::move(data))} {}
 
 	bool operator==(TestSet const& o) const {
 		return m_data == o.m_data;
