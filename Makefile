@@ -64,6 +64,8 @@ TEST_ENTRY := main
 TEST_TARGETS := \
 	interpreter_tests \
 	normal_test \
+	test \
+	test_report \
 	test_set
 
 PLAYGROUND_DIR := playground
