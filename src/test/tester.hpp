@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "test.hpp"
 #include "test_set.hpp"
 
 namespace Test {
