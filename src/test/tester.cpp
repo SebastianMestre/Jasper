@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -27,40 +28,48 @@ void Tester::add_tests(std::vector<TestSet> tss) {
 }
 
 TestReport Tester::execute() {
-	std::vector<std::string> reports;
+
+	auto to_text = [](TestStatus status) -> char const* {
+		switch (status) {
+		case TestStatus::Ok:
+			return ".";
+		case TestStatus::Error:
+			return "E";
+		case TestStatus::Fail:
+			return "F";
+		case TestStatus::Empty:
+			return "R";
+		case TestStatus::MissingFile:
+			return "?";
+		default:
+			return nullptr;
+		}
+	};
 
 	auto veredict = TestStatus::Ok;
+	std::vector<std::string> reports;
 
 	for (int i = 0; i < m_test_sets.size(); ++i) {
 		TestReport ts_answer = m_test_sets[i].execute();
 
-		switch (ts_answer.m_code) {
-		case TestStatus::Ok:
-			std::cout << '.';
-			break;
-		case TestStatus::Error:
-			veredict = TestStatus::Error;
-			std::cout << 'E';
-			break;
-		case TestStatus::Fail:
-			if (veredict != TestStatus::Error)
-				veredict = TestStatus::Fail;
-			std::cout << 'F';
-			break;
-		case TestStatus::Empty:
-			if (veredict != TestStatus::Error && veredict != TestStatus::Fail)
-				veredict = TestStatus::Empty;
-			std::cout << 'R';
-			break;
-		case TestStatus::MissingFile:
-			std::cout << '?';
-			break;
-		default:
-			std::cout << " -Unknown test code- ";
+		auto const& msg = ts_answer.m_msg;
+		auto const& code = ts_answer.m_code;
+
+		veredict = worst_of(veredict, code);
+		auto status_text = to_text(code);
+		if (status_text) {
+			std::cout << status_text;
+		} else {
+			std::stringstream ss;
+			ss << "Test number " << i + 1 << ": returned an invalid TestStatus (" << int(code) << ")";
+			reports.push_back(ss.str());
 		}
 
-		if (ts_answer.m_msg.size())
-			reports.push_back(ts_answer.m_msg);
+		if (!ts_answer.m_msg.empty()) {
+			std::stringstream ss;
+			ss << "Test number " << i + 1 << ": " << msg;
+			reports.push_back(ss.str());
+		}
 	}
 
 	std::cout << std::endl;
