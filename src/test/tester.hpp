@@ -10,14 +10,14 @@ namespace Test {
 
 struct Tester {
 
-	std::vector<std::unique_ptr<TestSet>> m_test_sets;
+	std::vector<TestSet> m_test_sets;
 
 	Tester() = default;
-	Tester(std::unique_ptr<TestSet>);
-	Tester(std::vector<std::unique_ptr<TestSet>>);
+	Tester(TestSet);
+	Tester(std::vector<TestSet>);
 
-	void add_test(std::unique_ptr<TestSet>);
-	void add_tests(std::vector<std::unique_ptr<TestSet>>);
+	void add_test(TestSet);
+	void add_tests(std::vector<TestSet>);
 	TestReport execute();
 };
 

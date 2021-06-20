@@ -43,7 +43,7 @@ void interpreter_tests(Test::Tester& tests) {
 	    using TestCase = Test::InterpreterTestSet;
 	    using Testers = std::vector<Test::Interpret>;
 
-	    tests.add_test(std::make_unique<TestCase>(
+	    tests.add_test(TestCase(
 	        "tests/basic_op.jp",
 	        Testers {
 	            EQUALS("int_val", 10),
@@ -71,7 +71,7 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("ternary_disambiguations", 1),
 	        }));
 
-	    tests.add_test(std::make_unique<TestCase>(
+	    tests.add_test(TestCase(
 	        "tests/function.jp",
 	        Testers {
 	            EQUALS("normal()", 3),
@@ -85,7 +85,7 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("second(7,15)", 15),
 	        }));
 
-	    tests.add_test(std::make_unique<TestCase>(
+	    tests.add_test(TestCase(
 	        "tests/recursion.jp",
 	        Testers {
 	            EQUALS("fib(6)", 8),
@@ -95,11 +95,11 @@ void interpreter_tests(Test::Tester& tests) {
 	            IS_FALSE("odd(18)"),
 	            EQUALS("inner()", 2)}));
 
-	    tests.add_test(std::make_unique<TestCase>(
+	    tests.add_test(TestCase(
 	        "tests/loops.jp",
 	        Testers {EQUALS("for_loop()", 120), EQUALS("while_loop()", 120)}));
 
-	    tests.add_test(std::make_unique<TestCase>(
+	    tests.add_test(TestCase(
 	        "tests/native.jp",
 	        Testers {
 	            ARRAY_OF_SIZE("append()", 1),
@@ -109,10 +109,10 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("size_of()", 2),
 	            EQUALS("join()", "10,10")}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/struct.jp", Testers {EQUALS("access()", "ABCA")}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/typesystem.jp",
 	        Testers {
 	            EQUALS("a", 1),
@@ -121,7 +121,7 @@ void interpreter_tests(Test::Tester& tests) {
 	            ARRAY_OF_SIZE("__invoke()", 3),
 	            EQUALS("extract()", 4)}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/union.jp",
 	        Testers {
 	            EQUALS("serialize(from_number(10))", "(number)"),
@@ -129,13 +129,13 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("__invoke()", 3),
 	            EQUALS("capture_inner()", 10)}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/full_union.jp", Testers {EQUALS("__invoke()", 11)}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/simple_language.jp", Testers {EQUALS("__invoke()", 42)}));
 
-	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	    tests.add_test(TestCase(
 	        "tests/seq_expressions.jp",
 	        Testers {
 	            EQUALS("return_const", 31415),
@@ -147,7 +147,7 @@ void interpreter_tests(Test::Tester& tests) {
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
-	tester.add_test(std::make_unique<Test::NormalTestSet>(
+	tester.add_test(Test::NormalTestSet(
 	    std::vector<Test::NormalTestSet::TestFunction> {
 	        +[]() -> TestReport {
 		        TarjanSolver solver(3);
@@ -188,7 +188,7 @@ void allocator_tests(Test::Tester& tests) {
 }
 
 void string_set_tests(Test::Tester& tester) {
-	tester.add_test(std::make_unique<Test::NormalTestSet>(
+	tester.add_test(Test::NormalTestSet(
 	    std::vector<Test::NormalTestSet::TestFunction> {+[]() -> TestReport {
 		    StringSet s;
 		    s.insert("AAA");

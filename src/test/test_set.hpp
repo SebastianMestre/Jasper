@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,15 +17,14 @@ struct SymbolTable;
 
 namespace Test {
 
-struct TestSet {
-
+struct ITestSet {
 	virtual TestReport execute() = 0;
-	virtual ~TestSet() = default;
+	virtual ~ITestSet() = default;
 };
 
 using Interpret = ExitStatus (*)(Interpreter::Interpreter&, Frontend::SymbolTable&);
 
-struct InterpreterTestSet : public TestSet {
+struct InterpreterTestSet : public ITestSet {
 
 	std::string m_source_file;
 	std::vector<Interpret> m_testers;
@@ -37,7 +37,7 @@ struct InterpreterTestSet : public TestSet {
 	TestReport execute() override;
 };
 
-struct NormalTestSet : public TestSet {
+struct NormalTestSet : public ITestSet {
 	using TestFunction = TestReport (*)();
 
 	NormalTestSet();
@@ -47,6 +47,22 @@ struct NormalTestSet : public TestSet {
 	std::vector<TestFunction> m_testers;
 
 	TestReport execute() override;
+};
+
+struct TestSet {
+	std::unique_ptr<ITestSet> m_data;
+
+	template <typename T>
+	TestSet(T data)
+	    : m_data {std::make_unique<T>(std::move(data))} {}
+
+	bool operator==(TestSet const& o) const {
+		return m_data == o.m_data;
+	}
+
+	TestReport execute() {
+		return m_data->execute();
+	}
 };
 
 } // namespace Test
