@@ -1,7 +1,6 @@
+#include "normal_test.hpp"
 
 #include <cassert>
-
-#include "test_set.hpp"
 
 namespace Test {
 

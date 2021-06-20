@@ -63,7 +63,7 @@ TEST_DIR := test
 TEST_ENTRY := main
 TEST_TARGETS := \
 	interpreter_tests \
-	test_set \
+	normal_test \
 	tester
 
 PLAYGROUND_DIR := playground
