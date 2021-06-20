@@ -66,7 +66,7 @@ TestReport NormalTestSet::execute() {
 			auto report = test();
 
 			// FUTURE: Accumulate failed tests
-			if (report.m_code != TestStatus::Ok)
+			if (report.status() != TestStatus::Ok)
 				return report;
 		}
 	} catch (std::exception const& e) {

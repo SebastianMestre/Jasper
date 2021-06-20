@@ -29,7 +29,3 @@ inline TestStatus worst_of(TestStatus lhs, TestStatus rhs) {
 	return TestStatus::Ok;
 }
 
-struct TestReport {
-	TestStatus m_code;
-	std::string m_msg;
-};

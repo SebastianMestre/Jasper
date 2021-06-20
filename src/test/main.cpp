@@ -214,8 +214,10 @@ int main() {
 	allocator_tests(tests);
 	string_set_tests(tests);
 	interpreter_tests(tests);
-	auto test_result = tests.execute();
-	if (test_result.m_code != TestStatus::Ok)
+	auto test_report = tests.execute();
+	test_report.print();
+	auto test_status = test_report.status();
+	if (test_status != TestStatus::Ok)
 		return 1;
 	return 0;
 }

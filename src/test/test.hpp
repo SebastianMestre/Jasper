@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "test_status_tag.hpp"
+#include "test_report.hpp"
 
 struct TestSet {
 	struct Interface {

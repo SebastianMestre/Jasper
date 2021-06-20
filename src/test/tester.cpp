@@ -7,7 +7,8 @@
 #include <vector>
 
 #include "../utils/typedefs.hpp"
-#include "test_status_tag.hpp"
+// #include "test_status_tag.hpp"
+#include "test_report.hpp"
 
 namespace Test {
 
@@ -29,55 +30,29 @@ void Tester::add_tests(std::vector<TestSet> tss) {
 
 TestReport Tester::execute() {
 
-	auto to_text = [](TestStatus status) -> char const* {
-		switch (status) {
-		case TestStatus::Ok:
-			return ".";
-		case TestStatus::Error:
-			return "E";
-		case TestStatus::Fail:
-			return "F";
-		case TestStatus::Empty:
-			return "R";
-		case TestStatus::MissingFile:
-			return "?";
-		default:
-			return nullptr;
-		}
-	};
-
 	auto veredict = TestStatus::Ok;
 	std::vector<std::string> reports;
 
+	TestReport full_report;
+
 	for (int i = 0; i < m_test_sets.size(); ++i) {
-		TestReport ts_answer = m_test_sets[i].execute();
+		TestReport report = m_test_sets[i].execute();
 
-		auto const& msg = ts_answer.m_msg;
-		auto const& code = ts_answer.m_code;
+		std::stringstream prefix;
+		prefix << "[" << i << "] ";
+		auto prefix_str = prefix.str();
 
-		veredict = worst_of(veredict, code);
-		auto status_text = to_text(code);
-		if (status_text) {
-			std::cout << status_text;
-		} else {
-			std::stringstream ss;
-			ss << "Test number " << i + 1 << ": returned an invalid TestStatus (" << int(code) << ")";
-			reports.push_back(ss.str());
+		for (auto& report_piece : report.m_pieces) {
+			report_piece.m_message.insert(
+			    report_piece.m_message.begin(),
+			    prefix_str.begin(),
+			    prefix_str.end());
 		}
 
-		if (!ts_answer.m_msg.empty()) {
-			std::stringstream ss;
-			ss << "Test number " << i + 1 << ": " << msg;
-			reports.push_back(ss.str());
-		}
+		full_report += report;
 	}
 
-	std::cout << std::endl;
-	for (const auto& r : reports)
-		std::cout << r << std::endl;
-	
-	// TODO: put some text in the report
-	return {veredict, ""};
+	return full_report;
 }
 
 } // namespace Test
