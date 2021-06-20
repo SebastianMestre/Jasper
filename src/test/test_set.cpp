@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "../utils/typedefs.hpp"
-// #include "test_status_tag.hpp"
 #include "test_report.hpp"
 
 namespace Test {

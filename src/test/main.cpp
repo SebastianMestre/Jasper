@@ -8,7 +8,7 @@
 #include "interpreter_tests.hpp"
 #include "normal_test.hpp"
 #include "test_set.hpp"
-#include "test_status_tag.hpp"
+#include "test_status.hpp"
 #include "test_utils.hpp"
 
 #define EQUALS(expr, value)                                                    \

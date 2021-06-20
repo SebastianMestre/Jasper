@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "test_status_tag.hpp"
+#include "test_status.hpp"
 
 struct TestReportPiece {
 	TestStatus m_status;
