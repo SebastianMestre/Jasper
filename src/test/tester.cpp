@@ -12,18 +12,18 @@
 
 namespace Test {
 
-Tester::Tester(TestSet ts) {
+Tester::Tester(Test ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-Tester::Tester(std::vector<TestSet> tss)
+Tester::Tester(std::vector<Test> tss)
     : m_test_sets(std::move(tss)) {}
 
-void Tester::add_test(TestSet ts) {
+void Tester::add_test(Test ts) {
 	m_test_sets.push_back(std::move(ts));
 }
 
-void Tester::add_tests(std::vector<TestSet> tss) {
+void Tester::add_tests(std::vector<Test> tss) {
 	for (int i = 0; i < tss.size(); ++i)
 		m_test_sets.push_back(std::move(tss[i]));
 }

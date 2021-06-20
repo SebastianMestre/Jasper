@@ -4,7 +4,9 @@
 
 #include "test_report.hpp"
 
-struct TestSet {
+namespace Test {
+
+struct Test {
 	struct Interface {
 		virtual TestReport execute() = 0;
 		virtual ~Interface() = default;
@@ -25,10 +27,10 @@ struct TestSet {
 	std::unique_ptr<Interface> m_data;
 
 	template <typename T>
-	TestSet(T data)
+	Test(T data)
 	    : m_data {std::make_unique<Impl<T>>(std::move(data))} {}
 
-	bool operator==(TestSet const& o) const {
+	bool operator==(Test const& o) const {
 		return m_data == o.m_data;
 	}
 
@@ -36,3 +38,5 @@ struct TestSet {
 		return m_data->execute();
 	}
 };
+
+}
