@@ -9,6 +9,7 @@
 #include "test_utils.hpp"
 #include "tester.hpp"
 #include "test_set.hpp"
+#include "interpreter_tests.hpp"
 
 #define EQUALS(expr, value)                                                    \
 	+[](Interpreter::Interpreter& env,                                         \
