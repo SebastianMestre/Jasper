@@ -151,7 +151,7 @@ void interpreter_tests(Test::TestSet& tests) {
 void tarjan_algorithm_tests(Test::TestSet& tester) {
 	Test::TestSet inner_tester;
 
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
 		TarjanSolver solver(3);
 		solver.add_edge(0, 1);
 		solver.add_edge(1, 2);
@@ -168,7 +168,7 @@ void tarjan_algorithm_tests(Test::TestSet& tester) {
 		return {TestStatus::Ok};
 	}));
 
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
 		TarjanSolver solver(2);
 		solver.add_edge(0, 1);
 		solver.solve();
@@ -192,7 +192,7 @@ void allocator_tests(Test::TestSet& tests) {
 
 void string_set_tests(Test::TestSet& tester) {
 	Test::TestSet inner_tester;
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
 		StringSet s;
 		s.insert("AAA");
 		if (!s.includes("AAA"))

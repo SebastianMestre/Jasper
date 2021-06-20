@@ -21,6 +21,8 @@ struct TestReport {
 	TestReport(TestStatus status, std::string message)
 	    : m_pieces {{status, std::move(message)}} {}
 
+	TestReport(TestReportPiece piece)
+	    : m_pieces {{std::move(piece)}} {}
 
 	TestReport& operator += (TestReport const& o) {
 		m_pieces.insert(m_pieces.end(), o.m_pieces.begin(), o.m_pieces.end());

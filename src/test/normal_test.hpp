@@ -5,7 +5,7 @@
 namespace Test {
 
 struct NormalTest {
-	using TestFunction = TestReport (*)();
+	using TestFunction = TestReportPiece (*)();
 
 	NormalTest(TestFunction);
 	TestReport execute();
