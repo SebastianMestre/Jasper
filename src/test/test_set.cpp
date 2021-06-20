@@ -1,6 +1,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <cassert>
+
 #include "../interpreter/execute.hpp"
 #include "../symbol_table.hpp"
 #include "test_set.hpp"
@@ -49,31 +51,17 @@ TestReport InterpreterTestSet::execute() {
 	return {TestStatus::Ok};
 }
 
-NormalTestSet::NormalTestSet() {}
+NormalTest::NormalTest(TestFunction tester)
+    : m_tester {tester} {
+	assert(tester);
+}
 
-NormalTestSet::NormalTestSet(TestFunction tester)
-    : m_testers {tester} {}
-
-NormalTestSet::NormalTestSet(std::vector<TestFunction> testers)
-    : m_testers {std::move(testers)} {}
-
-TestReport NormalTestSet::execute() {
-	if (m_testers.empty())
-		return {TestStatus::Empty};
-
+TestReport NormalTest::execute() {
 	try {
-		for (auto* test : m_testers) {
-			auto report = test();
-
-			// FUTURE: Accumulate failed tests
-			if (report.status() != TestStatus::Ok)
-				return report;
-		}
+		return m_tester();
 	} catch (std::exception const& e) {
 		return {TestStatus::Error, e.what()};
 	}
-
-	return {TestStatus::Ok};
 }
 
 } // namespace Test

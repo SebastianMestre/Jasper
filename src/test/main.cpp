@@ -148,40 +148,41 @@ void interpreter_tests(Test::Tester& tests) {
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {
-	tester.add_test(Test::NormalTestSet(
-	    std::vector<Test::NormalTestSet::TestFunction> {
-	        +[]() -> TestReport {
-		        TarjanSolver solver(3);
-		        solver.add_edge(0, 1);
-		        solver.add_edge(1, 2);
-		        solver.add_edge(2, 0);
-		        solver.solve();
+	Test::Tester inner_tester;
 
-		        auto const& cov = solver.component_of_vertices();
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+		TarjanSolver solver(3);
+		solver.add_edge(0, 1);
+		solver.add_edge(1, 2);
+		solver.add_edge(2, 0);
+		solver.solve();
 
-		        if (cov[0] != cov[1] || cov[0] != cov[2])
-			        return {
-			            TestStatus::Fail,
-			            "All vertices in a 3-cycle should be in the same SCC"};
+		auto const& cov = solver.component_of_vertices();
 
-		        return {TestStatus::Ok};
-	        },
-	        +[]() -> TestReport {
-		        TarjanSolver solver(2);
-		        solver.add_edge(0, 1);
-		        solver.solve();
+		if (cov[0] != cov[1] || cov[0] != cov[2])
+			return {
+			    TestStatus::Fail,
+			    "All vertices in a 3-cycle should be in the same SCC"};
 
-		        auto const& cov = solver.component_of_vertices();
-		        if (cov[0] == cov[1])
-			        return {TestStatus::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
+		return {TestStatus::Ok};
+	}));
 
-		        if (cov[0] < cov[1])
-			        return {
-			            TestStatus::Fail,
-			            "SCCs should be in reverse topological sort."};
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+		TarjanSolver solver(2);
+		solver.add_edge(0, 1);
+		solver.solve();
 
-		        return {TestStatus::Ok};
-	        }}));
+		auto const& cov = solver.component_of_vertices();
+		if (cov[0] == cov[1])
+			return {TestStatus::Fail, "Vertices that are only weakly connected should not be in the same SCC"};
+
+		if (cov[0] < cov[1])
+			return {TestStatus::Fail, "SCCs should be in reverse topological sort."};
+
+		return {TestStatus::Ok};
+	}));
+
+	tester.add_test(std::move(inner_tester));
 }
 
 void allocator_tests(Test::Tester& tests) {
@@ -189,24 +190,24 @@ void allocator_tests(Test::Tester& tests) {
 }
 
 void string_set_tests(Test::Tester& tester) {
-	tester.add_test(Test::NormalTestSet(
-	    std::vector<Test::NormalTestSet::TestFunction> {+[]() -> TestReport {
-		    StringSet s;
-		    s.insert("AAA");
-		    if (!s.includes("AAA"))
-			    return {TestStatus::Fail, "AAA is not in the set after inserting it"};
+	Test::Tester inner_tester;
+	inner_tester.add_test(Test::NormalTest(+[]() -> TestReport {
+		StringSet s;
+		s.insert("AAA");
+		if (!s.includes("AAA"))
+			return {TestStatus::Fail, "AAA is not in the set after inserting it"};
 
-		    s.insert("BBB");
-		    if (!s.includes("AAA"))
-			    return {
-			        TestStatus::Fail,
-			        "AAA is no longer in the set after inserting BBB"};
+		s.insert("BBB");
+		if (!s.includes("AAA"))
+			return {TestStatus::Fail, "AAA is no longer in the set after inserting BBB"};
 
-		    if (!s.includes("BBB"))
-			    return {TestStatus::Fail, "BBB is not in the set after inserting it"};
+		if (!s.includes("BBB"))
+			return {TestStatus::Fail, "BBB is not in the set after inserting it"};
 
-		    return {TestStatus::Ok};
-	    }}));
+		return {TestStatus::Ok};
+	}));
+
+	tester.add_test(std::move(inner_tester));
 }
 
 int main() {

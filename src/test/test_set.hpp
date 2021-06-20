@@ -30,16 +30,13 @@ struct InterpreterTestSet {
 	TestReport execute();
 };
 
-struct NormalTestSet {
+struct NormalTest {
 	using TestFunction = TestReport (*)();
 
-	NormalTestSet();
-	NormalTestSet(TestFunction);
-	NormalTestSet(std::vector<TestFunction>);
-
-	std::vector<TestFunction> m_testers;
-
+	NormalTest(TestFunction);
 	TestReport execute();
+
+	TestFunction m_tester;
 };
 
 } // namespace Test
