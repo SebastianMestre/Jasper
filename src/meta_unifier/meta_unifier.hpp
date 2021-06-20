@@ -57,7 +57,7 @@ struct Engine {
 			bool should_be_term = false;
 
 			// term(X) :- is_dot_result_of(X, Y), term(Y).
-			// X is term <= X is dot result of Y && Y is term
+			// X is dot result of Y && Y is term => X is term
 			std::vector<int> dot_targets =
 			    relationships.gather(Relationship::Tag::IsDotResultOf, 0, 1, X);
 			for (int Y : dot_targets) {
@@ -67,7 +67,7 @@ struct Engine {
 			}
 
 			// term(X) :- is_dot_result_of(Y, X), term(Y).
-			// X is term <= Y is dot result of X && Y is term
+			// Y is dot result of X && Y is term => X is term
 			std::vector<int> dot_results =
 			    relationships.gather(Relationship::Tag::IsDotResultOf, 1, 0, X);
 			for (int Y : dot_results) {
@@ -82,7 +82,7 @@ struct Engine {
 
 		// TODO: implement the following rules
 		// ctor(X) :- is_dot_result_of(X, Y), mono(Y).
-		// mono(X) :- is_dot_result_of(Y, X), ctor(Y).
+		// mono(Y) :- is_dot_result_of(X, Y), ctor(X).
 	}
 
 	int eval(int idx) {
