@@ -30,10 +30,6 @@ struct Test {
 	Test(T data)
 	    : m_data {std::make_unique<Impl<T>>(std::move(data))} {}
 
-	bool operator==(Test const& o) const {
-		return m_data == o.m_data;
-	}
-
 	TestReport execute() {
 		return m_data->execute();
 	}
