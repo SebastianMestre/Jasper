@@ -62,6 +62,7 @@ INTERPRETER_TARGETS := \
 TEST_DIR := test
 TEST_ENTRY := main
 TEST_TARGETS := \
+	interpreter_tests \
 	lib/interpreter_tests \
 	lib/normal_test \
 	lib/test \
