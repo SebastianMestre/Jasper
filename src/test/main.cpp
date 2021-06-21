@@ -219,7 +219,7 @@ int main() {
 	interpreter_tests(tests);
 	auto test_report = tests.execute();
 	test_report.print();
-	auto test_status = test_report.status();
+	auto test_status = test_report.compute_status();
 	if (test_status != TestStatus::Ok)
 		return 1;
 	return 0;

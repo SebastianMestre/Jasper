@@ -36,5 +36,5 @@ struct TestReport {
 	}
 
 	void print();
-	TestStatus status();
+	TestStatus compute_status();
 };

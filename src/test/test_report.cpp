@@ -38,7 +38,7 @@ void TestReport::print() {
 	}
 }
 
-TestStatus TestReport::status() {
+TestStatus TestReport::compute_status() {
 	return std::accumulate(
 	    m_pieces.begin(),
 	    m_pieces.end(),
