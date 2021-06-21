@@ -5,11 +5,11 @@
 #include "../algorithms/tarjan_solver.hpp"
 #include "../interpreter/execute.hpp"
 #include "../utils/string_set.hpp"
-#include "interpreter_tests.hpp"
-#include "normal_test.hpp"
-#include "test_set.hpp"
-#include "test_status.hpp"
-#include "test_utils.hpp"
+#include "lib/interpreter_tests.hpp"
+#include "lib/normal_test.hpp"
+#include "lib/test_set.hpp"
+#include "lib/test_status.hpp"
+#include "lib/test_utils.hpp"
 
 #define EQUALS(expr, value)                                                    \
 	+[](Interpreter::Interpreter& env,                                         \

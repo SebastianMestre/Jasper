@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../utils/typedefs.hpp"
+#include "../../utils/typedefs.hpp"
 #include "test_report.hpp"
 
 namespace Test {

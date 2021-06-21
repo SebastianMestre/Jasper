@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 
-#include "../interpreter/execute.hpp"
-#include "../interpreter/value.hpp"
+#include "../../interpreter/execute.hpp"
+#include "../../interpreter/value.hpp"
 
 namespace Assert {
 

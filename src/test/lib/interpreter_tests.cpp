@@ -3,8 +3,8 @@
 #include <fstream>
 #include <sstream>
 
-#include "../interpreter/execute.hpp"
-#include "../symbol_table.hpp"
+#include "../../interpreter/execute.hpp"
+#include "../../symbol_table.hpp"
 
 namespace Test {
 

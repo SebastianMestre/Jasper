@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../interpreter/exit_status_tag.hpp"
+#include "../../interpreter/exit_status_tag.hpp"
 #include "test_report.hpp"
 
 namespace Interpreter {

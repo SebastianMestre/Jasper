@@ -62,11 +62,11 @@ INTERPRETER_TARGETS := \
 TEST_DIR := test
 TEST_ENTRY := main
 TEST_TARGETS := \
-	interpreter_tests \
-	normal_test \
-	test \
-	test_report \
-	test_set
+	lib/interpreter_tests \
+	lib/normal_test \
+	lib/test \
+	lib/test_report \
+	lib/test_set
 
 PLAYGROUND_DIR := playground
 PLAYGROUND_ENTRY := main
