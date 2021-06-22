@@ -13,7 +13,11 @@
 void tarjan_algorithm_tests(Test::TestSet& tester) {
 	Test::TestSet inner_tester;
 
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
+	auto add_test = [&](Test::NormalTest::TestFunction function) {
+		inner_tester.add_test(Test::NormalTest(function));
+	};
+
+	add_test(+[]() -> TestReportPiece {
 		TarjanSolver solver(3);
 		solver.add_edge(0, 1);
 		solver.add_edge(1, 2);
@@ -28,9 +32,9 @@ void tarjan_algorithm_tests(Test::TestSet& tester) {
 			    "All vertices in a 3-cycle should be in the same SCC"};
 
 		return {TestStatus::Ok};
-	}));
+	});
 
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
+	add_test(+[]() -> TestReportPiece {
 		TarjanSolver solver(2);
 		solver.add_edge(0, 1);
 		solver.solve();
@@ -43,7 +47,7 @@ void tarjan_algorithm_tests(Test::TestSet& tester) {
 			return {TestStatus::Fail, "SCCs should be in reverse topological sort."};
 
 		return {TestStatus::Ok};
-	}));
+	});
 
 	tester.add_test(std::move(inner_tester));
 }
@@ -54,7 +58,12 @@ void allocator_tests(Test::TestSet& tests) {
 
 void string_set_tests(Test::TestSet& tester) {
 	Test::TestSet inner_tester;
-	inner_tester.add_test(Test::NormalTest(+[]() -> TestReportPiece {
+
+	auto add_test = [&](Test::NormalTest::TestFunction function) {
+		inner_tester.add_test(Test::NormalTest(function));
+	};
+
+	add_test(+[]() -> TestReportPiece {
 		StringSet s;
 		s.insert("AAA");
 		if (!s.includes("AAA"))
@@ -68,17 +77,19 @@ void string_set_tests(Test::TestSet& tester) {
 			return {TestStatus::Fail, "BBB is not in the set after inserting it"};
 
 		return {TestStatus::Ok};
-	}));
+	});
 
 	tester.add_test(std::move(inner_tester));
 }
 
 int main() {
 	Test::TestSet tests;
+
 	tarjan_algorithm_tests(tests);
 	allocator_tests(tests);
 	string_set_tests(tests);
 	interpreter_tests(tests);
+
 	auto test_report = tests.execute();
 	test_report.print();
 	auto test_status = test_report.compute_status();
