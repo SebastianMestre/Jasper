@@ -53,42 +53,8 @@ void SymbolTable::end_scope() {
 	m_shadowed_scopes.pop_back();
 }
 
-AST::SequenceExpression* SymbolTable::current_seq_expr() {
-	return m_seq_expr_stack.empty() ? nullptr : m_seq_expr_stack.back();
-}
 
-void SymbolTable::enter_seq_expr(AST::SequenceExpression* seq_expr) {
-	m_seq_expr_stack.push_back(seq_expr);
-}
 
-void SymbolTable::exit_seq_expr() {
-	m_seq_expr_stack.pop_back();
-}
 
-AST::FunctionLiteral* SymbolTable::current_function() {
-	return m_function_stack.empty() ? nullptr : m_function_stack.back();
-}
-
-void SymbolTable::enter_function(AST::FunctionLiteral* func) {
-	m_function_stack.push_back(func);
-}
-
-void SymbolTable::exit_function() {
-	m_function_stack.pop_back();
-}
-
-AST::Declaration* SymbolTable::current_top_level_declaration() {
-	return m_current_decl;
-}
-
-void SymbolTable::enter_top_level_decl(AST::Declaration* decl) {
-	assert(!m_current_decl);
-	m_current_decl = decl;
-}
-
-void SymbolTable::exit_top_level_decl() {
-	assert(m_current_decl);
-	m_current_decl = nullptr;
-}
 
 } // namespace Frontend
