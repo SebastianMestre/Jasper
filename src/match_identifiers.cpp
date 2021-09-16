@@ -281,7 +281,7 @@ struct SymbolResolutionHelper {
 	return {};
 }
 
-[[nodiscard]] ErrorReport match_identifiers(AST::DeclarationList* ast, SymbolResolutionHelper& env) {
+[[nodiscard]] ErrorReport match_identifiers(AST::Program* ast, SymbolResolutionHelper& env) {
 	for (auto& decl : ast->m_declarations) {
 		env.declare(&decl);
 		decl.m_surrounding_function = env.current_function();
@@ -361,7 +361,7 @@ struct SymbolResolutionHelper {
 		DISPATCH(ReturnStatement);
 
 		DISPATCH(Declaration);
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);

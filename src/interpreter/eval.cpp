@@ -38,7 +38,7 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 	}
 };
 
-void eval(AST::DeclarationList* ast, Interpreter& e) {
+void eval(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
@@ -414,7 +414,7 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 		DISPATCH(Declaration);
 
 		DISPATCH(Block);

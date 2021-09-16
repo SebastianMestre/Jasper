@@ -96,11 +96,11 @@ struct BlockFuncDeclaration : public Declaration {
 	    : Declaration {CSTTag::BlockFuncDeclaration} {}
 };
 
-struct DeclarationList : public CST {
+struct Program : public CST {
 	std::vector<Declaration*> m_declarations;
 
-	DeclarationList()
-	    : CST {CSTTag::DeclarationList} {}
+	Program()
+	    : CST {CSTTag::Program} {}
 };
 
 struct IntegerLiteral : public CST {

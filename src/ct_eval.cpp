@@ -40,7 +40,7 @@ AST::Constructor* constructor_from_ast(AST::AST* ast, TypeChecker& tc, AST::Allo
 
 AST::AST* ct_eval(
     AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	// This does something very similar to what ct_eval(DeclarationList) does.
+	// This does something very similar to what ct_eval(Program) does.
 	// Maybe it can be de-duplicated?
 
 	assert(ast);
@@ -313,8 +313,8 @@ AST::Declaration* ct_eval(
 	return ast;
 }
 
-AST::DeclarationList* ct_eval(
-    AST::DeclarationList* ast, TypeChecker& tc, AST::Allocator& alloc) {
+AST::Program* ct_eval(
+    AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	auto& uf = tc.m_core.m_meta_core;
 
@@ -427,7 +427,7 @@ AST::AST* ct_eval(
 		DISPATCH(ReturnStatement);
 
 		DISPATCH(Declaration);
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 
 		DISPATCH(TypeTerm);
 		REJECT(StructExpression); // handled in type_func_from_ast

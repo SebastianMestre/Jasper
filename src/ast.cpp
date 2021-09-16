@@ -195,8 +195,8 @@ AST* convert_ast(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
-	auto ast = alloc.make<DeclarationList>();
+AST* convert_ast(CST::Program* cst, Allocator& alloc) {
+	auto ast = alloc.make<Program>();
 
 	for (auto& declaration : cst->m_declarations) {
 		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
@@ -456,7 +456,7 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
 
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 		DISPATCH(PlainDeclaration);
 		DISPATCH(FuncDeclaration);
 		DISPATCH(BlockFuncDeclaration);

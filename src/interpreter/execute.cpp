@@ -42,8 +42,8 @@ ExitStatus execute(
 		print(cst, 1);
 
 	// Can this even happen? parse_program should always either return a
-	// DeclarationList or an error
-	if (cst->type() != CSTTag::DeclarationList)
+	// Program or an error
+	if (cst->type() != CSTTag::Program)
 		return ExitStatus::TopLevelTypeError;
 
 	AST::Allocator ast_allocator;
@@ -64,7 +64,7 @@ ExitStatus execute(
 		}
 	}
 
-	tc.m_env.compute_declaration_order(static_cast<AST::DeclarationList*>(ast));
+	tc.m_env.compute_declaration_order(static_cast<AST::Program*>(ast));
 
 	if (settings.typecheck) {
 		tc.m_core.m_meta_core.comp = &tc.m_env.declaration_components;

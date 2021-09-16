@@ -71,11 +71,11 @@ struct Declaration : public AST {
 };
 
 // doesnt have a ast_vtype
-struct DeclarationList : public AST {
+struct Program : public AST {
 	std::vector<Declaration> m_declarations;
 
-	DeclarationList()
-	    : AST {ASTTag::DeclarationList} {}
+	Program()
+	    : AST {ASTTag::Program} {}
 };
 
 // las estructuras como declaration list, index expression, block, if, for no tienen

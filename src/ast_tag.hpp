@@ -23,7 +23,7 @@
 	X(IfElseStatement)                                                         \
 	X(WhileStatement)                                                          \
                                                                                \
-	X(DeclarationList)                                                         \
+	X(Program)                                                         \
 	X(Declaration)                                                             \
                                                                                \
 	X(UnionExpression)                                                         \

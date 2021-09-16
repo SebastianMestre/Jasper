@@ -132,7 +132,7 @@ void compute_offsets(AST::SequenceExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_body, frame_offset);
 }
 
-void compute_offsets(AST::DeclarationList* ast, int frame_offset) {
+void compute_offsets(AST::Program* ast, int frame_offset) {
 	for (auto& decl : ast->m_declarations) {
 		if (decl.m_value)
 			compute_offsets(decl.m_value, frame_offset);
@@ -188,7 +188,7 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(ReturnStatement);
 
 		DISPATCH(Declaration);
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
