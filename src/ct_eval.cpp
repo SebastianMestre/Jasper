@@ -12,11 +12,9 @@
 
 namespace TypeChecker {
 
+static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
-static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
-
-static TypeFunctionId type_func_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
@@ -164,57 +162,60 @@ static AST::Expr* ct_eval(
 // types
 
 
-static TypeFunctionId type_func_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-#ifndef NDEBUG
-	auto& uf = tc.m_core.m_meta_core;
-	assert(uf.is(uf.eval(ast->m_meta_type), Tag::Func));
-#endif
-	if (ast->type() == ASTTag::TypeFunctionHandle) {
-		return static_cast<AST::TypeFunctionHandle*>(ast)->m_value;
-	} else if (ast->type() == ASTTag::Identifier) {
-		auto as_id = static_cast<AST::Identifier*>(ast);
-		auto decl = as_id->m_declaration;
-		auto value =
-		    static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-		return value->m_value;
-	// TODO: handle duplication better
-	} else if (ast->type() == ASTTag::UnionExpression) {
-		auto as_ue = static_cast<AST::UnionExpression*>(ast);
+static
+std::unordered_map<InternedString, MonoId>
+build_map(
+    std::vector<InternedString> const& names,
+    std::vector<AST::Expr*> const& types,
+    TypeChecker& tc,
+    AST::Allocator& alloc) {
 
-		std::unordered_map<InternedString, MonoId> structure;
-		int constructor_count = as_ue->m_constructors.size();
-		for (int i = 0; i < constructor_count; ++i){
-			MonoId mono = eval_then_get_mono(as_ue->m_types[i], tc, alloc);
-			InternedString name = as_ue->m_constructors[i];
-			assert(!structure.count(name));
-			structure[name] = mono;
-		}
+	assert(names.size() == types.size());
 
-		TypeFunctionId result = tc.m_core.new_type_function(
-		    TypeFunctionTag::Variant, {}, std::move(structure));
-
-		return result;
-	} else if (ast->type() == ASTTag::StructExpression) {
-		auto as_se = static_cast<AST::StructExpression*>(ast);
-
-		std::vector<InternedString> fields;
-		std::unordered_map<InternedString, MonoId> structure;
-		int field_count = as_se->m_fields.size();
-		for (int i = 0; i < field_count; ++i){
-			MonoId mono = eval_then_get_mono(as_se->m_types[i], tc, alloc);
-			InternedString name = as_se->m_fields[i];
-			assert(!structure.count(name));
-			structure[name] = mono;
-			fields.push_back(name);
-		}
-
-		TypeFunctionId result = tc.m_core.new_type_function(
-		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
-
-		return result;
-	} else {
-		Log::fatal() << "Unexpected ast type used as typefunc";
+	std::unordered_map<InternedString, MonoId> structure;
+	int n = names.size();
+	for (int i = 0; i < n; ++i){
+		MonoId mono = eval_then_get_mono(types[i], tc, alloc);
+		InternedString name = names[i];
+		assert(!structure.count(name));
+		structure[name] = mono;
 	}
+
+	return structure;
+}
+
+static AST::TypeFunctionHandle* ct_eval(
+    AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	std::vector<InternedString> fields = ast->m_fields;
+
+	std::unordered_map<InternedString, MonoId> structure =
+	    build_map(ast->m_fields, ast->m_types, tc, alloc);
+
+	TypeFunctionId result = tc.m_core.new_type_function(
+		TypeFunctionTag::Record, std::move(fields), std::move(structure));
+
+	auto node = alloc.make<AST::TypeFunctionHandle>();
+	node->m_value = result;
+	node->m_syntax = ast;
+
+	return node;
+}
+
+static AST::TypeFunctionHandle* ct_eval(
+    AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	std::unordered_map<InternedString, MonoId> structure =
+		build_map(ast->m_constructors, ast->m_types, tc, alloc);
+
+	TypeFunctionId result = tc.m_core.new_type_function(
+		TypeFunctionTag::Variant, {}, std::move(structure));
+
+	auto node = alloc.make<AST::TypeFunctionHandle>();
+	node->m_value = result;
+	node->m_syntax = ast;
+
+	return node;
 }
 
 static AST::Constructor* constructor_from_ast(
@@ -256,7 +257,7 @@ static AST::MonoTypeHandle* ct_eval(
     AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto handle = alloc.make<AST::MonoTypeHandle>();
 
-	TypeFunctionId type_function = type_func_from_ast(ast->m_callee, tc, alloc);
+	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc, alloc);
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
@@ -350,7 +351,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
 				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-				TypeFunctionId tf = type_func_from_ast(handle->m_syntax, tc, alloc);
+				TypeFunctionId tf = eval_then_get_type_func(handle->m_syntax, tc, alloc);
 				tc.m_core.m_tf_core.unify(tf, handle->m_value);
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
@@ -430,8 +431,8 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(Program);
 
 		DISPATCH(TypeTerm);
-		REJECT(StructExpression); // handled in type_func_from_ast
-		REJECT(UnionExpression);  // handled in type_func_from_ast
+		DISPATCH(StructExpression);
+		DISPATCH(UnionExpression);
 		REJECT(TypeFunctionHandle);
 		REJECT(MonoTypeHandle);
 		REJECT(Constructor);
