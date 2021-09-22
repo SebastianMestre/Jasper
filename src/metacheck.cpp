@@ -21,7 +21,7 @@ static void process_declaration(MetaUnifier& uf, AST::Declaration* ast) {
 
 // Literals
 
-static void metacheck_scalar(MetaUnifier& uf, AST::AST* ast) {
+static void metacheck_scalar(MetaUnifier& uf, AST::Expr* ast) {
 	ast->m_meta_type = uf.make_const_node(Tag::Term);
 }
 

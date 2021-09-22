@@ -30,9 +30,7 @@ struct AST {
 	    : m_type {type} {}
 
 	CST::CST* m_cst {nullptr};
-	MetaTypeId m_meta_type {-1};
 	// is not set on polymorphic declarations and typefuncs (TODO: refactor)
-	MonoId m_value_type {-1};
 	ASTTag type() const {
 		return m_type;
 	}
@@ -49,6 +47,8 @@ struct Expr : public AST {
 	Expr(ASTTag type)
 	    : AST {type} {}
 
+	MetaTypeId m_meta_type {-1};
+	MonoId m_value_type {-1};
 };
 
 struct Allocator;
@@ -66,7 +66,9 @@ struct Declaration : public AST {
 
 	std::unordered_set<Declaration*> m_references;
 
+	MetaTypeId m_meta_type {-1};
 	bool m_is_polymorphic {false};
+	MonoId m_value_type {-1}; // used for non-polymorphic decls, and during unification
 	PolyId m_decl_type;
 
 	int m_frame_offset {INT_MIN};
@@ -225,7 +227,7 @@ struct MatchExpression : public Expr {
 	};
 
 	Identifier m_target;
-	AST* m_type_hint {nullptr};
+	Expr* m_type_hint {nullptr};
 	std::unordered_map<InternedString, CaseData> m_cases;
 
 	MatchExpression()
@@ -233,7 +235,7 @@ struct MatchExpression : public Expr {
 };
 
 struct ConstructorExpression : public Expr {
-	AST* m_constructor;
+	Expr* m_constructor;
 	std::vector<Expr*> m_args;
 
 	ConstructorExpression()
@@ -283,7 +285,7 @@ struct WhileStatement : public AST {
 
 struct UnionExpression : public Expr {
 	std::vector<InternedString> m_constructors;
-	std::vector<AST*> m_types;
+	std::vector<Expr*> m_types;
 
 	UnionExpression()
 	    : Expr {ASTTag::UnionExpression} {}
@@ -291,15 +293,15 @@ struct UnionExpression : public Expr {
 
 struct StructExpression : public Expr {
 	std::vector<InternedString> m_fields;
-	std::vector<AST*> m_types;
+	std::vector<Expr*> m_types;
 
 	StructExpression()
 	    : Expr {ASTTag::StructExpression} {}
 };
 
 struct TypeTerm : public Expr {
-	AST* m_callee;
-	std::vector<AST*> m_args; // should these be TypeTerms?
+	Expr* m_callee;
+	std::vector<Expr*> m_args; // should these be TypeTerms?
 
 	TypeTerm()
 	    : Expr {ASTTag::TypeTerm} {}
@@ -308,7 +310,7 @@ struct TypeTerm : public Expr {
 struct TypeFunctionHandle : public Expr {
 	TypeFunctionId m_value;
 	// points to the ast node this one was made from
-	AST* m_syntax;
+	Expr* m_syntax;
 
 	TypeFunctionHandle()
 	    : Expr {ASTTag::TypeFunctionHandle} {}
@@ -317,7 +319,7 @@ struct TypeFunctionHandle : public Expr {
 struct MonoTypeHandle : public Expr {
 	MonoId m_value;
 	// points to the ast node this one was made from
-	AST* m_syntax;
+	Expr* m_syntax;
 
 	MonoTypeHandle()
 	    : Expr {ASTTag::MonoTypeHandle} {}
@@ -327,7 +329,7 @@ struct Constructor : public Expr {
 	MonoId m_mono;
 	InternedString m_id;
 	// points to the ast node this one was made from
-	AST* m_syntax;
+	Expr* m_syntax;
 
 	Constructor()
 	    : Expr {ASTTag::Constructor} {}

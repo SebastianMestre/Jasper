@@ -38,9 +38,9 @@ static AST::FunctionLiteral* ct_eval(
 	return ast;
 }
 
-static MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc);
-static TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc);
-static AST::Constructor* constructor_from_ast(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
+static MonoId mono_type_from_ast(AST::Expr* ast, TypeChecker& tc);
+static TypeFunctionId type_func_from_ast(AST::Expr* ast, TypeChecker& tc);
+static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Expr* ct_eval(
     AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
@@ -157,7 +157,7 @@ static AST::Expr* ct_eval(
 }
 // types
 
-static TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
+static TypeFunctionId type_func_from_ast(AST::Expr* ast, TypeChecker& tc) {
 #ifndef NDEBUG
 	auto& uf = tc.m_core.m_meta_core;
 	assert(uf.is(uf.eval(ast->m_meta_type), Tag::Func));
@@ -210,7 +210,7 @@ static TypeFunctionId type_func_from_ast(AST::AST* ast, TypeChecker& tc) {
 	}
 }
 
-static MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
+static MonoId mono_type_from_ast(AST::Expr* ast, TypeChecker& tc){
 #ifndef NDEBUG
 	auto& uf = tc.m_core.m_meta_core;
 	assert(uf.is(uf.eval(ast->m_meta_type), Tag::Mono));
@@ -240,7 +240,7 @@ static MonoId mono_type_from_ast(AST::AST* ast, TypeChecker& tc){
 }
 
 static AST::Constructor* constructor_from_ast(
-    AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
+    AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto& uf = tc.m_core.m_meta_core;
 	MetaTypeId meta = uf.eval(ast->m_meta_type);
 	auto constructor = alloc.make<AST::Constructor>();
