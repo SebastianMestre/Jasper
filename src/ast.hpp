@@ -13,8 +13,6 @@
 
 struct Token;
 
-
-
 namespace CST {
 struct CST;
 }
@@ -30,10 +28,8 @@ struct AST {
 	    : m_type {type} {}
 
 	CST::CST* m_cst {nullptr};
-	// is not set on polymorphic declarations and typefuncs (TODO: refactor)
-	ASTTag type() const {
-		return m_type;
-	}
+
+	ASTTag type() const { return m_type; }
 	virtual ~AST() = default;
 };
 
@@ -86,7 +82,6 @@ struct Declaration : public AST {
 	    : AST {ASTTag::Declaration} {}
 };
 
-// doesnt have a ast_vtype
 struct Program : public AST {
 	std::vector<Declaration> m_declarations;
 
@@ -94,8 +89,6 @@ struct Program : public AST {
 	    : AST {ASTTag::Program} {}
 };
 
-// las estructuras como declaration list, index expression, block, if, for no tienen
-// tipo de valor asociado
 struct NumberLiteral : public Expr {
 	float m_value;
 
@@ -166,7 +159,6 @@ struct FunctionLiteral : public Expr {
 	    : Expr {ASTTag::FunctionLiteral} {}
 };
 
-// the ast_vtype must be computed
 struct Identifier : public Expr {
 	enum class Origin { Global, Capture, Local };
 
@@ -186,7 +178,6 @@ struct Identifier : public Expr {
 	    : Expr {ASTTag::Identifier} {}
 };
 
-// the value depends on the return value of callee
 struct CallExpression : public Expr {
 	Expr* m_callee;
 	std::vector<Expr*> m_args;
