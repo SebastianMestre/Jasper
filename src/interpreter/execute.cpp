@@ -69,7 +69,7 @@ ExitStatus execute(
 	if (settings.typecheck) {
 		tc.m_core.m_meta_core.comp = &tc.m_env.declaration_components;
 		TypeChecker::metacheck(tc.m_core.m_meta_core, ast);
-		ast = TypeChecker::ct_eval(ast, tc, ast_allocator);
+		TypeChecker::reify_types(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
 	}
 

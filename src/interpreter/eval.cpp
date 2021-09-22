@@ -16,12 +16,6 @@
 
 namespace Interpreter {
 
-static bool is_expression (AST::AST* ast) {
-	auto tag = ast->type();
-	auto tag_idx = static_cast<int>(tag);
-	return tag_idx < static_cast<int>(ASTTag::Block);
-}
-
 static void eval_stmt(AST::AST* ast, Interpreter& e) {
 	eval(ast, e);
 	if (is_expression(ast))
