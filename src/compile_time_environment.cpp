@@ -46,7 +46,7 @@ bool CompileTimeEnvironment::has_type_var(MonoId var) {
 	return scan_scope(m_global_scope, var);
 }
 
-void CompileTimeEnvironment::compute_declaration_order(AST::DeclarationList* ast) {
+void CompileTimeEnvironment::compute_declaration_order(AST::Program* ast) {
 
 	std::unordered_map<AST::Declaration*, int> decl_to_index;
 	std::vector<AST::Declaration*> index_to_decl;

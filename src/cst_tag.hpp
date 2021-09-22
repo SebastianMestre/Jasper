@@ -10,7 +10,7 @@
 	X(BlockFunctionLiteral)                                                    \
 	X(FunctionLiteral)                                                         \
                                                                                \
-	X(DeclarationList)                                                         \
+	X(Program)                                                         \
 	X(PlainDeclaration)                                                        \
 	X(FuncDeclaration)                                                         \
 	X(BlockFuncDeclaration)                                                    \

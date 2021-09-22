@@ -2,6 +2,7 @@
 
 namespace AST {
 struct AST;
+struct Expr;
 struct Allocator;
 }
 
@@ -9,6 +10,6 @@ namespace TypeChecker {
 
 struct TypeChecker;
 
-AST::AST* ct_eval(AST::AST*, TypeChecker& tc, AST::Allocator& alloc);
+void reify_types(AST::AST*, TypeChecker& tc, AST::Allocator& alloc);
 
 } // namespace TypeChecker

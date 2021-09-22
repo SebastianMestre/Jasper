@@ -10,7 +10,7 @@
 namespace AST {
 
 struct Declaration;
-struct DeclarationList;
+struct Program;
 struct FunctionLiteral;
 struct SequenceExpression;
 
@@ -42,7 +42,7 @@ struct CompileTimeEnvironment {
 
 	bool has_type_var(MonoId);
 
-	void compute_declaration_order(AST::DeclarationList* ast);
+	void compute_declaration_order(AST::Program* ast);
 };
 
 } // namespace Frontend

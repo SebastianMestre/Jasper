@@ -16,22 +16,22 @@
 	X(MatchExpression)                                                         \
 	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
+                                                                               \
 	X(SequenceExpression)                                                      \
+	X(UnionExpression)                                                         \
+	X(StructExpression)                                                        \
+	X(TypeTerm)                                                                \
+	X(TypeFunctionHandle)                                                      \
+	X(MonoTypeHandle)                                                          \
+	X(Constructor)                                                             \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
 	X(WhileStatement)                                                          \
                                                                                \
-	X(DeclarationList)                                                         \
-	X(Declaration)                                                             \
-                                                                               \
-	X(UnionExpression)                                                         \
-	X(StructExpression)                                                        \
-	X(TypeTerm)                                                                \
-	X(TypeFunctionHandle)                                                      \
-	X(MonoTypeHandle)                                                          \
-	X(Constructor)
+	X(Program)                                                                 \
+	X(Declaration)
 
 #define X(name) #name,
 constexpr const char* ast_string[] = {AST_TAGS};

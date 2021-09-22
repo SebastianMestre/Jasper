@@ -8,6 +8,8 @@
 
 namespace AST {
 
+static Expr* convert_expr(CST::CST* cst, Allocator& alloc);
+
 InternedString const& Declaration::identifier_text() const {
 	if (m_identifier.is_null()) {
 		if (!m_cst)
@@ -30,7 +32,7 @@ Token const* Identifier::token() const {
 }
 
 
-SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
+static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
 	auto block = static_cast<Block*>(convert_ast(cst, alloc));
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = block;
@@ -38,7 +40,7 @@ SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
 }
 
 
-AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
+static IntegerLiteral* convert(CST::IntegerLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<IntegerLiteral>();
 	ast->m_value = std::stoi(cst->text());
 	if (cst->m_negative)
@@ -46,7 +48,7 @@ AST* convert_ast(CST::IntegerLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::NumberLiteral* cst, Allocator& alloc) {
+static NumberLiteral* convert(CST::NumberLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<NumberLiteral>();
 	ast->m_value = std::stof(cst->text());
 	if (cst->m_negative)
@@ -54,44 +56,44 @@ AST* convert_ast(CST::NumberLiteral* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::StringLiteral* cst, Allocator& alloc) {
+static StringLiteral* convert(CST::StringLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<StringLiteral>();
 	ast->m_text = cst->m_token->m_text;
 	return ast;
 }
 
-AST* convert_ast(CST::BooleanLiteral* cst, Allocator& alloc) {
+static BooleanLiteral* convert(CST::BooleanLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<BooleanLiteral>();
 	ast->m_value = cst->m_token->m_type == TokenTag::KEYWORD_TRUE;
 	return ast;
 }
 
-AST* convert_ast(CST::NullLiteral* cst, Allocator& alloc) {
+static NullLiteral* convert(CST::NullLiteral* cst, Allocator& alloc) {
 	return alloc.make<NullLiteral>();
 }
 
-AST* convert_ast(CST::ArrayLiteral* cst, Allocator& alloc) {
+static ArrayLiteral* convert(CST::ArrayLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<ArrayLiteral>();
 
 	for (auto element : cst->m_elements) {
-		ast->m_elements.push_back(convert_ast(element, alloc));
+		ast->m_elements.push_back(convert_expr(element, alloc));
 	}
 
 	return ast;
 }
 
-Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
+static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
 	Declaration decl;
 	decl.m_cst = cst;
 	decl.m_identifier = data.identifier();
 	if (data.m_type_hint)
-		decl.m_type_hint = convert_ast(data.m_type_hint, alloc);
+		decl.m_type_hint = convert_expr(data.m_type_hint, alloc);
 	if (data.m_value)
-		decl.m_value = convert_ast(data.m_value, alloc);
+		decl.m_value = convert_expr(data.m_value, alloc);
 	return decl;
 }
 
-std::vector<Declaration> convert_args(
+static std::vector<Declaration> convert_args(
     CST::FuncParameters& cst_args,
     FunctionLiteral* surrounding_function,
     Allocator& alloc) {
@@ -106,16 +108,16 @@ std::vector<Declaration> convert_args(
 	return result;
 }
 
-AST* convert_ast(CST::FunctionLiteral* cst, Allocator& alloc) {
+static FunctionLiteral* convert(CST::FunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	ast->m_args = convert_args(cst->m_args, ast, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	ast->m_body = convert_expr(cst->m_body, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
+static FunctionLiteral* convert(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<FunctionLiteral>();
 
 	ast->m_args = convert_args(cst->m_args, ast, alloc);
@@ -125,25 +127,25 @@ AST* convert_ast(CST::BlockFunctionLiteral* cst, Allocator& alloc) {
 }
 
 // convert pizza expressions into plain calls
-AST* convert_pizza(CST::BinaryExpression* cst, Allocator& alloc) {
+static CallExpression* convert_pizza(CST::BinaryExpression* cst, Allocator& alloc) {
 	// TODO: better error
 	if (cst->m_rhs->type() != CSTTag::CallExpression)
 		Log::fatal("parsing error: bad pizza");
 
 	auto ast = alloc.make<CallExpression>();
 
-	ast->m_args.push_back(convert_ast(cst->m_lhs, alloc));
+	ast->m_args.push_back(convert_expr(cst->m_lhs, alloc));
 
 	auto call_cst = static_cast<CST::CallExpression*>(cst->m_rhs);
-	ast->m_callee = convert_ast(call_cst->m_callee, alloc);
+	ast->m_callee = convert_expr(call_cst->m_callee, alloc);
 	for (auto arg : call_cst->m_args)
-		ast->m_args.push_back(convert_ast(arg, alloc));
+		ast->m_args.push_back(convert_expr(arg, alloc));
 
 	return ast;
 }
 
 // convert binary operators into calls
-AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
+static CallExpression* convert(CST::BinaryExpression* cst, Allocator& alloc) {
 	if (cst->m_op_token->m_type == TokenTag::PIZZA)
 		return convert_pizza(cst, alloc);
 
@@ -157,22 +159,22 @@ AST* convert_ast(CST::BinaryExpression* cst, Allocator& alloc) {
 
 	ast->m_callee = identifier;
 
-	ast->m_args.push_back(convert_ast(cst->m_lhs, alloc));
-	ast->m_args.push_back(convert_ast(cst->m_rhs, alloc));
+	ast->m_args.push_back(convert_expr(cst->m_lhs, alloc));
+	ast->m_args.push_back(convert_expr(cst->m_rhs, alloc));
 
 	return ast;
 }
 
-AST* convert_ast(CST::PlainDeclaration* cst, Allocator& alloc) {
+static Declaration* convert(CST::PlainDeclaration* cst, Allocator& alloc) {
 	auto ast = alloc.make<Declaration>();
 	*ast = convert_declaration(cst, cst->m_data, alloc);
 	return ast;
 }
 
-AST* convert_ast(CST::FuncDeclaration* cst, Allocator& alloc) {
+static Declaration* convert(CST::FuncDeclaration* cst, Allocator& alloc) {
 	auto func_ast = alloc.make<FunctionLiteral>();
 	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_ast(cst->m_body, alloc);
+	func_ast->m_body = convert_expr(cst->m_body, alloc);
 
 	auto ast = alloc.make<Declaration>();
 	ast->m_cst = cst;
@@ -182,7 +184,7 @@ AST* convert_ast(CST::FuncDeclaration* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
+static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
 	auto func_ast = alloc.make<FunctionLiteral>();
 	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
 	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
@@ -195,8 +197,8 @@ AST* convert_ast(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
-	auto ast = alloc.make<DeclarationList>();
+static AST* convert(CST::Program* cst, Allocator& alloc) {
+	auto ast = alloc.make<Program>();
 
 	for (auto& declaration : cst->m_declarations) {
 		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
@@ -206,61 +208,61 @@ AST* convert_ast(CST::DeclarationList* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::Identifier* cst, Allocator& alloc) {
+static Identifier* convert(CST::Identifier* cst, Allocator& alloc) {
 	auto ast = alloc.make<Identifier>();
 	ast->m_cst = cst;
 	ast->m_text = cst->m_token->m_text;
 	return ast;
 }
 
-AST* convert_ast(CST::CallExpression* cst, Allocator& alloc) {
+static CallExpression* convert(CST::CallExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<CallExpression>();
 
 	for (auto arg : cst->m_args) {
-		ast->m_args.push_back(convert_ast(arg, alloc));
+		ast->m_args.push_back(convert_expr(arg, alloc));
 	}
 
-	ast->m_callee = convert_ast(cst->m_callee, alloc);
+	ast->m_callee = convert_expr(cst->m_callee, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::IndexExpression* cst, Allocator& alloc) {
+static IndexExpression* convert(CST::IndexExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<IndexExpression>();
 
-	ast->m_callee = convert_ast(cst->m_callee, alloc);
-	ast->m_index = convert_ast(cst->m_index, alloc);
+	ast->m_callee = convert_expr(cst->m_callee, alloc);
+	ast->m_index = convert_expr(cst->m_index, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::TernaryExpression* cst, Allocator& alloc) {
+static TernaryExpression* convert(CST::TernaryExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<TernaryExpression>();
 
-	ast->m_condition = convert_ast(cst->m_condition, alloc);
-	ast->m_then_expr = convert_ast(cst->m_then_expr, alloc);
-	ast->m_else_expr = convert_ast(cst->m_else_expr, alloc);
+	ast->m_condition = convert_expr(cst->m_condition, alloc);
+	ast->m_then_expr = convert_expr(cst->m_then_expr, alloc);
+	ast->m_else_expr = convert_expr(cst->m_else_expr, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::AccessExpression* cst, Allocator& alloc) {
+static AccessExpression* convert(CST::AccessExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<AccessExpression>();
 
 	ast->m_member = cst->m_member->m_text;
-	ast->m_target = convert_ast(cst->m_record, alloc);
+	ast->m_target = convert_expr(cst->m_record, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
+static MatchExpression* convert(CST::MatchExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<MatchExpression>();
 
-	auto matchee = static_cast<Identifier*>(convert_ast(&cst->m_matchee, alloc));
+	auto matchee = static_cast<Identifier*>(convert_expr(&cst->m_matchee, alloc));
 	ast->m_target = std::move(*matchee);
 
 	if (cst->m_type_hint)
-		ast->m_type_hint = convert_ast(cst->m_type_hint, alloc);
+		ast->m_type_hint = convert_expr(cst->m_type_hint, alloc);
 
 	std::unordered_map<InternedString, MatchExpression::CaseData> cases;
 	for (auto& case_data : cst->m_cases) {
@@ -271,9 +273,9 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 		declaration.m_identifier = case_data.m_identifier->m_text;
 
 		if (case_data.m_type_hint)
-			declaration.m_type_hint = convert_ast(case_data.m_type_hint, alloc);
+			declaration.m_type_hint = convert_expr(case_data.m_type_hint, alloc);
 
-		auto expression = convert_ast(case_data.m_expression, alloc);
+		auto expression = convert_expr(case_data.m_expression, alloc);
 
 		auto insertion_result = cases.insert(
 		    {case_name,
@@ -290,24 +292,24 @@ AST* convert_ast(CST::MatchExpression* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::ConstructorExpression* cst, Allocator& alloc) {
+static ConstructorExpression* convert(CST::ConstructorExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<ConstructorExpression>();
 
-	ast->m_constructor = convert_ast(cst->m_constructor, alloc);
+	ast->m_constructor = convert_expr(cst->m_constructor, alloc);
 
 	for (auto& arg : cst->m_args)
-		ast->m_args.push_back(convert_ast(arg, alloc));
+		ast->m_args.push_back(convert_expr(arg, alloc));
 
 	return ast;
 }
 
-AST* convert_ast(CST::SequenceExpression* cst, Allocator& alloc) {
+static SequenceExpression* convert(CST::SequenceExpression* cst, Allocator& alloc) {
 	auto result = alloc.make<SequenceExpression>();
 	result->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
 	return result;
 }
 
-AST* convert_ast(CST::Block* cst, Allocator& alloc) {
+static Block* convert(CST::Block* cst, Allocator& alloc) {
 	auto ast = alloc.make<Block>();
 
 	for (auto element : cst->m_body) {
@@ -317,18 +319,18 @@ AST* convert_ast(CST::Block* cst, Allocator& alloc) {
 	return ast;
 }
 
-AST* convert_ast(CST::ReturnStatement* cst, Allocator& alloc) {
+static ReturnStatement* convert(CST::ReturnStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<ReturnStatement>();
 
-	ast->m_value = convert_ast(cst->m_value, alloc);
+	ast->m_value = convert_expr(cst->m_value, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::IfElseStatement* cst, Allocator& alloc) {
+static IfElseStatement* convert(CST::IfElseStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<IfElseStatement>();
 
-	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_condition = convert_expr(cst->m_condition, alloc);
 	ast->m_body = convert_ast(cst->m_body, alloc);
 
 	if (cst->m_else_body)
@@ -343,7 +345,7 @@ desugar
 to
 	{ x := e; while (p(x)) { stmt; x = f(x); } }
 */
-AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
+static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 
 	auto body = convert_ast(cst->m_body, alloc);
 	auto block_body = [&] {
@@ -354,12 +356,12 @@ AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
 		return inner_block;
 	}();
 
-	auto action = convert_ast(cst->m_action, alloc);
+	auto action = convert_expr(cst->m_action, alloc);
 	block_body->m_body.push_back(action);
 
 	auto while_ast = alloc.make<WhileStatement>();
 	while_ast->m_body = block_body;
-	while_ast->m_condition = convert_ast(cst->m_condition, alloc);;
+	while_ast->m_condition = convert_expr(cst->m_condition, alloc);;
 
 	auto outter_block_ast = alloc.make<Block>();
 	auto decl = convert_declaration(nullptr, cst->m_declaration, alloc);
@@ -371,16 +373,16 @@ AST* convert_ast(CST::ForStatement* cst, Allocator& alloc) {
 	return outter_block_ast;
 }
 
-AST* convert_ast(CST::WhileStatement* cst, Allocator& alloc) {
+static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<WhileStatement>();
 
-	ast->m_condition = convert_ast(cst->m_condition, alloc);
+	ast->m_condition = convert_expr(cst->m_condition, alloc);
 	ast->m_body = convert_ast(cst->m_body, alloc);
 
 	return ast;
 }
 
-AST* convert_ast(CST::UnionExpression* cst, Allocator& alloc) {
+static UnionExpression* convert(CST::UnionExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<UnionExpression>();
 
 	for (auto& constructor : cst->m_constructors) {
@@ -389,13 +391,13 @@ AST* convert_ast(CST::UnionExpression* cst, Allocator& alloc) {
 	}
 
 	for (auto type : cst->m_types) {
-		ast->m_types.push_back(convert_ast(type, alloc));
+		ast->m_types.push_back(convert_expr(type, alloc));
 	}
 
 	return ast;
 };
 
-AST* convert_ast(CST::StructExpression* cst, Allocator& alloc) {
+static StructExpression* convert(CST::StructExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<StructExpression>();
 
 	for (auto& cst_field : cst->m_fields) {
@@ -404,31 +406,27 @@ AST* convert_ast(CST::StructExpression* cst, Allocator& alloc) {
 	}
 
 	for (auto type : cst->m_types) {
-		ast->m_types.push_back(convert_ast(type, alloc));
+		ast->m_types.push_back(convert_expr(type, alloc));
 	}
 
 	return ast;
 };
 
-AST* convert_ast(CST::TypeTerm* cst, Allocator& alloc) {
+static TypeTerm* convert(CST::TypeTerm* cst, Allocator& alloc) {
 	auto ast = alloc.make<TypeTerm>();
 
-	ast->m_callee = convert_ast(cst->m_callee, alloc);
+	ast->m_callee = convert_expr(cst->m_callee, alloc);
 	for (auto arg : cst->m_args){
-		ast->m_args.push_back(convert_ast(arg, alloc));
+		ast->m_args.push_back(convert_expr(arg, alloc));
 	}
 
 	return ast;
 }
 
-AST* convert_ast(CST::CST* cst, Allocator& alloc) {
+static Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case CSTTag::type:                                                         \
-		return convert_ast(static_cast<CST::type*>(cst), alloc)
-
-#define REJECT(type)                                                           \
-	case CSTTag::type:                                                         \
-		Log::fatal("use of " #type " is forbidden in convert")
+		return convert(static_cast<CST::type*>(cst), alloc)
 
 	switch (cst->type()) {
 		DISPATCH(NumberLiteral);
@@ -450,17 +448,6 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(SequenceExpression);
 		DISPATCH(BinaryExpression);
 
-		DISPATCH(Block);
-		DISPATCH(ReturnStatement);
-		DISPATCH(IfElseStatement);
-		DISPATCH(ForStatement);
-		DISPATCH(WhileStatement);
-
-		DISPATCH(DeclarationList);
-		DISPATCH(PlainDeclaration);
-		DISPATCH(FuncDeclaration);
-		DISPATCH(BlockFuncDeclaration);
-
 		DISPATCH(UnionExpression);
 		DISPATCH(StructExpression);
 		DISPATCH(TypeTerm);
@@ -469,7 +456,44 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 	Log::fatal() << "(internal) CST type not handled in convert_ast: "
 	             << cst_string[(int)cst->type()];
 
-#undef REJECT
+#undef DISPATCH
+}
+
+static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
+#define DISPATCH(type)                                                         \
+	case CSTTag::type:                                                         \
+		return convert(static_cast<CST::type*>(cst), alloc)
+
+	switch (cst->type()) {
+
+		DISPATCH(Block);
+		DISPATCH(ReturnStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ForStatement);
+		DISPATCH(WhileStatement);
+
+		DISPATCH(PlainDeclaration);
+		DISPATCH(FuncDeclaration);
+		DISPATCH(BlockFuncDeclaration);
+
+	default:
+		return convert_expr(cst, alloc);
+	}
+
+#undef DISPATCH
+}
+
+AST* convert_ast(CST::CST* cst, Allocator& alloc) {
+#define DISPATCH(type)                                                         \
+	case CSTTag::type:                                                         \
+		return convert(static_cast<CST::type*>(cst), alloc)
+
+	switch (cst->type()) {
+		DISPATCH(Program);
+	default:
+		return convert_stmt(cst, alloc);
+	}
+
 #undef DISPATCH
 }
 

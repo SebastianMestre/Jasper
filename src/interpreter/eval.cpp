@@ -16,12 +16,6 @@
 
 namespace Interpreter {
 
-static bool is_expression (AST::AST* ast) {
-	auto tag = ast->type();
-	auto tag_idx = static_cast<int>(tag);
-	return tag_idx < static_cast<int>(ASTTag::Block);
-}
-
 static void eval_stmt(AST::AST* ast, Interpreter& e) {
 	eval(ast, e);
 	if (is_expression(ast))
@@ -38,7 +32,7 @@ void eval(AST::Declaration* ast, Interpreter& e) {
 	}
 };
 
-void eval(AST::DeclarationList* ast, Interpreter& e) {
+void eval(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
@@ -414,7 +408,7 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 		DISPATCH(Declaration);
 
 		DISPATCH(Block);

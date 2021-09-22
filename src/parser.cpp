@@ -159,7 +159,7 @@ Writer<CST::CST*> Parser::parse_top_level() {
 		declarations.push_back(declaration.m_result);
 	}
 
-	auto e = m_cst_allocator.make<CST::DeclarationList>();
+	auto e = m_cst_allocator.make<CST::Program>();
 	e->m_declarations = std::move(declarations);
 	return make_writer<CST::CST*>(e);
 }

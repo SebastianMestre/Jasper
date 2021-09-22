@@ -15,7 +15,7 @@ static void print_indentation (int d) {
 
 }
 
-void print_impl(DeclarationList* cst, int d) {
+void print_impl(Program* cst, int d) {
 	print_indentation(d);
 	std::cout << "(decl-list";
 	for (auto& decl : cst->m_declarations) {
@@ -316,7 +316,7 @@ void print_impl(CST* cst, int d) {
 		DISPATCH(MatchExpression)
 		DISPATCH(ConstructorExpression)
 
-		DISPATCH(DeclarationList)
+		DISPATCH(Program)
 		DISPATCH(PlainDeclaration)
 
 		DISPATCH(Block)

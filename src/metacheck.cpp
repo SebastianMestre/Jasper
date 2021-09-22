@@ -21,7 +21,7 @@ static void process_declaration(MetaUnifier& uf, AST::Declaration* ast) {
 
 // Literals
 
-static void metacheck_scalar(MetaUnifier& uf, AST::AST* ast) {
+static void metacheck_scalar(MetaUnifier& uf, AST::Expr* ast) {
 	ast->m_meta_type = uf.make_const_node(Tag::Term);
 }
 
@@ -170,7 +170,7 @@ static void metacheck(MetaUnifier& uf, AST::Declaration* ast) {
 	process_declaration(uf, ast);
 }
 
-static void metacheck(MetaUnifier& uf, AST::DeclarationList* ast) {
+static void metacheck(MetaUnifier& uf, AST::Program* ast) {
 	for (auto& decl : ast->m_declarations)
 		decl.m_meta_type = uf.make_var_node();
 
@@ -259,7 +259,7 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(ReturnStatement)
 
 		DISPATCH(Declaration)
-		DISPATCH(DeclarationList)
+		DISPATCH(Program)
 
 		DISPATCH(UnionExpression)
 		DISPATCH(StructExpression)

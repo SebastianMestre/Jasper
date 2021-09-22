@@ -337,7 +337,7 @@ void typecheck(AST::Declaration* ast, TypeChecker& tc) {
 	generalize(ast, tc);
 }
 
-void typecheck(AST::DeclarationList* ast, TypeChecker& tc) {
+void typecheck(AST::Program* ast, TypeChecker& tc) {
 
 	auto const& comps = tc.m_env.declaration_components;
 	for (auto const& decls : comps) {
@@ -408,7 +408,7 @@ void typecheck(AST::AST* ast, TypeChecker& tc) {
 		DISPATCH(SequenceExpression);
 
 		DISPATCH(Declaration);
-		DISPATCH(DeclarationList);
+		DISPATCH(Program);
 
 		DISPATCH(Block);
 		DISPATCH(WhileStatement);
