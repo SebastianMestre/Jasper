@@ -253,75 +253,24 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	e.m_stack.pop_unsafe();
 }
 
-void eval(AST::ConstructorExpression* ast, Interpreter& e) {
-	// NOTE: we leave the ctor on the stack for the time being
+// NOTE: this assumes the constructor is at the top of the stack, and clobbers it
+static void eval_record_construction(
+    RecordConstructor* record_constructor,
+    std::vector<AST::Expr*> args,
+    Interpreter& e) {
 
-	eval(ast->m_constructor, e);
-	auto constructor = value_of(e.m_stack.access(0));
-
-	if (constructor.type() == ValueTag::RecordConstructor) {
-		auto record_constructor = constructor.get_cast<RecordConstructor>();
-
-		assert(ast->m_args.size() == record_constructor->m_keys.size());
-
-
-		// eval arguments
-		// arguments start at storage_point
-		int storage_point = e.m_stack.m_stack_ptr;
-		for (int i = 0; i < ast->m_args.size(); ++i)
-			eval(ast->m_args[i], e);
-
-		// store all arguments in record object
-		RecordType record;
-		for (int i = 0; i < ast->m_args.size(); ++i) {
-			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i]);
-		}
-		
-		// promote record object to heap
-		auto result = e.m_gc->new_record(std::move(record));
-
-		// pop arguments
-		while (e.m_stack.m_stack_ptr > storage_point)
-			e.m_stack.pop_unsafe();
-
-		// replace ctor with record
-		e.m_stack.access(0) = Value{result.get()};
-	} else if (constructor.type() == ValueTag::VariantConstructor) {
-		auto variant_constructor = constructor.get_cast<VariantConstructor>();
-
-		assert(ast->m_args.size() == 1);
-
-		eval(ast->m_args[0], e);
-		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
-
-		// replace ctor with variant, and pop value
-		e.m_stack.access(1) = Value{result.get()};
-		e.m_stack.pop_unsafe();
-	}
-}
-
-void eval(AST::StructConstruction* ast, Interpreter& e) {
-	// NOTE: we leave the ctor on the stack for the time being
-
-	eval(ast->m_constructor, e);
-	auto constructor = value_of(e.m_stack.access(0));
-
-	auto record_constructor = constructor.get_cast<RecordConstructor>();
-
-	assert(ast->m_args.size() == record_constructor->m_keys.size());
-
+	auto const arg_count = args.size();
+	assert(arg_count == record_constructor->m_keys.size());
 
 	// eval arguments
 	// arguments start at storage_point
 	int storage_point = e.m_stack.m_stack_ptr;
-	for (int i = 0; i < ast->m_args.size(); ++i)
-		eval(ast->m_args[i], e);
+	for (int i = 0; i < arg_count; ++i)
+		eval(args[i], e);
 
 	// store all arguments in record object
 	RecordType record;
-	for (int i = 0; i < ast->m_args.size(); ++i) {
+	for (int i = 0; i < arg_count; ++i) {
 		record[record_constructor->m_keys[i]] =
 		    value_of(e.m_stack.m_stack[storage_point + i]);
 	}
@@ -337,21 +286,51 @@ void eval(AST::StructConstruction* ast, Interpreter& e) {
 	e.m_stack.access(0) = Value{result.get()};
 }
 
-void eval(AST::UnionConstruction* ast, Interpreter& e) {
-	// NOTE: we leave the ctor on the stack for the time being
+// NOTE: this assumes the constructor is at the top of the stack, and clobbers it
+static void eval_variant_construction(
+    VariantConstructor* variant_constructor, AST::Expr* arg, Interpreter& e) {
 
-	eval(ast->m_constructor, e);
-	auto constructor = value_of(e.m_stack.access(0));
-
-	auto variant_constructor = constructor.get_cast<VariantConstructor>();
-
-	eval(ast->m_arg, e);
+	eval(arg, e);
 	auto result = e.m_gc->new_variant(
 	    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
 
 	// replace ctor with variant, and pop value
 	e.m_stack.access(1) = Value{result.get()};
 	e.m_stack.pop_unsafe();
+}
+
+void eval(AST::ConstructorExpression* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+
+	eval(ast->m_constructor, e);
+	auto constructor = value_of(e.m_stack.access(0));
+
+	if (constructor.type() == ValueTag::RecordConstructor) {
+		auto record_constructor = constructor.get_cast<RecordConstructor>();
+		eval_record_construction(record_constructor, ast->m_args, e);
+	} else if (constructor.type() == ValueTag::VariantConstructor) {
+		auto variant_constructor = constructor.get_cast<VariantConstructor>();
+		assert(ast->m_args.size() == 1);
+		eval_variant_construction(variant_constructor, ast->m_args[0], e);
+	}
+}
+
+void eval(AST::StructConstruction* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+	// eval_record_construction takes care of popping it
+	eval(ast->m_constructor, e);
+	auto constructor = value_of(e.m_stack.access(0));
+	auto record_constructor = constructor.get_cast<RecordConstructor>();
+	eval_record_construction(record_constructor, ast->m_args, e);
+}
+
+void eval(AST::UnionConstruction* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+	// eval_variant_construction takes care of popping it
+	eval(ast->m_constructor, e);
+	auto constructor = value_of(e.m_stack.access(0));
+	auto variant_constructor = constructor.get_cast<VariantConstructor>();
+	eval_variant_construction(variant_constructor, ast->m_arg, e);
 }
 
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
