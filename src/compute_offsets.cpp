@@ -128,6 +128,20 @@ void compute_offsets(AST::ConstructorExpression* ast, int frame_offset) {
 		compute_offsets(arg, frame_offset);
 }
 
+void compute_offsets(AST::StructConstruction* ast, int frame_offset) {
+	compute_offsets(ast->m_constructor, frame_offset);
+
+	for (auto& arg : ast->m_args)
+		compute_offsets(arg, frame_offset);
+}
+
+void compute_offsets(AST::UnionConstruction* ast, int frame_offset) {
+	compute_offsets(ast->m_constructor, frame_offset);
+	compute_offsets(ast->m_arg, frame_offset);
+}
+
+
+
 void compute_offsets(AST::SequenceExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_body, frame_offset);
 }
@@ -181,6 +195,8 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
+		DISPATCH(UnionConstruction);
+		DISPATCH(StructConstruction);
 
 		DISPATCH(Block);
 		DISPATCH(WhileStatement);
@@ -196,7 +212,7 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 
 		DO_NOTHING(TypeFunctionHandle);
 		DO_NOTHING(MonoTypeHandle);
-		DO_NOTHING(Constructor);
+		DO_NOTHING(UnionAccessExpression);
 	}
 
 #undef DO_NOTHING

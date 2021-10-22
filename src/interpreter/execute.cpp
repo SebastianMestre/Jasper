@@ -9,6 +9,7 @@
 #include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
+#include "../rewrite_after_metacheck.hpp"
 #include "../symbol_table.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
@@ -69,6 +70,7 @@ ExitStatus execute(
 	if (settings.typecheck) {
 		tc.m_core.m_meta_core.comp = &tc.m_env.declaration_components;
 		TypeChecker::metacheck(tc.m_core.m_meta_core, ast);
+		TypeChecker::rewrite_after_metacheck(ast, tc, ast_allocator);
 		TypeChecker::reify_types(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
 	}

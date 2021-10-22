@@ -37,6 +37,7 @@ COMMON_TARGETS := \
 	metacheck \
 	meta_unifier \
 	parser \
+	rewrite_after_metacheck \
 	source_location \
 	symbol_table \
 	token \

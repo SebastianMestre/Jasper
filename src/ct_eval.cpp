@@ -16,8 +16,6 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
-static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
-
 static int eval_then_get_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto handle = ct_eval(ast, tc, alloc);
 	assert(handle->type() == ASTTag::MonoTypeHandle);
@@ -109,11 +107,8 @@ static AST::TernaryExpression* ct_eval(
 static AST::Expr* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto& uf = tc.m_core.m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
-	// TODO: support vars
-	if (uf.is(meta_type, Tag::Ctor))
-		return constructor_from_ast(ast, tc, alloc);
+	assert(!uf.is(uf.eval(ast->m_meta_type), Tag::Ctor));
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
 	return ast;
@@ -144,12 +139,53 @@ static AST::Expr* ct_eval(
 	return ast;
 }
 
-static AST::ConstructorExpression* ct_eval(
-    AST::ConstructorExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
+static AST::StructConstruction* ct_eval(
+    AST::StructConstruction* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	auto target = ast->m_constructor;
+
+	auto& uf = tc.m_core.m_meta_core;
+	assert(uf.is(uf.eval(target->m_meta_type), Tag::Mono));
+
+	auto mono = eval_then_get_mono(target, tc, alloc);
+
+	ast->m_mono = mono;
 
 	for (auto& arg : ast->m_args)
 		arg = ct_eval(arg, tc, alloc);
+
+	return ast;
+}
+
+static AST::UnionConstruction* ct_eval(
+    AST::UnionConstruction* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	auto target = ast->m_constructor;
+
+	auto& uf = tc.m_core.m_meta_core;
+	assert(uf.is(uf.eval(target->m_meta_type), Tag::Ctor));
+
+	assert(target->type() == ASTTag::UnionAccessExpression);
+	auto access = static_cast<AST::UnionAccessExpression*>(target);
+
+	// dummy with one constructor, the one used
+	std::unordered_map<InternedString, MonoId> structure;
+	structure[access->m_member] = tc.new_var();
+
+	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+	    TypeFunctionTag::Variant, {}, std::move(structure), true);
+
+	MonoId dummy_monotype =
+	    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
+
+	MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
+
+	tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
+
+	ast->m_mono = monotype;
+	ast->m_member = access->m_member;
+
+	ast->m_arg = ct_eval(ast->m_arg, tc, alloc);
 
 	return ast;
 }
@@ -218,39 +254,9 @@ static AST::TypeFunctionHandle* ct_eval(
 	return node;
 }
 
-static AST::Constructor* constructor_from_ast(
-    AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto& uf = tc.m_core.m_meta_core;
-	MetaTypeId meta = uf.eval(ast->m_meta_type);
-	auto constructor = alloc.make<AST::Constructor>();
-	constructor->m_syntax = ast;
-
-	if (uf.is(meta, Tag::Mono)) {
-		constructor->m_mono = eval_then_get_mono(ast, tc, alloc);
-	} else if (uf.is(meta, Tag::Ctor)) {
-		assert(ast->type() == ASTTag::AccessExpression);
-
-		auto access = static_cast<AST::AccessExpression*>(ast);
-
-		// dummy with one constructor, the one used
-		std::unordered_map<InternedString, MonoId> structure;
-		structure[access->m_member] = tc.new_var();
-		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-		    TypeFunctionTag::Variant, {}, std::move(structure), true);
-		MonoId dummy_monotype =
-		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
-
-		MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
-
-		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
-
-		constructor->m_mono = monotype;
-		constructor->m_id = access->m_member;
-	} else {
-		Log::fatal("Using something whose metatype is neither 'monotype' nor 'constructor' as a constructor");
-	}
-
-	return constructor;
+static AST::UnionAccessExpression* ct_eval(
+    AST::UnionAccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	return ast;
 }
 
 static AST::MonoTypeHandle* ct_eval(
@@ -419,8 +425,10 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
-		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
+		DISPATCH(UnionConstruction);
+		DISPATCH(StructConstruction);
+		DISPATCH(UnionAccessExpression);
 
 		REJECT(Block);
 		REJECT(IfElseStatement);
@@ -435,7 +443,7 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(UnionExpression);
 		REJECT(TypeFunctionHandle);
 		REJECT(MonoTypeHandle);
-		REJECT(Constructor);
+		REJECT(ConstructorExpression);
 	}
 
 	Log::fatal() << "(internal) Unhandled case in ct_eval : "

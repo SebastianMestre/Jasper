@@ -232,36 +232,45 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 	tc.m_core.m_mono_core.unify(ast->m_target.m_value_type, term_type);
 }
 
-void typecheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
-	typecheck(ast->m_constructor, tc);
+void typecheck(AST::StructConstruction* ast, TypeChecker& tc) {
+	// typecheck(ast->m_constructor, tc);
 
-	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == ASTTag::Constructor);
+	auto mono = ast->m_mono;
 
-	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(constructor->m_mono);
+	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(mono);
 	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
 
 	// match value arguments
-	if (tf_data.tag == TypeFunctionTag::Record) {
-		assert(tf_data.fields.size() == ast->m_args.size());
-		for (int i = 0; i < ast->m_args.size(); ++i) {
-			typecheck(ast->m_args[i], tc);
-			MonoId field_type = tf_data.structure[tf_data.fields[i]];
-			tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
-		}
-	// match the argument type with the constructor used
-	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		assert(ast->m_args.size() == 1);
-
-		typecheck(ast->m_args[0], tc);
-		InternedString id = constructor->m_id;
-		MonoId constructor_type = tf_data.structure[id];
-
-		tc.m_core.m_mono_core.unify(constructor_type, ast->m_args[0]->m_value_type);
+	assert(tf_data.tag == TypeFunctionTag::Record);
+	assert(tf_data.fields.size() == ast->m_args.size());
+	for (int i = 0; i < ast->m_args.size(); ++i) {
+		typecheck(ast->m_args[i], tc);
+		MonoId field_type = tf_data.structure[tf_data.fields[i]];
+		tc.m_core.m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
 	}
 
-	ast->m_value_type = constructor->m_mono;
+	ast->m_value_type = mono;
+}
+
+void typecheck(AST::UnionConstruction* ast, TypeChecker& tc) {
+	typecheck(ast->m_constructor, tc);
+
+	auto mono = ast->m_mono;
+
+	TypeFunctionId tf = tc.m_core.m_mono_core.find_function(mono);
+	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
+	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
+
+	// match the argument type with the constructor used
+	assert(tf_data.tag == TypeFunctionTag::Variant);
+
+	typecheck(ast->m_arg, tc);
+	InternedString id = ast->m_member;
+	MonoId constructor_type = tf_data.structure[id];
+
+	tc.m_core.m_mono_core.unify(constructor_type, ast->m_arg->m_value_type);
+	ast->m_value_type = mono;
 }
 
 void typecheck(AST::SequenceExpression* ast, TypeChecker& tc) {
@@ -404,7 +413,8 @@ void typecheck(AST::AST* ast, TypeChecker& tc) {
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);
-		DISPATCH(ConstructorExpression);
+		DISPATCH(UnionConstruction);
+		DISPATCH(StructConstruction);
 		DISPATCH(SequenceExpression);
 
 		DISPATCH(Declaration);
@@ -417,7 +427,7 @@ void typecheck(AST::AST* ast, TypeChecker& tc) {
 
 		IGNORE(TypeFunctionHandle);
 		IGNORE(MonoTypeHandle);
-		IGNORE(Constructor);
+		IGNORE(UnionAccessExpression);
 	}
 
 	Log::fatal() << "(internal) CST type not handled in typecheck: "

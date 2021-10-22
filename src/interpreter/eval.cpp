@@ -302,6 +302,58 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	}
 }
 
+void eval(AST::StructConstruction* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+
+	eval(ast->m_constructor, e);
+	auto constructor = value_of(e.m_stack.access(0));
+
+	auto record_constructor = constructor.get_cast<RecordConstructor>();
+
+	assert(ast->m_args.size() == record_constructor->m_keys.size());
+
+
+	// eval arguments
+	// arguments start at storage_point
+	int storage_point = e.m_stack.m_stack_ptr;
+	for (int i = 0; i < ast->m_args.size(); ++i)
+		eval(ast->m_args[i], e);
+
+	// store all arguments in record object
+	RecordType record;
+	for (int i = 0; i < ast->m_args.size(); ++i) {
+		record[record_constructor->m_keys[i]] =
+		    value_of(e.m_stack.m_stack[storage_point + i]);
+	}
+
+	// promote record object to heap
+	auto result = e.m_gc->new_record(std::move(record));
+
+	// pop arguments
+	while (e.m_stack.m_stack_ptr > storage_point)
+		e.m_stack.pop_unsafe();
+
+	// replace ctor with record
+	e.m_stack.access(0) = Value{result.get()};
+}
+
+void eval(AST::UnionConstruction* ast, Interpreter& e) {
+	// NOTE: we leave the ctor on the stack for the time being
+
+	eval(ast->m_constructor, e);
+	auto constructor = value_of(e.m_stack.access(0));
+
+	auto variant_constructor = constructor.get_cast<VariantConstructor>();
+
+	eval(ast->m_arg, e);
+	auto result = e.m_gc->new_variant(
+	    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
+
+	// replace ctor with variant, and pop value
+	e.m_stack.access(1) = Value{result.get()};
+	e.m_stack.pop_unsafe();
+}
+
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
 	eval(ast->m_body, e);
 	if (!e.m_returning)
@@ -362,18 +414,8 @@ void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
 	e.push_record_constructor(type_function_data.fields);
 }
 
-void eval(AST::Constructor* ast, Interpreter& e) {
-	TypeFunctionId tf_header = e.m_tc->m_core.m_mono_core.find_function(ast->m_mono);
-	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
-	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
-
-	if (tf_data.tag == TypeFunctionTag::Record) {
-		e.push_record_constructor(tf_data.fields);
-	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		e.push_variant_constructor(ast->m_id);
-	} else {
-		Log::fatal("not implemented this type function for construction");
-	}
+void eval(AST::UnionAccessExpression* ast, Interpreter& e) {
+	e.push_variant_constructor(ast->m_member);
 }
 
 void eval(AST::TypeTerm* ast, Interpreter& e) {
@@ -407,6 +449,8 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
+		DISPATCH(StructConstruction);
+		DISPATCH(UnionConstruction);
 
 		DISPATCH(Program);
 		DISPATCH(Declaration);
@@ -421,7 +465,7 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(UnionExpression);
 		DISPATCH(TypeFunctionHandle);
 		DISPATCH(MonoTypeHandle);
-		DISPATCH(Constructor);
+		DISPATCH(UnionAccessExpression);
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "

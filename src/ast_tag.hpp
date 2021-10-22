@@ -23,7 +23,9 @@
 	X(TypeTerm)                                                                \
 	X(TypeFunctionHandle)                                                      \
 	X(MonoTypeHandle)                                                          \
-	X(Constructor)                                                             \
+	X(UnionAccessExpression)                                                   \
+	X(UnionConstruction)                                                       \
+	X(StructConstruction)                                                      \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \

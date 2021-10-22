@@ -316,14 +316,31 @@ struct MonoTypeHandle : public Expr {
 	    : Expr {ASTTag::MonoTypeHandle} {}
 };
 
-struct Constructor : public Expr {
-	MonoId m_mono;
-	InternedString m_id;
-	// points to the ast node this one was made from
-	Expr* m_syntax;
+struct UnionAccessExpression : public Expr {
+	InternedString m_member;
+	Expr* m_target;
 
-	Constructor()
-	    : Expr {ASTTag::Constructor} {}
+	UnionAccessExpression()
+	    : Expr {ASTTag::UnionAccessExpression} {}
+};
+
+struct UnionConstruction : public Expr {
+	Expr* m_constructor;
+	InternedString m_member;
+	MonoId m_mono{-1};
+	Expr* m_arg;
+
+	UnionConstruction()
+	    : Expr {ASTTag::UnionConstruction} {}
+};
+
+struct StructConstruction : public Expr {
+	Expr* m_constructor;
+	MonoId m_mono{-1};
+	std::vector<Expr*> m_args;
+
+	StructConstruction()
+	    : Expr {ASTTag::StructConstruction} {}
 };
 
 } // namespace AST
