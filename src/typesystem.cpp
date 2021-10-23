@@ -53,18 +53,10 @@ TypeSystemCore::TypeSystemCore() {
 			core.node_header[a].data_idx = b;
 			b_data.argument_count = new_argument_count;
 
-			for (auto& kv_a : a_data.result_data.structure) {
-				auto kv_b = b_data.result_data.structure.find(kv_a.first);
-
-				if (kv_b == b_data.result_data.structure.end())
-					// if b doesn't have a field of a, act accordingly
-					if (b_data.is_dummy)
-						b_data.result_data.structure.insert(kv_a);
-					else
-						Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
-				else
-					// else the fields must have equivalent types
-					unify(kv_a.second, kv_b->second);
+			if (b_data.is_dummy) {
+				combine_left_to_right(a_data.result_data, b_data.result_data);
+			} else {
+				check_constraints_left_to_right(a_data.result_data, b_data.result_data);
 			}
 
 		} else {
@@ -79,7 +71,7 @@ MonoId TypeSystemCore::new_constrained_term(
     TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
 	int id = m_monos_uf.new_var();
 	m_monos.push_back(
-	    {MonoFr::Tag::Constr, -1, {}, {type, {}, std::move(structure)}});
+	    {MonoFr::Tag::Var, -1, {}, {type, {}, std::move(structure)}});
 	return id;
 }
 
@@ -145,7 +137,7 @@ MonoId TypeSystemCore::inst_impl(
 	// representative, which does seem to make sense. I think.
 	mono = m_monos_uf.find(mono);
 
-	if (m_monos[mono].tag == MonoFr::Tag::Constr) {
+	if (m_monos[mono].tag == MonoFr::Tag::Var) {
 		auto it = mapping.find(mono);
 		return it == mapping.end() ? mono : it->second;
 	} else {
@@ -178,7 +170,7 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
 	mono = m_monos_uf.find(mono);
-	if (m_monos[mono].tag == MonoFr::Tag::Constr) {
+	if (m_monos[mono].tag == MonoFr::Tag::Var) {
 		free_vars.insert(mono);
 	} else {
 		for (MonoId arg : m_monos[mono].args)
@@ -191,12 +183,12 @@ void TypeSystemCore::unify(MonoId lhs, MonoId rhs) {
 	rhs = m_monos_uf.find(rhs);
 
 	// si rhs es var, lo pongo a la izq
-	if (m_monos[rhs].tag == MonoFr::Tag::Constr)
+	if (m_monos[rhs].tag == MonoFr::Tag::Var)
 		std::swap(lhs, rhs);
 
 	combine_left_to_right(lhs, rhs);
 
-	if (m_monos[lhs].tag == MonoFr::Tag::Constr) {
+	if (m_monos[lhs].tag == MonoFr::Tag::Var) {
 		if (m_monos[rhs].tag == MonoFr::Tag::App) {
 			if (occurs(lhs, rhs))
 				Log::fatal() << "Tried to construct infinite type";
@@ -215,8 +207,48 @@ void TypeSystemCore::unify(MonoId lhs, MonoId rhs) {
 	}
 }
 
-bool TypeSystemCore::occurs(int i, int j) {
+bool TypeSystemCore::occurs(int v, int i) {
+	assert(m_monos[v].tag == MonoFr::Tag::Var);
+	assert(m_monos_uf.find(v) == v);
+
+	i = m_monos_uf.find(i);
+
+	if (i == v)
+		return true;
+
+	if (m_monos[i].tag == MonoFr::Tag::Var)
+		return false;
+
+	for (int arg : m_monos[i].args)
+		if (occurs(v, arg))
+			return true;
+
 	return false;
+}
+
+void TypeSystemCore::combine_left_to_right(MonoId a, MonoId b) {
+	combine_left_to_right(m_monos[a].data, m_monos[b].data);
+}
+
+void TypeSystemCore::combine_left_to_right(TypeData& a, TypeData& b) {
+	for (auto& kv_a : a.structure) {
+		auto kv_b = b.structure.find(kv_a.first);
+		if (kv_b == b.structure.end())
+			b.structure.insert(kv_a);
+		else
+			unify(kv_a.second, kv_b->second);
+	}
+}
+
+// the right is the authority here
+void TypeSystemCore::check_constraints_left_to_right(TypeData& a, TypeData& b) {
+	for (auto& kv_a : a.structure) {
+		auto kv_b = b.structure.find(kv_a.first);
+		if (kv_b == b.structure.end())
+			Log::fatal() << "Field '" << kv_a.first << "' does not exist.";
+		else
+			unify(kv_a.second, kv_b->second);
+	}
 }
 
 int TypeSystemCore::find_function(MonoId x) {
@@ -224,7 +256,4 @@ int TypeSystemCore::find_function(MonoId x) {
 	if (m_monos[x].tag != MonoFr::Tag::App)
 		Log::fatal() << "Tried to read typefunc of non-app type";
 	return m_monos[x].func_id;
-}
-
-void TypeSystemCore::combine_left_to_right(MonoId lhs, MonoId rhs) {
 }

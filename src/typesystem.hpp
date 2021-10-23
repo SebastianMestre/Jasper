@@ -45,7 +45,7 @@ struct PolyData {
 };
 
 struct MonoFr {
-	enum class Tag { Constr, App };
+	enum class Tag { Var, App };
 	Tag tag;
 
 	// app
@@ -90,7 +90,11 @@ struct TypeSystemCore {
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
 	MonoId new_var() { return new_constrained_term(TypeFunctionTag::Any, {}); }
-	void combine_left_to_right(MonoId lhs, MonoId rhs);
+
+	void combine_left_to_right(MonoId, MonoId);
+	void combine_left_to_right(TypeData&, TypeData&);
+	void check_constraints_left_to_right(TypeData&, TypeData&);
+
 	void unify(MonoId lhs, MonoId rhs);
 	int find_function(MonoId x);
 	bool occurs(int i, int j);
