@@ -9,6 +9,7 @@
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
 #include "uf.hpp"
+#include "log/log.hpp"
 
 // Concrete type.
 // Else, for variant and record,
@@ -18,7 +19,7 @@
 // as 'deduced', because they were not created by the user/
 //
 // TODO: change for polymorphic approach
-enum class TypeFunctionTag { Builtin, Variant, Record };
+enum class TypeFunctionTag { Any, Builtin, Variant, Record };
 struct TypeData {
 	TypeFunctionTag tag;
 	std::vector<InternedString> fields;
@@ -44,7 +45,7 @@ struct PolyData {
 };
 
 struct MonoFr {
-	enum class Tag { Constr, Empty, App };
+	enum class Tag { Constr, App };
 	Tag tag;
 
 	// app
@@ -60,10 +61,6 @@ struct TypeSystemCore {
 	std::vector<MonoFr> m_monos;
 	Uf m_monos_uf;
 
-private:
-	Unification::Core m_mono_core;
-public:
-
 	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
 
@@ -73,10 +70,7 @@ public:
 
 	TypeSystemCore();
 
-	MonoId new_term(
-	    TypeFunctionId type_function,
-	    std::vector<MonoId> args,
-	    char const* tag = nullptr);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args);
 
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
@@ -88,25 +82,16 @@ public:
 	    bool dummy = false);
 
 	MonoId new_constrained_term(
-	    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
-
-		TypeFunctionId tf = new_type_function(
-			type, {}, std::move(structure), true);
-
-		return new_term(tf, {}, "constrained term");
-	}
+	    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure);
 
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
-
 	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
-
-	MonoId new_var() { return m_mono_core.new_var(); }
-	void unify(MonoId lhs, MonoId rhs) {
-		m_mono_core.unify(lhs, rhs);
-		// TODO: unify MonoFr
-	}
-	int find_function(MonoId x) { return m_mono_core.find_function(x); }
+	MonoId new_var() { return new_constrained_term(TypeFunctionTag::Any, {}); }
+	void combine_left_to_right(MonoId lhs, MonoId rhs);
+	void unify(MonoId lhs, MonoId rhs);
+	int find_function(MonoId x);
+	bool occurs(int i, int j);
 };

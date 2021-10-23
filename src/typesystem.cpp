@@ -73,24 +73,17 @@ TypeSystemCore::TypeSystemCore() {
 			    << fa << " and " << fb << ")";
 		}
 	};
-
-	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
-		a = core.find_term(a);
-		b = core.find_term(b);
-
-		if (a == b)
-			return;
-	
-		Unification::Core::TermData& a_data = core.term_data[a];
-		Unification::Core::TermData& b_data = core.term_data[b];
-
-		m_tf_core.unify(a_data.function_id, b_data.function_id);
-	};
 }
 
+MonoId TypeSystemCore::new_constrained_term(
+    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
+	int id = m_monos_uf.new_var();
+	m_monos.push_back(
+	    {MonoFr::Tag::Constr, -1, {}, {type, {}, std::move(structure)}});
+	return id;
+}
 
-MonoId TypeSystemCore::new_term(
-    TypeFunctionId tf, std::vector<int> args, char const* tag) {
+MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
 	tf = m_tf_core.find(tf);
 
 	{
@@ -113,7 +106,7 @@ MonoId TypeSystemCore::new_term(
 	assert(id == m_monos.size());
 	m_monos.push_back(MonoFr{MonoFr::Tag::App, tf, args, {}});
 
-	return m_mono_core.new_term(tf, std::move(args), tag);
+	return id;
 }
 
 PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
@@ -150,18 +143,16 @@ MonoId TypeSystemCore::inst_impl(
 	// NOTE(Mestre): Is just calling find good enough? It means we
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
-	mono = m_mono_core.find(mono);
-	Unification::Core::NodeHeader header = m_mono_core.node_header[mono];
+	mono = m_monos_uf.find(mono);
 
-	if (header.tag == Unification::Core::Tag::Var) {
+	if (m_monos[mono].tag == MonoFr::Tag::Constr) {
 		auto it = mapping.find(mono);
 		return it == mapping.end() ? mono : it->second;
 	} else {
-		TermId term = header.data_idx;
 		std::vector<MonoId> new_args;
-		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
+		for (MonoId arg : m_monos[mono].args)
 			new_args.push_back(inst_impl(arg, mapping));
-		return new_term(m_mono_core.term_data[term].function_id, std::move(new_args));
+		return new_term(m_monos[mono].func_id, std::move(new_args));
 	}
 }
 
@@ -186,14 +177,54 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 }
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
-	mono = m_mono_core.find(mono);
-	const Unification::Core::NodeHeader& header = m_mono_core.node_header[mono];
-
-	if (header.tag == Unification::Core::Tag::Var) {
+	mono = m_monos_uf.find(mono);
+	if (m_monos[mono].tag == MonoFr::Tag::Constr) {
 		free_vars.insert(mono);
 	} else {
-		TermId term = header.data_idx;
-		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
+		for (MonoId arg : m_monos[mono].args)
 			gather_free_vars(arg, free_vars);
 	}
+}
+
+void TypeSystemCore::unify(MonoId lhs, MonoId rhs) {
+	lhs = m_monos_uf.find(lhs);
+	rhs = m_monos_uf.find(rhs);
+
+	// si rhs es var, lo pongo a la izq
+	if (m_monos[rhs].tag == MonoFr::Tag::Constr)
+		std::swap(lhs, rhs);
+
+	combine_left_to_right(lhs, rhs);
+
+	if (m_monos[lhs].tag == MonoFr::Tag::Constr) {
+		if (m_monos[rhs].tag == MonoFr::Tag::App) {
+			if (occurs(lhs, rhs))
+				Log::fatal() << "Tried to construct infinite type";
+			// si lhs es var, lo apunto a rhs
+			m_monos_uf.join_left_to_right(lhs, rhs);
+		}
+	} else {
+		// recursion del unify tipico
+
+		m_tf_core.unify(m_monos[lhs].func_id, m_monos[rhs].func_id);
+
+		assert(m_monos[lhs].args.size() == m_monos[rhs].args.size());
+		for (int i = 0; i < m_monos[lhs].args.size(); ++i) {
+			unify(m_monos[lhs].args[i], m_monos[rhs].args[i]);
+		}
+	}
+}
+
+bool TypeSystemCore::occurs(int i, int j) {
+	return false;
+}
+
+int TypeSystemCore::find_function(MonoId x) {
+	x = m_monos_uf.find(x);
+	if (m_monos[x].tag != MonoFr::Tag::App)
+		Log::fatal() << "Tried to read typefunc of non-app type";
+	return m_monos[x].func_id;
+}
+
+void TypeSystemCore::combine_left_to_right(MonoId lhs, MonoId rhs) {
 }

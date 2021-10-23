@@ -43,7 +43,7 @@ void typecheck(AST::ArrayLiteral* ast, TypeChecker& tc) {
 	}
 
 	auto array_type =
-	    tc.m_core.new_term(BuiltinType::Array, {element_type}, "Array Literal");
+	    tc.m_core.new_term(BuiltinType::Array, {element_type});
 
 	ast->m_value_type = array_type;
 }

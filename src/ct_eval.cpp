@@ -262,7 +262,7 @@ static AST::MonoTypeHandle* ct_eval(
 		args.push_back(static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value);
 	}
 
-	MonoId result = tc.m_core.new_term(type_function, std::move(args), "from ast");
+	MonoId result = tc.m_core.new_term(type_function, std::move(args));
 	handle->m_value = result;
 	handle->m_syntax = ast;
 	return handle;
