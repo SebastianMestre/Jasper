@@ -87,6 +87,15 @@ public:
 	    std::unordered_map<InternedString, MonoId> structure,
 	    bool dummy = false);
 
+	MonoId new_constrained_term(
+	    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
+
+		TypeFunctionId tf = new_type_function(
+			type, {}, std::move(structure), true);
+
+		return new_term(tf, {}, "constrained term");
+	}
+
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
 

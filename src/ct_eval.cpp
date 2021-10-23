@@ -233,12 +233,8 @@ static AST::Constructor* constructor_from_ast(
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
 		// dummy with one constructor, the one used
-		std::unordered_map<InternedString, MonoId> structure;
-		structure[access->m_member] = tc.new_var();
-		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-		    TypeFunctionTag::Variant, {}, std::move(structure), true);
-		MonoId dummy_monotype =
-		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
+		MonoId dummy_monotype = tc.m_core.new_constrained_term(
+		    TypeFunctionTag::Variant, {{access->m_member, tc.new_var()}});
 
 		MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
 

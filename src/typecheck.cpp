@@ -178,13 +178,8 @@ void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-	    TypeFunctionTag::Record,
-	    // we don't care about field order in dummies
-	    {},
-	    {{ast->m_member, member_type}},
-	    true);
-	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "record instance");
+	MonoId term_type = tc.m_core.new_constrained_term(
+	    TypeFunctionTag::Record, {{ast->m_member, member_type}});
 
 	tc.m_core.unify(ast->m_target->m_value_type, term_type);
 }
@@ -219,16 +214,11 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
 	}
 
-	TypeFunctionId dummy_tf = tc.m_core.new_type_function(
-	    TypeFunctionTag::Variant,
-	    // we don't care about field order in dummies
-	    {},
-	    std::move(dummy_structure),
-	    true);
-
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
-	MonoId term_type = tc.m_core.new_term(dummy_tf, {}, "match variant dummy");
+	MonoId term_type = tc.m_core.new_constrained_term(
+		TypeFunctionTag::Variant, std::move(dummy_structure));
+
 	tc.m_core.unify(ast->m_target.m_value_type, term_type);
 }
 
@@ -275,8 +265,6 @@ void print_information(AST::Declaration* ast, TypeChecker& tc) {
 	auto& poly_data = tc.m_core.poly_data[poly];
 	Log::info() << "Type of local variable '" << ast->identifier_text()
 	            << "' has " << poly_data.vars.size() << " type variables";
-	Log::info("The type is:");
-	tc.m_core.m_mono_core.print_node(poly_data.base);
 #endif
 }
 
