@@ -255,7 +255,6 @@ namespace EndStates {
 	X(Array, KEYWORD_ARRAY, "array")                                           \
 	X(Null, KEYWORD_NULL, "null")                                              \
 	X(Seq, KEYWORD_SEQ, "seq")                                                 \
-	X(Tuple, KEYWORD_TUPLE, "tuple")                                           \
 	X(Struct, KEYWORD_STRUCT, "struct")                                        \
 	X(Union, KEYWORD_UNION, "union")
 
