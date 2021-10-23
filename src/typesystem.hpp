@@ -8,23 +8,31 @@
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
+#include "uf.hpp"
 
-enum class TypeFunctionTag { Builtin, Variant, Tuple, Record };
-// Concrete type function. If it's a built-in, we use argument_count
-// to tell how many arguments it takes. Else, for variant, tuple and record,
+// Concrete type.
+// Else, for variant and record,
 // we store their structure as a hash from names to monotypes.
 //
 // Dummy type functions are for unification purposes only, but do not count
 // as 'deduced', because they were not created by the user/
 //
 // TODO: change for polymorphic approach
-struct TypeFunctionData {
+enum class TypeFunctionTag { Builtin, Variant, Record };
+struct TypeData {
 	TypeFunctionTag tag;
-	int argument_count; // -1 means variadic
-
 	std::vector<InternedString> fields;
 	std::unordered_map<InternedString, MonoId> structure;
+};
 
+struct MonoDataFr {
+	TypeData details;
+	bool is_dummy {false};
+};
+
+struct TypeFunctionData {
+	TypeData result_data;
+	int argument_count; // -1 means variadic
 	bool is_dummy {false};
 };
 
@@ -35,8 +43,26 @@ struct PolyData {
 	std::vector<MonoId> vars;
 };
 
+struct MonoFr {
+	enum class Tag { Constr, Empty, App };
+	Tag tag;
+
+	// app
+	int func_id;
+	std::vector<int> args;
+
+	// constr
+	TypeData data;
+};
+
 struct TypeSystemCore {
+
+	std::vector<MonoFr> m_monos;
+	Uf m_monos_uf;
+
+private:
 	Unification::Core m_mono_core;
+public:
 
 	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
@@ -67,4 +93,11 @@ struct TypeSystemCore {
 	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
+
+	MonoId new_var() { return m_mono_core.new_var(); }
+	void unify(MonoId lhs, MonoId rhs) {
+		m_mono_core.unify(lhs, rhs);
+		// TODO: unify MonoFr
+	}
+	int find_function(MonoId x) { return m_mono_core.find_function(x); }
 };

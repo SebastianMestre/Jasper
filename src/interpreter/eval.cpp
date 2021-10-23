@@ -356,20 +356,20 @@ void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
 
 void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
 	TypeFunctionId type_function_header =
-	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
+	    e.m_tc->m_core.find_function(ast->m_value);
 	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
 	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
-	e.push_record_constructor(type_function_data.fields);
+	e.push_record_constructor(type_function_data.result_data.fields);
 }
 
 void eval(AST::Constructor* ast, Interpreter& e) {
-	TypeFunctionId tf_header = e.m_tc->m_core.m_mono_core.find_function(ast->m_mono);
+	TypeFunctionId tf_header = e.m_tc->m_core.find_function(ast->m_mono);
 	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
 	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
 
-	if (tf_data.tag == TypeFunctionTag::Record) {
-		e.push_record_constructor(tf_data.fields);
-	} else if (tf_data.tag == TypeFunctionTag::Variant) {
+	if (tf_data.result_data.tag == TypeFunctionTag::Record) {
+		e.push_record_constructor(tf_data.result_data.fields);
+	} else if (tf_data.result_data.tag == TypeFunctionTag::Variant) {
 		e.push_variant_constructor(ast->m_id);
 	} else {
 		Log::fatal("not implemented this type function for construction");

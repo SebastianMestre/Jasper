@@ -242,7 +242,7 @@ static AST::Constructor* constructor_from_ast(
 
 		MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
 
-		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
+		tc.m_core.unify(dummy_monotype, monotype);
 
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
@@ -359,7 +359,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 
 				auto handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
 				MonoId mt = eval_then_get_mono(handle->m_syntax, tc, alloc);
-				tc.m_core.m_mono_core.unify(mt, handle->m_value);
+				tc.m_core.unify(mt, handle->m_value);
 			} else {
 				if (decl->m_type_hint)
 					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);

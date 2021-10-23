@@ -53,18 +53,18 @@ TypeSystemCore::TypeSystemCore() {
 			core.node_header[a].data_idx = b;
 			b_data.argument_count = new_argument_count;
 
-			for (auto& kv_a : a_data.structure) {
-				auto kv_b = b_data.structure.find(kv_a.first);
+			for (auto& kv_a : a_data.result_data.structure) {
+				auto kv_b = b_data.result_data.structure.find(kv_a.first);
 
-				if (kv_b == b_data.structure.end())
+				if (kv_b == b_data.result_data.structure.end())
 					// if b doesn't have a field of a, act accordingly
 					if (b_data.is_dummy)
-						b_data.structure.insert(kv_a);
+						b_data.result_data.structure.insert(kv_a);
 					else
 						Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
 				else
 					// else the fields must have equivalent types
-					m_mono_core.unify(kv_a.second, kv_b->second);
+					unify(kv_a.second, kv_b->second);
 			}
 
 		} else {
@@ -94,6 +94,8 @@ MonoId TypeSystemCore::new_term(
 	tf = m_tf_core.find(tf);
 
 	{
+		// we create a dummy typefunc to achieve unification of typefunc argument counts
+
 		// TODO: add a TypeFunctionTag::Unknown tag, to express
 		// that it's a dummy of unknown characteristics
 
@@ -106,6 +108,10 @@ MonoId TypeSystemCore::new_term(
 
 		m_tf_core.unify(tf, dummy_tf);
 	}
+
+	int id = m_monos_uf.new_var();
+	assert(id == m_monos.size());
+	m_monos.push_back(MonoFr{MonoFr::Tag::App, tf, args, {}});
 
 	return m_mono_core.new_term(tf, std::move(args), tag);
 }
@@ -123,7 +129,7 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
-	m_type_functions.push_back({TypeFunctionTag::Builtin, arguments});
+	m_type_functions.push_back({{TypeFunctionTag::Builtin}, arguments});
 	return id;
 }
 
@@ -134,7 +140,7 @@ TypeFunctionId TypeSystemCore::new_type_function(
     bool dummy) {
 	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
 	m_type_functions.push_back(
-	    {type, 0, std::move(fields), std::move(structure), dummy});
+	    {{type, std::move(fields), std::move(structure)}, 0, dummy});
 	return id;
 }
 
@@ -175,7 +181,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
-		vals.push_back(m_mono_core.new_var());
+		vals.push_back(new_var());
 	return inst_with(poly, vals);
 }
 
