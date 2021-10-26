@@ -162,6 +162,7 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 }
 
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
+	// TODO: do something with the constraints
 	std::vector<MonoId> vals;
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
 		vals.push_back(new_var());

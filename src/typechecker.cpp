@@ -155,7 +155,12 @@ MonoId TypeChecker::new_hidden_var() {
 }
 
 MonoId TypeChecker::new_var() {
-	MonoId result = m_core.new_var();
+	return new_constrained_var(TypeFunctionTag::Any, {});
+}
+
+MonoId TypeChecker::new_constrained_var(
+    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
+	MonoId result = m_core.new_constrained_term(type, std::move(structure));
 	m_env.current_scope().m_type_vars.insert(result);
 	return result;
 }

@@ -178,7 +178,7 @@ void typecheck(AST::AccessExpression* ast, TypeChecker& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	MonoId term_type = tc.m_core.new_constrained_term(
+	MonoId term_type = tc.new_constrained_var(
 	    TypeFunctionTag::Record, {{ast->m_member, member_type}});
 
 	tc.m_core.unify(ast->m_target->m_value_type, term_type);
@@ -216,7 +216,7 @@ void typecheck(AST::MatchExpression* ast, TypeChecker& tc) {
 
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
-	MonoId term_type = tc.m_core.new_constrained_term(
+	MonoId term_type = tc.new_constrained_var(
 		TypeFunctionTag::Variant, std::move(dummy_structure));
 
 	tc.m_core.unify(ast->m_target.m_value_type, term_type);
@@ -264,7 +264,7 @@ void print_information(AST::Declaration* ast, TypeChecker& tc) {
 	auto poly = ast->m_decl_type;
 	auto& poly_data = tc.m_core.poly_data[poly];
 	Log::info() << "Type of local variable '" << ast->identifier_text()
-	            << "' has " << poly_data.vars.size() << " type variables";
+	            << "' has " << int(poly_data.vars.size()) << " type variables";
 #endif
 }
 

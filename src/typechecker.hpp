@@ -27,8 +27,10 @@ struct TypeChecker {
 	void declare_builtin_value(InternedString const& name, PolyId);
 	void declare_builtin_typefunc(InternedString const& name, TypeFunctionId);
 
-	MonoId new_hidden_var();
 	MonoId new_var();
+	MonoId new_hidden_var();
+	MonoId new_constrained_var(
+	    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure);
 	PolyId generalize(MonoId mono);
 	void bind_free_vars(MonoId mono);
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);

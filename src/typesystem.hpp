@@ -48,11 +48,11 @@ struct MonoFr {
 	enum class Tag { Var, App };
 	Tag tag;
 
-	// app
+	// data for app case
 	int func_id;
 	std::vector<int> args;
 
-	// constr
+	// constraints
 	TypeData data;
 };
 
