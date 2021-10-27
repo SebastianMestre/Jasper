@@ -15,7 +15,6 @@ LIBS :=
 COMMON_DIR := .
 COMMON_TARGETS := \
 	algorithms/tarjan_solver \
-	algorithms/unification \
 	log/basic_stream \
 	log/log \
 	log/stream \

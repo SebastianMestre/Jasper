@@ -4,7 +4,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "algorithms/unification.hpp"
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
