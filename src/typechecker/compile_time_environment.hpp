@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "typechecker_types.hpp"
-#include "utils/interned_string.hpp"
+#include "../utils/interned_string.hpp"
 
 namespace AST {
 

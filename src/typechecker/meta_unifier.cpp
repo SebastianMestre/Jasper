@@ -1,6 +1,6 @@
 #include "meta_unifier.hpp"
 
-#include "log/log.hpp"
+#include "../log/log.hpp"
 
 #include <iostream>
 

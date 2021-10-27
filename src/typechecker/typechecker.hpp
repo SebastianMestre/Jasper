@@ -2,8 +2,8 @@
 
 #include "compile_time_environment.hpp"
 #include "typesystem.hpp"
-#include "utils/chunked_array.hpp"
-#include "utils/interned_string.hpp"
+#include "../utils/chunked_array.hpp"
+#include "../utils/interned_string.hpp"
 
 namespace AST {
 struct Allocator;

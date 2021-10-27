@@ -8,7 +8,7 @@
 #include <climits>
 
 #include "./utils/interned_string.hpp"
-#include "typechecker_types.hpp"
+#include "./typechecker/typechecker_types.hpp"
 #include "ast_tag.hpp"
 
 struct Token;

@@ -1,6 +1,6 @@
 #include "metacheck.hpp"
 
-#include "ast.hpp"
+#include "../ast.hpp"
 #include "meta_unifier.hpp"
 
 namespace TypeChecker {

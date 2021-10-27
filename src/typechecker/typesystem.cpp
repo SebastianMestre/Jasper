@@ -2,13 +2,52 @@
 
 #include <cassert>
 
-#include "./log/log.hpp"
+#include "../log/log.hpp"
 
-TypeSystemCore::TypeSystemCore() {
+MonoId TypeSystemCore::new_constrained_term(
+    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
+	int id = m_monos_uf.new_var();
+	m_monos.push_back(
+	    {MonoFr::Tag::Var, -1, {}, {type, {}, std::move(structure)}});
+	return id;
+}
+
+MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
+	tf = m_type_function_uf.find(tf);
+
+	{
+		// we create a dummy typefunc to achieve unification of typefunc argument counts
+
+		// TODO: add a TypeFunctionTag::Unknown tag, to express
+		// that it's a dummy of unknown characteristics
+
+		TypeFunctionId dummy_tf =
+		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
+
+		m_type_functions[dummy_tf].argument_count = args.size();
+
+		unify_type_function(tf, dummy_tf);
+	}
+
+	int id = m_monos_uf.new_var();
+	assert(id == m_monos.size());
+	m_monos.push_back(MonoFr{MonoFr::Tag::App, tf, args, {}});
+
+	return id;
+}
+
+PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
+	// TODO: check that the given vars are actually vars
+	PolyData data;
+	data.base = mono;
+	data.vars = std::move(vars);
+	PolyId poly = poly_data.size();
+	poly_data.push_back(std::move(data));
+	return poly;
 }
 
 
-void TypeSystemCore::unify_type_func(int a, int b) {
+void TypeSystemCore::unify_type_function(int a, int b) {
 	// TODO: Redo this once we add polymorphic records
 
 	a = m_type_function_uf.find(a);
@@ -67,49 +106,6 @@ void TypeSystemCore::unify_type_func(int a, int b) {
 	}
 }
 
-MonoId TypeSystemCore::new_constrained_term(
-    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure) {
-	int id = m_monos_uf.new_var();
-	m_monos.push_back(
-	    {MonoFr::Tag::Var, -1, {}, {type, {}, std::move(structure)}});
-	return id;
-}
-
-MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
-	tf = m_type_function_uf.find(tf);
-
-	{
-		// we create a dummy typefunc to achieve unification of typefunc argument counts
-
-		// TODO: add a TypeFunctionTag::Unknown tag, to express
-		// that it's a dummy of unknown characteristics
-
-		TypeFunctionId dummy_tf =
-		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
-
-		m_type_functions[dummy_tf].argument_count = args.size();
-
-		unify_type_func(tf, dummy_tf);
-	}
-
-	int id = m_monos_uf.new_var();
-	assert(id == m_monos.size());
-	m_monos.push_back(MonoFr{MonoFr::Tag::App, tf, args, {}});
-
-	return id;
-}
-
-PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
-	// TODO: check that the given vars are actually vars
-	PolyData data;
-	data.base = mono;
-	data.vars = std::move(vars);
-	PolyId poly = poly_data.size();
-	poly_data.push_back(std::move(data));
-	return poly;
-}
-
-
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
 	TypeFunctionId id = m_type_function_uf.new_var();
 	m_type_functions.push_back({{TypeFunctionTag::Builtin}, arguments});
@@ -133,6 +129,28 @@ TypeFunctionId TypeSystemCore::new_type_function_var() {
 	return id;
 }
 
+
+MonoId TypeSystemCore::inst_fresh(PolyId poly) {
+	// TODO: do something with the constraints
+	std::vector<MonoId> vals;
+	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
+		vals.push_back(new_var());
+	return inst_with(poly, vals);
+}
+
+MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
+	PolyData const& data = poly_data[poly];
+
+	assert(data.vars.size() == vals.size());
+
+	std::unordered_map<MonoId, MonoId> old_to_new;
+	for (int i {0}; i != data.vars.size(); ++i) {
+		old_to_new[data.vars[i]] = vals[i];
+	}
+
+	return inst_impl(data.base, old_to_new);
+}
+
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
@@ -150,27 +168,6 @@ MonoId TypeSystemCore::inst_impl(
 			new_args.push_back(inst_impl(arg, mapping));
 		return new_term(m_monos[mono].func_id, std::move(new_args));
 	}
-}
-
-MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
-	PolyData const& data = poly_data[poly];
-
-	assert(data.vars.size() == vals.size());
-
-	std::unordered_map<MonoId, MonoId> old_to_new;
-	for (int i {0}; i != data.vars.size(); ++i) {
-		old_to_new[data.vars[i]] = vals[i];
-	}
-
-	return inst_impl(data.base, old_to_new);
-}
-
-MonoId TypeSystemCore::inst_fresh(PolyId poly) {
-	// TODO: do something with the constraints
-	std::vector<MonoId> vals;
-	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
-		vals.push_back(new_var());
-	return inst_with(poly, vals);
 }
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
@@ -203,7 +200,7 @@ void TypeSystemCore::unify(MonoId lhs, MonoId rhs) {
 	} else {
 		// recursion del unify tipico
 
-		unify_type_func(m_monos[lhs].func_id, m_monos[rhs].func_id);
+		unify_type_function(m_monos[lhs].func_id, m_monos[rhs].func_id);
 
 		assert(m_monos[lhs].args.size() == m_monos[rhs].args.size());
 		for (int i = 0; i < m_monos[lhs].args.size(); ++i) {

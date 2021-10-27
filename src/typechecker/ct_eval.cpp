@@ -1,9 +1,9 @@
 #include "ct_eval.hpp"
 
-#include "./log/log.hpp"
+#include "../ast.hpp"
+#include "../ast_allocator.hpp"
+#include "../log/log.hpp"
 #include "typechecker.hpp"
-#include "ast.hpp"
-#include "ast_allocator.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -24,7 +24,7 @@ static int eval_then_get_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& a
 	return static_cast<AST::MonoTypeHandle*>(handle)->m_value;
 }
 
-static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static int eval_then_get_type_function(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto handle = ct_eval(ast, tc, alloc);
 	assert(handle->type() == ASTTag::TypeFunctionHandle);
 	return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
@@ -253,7 +253,7 @@ static AST::MonoTypeHandle* ct_eval(
     AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto handle = alloc.make<AST::MonoTypeHandle>();
 
-	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc, alloc);
+	TypeFunctionId type_function = eval_then_get_type_function(ast->m_callee, tc, alloc);
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
@@ -347,8 +347,8 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
 				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-				TypeFunctionId tf = eval_then_get_type_func(handle->m_syntax, tc, alloc);
-				tc.m_core.unify_type_func(tf, handle->m_value);
+				TypeFunctionId tf = eval_then_get_type_function(handle->m_syntax, tc, alloc);
+				tc.m_core.unify_type_function(tf, handle->m_value);
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";

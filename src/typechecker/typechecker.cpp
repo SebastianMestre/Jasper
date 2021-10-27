@@ -1,8 +1,8 @@
 #include "typechecker.hpp"
 
+#include "../ast.hpp"
+#include "../ast_allocator.hpp"
 #include "typechecker_types.hpp"
-#include "ast.hpp"
-#include "ast_allocator.hpp"
 
 namespace TypeChecker {
 

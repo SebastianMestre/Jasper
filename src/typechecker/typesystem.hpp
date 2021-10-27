@@ -4,20 +4,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../algorithms/union_find.hpp"
+#include "../log/log.hpp"
+#include "../utils/interned_string.hpp"
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
-#include "utils/interned_string.hpp"
-#include "algorithms/union_find.hpp"
-#include "log/log.hpp"
 
-// Concrete type.
-// Else, for variant and record,
-// we store their structure as a hash from names to monotypes.
-//
-// Dummy type functions are for unification purposes only, but do not count
-// as 'deduced', because they were not created by the user/
-//
-// TODO: change for polymorphic approach
 enum class TypeFunctionTag { Any, Builtin, Variant, Record };
 struct TypeData {
 	TypeFunctionTag tag;
@@ -67,12 +59,13 @@ struct TypeSystemCore {
 
 	MetaUnifier m_meta_core;
 
-	TypeSystemCore();
+	TypeSystemCore() = default;
 
 	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args);
 
 	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
+	void unify_type_function(TypeFunctionId a, TypeFunctionId b);
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function(
 	    TypeFunctionTag type,
@@ -98,5 +91,4 @@ struct TypeSystemCore {
 	void unify(MonoId lhs, MonoId rhs);
 	int find_function(MonoId x);
 	bool occurs(int i, int j);
-	void unify_type_func(int a, int b);
 };
