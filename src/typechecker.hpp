@@ -25,7 +25,7 @@ struct TypeChecker {
 
 	AST::Declaration* new_builtin_declaration(InternedString const& name);
 	void declare_builtin_value(InternedString const& name, PolyId);
-	void declare_builtin_typefunc(InternedString const& name, TypeFunctionId);
+	void declare_builtin_type_function(InternedString const& name, TypeFunctionId);
 
 	MonoId new_var();
 	MonoId new_hidden_var();

@@ -143,11 +143,11 @@ TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator
 		}
 	}
 
-	declare_builtin_typefunc("int", BuiltinType::Int);
-	declare_builtin_typefunc("float", BuiltinType::Float);
-	declare_builtin_typefunc("string", BuiltinType::String);
-	declare_builtin_typefunc("boolean", BuiltinType::Boolean);
-	declare_builtin_typefunc("array", BuiltinType::Array);
+	declare_builtin_type_function("int", BuiltinType::Int);
+	declare_builtin_type_function("float", BuiltinType::Float);
+	declare_builtin_type_function("string", BuiltinType::String);
+	declare_builtin_type_function("boolean", BuiltinType::Boolean);
+	declare_builtin_type_function("array", BuiltinType::Array);
 }
 
 MonoId TypeChecker::new_hidden_var() {
@@ -219,12 +219,12 @@ AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& nam
 	return result;
 }
 
-void TypeChecker::declare_builtin_typefunc(
-    InternedString const& name, TypeFunctionId typefunc) {
+void TypeChecker::declare_builtin_type_function(
+    InternedString const& name, TypeFunctionId type_function) {
 	auto decl = new_builtin_declaration(name);
 
 	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
-	handle->m_value = typefunc;
+	handle->m_value = type_function;
 	decl->m_value = handle;
 	decl->m_meta_type = m_core.m_meta_core.make_const_node(Tag::Func);
 }

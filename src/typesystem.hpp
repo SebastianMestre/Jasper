@@ -61,7 +61,7 @@ struct TypeSystemCore {
 	Uf m_monos_uf;
 
 	std::vector<TypeFunctionData> m_type_functions;
-	Uf m_typefunc_uf;
+	Uf m_type_function_uf;
 
 	std::vector<PolyData> poly_data;
 

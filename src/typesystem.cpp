@@ -11,8 +11,8 @@ TypeSystemCore::TypeSystemCore() {
 void TypeSystemCore::unify_type_func(int a, int b) {
 	// TODO: Redo this once we add polymorphic records
 
-	a = m_typefunc_uf.find(a);
-	b = m_typefunc_uf.find(b);
+	a = m_type_function_uf.find(a);
+	b = m_type_function_uf.find(b);
 
 	if (a == b)
 		return;
@@ -52,7 +52,7 @@ void TypeSystemCore::unify_type_func(int a, int b) {
 		// Also, we do it before unifying their data to prevent infinite
 		// recursion
 		b_data.argument_count = new_argument_count;
-		m_typefunc_uf.join_left_to_right(a, b);
+		m_type_function_uf.join_left_to_right(a, b);
 
 		if (b_data.is_dummy) {
 			combine_left_to_right(a_data.result_data, b_data.result_data);
@@ -76,7 +76,7 @@ MonoId TypeSystemCore::new_constrained_term(
 }
 
 MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
-	tf = m_typefunc_uf.find(tf);
+	tf = m_type_function_uf.find(tf);
 
 	{
 		// we create a dummy typefunc to achieve unification of typefunc argument counts
@@ -111,7 +111,7 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId id = m_typefunc_uf.new_var();
+	TypeFunctionId id = m_type_function_uf.new_var();
 	m_type_functions.push_back({{TypeFunctionTag::Builtin}, arguments});
 	return id;
 }
@@ -121,14 +121,14 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	TypeFunctionId id = m_typefunc_uf.new_var();
+	TypeFunctionId id = m_type_function_uf.new_var();
 	m_type_functions.push_back(
 	    {{type, std::move(fields), std::move(structure)}, 0, dummy});
 	return id;
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
-	TypeFunctionId id = m_typefunc_uf.new_var();
+	TypeFunctionId id = m_type_function_uf.new_var();
 	m_type_functions.push_back({{TypeFunctionTag::Any, {}, {}}, 0, true});
 	return id;
 }
@@ -259,6 +259,6 @@ void TypeSystemCore::check_constraints_left_to_right(TypeData& a, TypeData& b) {
 int TypeSystemCore::find_function(MonoId x) {
 	x = m_monos_uf.find(x);
 	if (m_monos[x].tag != MonoFr::Tag::App)
-		Log::fatal() << "Tried to read typefunc of non-app type";
+		Log::fatal() << "Tried to read type function of non-app type";
 	return m_monos[x].func_id;
 }
