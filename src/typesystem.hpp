@@ -8,7 +8,7 @@
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
-#include "uf.hpp"
+#include "algorithms/union_find.hpp"
 #include "log/log.hpp"
 
 // Concrete type.
@@ -61,8 +61,8 @@ struct TypeSystemCore {
 	std::vector<MonoFr> m_monos;
 	Uf m_monos_uf;
 
-	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
+	Uf m_typefunc_uf;
 
 	std::vector<PolyData> poly_data;
 
@@ -80,6 +80,7 @@ struct TypeSystemCore {
 	    std::vector<InternedString> fields,
 	    std::unordered_map<InternedString, MonoId> structure,
 	    bool dummy = false);
+	TypeFunctionId new_type_function_var();
 
 	MonoId new_constrained_term(
 	    TypeFunctionTag type, std::unordered_map<InternedString, MonoId> structure);
@@ -98,4 +99,5 @@ struct TypeSystemCore {
 	void unify(MonoId lhs, MonoId rhs);
 	int find_function(MonoId x);
 	bool occurs(int i, int j);
+	void unify_type_func(int a, int b);
 };

@@ -229,7 +229,7 @@ void typecheck(AST::ConstructorExpression* ast, TypeChecker& tc) {
 	assert(constructor->type() == ASTTag::Constructor);
 
 	TypeFunctionId tf = tc.m_core.find_function(constructor->m_mono);
-	int tf_data_idx = tc.m_core.m_tf_core.find_function(tf);
+	int tf_data_idx = tc.m_core.m_typefunc_uf.find(tf);
 	TypeFunctionData& tf_data = tc.m_core.m_type_functions[tf_data_idx];
 
 	// match value arguments

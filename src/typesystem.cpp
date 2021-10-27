@@ -5,66 +5,66 @@
 #include "./log/log.hpp"
 
 TypeSystemCore::TypeSystemCore() {
-	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {
-		// TODO: Redo this once we add polymorphic records
-		if (core.find_term(a) == core.find_term(b))
-			return;
-	
-		int fa = core.find_function(a);
-		int fb = core.find_function(b);
+}
 
-		if (m_type_functions[fb].is_dummy) {
-			std::swap(a, b);
-			std::swap(fa, fb);
-		}
 
-		TypeFunctionData& a_data = m_type_functions[fa];
-		TypeFunctionData& b_data = m_type_functions[fb];
+void TypeSystemCore::unify_type_func(int a, int b) {
+	// TODO: Redo this once we add polymorphic records
 
-		if (a_data.is_dummy) {
+	a = m_typefunc_uf.find(a);
+	b = m_typefunc_uf.find(b);
 
-			int const new_argument_count = [&] {
-				if (a_data.argument_count == b_data.argument_count) {
-					return a_data.argument_count;
-				} else if (b_data.is_dummy || b_data.argument_count == -1) {
-					return -1;
-				} else {
-					std::string argc_a =
-					    a_data.argument_count == -1
-					        ? std::string("variadic")
-					        : std::to_string(a_data.argument_count);
-					std::string argc_b =
-					    b_data.argument_count == -1
-					        ? std::string("variadic")
-					        : std::to_string(b_data.argument_count);
-					Log::fatal()
-					    << "Deduced type functions with incompatible argument "
-					       "counts to be equal (with "
-					    << argc_a << " and " << argc_b << " arguments)";
-				}
-			}();
+	if (a == b)
+		return;
 
-			// Make a point to b. this way, if more fields get added to a or b,
-			// both get updated
-			//
-			// Also, we do it before unifying their data to prevent infinite
-			// recursion
-			core.node_header[a].tag = Unification::Core::Tag::Var;
-			core.node_header[a].data_idx = b;
-			b_data.argument_count = new_argument_count;
+	if (!m_type_functions[a].is_dummy)
+		std::swap(a, b);
 
-			if (b_data.is_dummy) {
-				combine_left_to_right(a_data.result_data, b_data.result_data);
+	TypeFunctionData& a_data = m_type_functions[a];
+	TypeFunctionData& b_data = m_type_functions[b];
+
+	if (a_data.is_dummy) {
+
+		int const new_argument_count = [&] {
+			if (a_data.argument_count == b_data.argument_count) {
+				return a_data.argument_count;
+			} else if (b_data.is_dummy || b_data.argument_count == -1) {
+				return -1;
 			} else {
-				check_constraints_left_to_right(a_data.result_data, b_data.result_data);
+				std::string argc_a =
+					a_data.argument_count == -1
+						? std::string("variadic")
+						: std::to_string(a_data.argument_count);
+				std::string argc_b =
+					b_data.argument_count == -1
+						? std::string("variadic")
+						: std::to_string(b_data.argument_count);
+				Log::fatal()
+					<< "Deduced type functions with incompatible argument "
+					   "counts to be equal (with "
+					<< argc_a << " and " << argc_b << " arguments)";
 			}
+		}();
 
+		// Make a point to b. this way, if more fields get added to a or b,
+		// both get updated
+		//
+		// Also, we do it before unifying their data to prevent infinite
+		// recursion
+		b_data.argument_count = new_argument_count;
+		m_typefunc_uf.join_left_to_right(a, b);
+
+		if (b_data.is_dummy) {
+			combine_left_to_right(a_data.result_data, b_data.result_data);
 		} else {
-			Log::fatal()
-			    << "Deduced two different type functions to be equal (with IDs "
-			    << fa << " and " << fb << ")";
+			check_constraints_left_to_right(a_data.result_data, b_data.result_data);
 		}
-	};
+
+	} else {
+		Log::fatal()
+			<< "Deduced two different type functions to be equal (with IDs "
+			<< a << " and " << b << ")";
+	}
 }
 
 MonoId TypeSystemCore::new_constrained_term(
@@ -76,7 +76,7 @@ MonoId TypeSystemCore::new_constrained_term(
 }
 
 MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
-	tf = m_tf_core.find(tf);
+	tf = m_typefunc_uf.find(tf);
 
 	{
 		// we create a dummy typefunc to achieve unification of typefunc argument counts
@@ -84,14 +84,12 @@ MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
 		// TODO: add a TypeFunctionTag::Unknown tag, to express
 		// that it's a dummy of unknown characteristics
 
-		// TODO: add some APIs to make this less jarring
 		TypeFunctionId dummy_tf =
 		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
 
-		int dummy_tf_data_id = m_tf_core.find_function(dummy_tf);
-		m_type_functions[dummy_tf_data_id].argument_count = args.size();
+		m_type_functions[dummy_tf].argument_count = args.size();
 
-		m_tf_core.unify(tf, dummy_tf);
+		unify_type_func(tf, dummy_tf);
 	}
 
 	int id = m_monos_uf.new_var();
@@ -113,7 +111,7 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
+	TypeFunctionId id = m_typefunc_uf.new_var();
 	m_type_functions.push_back({{TypeFunctionTag::Builtin}, arguments});
 	return id;
 }
@@ -123,9 +121,15 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
+	TypeFunctionId id = m_typefunc_uf.new_var();
 	m_type_functions.push_back(
 	    {{type, std::move(fields), std::move(structure)}, 0, dummy});
+	return id;
+}
+
+TypeFunctionId TypeSystemCore::new_type_function_var() {
+	TypeFunctionId id = m_typefunc_uf.new_var();
+	m_type_functions.push_back({{TypeFunctionTag::Any, {}, {}}, 0, true});
 	return id;
 }
 
@@ -199,7 +203,7 @@ void TypeSystemCore::unify(MonoId lhs, MonoId rhs) {
 	} else {
 		// recursion del unify tipico
 
-		m_tf_core.unify(m_monos[lhs].func_id, m_monos[rhs].func_id);
+		unify_type_func(m_monos[lhs].func_id, m_monos[rhs].func_id);
 
 		assert(m_monos[lhs].args.size() == m_monos[rhs].args.size());
 		for (int i = 0; i < m_monos[lhs].args.size(); ++i) {

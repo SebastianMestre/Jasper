@@ -318,7 +318,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
 			auto handle = alloc.make<AST::TypeFunctionHandle>();
-			handle->m_value = tc.m_core.m_tf_core.new_var();
+			handle->m_value = tc.m_core.new_type_function_var();
 			handle->m_syntax = decl.m_value;
 			decl.m_value = handle;
 		} else if (uf.is(meta_type, Tag::Mono)) {
@@ -348,7 +348,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 
 				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
 				TypeFunctionId tf = eval_then_get_type_func(handle->m_syntax, tc, alloc);
-				tc.m_core.m_tf_core.unify(tf, handle->m_value);
+				tc.m_core.unify_type_func(tf, handle->m_value);
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
