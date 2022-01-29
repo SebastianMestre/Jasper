@@ -33,11 +33,11 @@ COMMON_TARGETS := \
 	ct_eval \
 	error_report \
 	lexer \
-	match_identifiers \
 	metacheck \
 	meta_unifier \
 	parser \
 	source_location \
+	symbol_resolution \
 	symbol_table \
 	token \
 	typecheck \

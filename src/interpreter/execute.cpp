@@ -6,9 +6,9 @@
 #include "../cst_allocator.hpp"
 #include "../ct_eval.hpp"
 #include "../lexer.hpp"
-#include "../match_identifiers.hpp"
 #include "../metacheck.hpp"
 #include "../parser.hpp"
+#include "../symbol_resolution.hpp"
 #include "../symbol_table.hpp"
 #include "../token_array.hpp"
 #include "../typecheck.hpp"
@@ -57,7 +57,7 @@ ExitStatus execute(
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
-		auto err = Frontend::match_identifiers(ast, context);
+		auto err = Frontend::resolve_symbols(ast, context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatus::StaticError;
@@ -84,11 +84,8 @@ ExitStatus execute(
 }
 
 
-// FIXME: This does not handle seq-expressions, or inline definitions of
-// functions, because it does not call `match_identifiers` or `compute_offsets`.
-// Note that we can't just call match_identifiers, because that wouldn't take
-// into account the rest of the program that's already been processed, before
-// this is run
+// FIXME: This might not handle seq-expressions, or inline definitions of
+// functions. Investigate.
 Value eval_expression(
 	const std::string& expr,
 	Interpreter& env,
@@ -105,7 +102,7 @@ Value eval_expression(
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	{
-		auto err = Frontend::match_identifiers(ast, context);
+		auto err = Frontend::resolve_symbols(ast, context);
 		if (!err.ok()) {
 			err.print();
 			return env.null();
