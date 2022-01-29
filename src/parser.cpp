@@ -1161,14 +1161,6 @@ Writer<CST::CST*> Parser::parse_type_function() {
 		u->m_types = std::move(tl.m_result.second);
 
 		return make_writer<CST::CST*>(u);
-	} else if (consume(TokenTag::KEYWORD_TUPLE)) {
-		auto tl = parse_type_list(false);
-		CHECK_AND_RETURN(result, tl);
-
-		auto t = m_cst_allocator.make<CST::TupleExpression>();
-		t->m_types = std::move(tl.m_result.second);
-
-		return make_writer<CST::CST*>(t);
 	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
 		auto tl = parse_type_list(true);
 		CHECK_AND_RETURN(result, tl);

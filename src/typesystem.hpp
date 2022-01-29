@@ -9,9 +9,9 @@
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
 
-enum class TypeFunctionTag { Builtin, Variant, Tuple, Record };
+enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
-// to tell how many arguments it takes. Else, for variant, tuple and record,
+// to tell how many arguments it takes. Else, for variant, and record,
 // we store their structure as a hash from names to monotypes.
 //
 // Dummy type functions are for unification purposes only, but do not count

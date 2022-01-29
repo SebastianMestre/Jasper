@@ -64,7 +64,6 @@
 	X(KEYWORD_MATCH, "KEYWORD_MATCH")                                          \
 	X(KEYWORD_SEQ, "KEYWORD_SEQ")                                              \
 	X(KEYWORD_UNION, "KEYWORD_UNION")                                          \
-	X(KEYWORD_TUPLE, "KEYWORD_TUPLE")                                          \
 	X(KEYWORD_STRUCT, "KEYWORD_STRUCT")                                        \
 	X(END, "(end of file)")
 

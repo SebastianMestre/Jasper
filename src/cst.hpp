@@ -337,13 +337,6 @@ struct UnionExpression : public CST {
 	    : CST {CSTTag::UnionExpression} {}
 };
 
-struct TupleExpression : public CST {
-	std::vector<CST*> m_types;
-
-	TupleExpression()
-	    : CST {CSTTag::TupleExpression} {}
-};
-
 struct StructExpression : public CST {
 	// TODO: better storage?
 	std::vector<Identifier> m_fields;
