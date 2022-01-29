@@ -21,6 +21,11 @@ struct Node {
 	bool is_dot_target{false};
 };
 
+struct AccessFact {
+	int result;
+	int target;
+};
+
 struct MetaUnifier {
 	// TODO: handle dot targets
 
@@ -41,6 +46,8 @@ struct MetaUnifier {
 	int make_var_node();
 	int make_dot_node(int target);
 
+	void make_access_fact(int result, int target);
+
 private:
 	void register_dot_target(int idx);
 	void turn_dot_result_into(int idx, Tag tag);
@@ -50,6 +57,7 @@ private:
 	void turn_into_var(int idx, int target);
 
 	std::vector<Node> nodes;
+	std::vector<AccessFact> access_facts;
 public:
 	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
 };

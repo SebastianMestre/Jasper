@@ -78,6 +78,13 @@ static void metacheck(MetaUnifier& uf, AST::IndexExpression* ast) {
 
 static void metacheck(MetaUnifier& uf, AST::AccessExpression* ast) {
 	metacheck(uf, ast->m_target);
+
+	auto result_node = uf.make_var_node();
+	auto target_node = ast->m_target->m_meta_type;
+
+	uf.make_access_fact(result_node, target_node);
+	ast->m_meta_type = result_node;
+
 	ast->m_meta_type = uf.make_dot_node(ast->m_target->m_meta_type);
 }
 

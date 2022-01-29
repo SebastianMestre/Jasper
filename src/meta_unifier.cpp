@@ -186,6 +186,10 @@ int MetaUnifier::eval(int idx) {
 }
 
 
+void MetaUnifier::make_access_fact(int result, int target) {
+	access_facts.push_back({result, target});
+}
+
 int MetaUnifier::make_const_node(Tag tag) {
 	assert(is_constant(tag));
 	int result = nodes.size();
