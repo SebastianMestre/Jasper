@@ -24,6 +24,10 @@ struct AccessFact {
 	int target;
 };
 
+struct CtorFact {
+	int target;
+};
+
 struct MetaUnifier {
 	// TODO: handle dot targets
 
@@ -43,6 +47,9 @@ struct MetaUnifier {
 	int make_var_node();
 
 	void make_access_fact(int result, int target);
+	void make_ctor_fact(int target);
+
+	void solve();
 
 private:
 	bool occurs(int var, int target);
@@ -52,6 +59,7 @@ private:
 
 	std::vector<Node> nodes;
 	std::vector<AccessFact> access_facts;
+	std::vector<CtorFact> ctor_facts;
 public:
 	std::vector<std::vector<AST::Declaration*>> const* comp {nullptr};
 };
