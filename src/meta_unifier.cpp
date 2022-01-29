@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+static char const* tag_str[5] = { "Var", "Term", "Mono", "Ctor", "Func" };
+
 Tag MetaUnifier::tag(int idx) const {
 	return nodes[idx].tag;
 }
@@ -28,18 +30,6 @@ bool MetaUnifier::is_constant(int idx) const {
 
 bool MetaUnifier::is_singleton_var(int idx) const {
 	return is(idx, Tag::Var) && nodes[idx].target == idx;
-}
-
-
-bool MetaUnifier::occurs(int v, int i){
-	assert(is_singleton_var(v));
-
-	i = find(i);
-
-	if (i == v)
-		return true;
-
-	return false;
 }
 
 int MetaUnifier::find(int idx) {
@@ -67,19 +57,14 @@ bool MetaUnifier::turn_into(int idx, Tag tag) {
 	}
 
 	if (this->tag(idx) != tag) {
-		char const* str[5] = { "Var", "Term", "Mono", "Ctor", "Func" };
-
-		Log::fatal() << "bad turn_into: turning a " << str[int(this->tag(idx))] << " into a " << str[int(tag)];
+		Log::fatal() << "bad operation: turning a " << tag_str[int(this->tag(idx))] << " into a " << tag_str[int(tag)];
 	}
 
 	return false;
 }
 
 void MetaUnifier::unify(int idx1, int idx2) {
-	// FIXME: This code was written when I was very sleepy. Please, check
-	//        very carefully, and point out the suspicious bits.
-
-	// TODO: occurs check
+	// FIXME: This is probably overcomplicated
 
 	idx1 = find(idx1);
 	idx2 = find(idx2);
@@ -104,19 +89,12 @@ void MetaUnifier::unify(int idx1, int idx2) {
 		return;
 	}
 
-	if (!is_constant(tag1) && is_constant(tag2)) {
-		std::swap(idx1, idx2);
-		std::swap(tag1, tag2);
-	}
-
 	assert(0 && "NOT REACHABLE");
 }
 
 
 int MetaUnifier::eval(int idx) {
-	idx = find(idx);
-
-	return idx;
+	return find(idx);
 }
 
 
@@ -152,24 +130,14 @@ void MetaUnifier::solve() {
 			int result = fact.result;
 
 			// accessing a mono gives you a ctor
-			if (is(target, Tag::Mono)) {
-				advanced |= turn_into(result, Tag::Ctor);
-			}
+			if (is(target, Tag::Mono)) advanced |= turn_into(result, Tag::Ctor);
+			if (is(result, Tag::Ctor)) advanced |= turn_into(target, Tag::Mono);
 
-			// if an access expression gives you a ctor, then the target must be a mono
-			if (is(result, Tag::Ctor)) {
-				advanced |= turn_into(target, Tag::Mono);
-			}
 
 			// accessing a term gives you another term
-			if (is(target, Tag::Term)) {
-				advanced |= turn_into(result, Tag::Term);
-			}
+			if (is(target, Tag::Term)) advanced |= turn_into(result, Tag::Term);
+			if (is(result, Tag::Term)) advanced |= turn_into(target, Tag::Term);
 
-			// if an access expression gives you a term, then the target is a term too
-			if (is(result, Tag::Term)) {
-				advanced |= turn_into(target, Tag::Term);
-			}
 
 			// this language only has access chains between terms
 			for (auto inner_fact : access_facts) {
@@ -179,6 +147,7 @@ void MetaUnifier::solve() {
 					advanced |= turn_into(inner_fact.target, Tag::Term);
 				}
 			}
+
 
 			// invoking the result of an access expression as a constructor must mean that we are looking at a variant type
 			for (auto inner_fact : ctor_facts) {
