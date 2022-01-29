@@ -121,12 +121,10 @@ int MetaUnifier::eval(int idx) {
 
 
 void MetaUnifier::make_access_fact(int result, int target) {
-	Log::info() << "make_access_fact " << result << " " << target << "\n";
 	access_facts.push_back({result, target});
 }
 
 void MetaUnifier::make_ctor_fact(int target) {
-	Log::info() << "make_ctor_fact " << target << "\n";
 	ctor_facts.push_back({target});
 }
 
@@ -141,4 +139,55 @@ int MetaUnifier::make_var_node() {
 	int result = nodes.size();
 	nodes.push_back({Tag::Var, result});
 	return result;
+}
+
+void MetaUnifier::solve() {
+
+	bool advanced = true;
+	while (advanced) {
+		advanced = false;
+
+		for (auto fact : access_facts) {
+			int target = fact.target;
+			int result = fact.result;
+
+			// accessing a mono gives you a ctor
+			if (is(target, Tag::Mono)) {
+				advanced |= turn_into(result, Tag::Ctor);
+			}
+
+			// if an access expression gives you a ctor, then the target must be a mono
+			if (is(result, Tag::Ctor)) {
+				advanced |= turn_into(target, Tag::Mono);
+			}
+
+			// accessing a term gives you another term
+			if (is(target, Tag::Term)) {
+				advanced |= turn_into(result, Tag::Term);
+			}
+
+			// if an access expression gives you a term, then the target is a term too
+			if (is(result, Tag::Term)) {
+				advanced |= turn_into(target, Tag::Term);
+			}
+
+			// this language only has access chains between terms
+			for (auto inner_fact : access_facts) {
+				if (inner_fact.result == target) {
+					advanced |= turn_into(result, Tag::Term);
+					advanced |= turn_into(target, Tag::Term);
+					advanced |= turn_into(inner_fact.target, Tag::Term);
+				}
+			}
+
+			// invoking the result of an access expression as a constructor must mean that we are looking at a variant type
+			for (auto inner_fact : ctor_facts) {
+				if (inner_fact.target == result) {
+					advanced |= turn_into(result, Tag::Ctor);
+					advanced |= turn_into(target, Tag::Mono);
+				}
+			}
+		}
+	}
+
 }

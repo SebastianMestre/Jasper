@@ -131,9 +131,6 @@ static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
 	metacheck(uf, ast->m_constructor);
 	uf.make_ctor_fact(ast->m_constructor->m_meta_type);
 
-	Log::info() << "ctor target meta type: " << ast->m_constructor->m_meta_type;
-	Log::info() << "ctor expression meta type: " << ast->m_meta_type;
-
 	for (auto& arg : ast->m_args) {
 		metacheck(uf, arg);
 		uf.turn_into(arg->m_meta_type, Tag::Term);
