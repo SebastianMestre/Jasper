@@ -112,7 +112,7 @@ static AST::Expr* ct_eval(
 	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
 	// TODO: support vars
-	if (uf.is(meta_type, Tag::Ctor))
+	if (uf.is_ctor(meta_type))
 		return constructor_from_ast(ast, tc, alloc);
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
@@ -227,7 +227,7 @@ static AST::Constructor* constructor_from_ast(
 
 	if (uf.is(meta, Tag::Mono)) {
 		constructor->m_mono = eval_then_get_mono(ast, tc, alloc);
-	} else if (uf.is(meta, Tag::Ctor)) {
+	} else if (uf.is_ctor(meta)) {
 		assert(ast->type() == ASTTag::AccessExpression);
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
