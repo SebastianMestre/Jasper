@@ -2,6 +2,7 @@
 
 #include "ast.hpp"
 #include "meta_unifier.hpp"
+#include "log/log.hpp"
 
 namespace TypeChecker {
 
@@ -84,8 +85,6 @@ static void metacheck(MetaUnifier& uf, AST::AccessExpression* ast) {
 
 	uf.make_access_fact(result_node, target_node);
 	ast->m_meta_type = result_node;
-
-	ast->m_meta_type = uf.make_dot_node(ast->m_target->m_meta_type);
 }
 
 static void metacheck(MetaUnifier& uf, AST::MatchExpression* ast) {
@@ -130,6 +129,10 @@ static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
 	ast->m_meta_type = uf.make_const_node(Tag::Term);
 
 	metacheck(uf, ast->m_constructor);
+	uf.make_ctor_fact(ast->m_constructor->m_meta_type);
+
+	Log::info() << "ctor target meta type: " << ast->m_constructor->m_meta_type;
+	Log::info() << "ctor expression meta type: " << ast->m_meta_type;
 
 	for (auto& arg : ast->m_args) {
 		metacheck(uf, arg);
