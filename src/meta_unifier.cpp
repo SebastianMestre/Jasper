@@ -2,8 +2,6 @@
 
 #include "log/log.hpp"
 
-#include <iostream>
-
 #include <cassert>
 
 static char const* tag_str[5] = { "Var", "Term", "Mono", "Ctor", "Func" };
@@ -122,7 +120,7 @@ int MetaUnifier::make_var_node() {
 void MetaUnifier::solve() {
 
 	bool advanced = true;
-	while (advanced) {
+	do {
 		advanced = false;
 
 		for (auto fact : access_facts) {
@@ -130,13 +128,19 @@ void MetaUnifier::solve() {
 			int result = fact.result;
 
 			// accessing a mono gives you a ctor
-			if (is(target, Tag::Mono)) advanced |= turn_into(result, Tag::Ctor);
-			if (is(result, Tag::Ctor)) advanced |= turn_into(target, Tag::Mono);
+			if (is(target, Tag::Mono))
+				advanced |= turn_into(result, Tag::Ctor);
+
+			if (is(result, Tag::Ctor))
+				advanced |= turn_into(target, Tag::Mono);
 
 
 			// accessing a term gives you another term
-			if (is(target, Tag::Term)) advanced |= turn_into(result, Tag::Term);
-			if (is(result, Tag::Term)) advanced |= turn_into(target, Tag::Term);
+			if (is(target, Tag::Term))
+				advanced |= turn_into(result, Tag::Term);
+
+			if (is(result, Tag::Term))
+				advanced |= turn_into(target, Tag::Term);
 
 
 			// this language only has access chains between terms
@@ -157,6 +161,6 @@ void MetaUnifier::solve() {
 				}
 			}
 		}
-	}
+	} while(advanced);
 
 }
