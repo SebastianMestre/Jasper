@@ -28,6 +28,7 @@ struct MetaUnifier {
 	bool is_dot_target(int idx) const;
 
 	bool is(int idx, Tag t) const;
+	bool is_ctor(int idx) const;
 	bool is_singleton_var(int idx) const;
 	bool is_constant(Tag tag) const;
 	bool is_constant(int idx) const;

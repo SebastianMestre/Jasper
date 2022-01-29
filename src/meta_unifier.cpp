@@ -18,6 +18,10 @@ bool MetaUnifier::is(int idx, Tag t) const {
 	return tag(idx) == t;
 }
 
+bool MetaUnifier::is_ctor(int idx) const {
+	return tag(idx) == Tag::Ctor;
+}
+
 bool MetaUnifier::is_constant(Tag t) const {
 	return t == Tag::Term || t == Tag::Mono || t == Tag::Ctor || t == Tag::Func;
 }
