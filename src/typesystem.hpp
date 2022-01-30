@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "algorithms/unification.hpp"
+#include "algorithms/union_find.hpp"
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
@@ -71,6 +72,7 @@ struct TypeSystemCore {
 	TypeFunctionId new_tf_var();
 	void unify_tf(TypeFunctionId, TypeFunctionId);
 private:
+	UnionFind m_tf_uf;
 	Unification::Core m_tf_core;
 
 	int compute_new_argument_count(
