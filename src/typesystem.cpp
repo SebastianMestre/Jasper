@@ -163,16 +163,14 @@ int TypeSystemCore::compute_new_argument_count(
 	} else if (b_data.is_dummy || b_data.argument_count == -1) {
 		return -1;
 	} else {
-		std::string argc_a = a_data.argument_count == -1
-			? std::string("variadic")
-			: std::to_string(a_data.argument_count);
-		std::string argc_b = b_data.argument_count == -1
-			? std::string("variadic")
-			: std::to_string(b_data.argument_count);
-		Log::fatal()
-			<< "Deduced type functions with incompatible argument "
-			"counts to be equal (with "
-			<< argc_a << " and " << argc_b << " arguments)";
+		auto present_argument_count = [](int x) -> std::string {
+			return x == -1 ? "variadic" : std::to_string(x);
+		};
+		std::string argc_a = present_argument_count(a_data.argument_count);
+		std::string argc_b = present_argument_count(b_data.argument_count);
+		Log::fatal() << "Deduced type functions with incompatible argument "
+		                "counts to be equal (with "
+		             << argc_a << " and " << argc_b << " arguments)";
 	}
 }
 
