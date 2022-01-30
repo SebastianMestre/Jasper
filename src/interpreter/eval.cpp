@@ -355,17 +355,12 @@ void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
 }
 
 void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
-	TypeFunctionId type_function_header =
-	    e.m_tc->m_core.m_mono_core.find_function(ast->m_value);
-	int type_function = e.m_tc->m_core.m_tf_core.find_function(type_function_header);
-	auto& type_function_data = e.m_tc->m_core.m_type_functions[type_function];
+	auto& type_function_data = e.m_tc->m_core.type_function_data_of(ast->m_value);
 	e.push_record_constructor(type_function_data.fields);
 }
 
 void eval(AST::Constructor* ast, Interpreter& e) {
-	TypeFunctionId tf_header = e.m_tc->m_core.m_mono_core.find_function(ast->m_mono);
-	int tf = e.m_tc->m_core.m_tf_core.find_function(tf_header);
-	auto& tf_data = e.m_tc->m_core.m_type_functions[tf];
+	auto& tf_data = e.m_tc->m_core.type_function_data_of(ast->m_mono);
 
 	if (tf_data.tag == TypeFunctionTag::Record) {
 		e.push_record_constructor(tf_data.fields);

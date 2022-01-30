@@ -38,7 +38,6 @@ struct PolyData {
 struct TypeSystemCore {
 	Unification::Core m_mono_core;
 
-	Unification::Core m_tf_core;
 	std::vector<TypeFunctionData> m_type_functions;
 
 	std::vector<PolyData> poly_data;
@@ -67,4 +66,10 @@ struct TypeSystemCore {
 	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
+
+	TypeFunctionData& type_function_data_of(MonoId);
+	TypeFunctionId new_tf_var();
+	void unify_tf(TypeFunctionId, TypeFunctionId);
+private:
+	Unification::Core m_tf_core;
 };

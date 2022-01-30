@@ -191,3 +191,20 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 			gather_free_vars(arg, free_vars);
 	}
 }
+
+
+
+
+TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
+	TypeFunctionId tf_header = m_mono_core.find_function(mono);
+	int tf = m_tf_core.find_function(tf_header);
+	return m_type_functions[tf];
+}
+
+TypeFunctionId TypeSystemCore::new_tf_var() {
+	return m_tf_core.new_var();
+}
+
+void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {
+	m_tf_core.unify(i, j);
+}
