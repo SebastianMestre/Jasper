@@ -26,15 +26,9 @@ MonoId TypeSystemCore::new_term(
 	tf = find_tf(tf);
 
 	{
-		// TODO: add a TypeFunctionTag::Unknown tag, to express
-		// that it's a dummy of unknown characteristics
-
-		// TODO: add some APIs to make this less jarring
-		TypeFunctionId dummy_tf =
-		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
-
+		// This block of code ensures that tf has the right arity
+		TypeFunctionId dummy_tf = new_tf_var();
 		get_tf_data(dummy_tf).argument_count = args.size();
-
 		unify_tf(tf, dummy_tf);
 	}
 
@@ -52,10 +46,8 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 }
 
 
-TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId id = m_tf_uf.new_var();
-	m_type_functions.push_back({TypeFunctionTag::Builtin, arguments});
-	return id;
+TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
+	return create_tf(TypeFunctionTag::Builtin, arity, {}, {}, false);
 }
 
 TypeFunctionId TypeSystemCore::new_type_function(
@@ -63,10 +55,19 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	TypeFunctionId id = m_tf_uf.new_var();
+	return create_tf(type, 0, std::move(fields), std::move(structure), dummy);
+}
+
+TypeFunctionId TypeSystemCore::create_tf(
+    TypeFunctionTag tag,
+    int arity,
+    std::vector<InternedString> fields,
+    std::unordered_map<InternedString, MonoId> structure,
+    bool is_dummy) {
+	TypeFunctionId result = m_tf_uf.new_var();
 	m_type_functions.push_back(
-	    {type, 0, std::move(fields), std::move(structure), dummy});
-	return id;
+	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
+	return result;
 }
 
 MonoId TypeSystemCore::inst_impl(
@@ -132,9 +133,7 @@ TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
 }
 
 TypeFunctionId TypeSystemCore::new_tf_var() {
-	auto result = new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
-	get_tf_data(result).argument_count = -1;
-	return result;
+	return create_tf(TypeFunctionTag::Builtin, -1, {}, {}, true);
 }
 
 void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {

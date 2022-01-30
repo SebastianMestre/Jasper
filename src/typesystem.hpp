@@ -81,4 +81,10 @@ private:
 	void unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
 	TypeFunctionData& get_tf_data(TypeFunctionId tf);
 	TypeFunctionId find_tf(TypeFunctionId tf);
+	TypeFunctionId create_tf(
+	    TypeFunctionTag tag,
+	    int arity,
+	    std::vector<InternedString> fields,
+	    std::unordered_map<InternedString, MonoId> structure,
+	    bool is_dummy);
 };
