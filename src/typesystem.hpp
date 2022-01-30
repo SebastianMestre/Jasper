@@ -72,4 +72,9 @@ struct TypeSystemCore {
 	void unify_tf(TypeFunctionId, TypeFunctionId);
 private:
 	Unification::Core m_tf_core;
+
+	int compute_new_argument_count(
+	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;
+
+	void point_tf_at_another(TypeFunctionId a, TypeFunctionId b);
 };

@@ -23,34 +23,15 @@ TypeSystemCore::TypeSystemCore() {
 
 		if (a_data.is_dummy) {
 
-			int const new_argument_count = [&] {
-				if (a_data.argument_count == b_data.argument_count) {
-					return a_data.argument_count;
-				} else if (b_data.is_dummy || b_data.argument_count == -1) {
-					return -1;
-				} else {
-					std::string argc_a =
-					    a_data.argument_count == -1
-					        ? std::string("variadic")
-					        : std::to_string(a_data.argument_count);
-					std::string argc_b =
-					    b_data.argument_count == -1
-					        ? std::string("variadic")
-					        : std::to_string(b_data.argument_count);
-					Log::fatal()
-					    << "Deduced type functions with incompatible argument "
-					       "counts to be equal (with "
-					    << argc_a << " and " << argc_b << " arguments)";
-				}
-			}();
-
 			// Make a point to b. this way, if more fields get added to a or b,
 			// both get updated
 			//
 			// Also, we do it before unifying their data to prevent infinite
 			// recursion
-			core.node_header[a].tag = Unification::Core::Tag::Var;
-			core.node_header[a].data_idx = b;
+			point_tf_at_another(a, b);
+
+			int const new_argument_count = compute_new_argument_count(a_data, b_data);
+
 			b_data.argument_count = new_argument_count;
 
 			for (auto& kv_a : a_data.structure) {
@@ -84,7 +65,7 @@ TypeSystemCore::TypeSystemCore() {
 		Unification::Core::TermData& a_data = core.term_data[a];
 		Unification::Core::TermData& b_data = core.term_data[b];
 
-		m_tf_core.unify(a_data.function_id, b_data.function_id);
+		unify_tf(a_data.function_id, b_data.function_id);
 	};
 }
 
@@ -208,3 +189,30 @@ TypeFunctionId TypeSystemCore::new_tf_var() {
 void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {
 	m_tf_core.unify(i, j);
 }
+
+void TypeSystemCore::point_tf_at_another(TypeFunctionId a, TypeFunctionId b) {
+	m_tf_core.node_header[a].tag = Unification::Core::Tag::Var;
+	m_tf_core.node_header[a].data_idx = b;
+}
+
+int TypeSystemCore::compute_new_argument_count(
+    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const {
+	if (a_data.argument_count == b_data.argument_count) {
+		return a_data.argument_count;
+	} else if (b_data.is_dummy || b_data.argument_count == -1) {
+		return -1;
+	} else {
+		std::string argc_a = a_data.argument_count == -1
+			? std::string("variadic")
+			: std::to_string(a_data.argument_count);
+		std::string argc_b = b_data.argument_count == -1
+			? std::string("variadic")
+			: std::to_string(b_data.argument_count);
+		Log::fatal()
+			<< "Deduced type functions with incompatible argument "
+			"counts to be equal (with "
+			<< argc_a << " and " << argc_b << " arguments)";
+	}
+}
+
+// void TypeSystemCore::technobabble(TypeFunctionData& a_data, TypeFunctionData& b_data) { }
