@@ -38,11 +38,6 @@ struct PolyData {
 
 struct TypeSystemCore {
 	Unification::Core m_mono_core;
-
-	std::vector<TypeFunctionData> m_type_functions;
-
-	std::vector<PolyData> poly_data;
-
 	MetaUnifier m_meta_core;
 
 	TypeSystemCore();
@@ -72,8 +67,6 @@ struct TypeSystemCore {
 	TypeFunctionId new_tf_var();
 	void unify_tf(TypeFunctionId, TypeFunctionId);
 private:
-	UnionFind m_tf_uf;
-
 	int compute_new_argument_count(
 	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;
 
@@ -87,4 +80,8 @@ private:
 	    std::vector<InternedString> fields,
 	    std::unordered_map<InternedString, MonoId> structure,
 	    bool is_dummy);
+
+	std::vector<TypeFunctionData> m_type_functions;
+	std::vector<PolyData> poly_data;
+	UnionFind m_tf_uf;
 };
