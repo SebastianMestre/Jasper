@@ -33,7 +33,6 @@
 	X(TypeTerm)                                                                \
 	X(TypeVar)                                                                 \
 	X(UnionExpression)                                                         \
-	X(TupleExpression)                                                         \
 	X(StructExpression)
 
 #define X(name) #name,
