@@ -45,31 +45,6 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return poly;
 }
 
-
-TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
-	return create_tf(TypeFunctionTag::Builtin, arity, {}, {}, false);
-}
-
-TypeFunctionId TypeSystemCore::new_type_function(
-    TypeFunctionTag type,
-    std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure,
-    bool dummy) {
-	return create_tf(type, 0, std::move(fields), std::move(structure), dummy);
-}
-
-TypeFunctionId TypeSystemCore::create_tf(
-    TypeFunctionTag tag,
-    int arity,
-    std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure,
-    bool is_dummy) {
-	TypeFunctionId result = m_tf_uf.new_var();
-	m_type_functions.push_back(
-	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
-	return result;
-}
-
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
@@ -126,14 +101,37 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 
+TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
+	return create_tf(TypeFunctionTag::Builtin, arity, {}, {}, false);
+}
 
-TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
-	TypeFunctionId tf = m_mono_core.find_function(mono);
-	return get_tf_data(tf);
+TypeFunctionId TypeSystemCore::new_type_function(
+    TypeFunctionTag type,
+    std::vector<InternedString> fields,
+    std::unordered_map<InternedString, MonoId> structure,
+    bool dummy) {
+	return create_tf(type, 0, std::move(fields), std::move(structure), dummy);
 }
 
 TypeFunctionId TypeSystemCore::new_tf_var() {
 	return create_tf(TypeFunctionTag::Builtin, -1, {}, {}, true);
+}
+
+TypeFunctionId TypeSystemCore::create_tf(
+    TypeFunctionTag tag,
+    int arity,
+    std::vector<InternedString> fields,
+    std::unordered_map<InternedString, MonoId> structure,
+    bool is_dummy) {
+	TypeFunctionId result = m_tf_uf.new_var();
+	m_type_functions.push_back(
+	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
+	return result;
+}
+
+TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
+	TypeFunctionId tf = m_mono_core.find_function(mono);
+	return get_tf_data(tf);
 }
 
 void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {
