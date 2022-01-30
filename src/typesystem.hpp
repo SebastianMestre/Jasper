@@ -78,4 +78,6 @@ private:
 
 	void point_tf_at_another(TypeFunctionId a, TypeFunctionId b);
 	void unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
+	TypeFunctionData& get_tf_data(TypeFunctionId tf);
+	TypeFunctionId find_tf(TypeFunctionId tf);
 };

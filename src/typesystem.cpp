@@ -55,7 +55,7 @@ TypeSystemCore::TypeSystemCore() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = m_tf_core.find(tf);
+	tf = find_tf(tf);
 
 	{
 		// TODO: add a TypeFunctionTag::Unknown tag, to express
@@ -65,10 +65,9 @@ MonoId TypeSystemCore::new_term(
 		TypeFunctionId dummy_tf =
 		    new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
 
-		int dummy_tf_data_id = m_tf_core.find_function(dummy_tf);
-		m_type_functions[dummy_tf_data_id].argument_count = args.size();
+		get_tf_data(dummy_tf).argument_count = args.size();
 
-		m_tf_core.unify(tf, dummy_tf);
+		unify_tf(tf, dummy_tf);
 	}
 
 	return m_mono_core.new_term(tf, std::move(args), tag);
@@ -160,9 +159,8 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
-	TypeFunctionId tf_header = m_mono_core.find_function(mono);
-	int tf = m_tf_core.find_function(tf_header);
-	return m_type_functions[tf];
+	TypeFunctionId tf = m_mono_core.find_function(mono);
+	return get_tf_data(tf);
 }
 
 TypeFunctionId TypeSystemCore::new_tf_var() {
@@ -217,4 +215,13 @@ void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b
 			// else the fields must have equivalent types
 			m_mono_core.unify(kv_a.second, kv_b->second);
 	}
+}
+
+TypeFunctionData& TypeSystemCore::get_tf_data(TypeFunctionId tf) {
+	int data_idx = m_tf_core.find_function(tf);
+	return m_type_functions[data_idx];
+}
+
+TypeFunctionId TypeSystemCore::find_tf(TypeFunctionId tf) {
+	return m_tf_core.find(tf);
 }
