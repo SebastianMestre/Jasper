@@ -29,24 +29,7 @@ TypeSystemCore::TypeSystemCore() {
 			// Also, we do it before unifying their data to prevent infinite
 			// recursion
 			point_tf_at_another(a, b);
-
-			int const new_argument_count = compute_new_argument_count(a_data, b_data);
-
-			b_data.argument_count = new_argument_count;
-
-			for (auto& kv_a : a_data.structure) {
-				auto kv_b = b_data.structure.find(kv_a.first);
-
-				if (kv_b == b_data.structure.end())
-					// if b doesn't have a field of a, act accordingly
-					if (b_data.is_dummy)
-						b_data.structure.insert(kv_a);
-					else
-						Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
-				else
-					// else the fields must have equivalent types
-					m_mono_core.unify(kv_a.second, kv_b->second);
-			}
+			unify_tf_data(a_data, b_data);
 
 		} else {
 			Log::fatal()
@@ -215,4 +198,23 @@ int TypeSystemCore::compute_new_argument_count(
 	}
 }
 
-// void TypeSystemCore::technobabble(TypeFunctionData& a_data, TypeFunctionData& b_data) { }
+void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
+
+	int const new_argument_count = compute_new_argument_count(a_data, b_data);
+
+	b_data.argument_count = new_argument_count;
+
+	for (auto& kv_a : a_data.structure) {
+		auto kv_b = b_data.structure.find(kv_a.first);
+
+		if (kv_b == b_data.structure.end())
+			// if b doesn't have a field of a, act accordingly
+			if (b_data.is_dummy)
+				b_data.structure.insert(kv_a);
+			else
+				Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
+		else
+			// else the fields must have equivalent types
+			m_mono_core.unify(kv_a.second, kv_b->second);
+	}
+}

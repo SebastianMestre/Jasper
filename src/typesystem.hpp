@@ -77,4 +77,5 @@ private:
 	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;
 
 	void point_tf_at_another(TypeFunctionId a, TypeFunctionId b);
+	void unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
 };
