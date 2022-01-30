@@ -73,7 +73,6 @@ struct TypeSystemCore {
 	void unify_tf(TypeFunctionId, TypeFunctionId);
 private:
 	UnionFind m_tf_uf;
-	Unification::Core m_tf_core;
 
 	int compute_new_argument_count(
 	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;

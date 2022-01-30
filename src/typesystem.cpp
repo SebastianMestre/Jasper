@@ -5,38 +5,6 @@
 #include "./log/log.hpp"
 
 TypeSystemCore::TypeSystemCore() {
-	m_tf_core.unify_function = [this](Unification::Core& core, int a, int b) {
-		// TODO: Redo this once we add polymorphic records
-		if (core.find_term(a) == core.find_term(b))
-			return;
-	
-		int fa = core.find_function(a);
-		int fb = core.find_function(b);
-
-		if (m_type_functions[fb].is_dummy) {
-			std::swap(a, b);
-			std::swap(fa, fb);
-		}
-
-		TypeFunctionData& a_data = m_type_functions[fa];
-		TypeFunctionData& b_data = m_type_functions[fb];
-
-		if (a_data.is_dummy) {
-
-			// Make a point to b. this way, if more fields get added to a or b,
-			// both get updated
-			//
-			// Also, we do it before unifying their data to prevent infinite
-			// recursion
-			point_tf_at_another(a, b);
-			unify_tf_data(a_data, b_data);
-
-		} else {
-			Log::fatal()
-			    << "Deduced two different type functions to be equal (with IDs "
-			    << fa << " and " << fb << ")";
-		}
-	};
 
 	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
 		a = core.find_term(a);
@@ -85,7 +53,7 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arguments) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
+	TypeFunctionId id = m_tf_uf.new_var();
 	m_type_functions.push_back({TypeFunctionTag::Builtin, arguments});
 	return id;
 }
@@ -95,7 +63,7 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	TypeFunctionId id = m_tf_core.new_term(m_type_functions.size());
+	TypeFunctionId id = m_tf_uf.new_var();
 	m_type_functions.push_back(
 	    {type, 0, std::move(fields), std::move(structure), dummy});
 	return id;
@@ -164,16 +132,31 @@ TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
 }
 
 TypeFunctionId TypeSystemCore::new_tf_var() {
-	return m_tf_core.new_var();
+	auto result = new_type_function(TypeFunctionTag::Builtin, {}, {}, true);
+	get_tf_data(result).argument_count = -1;
+	return result;
 }
 
 void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {
-	m_tf_core.unify(i, j);
+	i = find_tf(i);
+	j = find_tf(j);
+
+	if (i == j)
+		return;
+
+	if (get_tf_data(j).is_dummy)
+		std::swap(i, j);
+
+	if (get_tf_data(i).is_dummy) {
+		point_tf_at_another(i, j);
+		unify_tf_data(get_tf_data(i), get_tf_data(j));
+	} else {
+		Log::fatal() << "unified different typefuncs";
+	}
 }
 
 void TypeSystemCore::point_tf_at_another(TypeFunctionId a, TypeFunctionId b) {
-	m_tf_core.node_header[a].tag = Unification::Core::Tag::Var;
-	m_tf_core.node_header[a].data_idx = b;
+	m_tf_uf.join_left_to_right(a, b);
 }
 
 int TypeSystemCore::compute_new_argument_count(
@@ -218,10 +201,9 @@ void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b
 }
 
 TypeFunctionData& TypeSystemCore::get_tf_data(TypeFunctionId tf) {
-	int data_idx = m_tf_core.find_function(tf);
-	return m_type_functions[data_idx];
+	return m_type_functions[find_tf(tf)];
 }
 
 TypeFunctionId TypeSystemCore::find_tf(TypeFunctionId tf) {
-	return m_tf_core.find(tf);
+	return m_tf_uf.find(tf);
 }
