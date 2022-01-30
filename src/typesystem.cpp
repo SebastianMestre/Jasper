@@ -180,19 +180,20 @@ void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b
 
 	b_data.argument_count = new_argument_count;
 
+	bool can_add_fields_to_b = b_data.is_dummy;
 	for (auto& kv_a : a_data.structure) {
-		auto kv_b = b_data.structure.find(kv_a.first);
+		auto const& field_name = kv_a.first;
+		auto const kv_b = b_data.structure.find(field_name);
 
-		if (kv_b == b_data.structure.end())
-			// if b doesn't have a field of a, act accordingly
-			if (b_data.is_dummy)
-				b_data.structure.insert(kv_a);
-			else
-				Log::fatal() << "Accessing non-existing field '" << kv_a.first << "' of a record";
-		else
-			// else the fields must have equivalent types
+		bool const b_has_field = kv_b != b_data.structure.end();
+		if (b_has_field)
 			m_mono_core.unify(kv_a.second, kv_b->second);
+		else if (can_add_fields_to_b)
+			b_data.structure.insert(kv_a);
+		else
+			Log::fatal() << "Accessing non-existing field '" << field_name << "' of a record";
 	}
+
 }
 
 TypeFunctionData& TypeSystemCore::get_tf_data(TypeFunctionId tf) {
