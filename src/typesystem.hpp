@@ -64,17 +64,17 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
-	TypeFunctionId new_tf_var();
-	void unify_tf(TypeFunctionId, TypeFunctionId);
+	TypeFunctionId new_type_function_var();
+	void unify_type_function(TypeFunctionId, TypeFunctionId);
 private:
 	int compute_new_argument_count(
 	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;
 
-	void point_tf_at_another(TypeFunctionId a, TypeFunctionId b);
-	void unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
-	TypeFunctionData& get_tf_data(TypeFunctionId tf);
-	TypeFunctionId find_tf(TypeFunctionId tf);
-	TypeFunctionId create_tf(
+	void point_type_function_at_another(TypeFunctionId a, TypeFunctionId b);
+	void unify_type_function_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
+	TypeFunctionData& get_type_function_data(TypeFunctionId);
+	TypeFunctionId find_type_function(TypeFunctionId);
+	TypeFunctionId create_type_function(
 	    TypeFunctionTag tag,
 	    int arity,
 	    std::vector<InternedString> fields,
@@ -83,5 +83,5 @@ private:
 
 	std::vector<TypeFunctionData> m_type_functions;
 	std::vector<PolyData> poly_data;
-	UnionFind m_tf_uf;
+	UnionFind m_type_function_uf;
 };

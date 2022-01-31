@@ -16,20 +16,20 @@ TypeSystemCore::TypeSystemCore() {
 		Unification::Core::TermData& a_data = core.term_data[a];
 		Unification::Core::TermData& b_data = core.term_data[b];
 
-		unify_tf(a_data.function_id, b_data.function_id);
+		unify_type_function(a_data.function_id, b_data.function_id);
 	};
 }
 
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = find_tf(tf);
+	tf = find_type_function(tf);
 
 	{
 		// This block of code ensures that tf has the right arity
-		TypeFunctionId dummy_tf = new_tf_var();
-		get_tf_data(dummy_tf).argument_count = args.size();
-		unify_tf(tf, dummy_tf);
+		TypeFunctionId dummy_tf = new_type_function_var();
+		get_type_function_data(dummy_tf).argument_count = args.size();
+		unify_type_function(tf, dummy_tf);
 	}
 
 	return m_mono_core.new_term(tf, std::move(args), tag);
@@ -102,7 +102,7 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
-	return create_tf(TypeFunctionTag::Builtin, arity, {}, {}, false);
+	return create_type_function(TypeFunctionTag::Builtin, arity, {}, {}, false);
 }
 
 TypeFunctionId TypeSystemCore::new_type_function(
@@ -110,20 +110,20 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	return create_tf(type, 0, std::move(fields), std::move(structure), dummy);
+	return create_type_function(type, 0, std::move(fields), std::move(structure), dummy);
 }
 
-TypeFunctionId TypeSystemCore::new_tf_var() {
-	return create_tf(TypeFunctionTag::Builtin, -1, {}, {}, true);
+TypeFunctionId TypeSystemCore::new_type_function_var() {
+	return create_type_function(TypeFunctionTag::Builtin, -1, {}, {}, true);
 }
 
-TypeFunctionId TypeSystemCore::create_tf(
+TypeFunctionId TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool is_dummy) {
-	TypeFunctionId result = m_tf_uf.new_node();
+	TypeFunctionId result = m_type_function_uf.new_node();
 	m_type_functions.push_back(
 	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
 	return result;
@@ -131,29 +131,29 @@ TypeFunctionId TypeSystemCore::create_tf(
 
 TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
 	TypeFunctionId tf = m_mono_core.find_function(mono);
-	return get_tf_data(tf);
+	return get_type_function_data(tf);
 }
 
-void TypeSystemCore::unify_tf(TypeFunctionId i, TypeFunctionId j) {
-	i = find_tf(i);
-	j = find_tf(j);
+void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
+	i = find_type_function(i);
+	j = find_type_function(j);
 
 	if (i == j)
 		return;
 
-	if (get_tf_data(j).is_dummy)
+	if (get_type_function_data(j).is_dummy)
 		std::swap(i, j);
 
-	if (get_tf_data(i).is_dummy) {
-		point_tf_at_another(i, j);
-		unify_tf_data(get_tf_data(i), get_tf_data(j));
+	if (get_type_function_data(i).is_dummy) {
+		point_type_function_at_another(i, j);
+		unify_type_function_data(get_type_function_data(i), get_type_function_data(j));
 	} else {
 		Log::fatal() << "unified different typefuncs";
 	}
 }
 
-void TypeSystemCore::point_tf_at_another(TypeFunctionId a, TypeFunctionId b) {
-	m_tf_uf.join_left_to_right(a, b);
+void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
+	m_type_function_uf.join_left_to_right(a, b);
 }
 
 int TypeSystemCore::compute_new_argument_count(
@@ -174,7 +174,7 @@ int TypeSystemCore::compute_new_argument_count(
 	}
 }
 
-void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
+void TypeSystemCore::unify_type_function_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
 	assert(a_data.is_dummy);
 
 	b_data.argument_count = compute_new_argument_count(a_data, b_data);
@@ -195,10 +195,10 @@ void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b
 
 }
 
-TypeFunctionData& TypeSystemCore::get_tf_data(TypeFunctionId tf) {
-	return m_type_functions[find_tf(tf)];
+TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
+	return m_type_functions[find_type_function(tf)];
 }
 
-TypeFunctionId TypeSystemCore::find_tf(TypeFunctionId tf) {
-	return m_tf_uf.find(tf);
+TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
+	return m_type_function_uf.find(tf);
 }
