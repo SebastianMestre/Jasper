@@ -123,7 +123,7 @@ TypeFunctionId TypeSystemCore::create_tf(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool is_dummy) {
-	TypeFunctionId result = m_tf_uf.new_var();
+	TypeFunctionId result = m_tf_uf.new_node();
 	m_type_functions.push_back(
 	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
 	return result;
@@ -175,10 +175,9 @@ int TypeSystemCore::compute_new_argument_count(
 }
 
 void TypeSystemCore::unify_tf_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
+	assert(a_data.is_dummy);
 
-	int const new_argument_count = compute_new_argument_count(a_data, b_data);
-
-	b_data.argument_count = new_argument_count;
+	b_data.argument_count = compute_new_argument_count(a_data, b_data);
 
 	bool can_add_fields_to_b = b_data.is_dummy;
 	for (auto& kv_a : a_data.structure) {

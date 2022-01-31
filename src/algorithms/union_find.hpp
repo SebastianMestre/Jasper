@@ -3,7 +3,7 @@
 #include <vector>
 
 struct UnionFind {
-	int new_var() {
+	int new_node() {
 		int result = repr.size();
 		repr.push_back(result);
 		return result;
