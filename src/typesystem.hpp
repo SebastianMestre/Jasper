@@ -66,14 +66,14 @@ struct TypeSystemCore {
 	TypeFunctionData& type_function_data_of(MonoId);
 	TypeFunctionId new_type_function_var();
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
-private:
-	int compute_new_argument_count(
-	    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const;
 
-	void point_type_function_at_another(TypeFunctionId a, TypeFunctionId b);
-	void unify_type_function_data(TypeFunctionData& a_data, TypeFunctionData& b_data);
+private:
+	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
+	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
+	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
 	TypeFunctionId find_type_function(TypeFunctionId);
+
 	TypeFunctionId create_type_function(
 	    TypeFunctionTag tag,
 	    int arity,
