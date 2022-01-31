@@ -102,7 +102,8 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
-	return create_type_function(TypeFunctionTag::Builtin, arity, {}, {}, false);
+	return create_type_function(
+	    TypeFunctionTag::Builtin, arity, {}, {}, TypeFunctionStrength::Full);
 }
 
 TypeFunctionId TypeSystemCore::new_type_function(
@@ -110,11 +111,14 @@ TypeFunctionId TypeSystemCore::new_type_function(
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
     bool dummy) {
-	return create_type_function(type, 0, std::move(fields), std::move(structure), dummy);
+	auto strength = dummy ? TypeFunctionStrength::Half : TypeFunctionStrength::Full;
+	return create_type_function(
+	    type, 0, std::move(fields), std::move(structure), strength);
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
-	return create_type_function(TypeFunctionTag::Builtin, -1, {}, {}, true);
+	return create_type_function(
+	    TypeFunctionTag::Builtin, -1, {}, {}, TypeFunctionStrength::None);
 }
 
 TypeFunctionId TypeSystemCore::create_type_function(
@@ -122,10 +126,10 @@ TypeFunctionId TypeSystemCore::create_type_function(
     int arity,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure,
-    bool is_dummy) {
+    TypeFunctionStrength strength) {
 	TypeFunctionId result = m_type_function_uf.new_node();
 	m_type_functions.push_back(
-	    {tag, arity, std::move(fields), std::move(structure), is_dummy});
+	    {tag, arity, std::move(fields), std::move(structure), strength});
 	return result;
 }
 
@@ -141,10 +145,22 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 	if (i == j)
 		return;
 
-	if (get_type_function_data(j).is_dummy)
+	if (get_type_function_data(i).strength == TypeFunctionStrength::Full &&
+		get_type_function_data(j).strength == TypeFunctionStrength::Full)
+		Log::fatal() << "unified different type functions";
+
+	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
 		std::swap(i, j);
 
-	if (get_type_function_data(i).is_dummy) {
+	if (get_type_function_data(i).strength == TypeFunctionStrength::None) {
+		point_type_function_at_another(i, j);
+		return;
+	}
+
+	if (get_type_function_data(j).strength == TypeFunctionStrength::Half)
+		std::swap(i, j);
+
+	if (get_type_function_data(i).strength == TypeFunctionStrength::Half) {
 		// We get the data before calling point_type_function_at_another
 		// because doing it after the call would give us the same reference
 		// for both indices
@@ -152,9 +168,10 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		auto& j_data = get_type_function_data(j);
 		point_type_function_at_another(i, j);
 		unify_type_function_data(i_data, j_data);
-	} else {
-		Log::fatal() << "unified different typefuncs";
+		return;
 	}
+
+	Log::fatal() << "unified different typefuncs";
 }
 
 void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
@@ -163,9 +180,10 @@ void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFuncti
 
 int TypeSystemCore::compute_new_argument_count(
     TypeFunctionData const& a_data, TypeFunctionData const& b_data) const {
+
 	if (a_data.argument_count == b_data.argument_count) {
 		return a_data.argument_count;
-	} else if (b_data.is_dummy || b_data.argument_count == -1) {
+	} else if (b_data.strength == TypeFunctionStrength::Half || b_data.argument_count == -1) {
 		return -1;
 	} else {
 		auto present_argument_count = [](int x) -> std::string {
@@ -180,11 +198,11 @@ int TypeSystemCore::compute_new_argument_count(
 }
 
 void TypeSystemCore::unify_type_function_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
-	assert(a_data.is_dummy);
+	assert(a_data.strength == TypeFunctionStrength::Half);
 
 	b_data.argument_count = compute_new_argument_count(a_data, b_data);
 
-	bool can_add_fields_to_b = b_data.is_dummy;
+	bool can_add_fields_to_b = b_data.strength != TypeFunctionStrength::Full ;
 	for (auto& kv_a : a_data.structure) {
 		auto const& field_name = kv_a.first;
 		auto const kv_b = b_data.structure.find(field_name);
