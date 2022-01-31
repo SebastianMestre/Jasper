@@ -145,8 +145,13 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		std::swap(i, j);
 
 	if (get_type_function_data(i).is_dummy) {
+		// We get the data before calling point_type_function_at_another
+		// because doing it after the call would give us the same reference
+		// for both indices
+		auto& i_data = get_type_function_data(i);
+		auto& j_data = get_type_function_data(j);
 		point_type_function_at_another(i, j);
-		unify_type_function_data(get_type_function_data(i), get_type_function_data(j));
+		unify_type_function_data(i_data, j_data);
 	} else {
 		Log::fatal() << "unified different typefuncs";
 	}
