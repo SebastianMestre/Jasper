@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "./log/log.hpp"
+#include "../log/log.hpp"
 
 TypeSystemCore::TypeSystemCore() {
 

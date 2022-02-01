@@ -1,8 +1,8 @@
 #include "compile_time_environment.hpp"
 
-#include "algorithms/tarjan_solver.hpp"
-#include "ast.hpp"
-#include "log/log.hpp"
+#include "../algorithms/tarjan_solver.hpp"
+#include "../ast.hpp"
+#include "../log/log.hpp"
 
 #include <cassert>
 

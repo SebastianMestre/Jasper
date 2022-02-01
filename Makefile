@@ -19,6 +19,13 @@ COMMON_TARGETS := \
 	log/basic_stream \
 	log/log \
 	log/stream \
+	typechecker/compile_time_environment \
+	typechecker/ct_eval \
+	typechecker/metacheck \
+	typechecker/meta_unifier \
+	typechecker/typecheck \
+	typechecker/typechecker \
+	typechecker/typesystem \
 	utils/polymorphic_block_allocator \
 	utils/polymorphic_dumb_allocator \
 	utils/block_allocator \
@@ -27,22 +34,15 @@ COMMON_TARGETS := \
 	utils/string_set \
 	utils/string_view \
 	ast \
-	compile_time_environment \
 	compute_offsets \
 	cst \
-	ct_eval \
 	error_report \
 	lexer \
-	metacheck \
-	meta_unifier \
 	parser \
 	source_location \
 	symbol_resolution \
 	symbol_table \
-	token \
-	typecheck \
-	typechecker \
-	typesystem
+	token
 
 INTERPRETER_DIR := interpreter
 INTERPRETER_ENTRY := main

@@ -1,10 +1,10 @@
 #include "typecheck.hpp"
 
-#include "./log/log.hpp"
+#include "../ast.hpp"
+#include "../log/log.hpp"
 #include "compile_time_environment.hpp"
 #include "typechecker.hpp"
 #include "typechecker_types.hpp"
-#include "ast.hpp"
 
 #include <cassert>
 #include <unordered_set>

@@ -4,11 +4,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "algorithms/unification.hpp"
-#include "algorithms/union_find.hpp"
+#include "../algorithms/unification.hpp"
+#include "../algorithms/union_find.hpp"
+#include "../utils/interned_string.hpp"
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
-#include "utils/interned_string.hpp"
 
 // Type function strength is an ad-hoc concept, specific to our implementation
 // of unification.
