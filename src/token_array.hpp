@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/chunked_array.hpp"
+#include "./utils/chunked_array.hpp"
 
 struct Token;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "error_report.hpp"
+#include "./utils/error_report.hpp"
 
 namespace AST {
 struct AST;

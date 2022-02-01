@@ -26,20 +26,20 @@ COMMON_TARGETS := \
 	typechecker/typecheck \
 	typechecker/typechecker \
 	typechecker/typesystem \
+	utils/block_allocator \
+	utils/error_report \
+	utils/interned_string \
 	utils/polymorphic_block_allocator \
 	utils/polymorphic_dumb_allocator \
-	utils/block_allocator \
-	utils/interned_string \
+	utils/source_location \
 	utils/span \
 	utils/string_set \
 	utils/string_view \
 	ast \
 	compute_offsets \
 	cst \
-	error_report \
 	lexer \
 	parser \
-	source_location \
 	symbol_resolution \
 	symbol_table \
 	token

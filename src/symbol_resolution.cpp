@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "./log/log.hpp"
+#include "./utils/error_report.hpp"
 #include "./utils/interned_string.hpp"
 #include "ast.hpp"
-#include "error_report.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
 

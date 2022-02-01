@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "source_location.hpp"
-#include "utils/string_view.hpp"
+#include "string_view.hpp"
 
 struct ErrorReport {
 	std::string m_text;
