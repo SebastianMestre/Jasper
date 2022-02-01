@@ -5,9 +5,20 @@
 #include <vector>
 
 #include "algorithms/unification.hpp"
+#include "algorithms/union_find.hpp"
 #include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 #include "utils/interned_string.hpp"
+
+// Type function strength is an ad-hoc concept, specific to our implementation
+// of unification.
+// If a typefunc has 'None' strength, its data is not even considered for
+// unification.
+// If it has 'Half' strength, its data is considered to be incomplete, so we
+// allow adding to it, but not removing.
+// If it has 'Full' strength, we only accept exact matches during unification.
+// We don't allow unifying two different full-strength type functions
+enum class TypeFunctionStrength { None, Half, Full };
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
@@ -25,7 +36,7 @@ struct TypeFunctionData {
 	std::vector<InternedString> fields;
 	std::unordered_map<InternedString, MonoId> structure;
 
-	bool is_dummy {false};
+	TypeFunctionStrength strength;
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -37,12 +48,6 @@ struct PolyData {
 
 struct TypeSystemCore {
 	Unification::Core m_mono_core;
-
-	Unification::Core m_tf_core;
-	std::vector<TypeFunctionData> m_type_functions;
-
-	std::vector<PolyData> poly_data;
-
 	MetaUnifier m_meta_core;
 
 	TypeSystemCore();
@@ -67,4 +72,26 @@ struct TypeSystemCore {
 	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
+
+	TypeFunctionData& type_function_data_of(MonoId);
+	TypeFunctionId new_type_function_var();
+	void unify_type_function(TypeFunctionId, TypeFunctionId);
+
+private:
+	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
+	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
+	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
+	TypeFunctionData& get_type_function_data(TypeFunctionId);
+	TypeFunctionId find_type_function(TypeFunctionId);
+
+	TypeFunctionId create_type_function(
+	    TypeFunctionTag tag,
+	    int arity,
+	    std::vector<InternedString> fields,
+	    std::unordered_map<InternedString, MonoId> structure,
+	    TypeFunctionStrength);
+
+	std::vector<TypeFunctionData> m_type_functions;
+	std::vector<PolyData> poly_data;
+	UnionFind m_type_function_uf;
 };
