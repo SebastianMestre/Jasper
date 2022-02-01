@@ -1,9 +1,9 @@
 #include "ct_eval.hpp"
 
-#include "./log/log.hpp"
+#include "../ast.hpp"
+#include "../ast_allocator.hpp"
+#include "../log/log.hpp"
 #include "typechecker.hpp"
-#include "ast.hpp"
-#include "ast_allocator.hpp"
 
 #include <iostream>
 #include <sstream>

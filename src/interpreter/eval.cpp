@@ -5,9 +5,9 @@
 #include <cassert>
 #include <climits>
 
-#include "../log/log.hpp"
-#include "../typechecker.hpp"
 #include "../ast.hpp"
+#include "../log/log.hpp"
+#include "../typechecker/typechecker.hpp"
 #include "../utils/span.hpp"
 #include "garbage_collector.hpp"
 #include "interpreter.hpp"
