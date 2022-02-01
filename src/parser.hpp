@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "error_report.hpp"
+#include "./utils/error_report.hpp"
 #include "token_array.hpp"
 
 namespace CST {

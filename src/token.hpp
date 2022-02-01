@@ -1,8 +1,8 @@
 #pragma once
 
-#include "source_location.hpp"
+#include "./utils/interned_string.hpp"
+#include "./utils/source_location.hpp"
 #include "token_tag.hpp"
-#include "utils/interned_string.hpp"
 
 struct Token {
 	/* internal representation of token */

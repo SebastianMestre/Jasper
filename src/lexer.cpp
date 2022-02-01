@@ -1,8 +1,9 @@
-#include "automaton.hpp"
+#include "lexer.hpp"
 
+#include "./algorithms/automaton.hpp"
+#include "./utils/string_view.hpp"
 #include "token.hpp"
 #include "token_array.hpp"
-#include "utils/string_view.hpp"
 
 #include <cstdint>
 #include <cstdio>
