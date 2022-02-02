@@ -178,36 +178,6 @@ MetaTypeId TypeChecker::new_meta_var() {
 	return core().m_meta_core.make_var_node();
 }
 
-// qualifies all free variables in the given monotype
-PolyId TypeChecker::generalize(MonoId mono) {
-	std::unordered_set<MonoId> free_vars;
-	core().gather_free_vars(mono, free_vars);
-
-	std::vector<MonoId> new_vars;
-	std::unordered_map<MonoId, MonoId> mapping;
-	for (MonoId var : free_vars) {
-		if (!env().has_type_var(var)) {
-			auto fresh_var = new_hidden_var();
-			new_vars.push_back(fresh_var);
-			mapping[var] = fresh_var;
-		}
-	}
-
-	MonoId base = core().inst_impl(mono, mapping);
-
-	return core().new_poly(base, std::move(new_vars));
-}
-
-void TypeChecker::bind_free_vars(MonoId mono) {
-	std::unordered_set<MonoId> free_vars;
-	core().gather_free_vars(mono, free_vars);
-	for (MonoId var : free_vars) {
-		if (!env().has_type_var(var)) {
-			env().current_scope().m_type_vars.insert(var);
-		}
-	}
-}
-
 // Hindley-Milner [App], modified for multiple argument functions.
 MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 	MonoId return_type = core().m_mono_core.new_var();
@@ -320,8 +290,35 @@ MonoId Facade1::mono_string() { return tc.mono_string(); }
 MonoId Facade1::mono_boolean() { return tc.mono_boolean(); }
 MonoId Facade1::mono_unit() { return tc.mono_unit(); }
 
-void Facade1::bind_free_vars(MonoId mono) { tc.bind_free_vars(mono); }
-PolyId Facade1::generalize(MonoId mono) { return tc.generalize(mono); }
+void Facade1::bind_free_vars(MonoId mono) {
+	std::unordered_set<MonoId> free_vars;
+	core().gather_free_vars(mono, free_vars);
+	for (MonoId var : free_vars) {
+		if (!env().has_type_var(var)) {
+			env().current_scope().m_type_vars.insert(var);
+		}
+	}
+}
+
+// qualifies all free variables in the given monotype
+PolyId Facade1::generalize(MonoId mono) {
+	std::unordered_set<MonoId> free_vars;
+	core().gather_free_vars(mono, free_vars);
+
+	std::vector<MonoId> new_vars;
+	std::unordered_map<MonoId, MonoId> mapping;
+	for (MonoId var : free_vars) {
+		if (!env().has_type_var(var)) {
+			auto fresh_var = new_hidden_var();
+			new_vars.push_back(fresh_var);
+			mapping[var] = fresh_var;
+		}
+	}
+
+	MonoId base = core().inst_impl(mono, mapping);
+
+	return core().new_poly(base, std::move(new_vars));
+}
 
 TypeSystemCore& Facade1::core() { return tc.core(); }
 std::vector<std::vector<AST::Declaration*>> const& Facade1::declaration_order() const { return tc.declaration_order(); }

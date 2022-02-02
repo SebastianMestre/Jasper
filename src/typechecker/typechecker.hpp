@@ -29,8 +29,6 @@ struct TypeChecker {
 
 	MonoId new_hidden_var();
 	MonoId new_var();
-	PolyId generalize(MonoId mono);
-	void bind_free_vars(MonoId mono);
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
 	MetaTypeId new_meta_var();
