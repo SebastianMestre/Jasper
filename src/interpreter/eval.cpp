@@ -351,24 +351,15 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
-	eval(ast->m_syntax, e);
+	return eval(ast->m_syntax, e);
 }
 
 void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
-	auto& type_function_data = e.m_tc->m_core.type_function_data_of(ast->m_value);
-	e.push_record_constructor(type_function_data.fields);
+	return eval(ast->m_syntax, e);
 }
 
 void eval(AST::Constructor* ast, Interpreter& e) {
-	auto& tf_data = e.m_tc->m_core.type_function_data_of(ast->m_mono);
-
-	if (tf_data.tag == TypeFunctionTag::Record) {
-		e.push_record_constructor(tf_data.fields);
-	} else if (tf_data.tag == TypeFunctionTag::Variant) {
-		e.push_variant_constructor(ast->m_id);
-	} else {
-		Log::fatal("not implemented this type function for construction");
-	}
+	return eval(ast->m_syntax, e);
 }
 
 void eval(AST::TypeTerm* ast, Interpreter& e) {
