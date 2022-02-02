@@ -64,10 +64,10 @@ ExitStatus execute(
 		}
 	}
 
-	tc.m_env.compute_declaration_order(static_cast<AST::Program*>(ast));
+	tc.compute_declaration_order(static_cast<AST::Program*>(ast));
 
 	if (settings.typecheck) {
-		tc.core().m_meta_core.comp = &tc.m_env.declaration_components;
+		tc.core().m_meta_core.comp = &tc.declaration_order();
 		TypeChecker::metacheck(tc.core().m_meta_core, ast);
 		tc.core().m_meta_core.solve();
 		TypeChecker::reify_types(ast, tc, ast_allocator);
@@ -77,7 +77,7 @@ ExitStatus execute(
 	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
-	Interpreter env = {&tc, &gc, &tc.m_env.declaration_components};
+	Interpreter env = {&tc, &gc, &tc.declaration_order()};
 	declare_native_functions(env);
 	eval(ast, env);
 

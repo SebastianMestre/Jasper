@@ -337,7 +337,7 @@ void typecheck(AST::Declaration* ast, TypeChecker& tc) {
 
 void typecheck(AST::Program* ast, TypeChecker& tc) {
 
-	auto const& comps = tc.m_env.declaration_components;
+	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
 
 		bool type_in_component = false;

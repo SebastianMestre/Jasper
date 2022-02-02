@@ -8,6 +8,7 @@
 namespace AST {
 struct Allocator;
 struct Declaration;
+struct Program;
 }
 
 namespace TypeChecker {
@@ -41,6 +42,9 @@ struct TypeChecker {
 	MonoId mono_unit();
 
 	TypeSystemCore& core() { return m_core; }
+
+	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return m_env.declaration_components; }
+	void compute_declaration_order(AST::Program* ast) { m_env.compute_declaration_order(ast); }
 
 private:
 	TypeSystemCore m_core;

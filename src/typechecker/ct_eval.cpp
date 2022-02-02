@@ -333,7 +333,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 		}
 	}
 
-	auto const& comps = tc.m_env.declaration_components;
+	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
 			int meta_type = uf.eval(decl->m_meta_type);
