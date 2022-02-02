@@ -312,4 +312,26 @@ void TypeChecker::compute_declaration_order(AST::Program* ast) {
 	}
 }
 
+
+
+MonoId Facade1::mono_int() { return tc.mono_int(); }
+MonoId Facade1::mono_float() { return tc.mono_float(); }
+MonoId Facade1::mono_string() { return tc.mono_string(); }
+MonoId Facade1::mono_boolean() { return tc.mono_boolean(); }
+MonoId Facade1::mono_unit() { return tc.mono_unit(); }
+
+void Facade1::bind_free_vars(MonoId mono) { tc.bind_free_vars(mono); }
+PolyId Facade1::generalize(MonoId mono) { return tc.generalize(mono); }
+
+TypeSystemCore& Facade1::core() { return tc.core(); }
+std::vector<std::vector<AST::Declaration*>> const& Facade1::declaration_order() const { return tc.declaration_order(); }
+
+MonoId Facade1::new_hidden_var() { return tc.new_hidden_var(); }
+MonoId Facade1::new_var() { return tc.new_var(); }
+
+void Facade1::new_nested_scope() { tc.m_env.new_nested_scope(); }
+void Facade1::end_scope() { tc.m_env.end_scope(); }
+MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) { return tc.rule_app(std::move(args_types), func_type); }
+Frontend::CompileTimeEnvironment& Facade1::env() { return tc.env(); }
+
 } // namespace TypeChecker
