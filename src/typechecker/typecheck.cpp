@@ -12,41 +12,36 @@
 namespace TypeChecker {
 
 struct Facade1 {
-	TypeChecker& tc;
-
-	MonoId mono_int();
-	MonoId mono_float();
-	MonoId mono_string();
-	MonoId mono_boolean();
-	MonoId mono_unit();
+	Facade1(TypeChecker& tc)
+	    : tc {tc} {}
 
 	void bind_free_vars(MonoId mono);
 	PolyId generalize(MonoId mono);
-
-	TypeSystemCore& core();
-	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const;
-
-	MonoId new_hidden_var();
-	MonoId new_var();
-
-	void new_nested_scope();
-	void end_scope();
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
-	Frontend::CompileTimeEnvironment& env();
+
+	MonoId mono_int() { return tc.mono_int(); }
+	MonoId mono_float() { return tc.mono_float(); }
+	MonoId mono_string() { return tc.mono_string(); }
+	MonoId mono_boolean() { return tc.mono_boolean(); }
+	MonoId mono_unit() { return tc.mono_unit(); }
+
+	TypeSystemCore& core() { return tc.core(); }
+	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
+	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return tc.declaration_order(); }
+
+	MonoId new_hidden_var() { return tc.new_hidden_var(); }
+	MonoId new_var() { return tc.new_var(); }
+
+	void new_nested_scope() { tc.m_env.new_nested_scope(); }
+	void end_scope() { tc.m_env.end_scope(); }
 
 	void unify(MonoId i, MonoId j) { core().m_mono_core.unify(i, j); }
 
-	bool is_type(MetaTypeId i) {
-		return meta_type_is(i, Tag::Func) || meta_type_is(i, Tag::Mono);
-	}
+	bool is_type(MetaTypeId i) { return meta_type_is(i, Tag::Func) || meta_type_is(i, Tag::Mono); }
 
-	bool is_term(MetaTypeId i) {
-		return meta_type_is(i, Tag::Term);
-	}
+	bool is_term(MetaTypeId i) { return meta_type_is(i, Tag::Term); }
 
-	MonoId inst_fresh(PolyId i) {
-		return tc.core().inst_fresh(i);
-	}
+	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
 	MonoId new_term(
 	    TypeFunctionId type_function,
@@ -64,13 +59,10 @@ private:
 	MetaTypeId get_resolved_meta_type(MetaTypeId i) {
 		return core().m_meta_core.eval(i);
 	}
+
+	TypeChecker& tc;
 };
 
-MonoId Facade1::mono_int() { return tc.mono_int(); }
-MonoId Facade1::mono_float() { return tc.mono_float(); }
-MonoId Facade1::mono_string() { return tc.mono_string(); }
-MonoId Facade1::mono_boolean() { return tc.mono_boolean(); }
-MonoId Facade1::mono_unit() { return tc.mono_unit(); }
 
 void Facade1::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
@@ -102,15 +94,6 @@ PolyId Facade1::generalize(MonoId mono) {
 	return core().new_poly(base, std::move(new_vars));
 }
 
-TypeSystemCore& Facade1::core() { return tc.core(); }
-std::vector<std::vector<AST::Declaration*>> const& Facade1::declaration_order() const { return tc.declaration_order(); }
-
-MonoId Facade1::new_hidden_var() { return tc.new_hidden_var(); }
-MonoId Facade1::new_var() { return tc.new_var(); }
-
-void Facade1::new_nested_scope() { tc.m_env.new_nested_scope(); }
-void Facade1::end_scope() { tc.m_env.end_scope(); }
-
 
 // Hindley-Milner [App], modified for multiple argument functions.
 MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
@@ -124,7 +107,6 @@ MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
 
 	return return_type;
 }
-Frontend::CompileTimeEnvironment& Facade1::env() { return tc.env(); }
 
 
 void typecheck(AST::AST* ast, Facade1& tc);
