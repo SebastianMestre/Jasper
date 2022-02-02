@@ -14,7 +14,6 @@ namespace TypeChecker {
 
 struct TypeChecker {
 
-	TypeSystemCore m_core;
 	Frontend::CompileTimeEnvironment m_env;
 	ChunkedArray<AST::Declaration> m_builtin_declarations;
 
@@ -40,6 +39,11 @@ struct TypeChecker {
 	MonoId mono_string();
 	MonoId mono_boolean();
 	MonoId mono_unit();
+
+	TypeSystemCore& core() { return m_core; }
+
+private:
+	TypeSystemCore m_core;
 };
 
 } // namespace TypeChecker

@@ -67,9 +67,9 @@ ExitStatus execute(
 	tc.m_env.compute_declaration_order(static_cast<AST::Program*>(ast));
 
 	if (settings.typecheck) {
-		tc.m_core.m_meta_core.comp = &tc.m_env.declaration_components;
-		TypeChecker::metacheck(tc.m_core.m_meta_core, ast);
-		tc.m_core.m_meta_core.solve();
+		tc.core().m_meta_core.comp = &tc.m_env.declaration_components;
+		TypeChecker::metacheck(tc.core().m_meta_core, ast);
+		tc.core().m_meta_core.solve();
 		TypeChecker::reify_types(ast, tc, ast_allocator);
 		TypeChecker::typecheck(ast, tc);
 	}
