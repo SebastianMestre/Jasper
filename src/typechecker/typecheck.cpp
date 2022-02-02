@@ -46,7 +46,7 @@ void typecheck(AST::ArrayLiteral* ast, Facade1& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element, tc);
-		tc.core().m_mono_core.unify(element_type, element->m_value_type);
+		tc.unify(element_type, element->m_value_type);
 	}
 
 	auto array_type =
@@ -58,10 +58,6 @@ void typecheck(AST::ArrayLiteral* ast, Facade1& tc) {
 void typecheck(AST::Identifier* ast, Facade1& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
-
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(declaration->m_meta_type);
-	ast->m_meta_type = meta_type;
 
 	assert(uf.is(meta_type, Tag::Term));
 
@@ -80,8 +76,7 @@ void typecheck(AST::Block* ast, Facade1& tc) {
 
 void typecheck(AST::IfElseStatement* ast, Facade1& tc) {
 	typecheck(ast->m_condition, tc);
-	tc.core().m_mono_core.unify(
-	    ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_body, tc);
 
@@ -127,7 +122,7 @@ void typecheck(AST::FunctionLiteral* ast, Facade1& tc) {
 
 	// scan body
 	typecheck(ast->m_body, tc);
-	tc.core().m_mono_core.unify(ast->m_return_type, ast->m_body->m_value_type);
+	tc.unify(ast->m_return_type, ast->m_body->m_value_type);
 
 	tc.end_scope();
 }
@@ -136,8 +131,7 @@ void typecheck(AST::WhileStatement* ast, Facade1& tc) {
 	// TODO: Why do while statements create a new nested scope?
 	tc.new_nested_scope();
 	typecheck(ast->m_condition, tc);
-	tc.core().m_mono_core.unify(
-	    ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_body, tc);
 	tc.end_scope();
@@ -148,7 +142,7 @@ void typecheck(AST::ReturnStatement* ast, Facade1& tc) {
 
 	auto mono = ast->m_value->m_value_type;
 	auto seq_expr = ast->m_surrounding_seq_expr;
-	tc.core().m_mono_core.unify(seq_expr->m_value_type, mono);
+	tc.unify(seq_expr->m_value_type, mono);
 }
 
 void typecheck(AST::IndexExpression* ast, Facade1& tc) {
@@ -157,23 +151,21 @@ void typecheck(AST::IndexExpression* ast, Facade1& tc) {
 
 	auto var = tc.new_var();
 	auto arr = tc.core().new_term(BuiltinType::Array, {var});
-	tc.core().m_mono_core.unify(arr, ast->m_callee->m_value_type);
+	tc.unify(arr, ast->m_callee->m_value_type);
 
-	tc.core().m_mono_core.unify(tc.mono_int(), ast->m_index->m_value_type);
+	tc.unify(tc.mono_int(), ast->m_index->m_value_type);
 
 	ast->m_value_type = var;
 }
 
 void typecheck(AST::TernaryExpression* ast, Facade1& tc) {
 	typecheck(ast->m_condition, tc);
-	tc.core().m_mono_core.unify(
-	    ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
 	typecheck(ast->m_then_expr, tc);
 	typecheck(ast->m_else_expr, tc);
 
-	tc.core().m_mono_core.unify(
-	    ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
+	tc.unify(ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
 
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
@@ -193,7 +185,7 @@ void typecheck(AST::AccessExpression* ast, Facade1& tc) {
 	    true);
 	MonoId term_type = tc.core().new_term(dummy_tf, {}, "record instance");
 
-	tc.core().m_mono_core.unify(ast->m_target->m_value_type, term_type);
+	tc.unify(ast->m_target->m_value_type, term_type);
 }
 
 void typecheck(AST::MatchExpression* ast, Facade1& tc) {
@@ -201,7 +193,7 @@ void typecheck(AST::MatchExpression* ast, Facade1& tc) {
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
 		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.core().m_mono_core.unify(ast->m_target.m_value_type, handle->m_value);
+		tc.unify(ast->m_target.m_value_type, handle->m_value);
 	}
 
 	ast->m_value_type = tc.new_var();
@@ -219,8 +211,7 @@ void typecheck(AST::MatchExpression* ast, Facade1& tc) {
 
 		// unify type of match with type of cases
 		typecheck(case_data.m_expression, tc);
-		tc.core().m_mono_core.unify(
-		    ast->m_value_type, case_data.m_expression->m_value_type);
+		tc.unify(ast->m_value_type, case_data.m_expression->m_value_type);
 
 		// get the structure of the match expression for a dummy
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
@@ -236,7 +227,7 @@ void typecheck(AST::MatchExpression* ast, Facade1& tc) {
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
 	MonoId term_type = tc.core().new_term(dummy_tf, {}, "match variant dummy");
-	tc.core().m_mono_core.unify(ast->m_target.m_value_type, term_type);
+	tc.unify(ast->m_target.m_value_type, term_type);
 }
 
 void typecheck(AST::ConstructorExpression* ast, Facade1& tc) {
@@ -253,7 +244,7 @@ void typecheck(AST::ConstructorExpression* ast, Facade1& tc) {
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			typecheck(ast->m_args[i], tc);
 			MonoId field_type = tf_data.structure[tf_data.fields[i]];
-			tc.core().m_mono_core.unify(field_type, ast->m_args[i]->m_value_type);
+			tc.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
@@ -263,7 +254,7 @@ void typecheck(AST::ConstructorExpression* ast, Facade1& tc) {
 		InternedString id = constructor->m_id;
 		MonoId constructor_type = tf_data.structure[id];
 
-		tc.core().m_mono_core.unify(constructor_type, ast->m_args[0]->m_value_type);
+		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
 	ast->m_value_type = constructor->m_mono;
@@ -320,7 +311,7 @@ static void process_type_hint(AST::Declaration* ast, Facade1& tc) {
 
 	assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
 	auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-	tc.core().m_mono_core.unify(ast->m_value_type, handle->m_value);
+	tc.unify(ast->m_value_type, handle->m_value);
 }
 
 // typecheck the value and make the type of the decl equal
@@ -332,7 +323,7 @@ void process_contents(AST::Declaration* ast, Facade1& tc) {
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
 	typecheck(ast->m_value, tc);
-	tc.core().m_mono_core.unify(ast->m_value_type, ast->m_value->m_value_type);
+	tc.unify(ast->m_value_type, ast->m_value->m_value_type);
 }
 
 void typecheck(AST::Declaration* ast, Facade1& tc) {

@@ -71,6 +71,8 @@ struct Facade1 {
 	void end_scope();
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 	Frontend::CompileTimeEnvironment& env();
+
+	void unify(MonoId i, MonoId j) { core().m_mono_core.unify(i, j); }
 };
 
 } // namespace TypeChecker
