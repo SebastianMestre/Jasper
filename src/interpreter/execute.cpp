@@ -77,7 +77,7 @@ ExitStatus execute(
 	TypeChecker::compute_offsets(ast, 0);
 
 	GC gc;
-	Interpreter env = {&tc, &gc, &tc.m_env.declaration_components};
+	Interpreter env = {&gc, &tc.m_env.declaration_components};
 	declare_native_functions(env);
 	eval(ast, env);
 
