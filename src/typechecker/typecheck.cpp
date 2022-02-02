@@ -59,7 +59,7 @@ void typecheck(AST::Identifier* ast, Facade1& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
-	assert(uf.is(meta_type, Tag::Term));
+	assert(tc.is_term(declaration->m_meta_type));
 
 	// here we implement the [var] rule
 	ast->m_value_type = declaration->m_is_polymorphic
@@ -342,12 +342,9 @@ void typecheck(AST::Program* ast, Facade1& tc) {
 		bool non_type_in_component = false;
 		for (auto decl : decls) {
 
-			auto& uf = tc.core().m_meta_core;
-			auto meta_type = uf.eval(decl->m_meta_type);
-			if (uf.is(meta_type, Tag::Func) || uf.is(meta_type, Tag::Mono))
+			if (tc.is_type(decl->m_meta_type))
 				type_in_component = true;
-
-			if (uf.is(meta_type, Tag::Term))
+			if (tc.is_term(decl->m_meta_type))
 				non_type_in_component = true;
 		}
 

@@ -73,6 +73,24 @@ struct Facade1 {
 	Frontend::CompileTimeEnvironment& env();
 
 	void unify(MonoId i, MonoId j) { core().m_mono_core.unify(i, j); }
+
+	bool is_type(MetaTypeId i) {
+		return meta_type_is(i, Tag::Func) || meta_type_is(i, Tag::Mono);
+	}
+
+	bool is_term(MetaTypeId i) {
+		return meta_type_is(i, Tag::Term);
+	}
+
+private:
+	bool meta_type_is(MetaTypeId i, Tag t) {
+		i = get_resolved_meta_type(i);
+		return core().m_meta_core.is(i, t);
+	}
+
+	MetaTypeId get_resolved_meta_type(MetaTypeId i) {
+		return core().m_meta_core.eval(i);
+	}
 };
 
 } // namespace TypeChecker
