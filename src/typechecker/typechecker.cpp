@@ -170,7 +170,7 @@ MonoId TypeChecker::new_hidden_var() {
 
 MonoId TypeChecker::new_var() {
 	MonoId result = core().m_mono_core.new_var();
-	m_env.current_scope().m_type_vars.insert(result);
+	env().current_scope().m_type_vars.insert(result);
 	return result;
 }
 
@@ -186,7 +186,7 @@ PolyId TypeChecker::generalize(MonoId mono) {
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
 	for (MonoId var : free_vars) {
-		if (!m_env.has_type_var(var)) {
+		if (!env().has_type_var(var)) {
 			auto fresh_var = new_hidden_var();
 			new_vars.push_back(fresh_var);
 			mapping[var] = fresh_var;
@@ -202,8 +202,8 @@ void TypeChecker::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 	for (MonoId var : free_vars) {
-		if (!m_env.has_type_var(var)) {
-			m_env.current_scope().m_type_vars.insert(var);
+		if (!env().has_type_var(var)) {
+			env().current_scope().m_type_vars.insert(var);
 		}
 	}
 }

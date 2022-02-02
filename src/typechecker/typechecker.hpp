@@ -46,6 +46,7 @@ struct TypeChecker {
 	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const;
 	void compute_declaration_order(AST::Program* ast);
 
+	Frontend::CompileTimeEnvironment& env() { return m_env; }
 private:
 	TypeSystemCore m_core;
 	std::vector<std::vector<AST::Declaration*>> m_declaration_components;
@@ -72,6 +73,7 @@ struct Facade1 {
 	void new_nested_scope() { tc.m_env.new_nested_scope(); }
 	void end_scope() { tc.m_env.end_scope(); }
 	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type) { return tc.rule_app(std::move(args_types), func_type); }
+	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
 };
 
 } // namespace TypeChecker
