@@ -29,7 +29,6 @@ struct TypeChecker {
 
 	MonoId new_hidden_var();
 	MonoId new_var();
-	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
 	MetaTypeId new_meta_var();
 

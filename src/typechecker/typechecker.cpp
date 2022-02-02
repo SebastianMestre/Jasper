@@ -178,19 +178,6 @@ MetaTypeId TypeChecker::new_meta_var() {
 	return core().m_meta_core.make_var_node();
 }
 
-// Hindley-Milner [App], modified for multiple argument functions.
-MonoId TypeChecker::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-	MonoId return_type = core().m_mono_core.new_var();
-	args_types.push_back(return_type);
-
-	MonoId deduced_func_type =
-	    core().new_term(BuiltinType::Function, std::move(args_types));
-
-	core().m_mono_core.unify(func_type, deduced_func_type);
-
-	return return_type;
-}
-
 AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& name) {
 	m_builtin_declarations.push_back({});
 	auto result = &m_builtin_declarations.back();
@@ -328,7 +315,19 @@ MonoId Facade1::new_var() { return tc.new_var(); }
 
 void Facade1::new_nested_scope() { tc.m_env.new_nested_scope(); }
 void Facade1::end_scope() { tc.m_env.end_scope(); }
-MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) { return tc.rule_app(std::move(args_types), func_type); }
+
+// Hindley-Milner [App], modified for multiple argument functions.
+MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
+	MonoId return_type = core().m_mono_core.new_var();
+	args_types.push_back(return_type);
+
+	MonoId deduced_func_type =
+	    core().new_term(BuiltinType::Function, std::move(args_types));
+
+	core().m_mono_core.unify(func_type, deduced_func_type);
+
+	return return_type;
+}
 Frontend::CompileTimeEnvironment& Facade1::env() { return tc.env(); }
 
 } // namespace TypeChecker
