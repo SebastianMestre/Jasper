@@ -43,11 +43,12 @@ struct TypeChecker {
 
 	TypeSystemCore& core() { return m_core; }
 
-	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return m_env.declaration_components; }
-	void compute_declaration_order(AST::Program* ast) { m_env.compute_declaration_order(ast); }
+	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const;
+	void compute_declaration_order(AST::Program* ast);
 
 private:
 	TypeSystemCore m_core;
+	std::vector<std::vector<AST::Declaration*>> m_declaration_components;
 };
 
 } // namespace TypeChecker

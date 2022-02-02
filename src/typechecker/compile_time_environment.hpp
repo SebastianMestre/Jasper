@@ -30,9 +30,6 @@ struct CompileTimeEnvironment {
 	std::vector<AST::SequenceExpression*> m_seq_expr_stack;
 	AST::Declaration* m_current_decl {nullptr};
 
-	// TODO: is this a good place to put this?
-	std::vector<std::vector<AST::Declaration*>> declaration_components;
-
 	CompileTimeEnvironment();
 
 	Scope& current_scope();
