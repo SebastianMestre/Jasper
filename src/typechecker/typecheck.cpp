@@ -49,10 +49,8 @@ void typecheck(AST::ArrayLiteral* ast, Facade1& tc) {
 		tc.unify(element_type, element->m_value_type);
 	}
 
-	auto array_type =
-	    tc.core().new_term(BuiltinType::Array, {element_type}, "Array Literal");
-
-	ast->m_value_type = array_type;
+	ast->m_value_type =
+	    tc.new_term(BuiltinType::Array, {element_type}, "Array Literal");
 }
 
 void typecheck(AST::Identifier* ast, Facade1& tc) {
@@ -63,7 +61,7 @@ void typecheck(AST::Identifier* ast, Facade1& tc) {
 
 	// here we implement the [var] rule
 	ast->m_value_type = declaration->m_is_polymorphic
-	                        ? tc.core().inst_fresh(declaration->m_decl_type)
+	                        ? tc.inst_fresh(declaration->m_decl_type)
 	                        : declaration->m_value_type;
 }
 
@@ -115,9 +113,8 @@ void typecheck(AST::FunctionLiteral* ast, Facade1& tc) {
 		// return type
 		arg_types.push_back(ast->m_return_type);
 
-		MonoId term_mono_id = tc.core().new_term(
-		    BuiltinType::Function, std::move(arg_types));
-		ast->m_value_type = term_mono_id;
+		ast->m_value_type =
+		    tc.new_term(BuiltinType::Function, std::move(arg_types));
 	}
 
 	// scan body
@@ -150,7 +147,7 @@ void typecheck(AST::IndexExpression* ast, Facade1& tc) {
 	typecheck(ast->m_index, tc);
 
 	auto var = tc.new_var();
-	auto arr = tc.core().new_term(BuiltinType::Array, {var});
+	auto arr = tc.new_term(BuiltinType::Array, {var});
 	tc.unify(arr, ast->m_callee->m_value_type);
 
 	tc.unify(tc.mono_int(), ast->m_index->m_value_type);
@@ -183,7 +180,7 @@ void typecheck(AST::AccessExpression* ast, Facade1& tc) {
 	    {},
 	    {{ast->m_member, member_type}},
 	    true);
-	MonoId term_type = tc.core().new_term(dummy_tf, {}, "record instance");
+	MonoId term_type = tc.new_term(dummy_tf, {}, "record instance");
 
 	tc.unify(ast->m_target->m_value_type, term_type);
 }
@@ -226,7 +223,7 @@ void typecheck(AST::MatchExpression* ast, Facade1& tc) {
 
 	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
 	// knowing' the arguments to a typefunc.
-	MonoId term_type = tc.core().new_term(dummy_tf, {}, "match variant dummy");
+	MonoId term_type = tc.new_term(dummy_tf, {}, "match variant dummy");
 	tc.unify(ast->m_target.m_value_type, term_type);
 }
 

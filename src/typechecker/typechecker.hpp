@@ -82,6 +82,17 @@ struct Facade1 {
 		return meta_type_is(i, Tag::Term);
 	}
 
+	MonoId inst_fresh(PolyId i) {
+		return tc.core().inst_fresh(i);
+	}
+
+	MonoId new_term(
+	    TypeFunctionId type_function,
+	    std::vector<MonoId> arguments,
+	    char const* debug_data = nullptr) {
+		return core().new_term(type_function, std::move(arguments), debug_data);
+	}
+
 private:
 	bool meta_type_is(MetaTypeId i, Tag t) {
 		i = get_resolved_meta_type(i);
