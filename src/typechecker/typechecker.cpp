@@ -7,7 +7,8 @@
 
 namespace TypeChecker {
 
-TypeChecker::TypeChecker(AST::Allocator& allocator) : m_ast_allocator(&allocator) {
+TypeChecker::TypeChecker(AST::Allocator& allocator)
+    : m_ast_allocator(&allocator) {
 	// INVARIANT: we care only for the headers,
 	// wether something's a var or a term and which one
 	core().new_builtin_type_function(-1); // 0  | function

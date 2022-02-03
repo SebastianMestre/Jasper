@@ -11,8 +11,8 @@
 
 namespace TypeChecker {
 
-struct Facade1 {
-	Facade1(TypeChecker& tc)
+struct TypecheckHelper {
+	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
 
 	void bind_free_vars(MonoId mono);
@@ -26,7 +26,6 @@ struct Facade1 {
 	MonoId mono_unit() { return tc.mono_unit(); }
 
 	TypeSystemCore& core() { return tc.core(); }
-	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
 	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return tc.declaration_order(); }
 
 	MonoId new_hidden_var() { return tc.new_hidden_var(); }
@@ -38,7 +37,6 @@ struct Facade1 {
 	void unify(MonoId i, MonoId j) { core().m_mono_core.unify(i, j); }
 
 	bool is_type(MetaTypeId i) { return meta_type_is(i, Tag::Func) || meta_type_is(i, Tag::Mono); }
-
 	bool is_term(MetaTypeId i) { return meta_type_is(i, Tag::Term); }
 
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
@@ -60,11 +58,13 @@ private:
 		return core().m_meta_core.eval(i);
 	}
 
+	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
+
 	TypeChecker& tc;
 };
 
 
-void Facade1::bind_free_vars(MonoId mono) {
+void TypecheckHelper::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 	for (MonoId var : free_vars) {
@@ -73,7 +73,7 @@ void Facade1::bind_free_vars(MonoId mono) {
 }
 
 // qualifies all free variables in the given monotype
-PolyId Facade1::generalize(MonoId mono) {
+PolyId TypecheckHelper::generalize(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 
@@ -93,51 +93,52 @@ PolyId Facade1::generalize(MonoId mono) {
 }
 
 // Hindley-Milner [App], modified for multiple argument functions.
-MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-	MonoId return_type = core().m_mono_core.new_var();
+MonoId TypecheckHelper::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
+
+	MonoId return_type = new_hidden_var();
 	args_types.push_back(return_type);
 
 	MonoId deduced_func_type =
-	    core().new_term(BuiltinType::Function, std::move(args_types));
+	    new_term(BuiltinType::Function, std::move(args_types));
 
-	core().m_mono_core.unify(func_type, deduced_func_type);
+	unify(func_type, deduced_func_type);
 
 	return return_type;
 }
 
 
-void typecheck(AST::AST* ast, Facade1& tc);
+void typecheck(AST::AST* ast, TypecheckHelper& tc);
 
 void typecheck(AST::AST* ast, TypeChecker& tc) {
-	Facade1 f = {tc};
+	TypecheckHelper f = {tc};
 	typecheck(ast, f);
 }
 
-static void process_type_hint(AST::Declaration* ast, Facade1& tc);
+static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
 
 // Literals
-void typecheck(AST::NumberLiteral* ast, Facade1& tc) {
+void typecheck(AST::NumberLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.mono_float();
 }
 
-void typecheck(AST::IntegerLiteral* ast, Facade1& tc) {
+void typecheck(AST::IntegerLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.mono_int();
 }
 
-void typecheck(AST::StringLiteral* ast, Facade1& tc) {
+void typecheck(AST::StringLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.mono_string();
 }
 
-void typecheck(AST::BooleanLiteral* ast, Facade1& tc) {
+void typecheck(AST::BooleanLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.mono_boolean();
 }
 
-void typecheck(AST::NullLiteral* ast, Facade1& tc) {
+void typecheck(AST::NullLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.mono_unit();
 }
 
-void typecheck(AST::ArrayLiteral* ast, Facade1& tc) {
+void typecheck(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element, tc);
@@ -148,7 +149,7 @@ void typecheck(AST::ArrayLiteral* ast, Facade1& tc) {
 	    tc.new_term(BuiltinType::Array, {element_type}, "Array Literal");
 }
 
-void typecheck(AST::Identifier* ast, Facade1& tc) {
+void typecheck(AST::Identifier* ast, TypecheckHelper& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
@@ -160,14 +161,14 @@ void typecheck(AST::Identifier* ast, Facade1& tc) {
 	                        : declaration->m_value_type;
 }
 
-void typecheck(AST::Block* ast, Facade1& tc) {
+void typecheck(AST::Block* ast, TypecheckHelper& tc) {
 	tc.new_nested_scope();
 	for (auto& child : ast->m_body)
 		typecheck(child, tc);
 	tc.end_scope();
 }
 
-void typecheck(AST::IfElseStatement* ast, Facade1& tc) {
+void typecheck(AST::IfElseStatement* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
@@ -177,7 +178,7 @@ void typecheck(AST::IfElseStatement* ast, Facade1& tc) {
 		typecheck(ast->m_else_body, tc);
 }
 
-void typecheck(AST::CallExpression* ast, Facade1& tc) {
+void typecheck(AST::CallExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
 	for (auto& arg : ast->m_args)
 		typecheck(arg, tc);
@@ -186,11 +187,11 @@ void typecheck(AST::CallExpression* ast, Facade1& tc) {
 	for (auto& arg : ast->m_args)
 		arg_types.push_back(arg->m_value_type);
 
-	ast->m_value_type = tc.rule_app(
-	    std::move(arg_types), ast->m_callee->m_value_type);
+	ast->m_value_type =
+	    tc.rule_app(std::move(arg_types), ast->m_callee->m_value_type);
 }
 
-void typecheck(AST::FunctionLiteral* ast, Facade1& tc) {
+void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 	tc.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
 	{
@@ -219,7 +220,7 @@ void typecheck(AST::FunctionLiteral* ast, Facade1& tc) {
 	tc.end_scope();
 }
 
-void typecheck(AST::WhileStatement* ast, Facade1& tc) {
+void typecheck(AST::WhileStatement* ast, TypecheckHelper& tc) {
 	// TODO: Why do while statements create a new nested scope?
 	tc.new_nested_scope();
 	typecheck(ast->m_condition, tc);
@@ -229,7 +230,7 @@ void typecheck(AST::WhileStatement* ast, Facade1& tc) {
 	tc.end_scope();
 }
 
-void typecheck(AST::ReturnStatement* ast, Facade1& tc) {
+void typecheck(AST::ReturnStatement* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_value, tc);
 
 	auto mono = ast->m_value->m_value_type;
@@ -237,7 +238,7 @@ void typecheck(AST::ReturnStatement* ast, Facade1& tc) {
 	tc.unify(seq_expr->m_value_type, mono);
 }
 
-void typecheck(AST::IndexExpression* ast, Facade1& tc) {
+void typecheck(AST::IndexExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
 
@@ -250,7 +251,7 @@ void typecheck(AST::IndexExpression* ast, Facade1& tc) {
 	ast->m_value_type = var;
 }
 
-void typecheck(AST::TernaryExpression* ast, Facade1& tc) {
+void typecheck(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
@@ -262,7 +263,7 @@ void typecheck(AST::TernaryExpression* ast, Facade1& tc) {
 	ast->m_value_type = ast->m_then_expr->m_value_type;
 }
 
-void typecheck(AST::AccessExpression* ast, Facade1& tc) {
+void typecheck(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_target, tc);
 
 	// should this be a hidden type var?
@@ -280,7 +281,7 @@ void typecheck(AST::AccessExpression* ast, Facade1& tc) {
 	tc.unify(ast->m_target->m_value_type, term_type);
 }
 
-void typecheck(AST::MatchExpression* ast, Facade1& tc) {
+void typecheck(AST::MatchExpression* ast, TypecheckHelper& tc) {
 	typecheck(&ast->m_target, tc);
 	if (ast->m_type_hint) {
 		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
@@ -322,7 +323,7 @@ void typecheck(AST::MatchExpression* ast, Facade1& tc) {
 	tc.unify(ast->m_target.m_value_type, term_type);
 }
 
-void typecheck(AST::ConstructorExpression* ast, Facade1& tc) {
+void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_constructor, tc);
 
 	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
@@ -352,20 +353,9 @@ void typecheck(AST::ConstructorExpression* ast, Facade1& tc) {
 	ast->m_value_type = constructor->m_mono;
 }
 
-void typecheck(AST::SequenceExpression* ast, Facade1& tc) {
+void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.new_var();
 	typecheck(ast->m_body, tc);
-}
-
-void print_information(AST::Declaration* ast, Facade1& tc) {
-#if DEBUG
-	auto poly = ast->m_decl_type;
-	auto& poly_data = tc.core().poly_data[poly];
-	Log::info() << "Type of local variable '" << ast->identifier_text()
-	            << "' has " << poly_data.vars.size() << " type variables";
-	Log::info("The type is:");
-	tc.core().m_mono_core.print_node(poly_data.base);
-#endif
 }
 
 // this function implements 'the value restriction', a technique
@@ -380,7 +370,7 @@ static bool is_value_expression(AST::AST* ast) {
 	}
 }
 
-void generalize(AST::Declaration* ast, Facade1& tc) {
+void generalize(AST::Declaration* ast, TypecheckHelper& tc) {
 	assert(!ast->m_is_polymorphic);
 
 	assert(ast->m_value);
@@ -388,8 +378,6 @@ void generalize(AST::Declaration* ast, Facade1& tc) {
 	if (is_value_expression(ast->m_value)) {
 		ast->m_is_polymorphic = true;
 		ast->m_decl_type = tc.generalize(ast->m_value_type);
-
-		print_information(ast, tc);
 	} else {
 		// if it's not a value expression, its free vars get bound
 		// to the environment instead of being generalized
@@ -397,7 +385,7 @@ void generalize(AST::Declaration* ast, Facade1& tc) {
 	}
 }
 
-static void process_type_hint(AST::Declaration* ast, Facade1& tc) {
+static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc) {
 	if (!ast->m_type_hint)
 		return;
 
@@ -409,7 +397,7 @@ static void process_type_hint(AST::Declaration* ast, Facade1& tc) {
 // typecheck the value and make the type of the decl equal
 // to its type
 // apply typehints if available
-void process_contents(AST::Declaration* ast, Facade1& tc) {
+void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 	process_type_hint(ast, tc);
 
 	// it would be nicer to check this at an earlier stage
@@ -418,14 +406,14 @@ void process_contents(AST::Declaration* ast, Facade1& tc) {
 	tc.unify(ast->m_value_type, ast->m_value->m_value_type);
 }
 
-void typecheck(AST::Declaration* ast, Facade1& tc) {
+void typecheck(AST::Declaration* ast, TypecheckHelper& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
 	generalize(ast, tc);
 }
 
-void typecheck(AST::Program* ast, Facade1& tc) {
+void typecheck(AST::Program* ast, TypecheckHelper& tc) {
 
 	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
@@ -447,14 +435,18 @@ void typecheck(AST::Program* ast, Facade1& tc) {
 		if (type_in_component)
 			continue;
 
+		tc.new_nested_scope();
+
 		// set up some dummy types on every decl
 		for (auto decl : decls) {
-			decl->m_value_type = tc.new_hidden_var();
+			decl->m_value_type = tc.new_var();
 		}
 
 		for (auto decl : decls) {
 			process_contents(decl, tc);
 		}
+
+		tc.end_scope();
 
 		// generalize all the decl types, so that they are
 		// identified as polymorphic in the next rec-block
@@ -464,7 +456,7 @@ void typecheck(AST::Program* ast, Facade1& tc) {
 	}
 }
 
-void typecheck(AST::AST* ast, Facade1& tc) {
+void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
 		return typecheck(static_cast<AST::type*>(ast), tc);
