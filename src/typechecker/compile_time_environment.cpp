@@ -46,4 +46,9 @@ bool CompileTimeEnvironment::has_type_var(MonoId var) {
 	return scan_scope(m_global_scope, var);
 }
 
+void CompileTimeEnvironment::bind_var_if_not_present(MonoId var) {
+	if (!has_type_var(var))
+		current_scope().m_type_vars.insert(var);
+}
+
 } // namespace Frontend

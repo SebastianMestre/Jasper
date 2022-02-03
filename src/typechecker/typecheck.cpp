@@ -68,9 +68,7 @@ void Facade1::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 	for (MonoId var : free_vars) {
-		if (!env().has_type_var(var)) {
-			env().current_scope().m_type_vars.insert(var);
-		}
+		env().bind_var_if_not_present(var);
 	}
 }
 
@@ -93,7 +91,6 @@ PolyId Facade1::generalize(MonoId mono) {
 
 	return core().new_poly(base, std::move(new_vars));
 }
-
 
 // Hindley-Milner [App], modified for multiple argument functions.
 MonoId Facade1::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
