@@ -60,7 +60,7 @@ static AST::Expr* ct_eval(
 	assert(ast);
 	assert(ast->m_declaration);
 
-	auto& uf = tc.m_core.m_meta_core;
+	auto& uf = tc.core().m_meta_core;
 	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
 	if (!uf.is_constant(meta_type))
@@ -108,7 +108,7 @@ static AST::TernaryExpression* ct_eval(
 
 static AST::Expr* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto& uf = tc.m_core.m_meta_core;
+	auto& uf = tc.core().m_meta_core;
 	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
 	// TODO: support vars
@@ -192,7 +192,7 @@ static AST::TypeFunctionHandle* ct_eval(
 	std::unordered_map<InternedString, MonoId> structure =
 	    build_map(ast->m_fields, ast->m_types, tc, alloc);
 
-	TypeFunctionId result = tc.m_core.new_type_function(
+	TypeFunctionId result = tc.core().new_type_function(
 		TypeFunctionTag::Record, std::move(fields), std::move(structure));
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
@@ -208,7 +208,7 @@ static AST::TypeFunctionHandle* ct_eval(
 	std::unordered_map<InternedString, MonoId> structure =
 		build_map(ast->m_constructors, ast->m_types, tc, alloc);
 
-	TypeFunctionId result = tc.m_core.new_type_function(
+	TypeFunctionId result = tc.core().new_type_function(
 		TypeFunctionTag::Variant, {}, std::move(structure));
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
@@ -220,7 +220,7 @@ static AST::TypeFunctionHandle* ct_eval(
 
 static AST::Constructor* constructor_from_ast(
     AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto& uf = tc.m_core.m_meta_core;
+	auto& uf = tc.core().m_meta_core;
 	MetaTypeId meta = uf.eval(ast->m_meta_type);
 	auto constructor = alloc.make<AST::Constructor>();
 	constructor->m_syntax = ast;
@@ -235,14 +235,14 @@ static AST::Constructor* constructor_from_ast(
 		// dummy with one constructor, the one used
 		std::unordered_map<InternedString, MonoId> structure;
 		structure[access->m_member] = tc.new_var();
-		TypeFunctionId dummy_tf = tc.m_core.new_type_function(
+		TypeFunctionId dummy_tf = tc.core().new_type_function(
 		    TypeFunctionTag::Variant, {}, std::move(structure), true);
 		MonoId dummy_monotype =
-		    tc.m_core.new_term(dummy_tf, {}, "Union Constructor Access");
+		    tc.core().new_term(dummy_tf, {}, "Union Constructor Access");
 
 		MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
 
-		tc.m_core.m_mono_core.unify(dummy_monotype, monotype);
+		tc.core().m_mono_core.unify(dummy_monotype, monotype);
 
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
@@ -266,7 +266,7 @@ static AST::MonoTypeHandle* ct_eval(
 		args.push_back(static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value);
 	}
 
-	MonoId result = tc.m_core.new_term(type_function, std::move(args), "from ast");
+	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
 	handle->m_value = result;
 	handle->m_syntax = ast;
 	return handle;
@@ -306,7 +306,7 @@ static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& all
 
 static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	auto& uf = tc.m_core.m_meta_core;
+	auto& uf = tc.core().m_meta_core;
 
 	for (auto& decl : ast->m_declarations) {
 		int meta_type = uf.eval(decl.m_meta_type);
@@ -322,7 +322,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
 			auto handle = alloc.make<AST::TypeFunctionHandle>();
-			handle->m_value = tc.m_core.new_type_function_var();
+			handle->m_value = tc.core().new_type_function_var();
 			handle->m_syntax = decl.m_value;
 			decl.m_value = handle;
 		} else if (uf.is(meta_type, Tag::Mono)) {
@@ -333,7 +333,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 		}
 	}
 
-	auto const& comps = tc.m_env.declaration_components;
+	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
 			int meta_type = uf.eval(decl->m_meta_type);
@@ -352,14 +352,14 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 
 				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
 				TypeFunctionId tf = eval_then_get_type_func(handle->m_syntax, tc, alloc);
-				tc.m_core.unify_type_function(tf, handle->m_value);
+				tc.core().unify_type_function(tf, handle->m_value);
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
 
 				auto handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
 				MonoId mt = eval_then_get_mono(handle->m_syntax, tc, alloc);
-				tc.m_core.m_mono_core.unify(mt, handle->m_value);
+				tc.core().m_mono_core.unify(mt, handle->m_value);
 			} else {
 				if (decl->m_type_hint)
 					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);

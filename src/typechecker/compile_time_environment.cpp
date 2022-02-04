@@ -46,46 +46,9 @@ bool CompileTimeEnvironment::has_type_var(MonoId var) {
 	return scan_scope(m_global_scope, var);
 }
 
-void CompileTimeEnvironment::compute_declaration_order(AST::Program* ast) {
-
-	std::unordered_map<AST::Declaration*, int> decl_to_index;
-	std::vector<AST::Declaration*> index_to_decl;
-
-	// assign a unique int to every top level declaration
-	int i = 0;
-	for (auto& decl : ast->m_declarations) {
-		index_to_decl.push_back(&decl);
-		decl_to_index.insert({&decl, i});
-		i += 1;
-	}
-
-	// build up the explicit declaration graph
-	TarjanSolver solver(index_to_decl.size());
-	for (auto kv : decl_to_index) {
-		auto decl = kv.first;
-		auto u = kv.second;
-		for (auto other : decl->m_references) {
-			auto it = decl_to_index.find(other);
-			if (it != decl_to_index.end()) {
-				int v = it->second;
-				solver.add_edge(u, v);
-			}
-		}
-	}
-
-	// compute strongly connected components
-	solver.solve();
-
-	auto const& comps = solver.vertices_of_components();
-	std::vector<AST::Declaration*> decl_comp;
-	for (auto const& comp : comps) {
-		decl_comp.clear();
-		decl_comp.reserve(comp.size());
-		for (int u : comp)
-			decl_comp.push_back(index_to_decl[u]);
-
-		declaration_components.push_back(std::move(decl_comp));
-	}
+void CompileTimeEnvironment::bind_var_if_not_present(MonoId var) {
+	if (!has_type_var(var))
+		current_scope().m_type_vars.insert(var);
 }
 
 } // namespace Frontend

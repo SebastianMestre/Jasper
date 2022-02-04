@@ -8,13 +8,13 @@
 namespace AST {
 struct Allocator;
 struct Declaration;
+struct Program;
 }
 
 namespace TypeChecker {
 
 struct TypeChecker {
 
-	TypeSystemCore m_core;
 	Frontend::CompileTimeEnvironment m_env;
 	ChunkedArray<AST::Declaration> m_builtin_declarations;
 
@@ -29,9 +29,6 @@ struct TypeChecker {
 
 	MonoId new_hidden_var();
 	MonoId new_var();
-	PolyId generalize(MonoId mono);
-	void bind_free_vars(MonoId mono);
-	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
 	MetaTypeId new_meta_var();
 
@@ -40,6 +37,16 @@ struct TypeChecker {
 	MonoId mono_string();
 	MonoId mono_boolean();
 	MonoId mono_unit();
+
+	TypeSystemCore& core() { return m_core; }
+
+	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const;
+	void compute_declaration_order(AST::Program* ast);
+
+	Frontend::CompileTimeEnvironment& env() { return m_env; }
+private:
+	TypeSystemCore m_core;
+	std::vector<std::vector<AST::Declaration*>> m_declaration_components;
 };
 
 } // namespace TypeChecker
