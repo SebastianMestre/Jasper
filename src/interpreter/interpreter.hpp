@@ -28,7 +28,6 @@ struct Scope {
 
 struct Interpreter {
 	Stack m_stack;
-	TypeChecker::TypeChecker* m_tc;
 	GC* m_gc;
 	std::vector<std::vector<AST::Declaration*>> const* m_declaration_order;
 	int m_gc_size_on_last_pass {64};
@@ -37,11 +36,9 @@ struct Interpreter {
 	Scope m_global_scope;
 
 	Interpreter(
-	    TypeChecker::TypeChecker* tc,
 	    GC* gc,
 	    std::vector<std::vector<AST::Declaration*>> const* declaration_order)
-	    : m_tc {tc}
-	    , m_gc {gc}
+	    : m_gc {gc}
 	    , m_declaration_order {declaration_order} {}
 
 	void save_return_value(Value);
