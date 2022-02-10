@@ -16,6 +16,8 @@ struct SequenceExpression;
 
 } // namespace AST
 
+struct TypeSystemCore;
+
 namespace Frontend {
 
 struct CompileTimeEnvironment {
@@ -37,8 +39,8 @@ struct CompileTimeEnvironment {
 	void new_nested_scope();
 	void end_scope();
 
-	bool has_type_var(MonoId);
-	void bind_var_if_not_present(MonoId);
+	bool has_type_var(MonoId, TypeSystemCore&);
+	void bind_var_if_not_present(MonoId, TypeSystemCore&);
 
 	void compute_declaration_order(AST::Program* ast);
 };
