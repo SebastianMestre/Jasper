@@ -43,6 +43,7 @@ struct CompileTimeEnvironment {
 	void compute_declaration_order(AST::Program* ast);
 
 	Scope& global_scope();
+	std::vector<Scope> const& scopes();
 };
 
 } // namespace Frontend

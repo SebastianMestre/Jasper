@@ -33,16 +33,16 @@ void CompileTimeEnvironment::end_scope() {
 bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
 	// TODO: check that the given mono is actually a var
 
-	auto scan_scope = [](Scope& scope, MonoId var) -> bool {
+	auto scan_scope = [](Scope const& scope, MonoId var) -> bool {
 		return scope.m_type_vars.count(var) != 0;
 	};
 
 	// scan nested scopes from the inside out
-	for (int i = m_scopes.size(); i-- > 1;) {
-		auto found = scan_scope(m_scopes[i], var);
+	for (int i = scopes().size(); i-- > 1;) {
+		auto found = scan_scope(scopes()[i], var);
 		if (found)
 			return true;
-		if (!m_scopes[i].m_nested)
+		if (!scopes()[i].m_nested)
 			break;
 	}
 
@@ -51,7 +51,7 @@ bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
 	if (found)
 		return true;
 
-	for (auto& scope : m_scopes) {
+	for (auto& scope : scopes()) {
 		for (auto stored_var : scope.m_type_vars) {
 			std::unordered_set<MonoId> free_vars;
 			core.gather_free_vars(stored_var, free_vars);
@@ -75,6 +75,10 @@ void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::global_scope() {
 	return m_scopes[0];
+}
+
+std::vector<CompileTimeEnvironment::Scope> const& CompileTimeEnvironment::scopes() {
+	return m_scopes;
 }
 
 } // namespace Frontend
