@@ -85,8 +85,7 @@ private:
 
 		for (auto& scope : scopes()) {
 			for (auto stored_var : scope.m_type_vars) {
-				std::unordered_set<MonoId> free_vars;
-				core().gather_free_vars(stored_var, free_vars);
+				std::unordered_set<MonoId> free_vars = free_vars_of(stored_var);
 				if (free_vars.count(var))
 					return true;
 			}
@@ -99,12 +98,17 @@ private:
 		if (!has_type_var(var))
 			env().bind_to_current_scope(var);
 	}
+
+	std::unordered_set<MonoId> free_vars_of(MonoId mono) {
+		std::unordered_set<MonoId> free_vars;
+		core().gather_free_vars(mono, free_vars);
+		return free_vars;
+	}
 };
 
 
 void TypecheckHelper::bind_free_vars(MonoId mono) {
-	std::unordered_set<MonoId> free_vars;
-	core().gather_free_vars(mono, free_vars);
+	std::unordered_set<MonoId> free_vars = free_vars_of(mono);
 	for (MonoId var : free_vars) {
 		bind_var_if_not_present(var);
 	}
@@ -112,8 +116,7 @@ void TypecheckHelper::bind_free_vars(MonoId mono) {
 
 // qualifies all free variables in the given monotype
 PolyId TypecheckHelper::generalize(MonoId mono) {
-	std::unordered_set<MonoId> free_vars;
-	core().gather_free_vars(mono, free_vars);
+	std::unordered_set<MonoId> free_vars = free_vars_of(mono);
 
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
