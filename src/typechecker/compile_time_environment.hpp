@@ -27,9 +27,7 @@ struct CompileTimeEnvironment {
 	};
 
 	std::vector<Scope> m_scopes;
-	std::vector<AST::FunctionLiteral*> m_function_stack;
-	std::vector<AST::SequenceExpression*> m_seq_expr_stack;
-	AST::Declaration* m_current_decl {nullptr};
+
 
 	CompileTimeEnvironment();
 
