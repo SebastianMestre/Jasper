@@ -10,6 +10,7 @@
 namespace Frontend {
 
 CompileTimeEnvironment::CompileTimeEnvironment() {
+	m_scopes.push_back({false});
 }
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
@@ -25,6 +26,7 @@ void CompileTimeEnvironment::new_nested_scope() {
 }
 
 void CompileTimeEnvironment::end_scope() {
+	assert(m_scopes.size() > 1);
 	m_scopes.pop_back();
 }
 
@@ -36,7 +38,7 @@ bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
 	};
 
 	// scan nested scopes from the inside out
-	for (int i = m_scopes.size(); i--;) {
+	for (int i = m_scopes.size(); i-- > 1;) {
 		auto found = scan_scope(m_scopes[i], var);
 		if (found)
 			return true;
@@ -72,7 +74,7 @@ void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
 
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::global_scope() {
-	return m_global_scope;
+	return m_scopes[0];
 }
 
 } // namespace Frontend
