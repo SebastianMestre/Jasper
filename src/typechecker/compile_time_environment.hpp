@@ -45,9 +45,6 @@ struct CompileTimeEnvironment {
 	void compute_declaration_order(AST::Program* ast);
 
 	Scope& global_scope();
-
-private:
-	Scope m_global_scope;
 };
 
 } // namespace Frontend
