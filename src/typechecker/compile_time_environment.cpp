@@ -8,47 +8,37 @@
 
 namespace Frontend {
 
-CompileTimeEnvironment::CompileTimeEnvironment() {}
+CompileTimeEnvironment::CompileTimeEnvironment() {
+	m_scopes.push_back({});
+}
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
-	return m_scopes.empty() ? m_global_scope : m_scopes.back();
+	return m_scopes.empty() ? global_scope() : m_scopes.back();
 }
 
 void CompileTimeEnvironment::new_scope() {
-	m_scopes.push_back({false});
+	m_scopes.push_back({});
 }
 
 void CompileTimeEnvironment::new_nested_scope() {
-	m_scopes.push_back({true});
+	m_scopes.push_back({});
 }
 
 void CompileTimeEnvironment::end_scope() {
+	assert(m_scopes.size() > 1);
 	m_scopes.pop_back();
 }
 
-bool CompileTimeEnvironment::has_type_var(MonoId var) {
-	// TODO: check that the given mono is actually a var
-
-	auto scan_scope = [](Scope& scope, MonoId var) -> bool {
-		return scope.m_type_vars.count(var) != 0;
-	};
-
-	// scan nested scopes from the inside out
-	for (int i = m_scopes.size(); i--;) {
-		auto found = scan_scope(m_scopes[i], var);
-		if (found)
-			return true;
-		if (!m_scopes[i].m_nested)
-			break;
-	}
-
-	// fall back to global scope lookup
-	return scan_scope(m_global_scope, var);
+void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
+	current_scope().m_type_vars.insert(var);
 }
 
-void CompileTimeEnvironment::bind_var_if_not_present(MonoId var) {
-	if (!has_type_var(var))
-		current_scope().m_type_vars.insert(var);
+CompileTimeEnvironment::Scope& CompileTimeEnvironment::global_scope() {
+	return m_scopes[0];
+}
+
+std::vector<CompileTimeEnvironment::Scope> const& CompileTimeEnvironment::scopes() {
+	return m_scopes;
 }
 
 } // namespace Frontend

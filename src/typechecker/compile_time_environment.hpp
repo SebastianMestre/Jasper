@@ -20,15 +20,10 @@ namespace Frontend {
 
 struct CompileTimeEnvironment {
 	struct Scope {
-		bool m_nested {false};
 		std::unordered_set<MonoId> m_type_vars;
 	};
 
-	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
-	std::vector<AST::FunctionLiteral*> m_function_stack;
-	std::vector<AST::SequenceExpression*> m_seq_expr_stack;
-	AST::Declaration* m_current_decl {nullptr};
 
 	CompileTimeEnvironment();
 
@@ -37,10 +32,12 @@ struct CompileTimeEnvironment {
 	void new_nested_scope();
 	void end_scope();
 
-	bool has_type_var(MonoId);
-	void bind_var_if_not_present(MonoId);
+	void bind_to_current_scope(MonoId);
 
 	void compute_declaration_order(AST::Program* ast);
+
+	Scope& global_scope();
+	std::vector<Scope> const& scopes();
 };
 
 } // namespace Frontend
