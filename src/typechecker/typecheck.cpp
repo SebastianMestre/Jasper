@@ -62,22 +62,18 @@ private:
 
 	TypeChecker& tc;
 
-	bool has_type_var(MonoId var) {
+	bool is_bound_to_env(MonoId var) {
 
-		for (auto& scope : env().scopes()) {
-			for (auto bound_type : scope.m_type_vars) {
-				bool found = free_vars_of(bound_type).count(var) != 0;
-				if (found)
+		for (auto& scope : env().scopes())
+			for (auto bound_type : scope.m_type_vars)
+				if (free_vars_of(bound_type).count(var) != 0)
 					return true;
-			}
-		}
 
 		return false;
 	}
 
-	void bind_var_if_not_present(MonoId var) {
-		if (!has_type_var(var))
-			env().bind_to_current_scope(var);
+	void bind_to_env(MonoId var) {
+		env().bind_to_current_scope(var);
 	}
 
 	std::unordered_set<MonoId> free_vars_of(MonoId mono) {
@@ -89,20 +85,19 @@ private:
 
 
 void TypecheckHelper::bind_free_vars(MonoId mono) {
-	auto free_vars = free_vars_of(mono);
-	for (MonoId var : free_vars) {
-		bind_var_if_not_present(var);
+	for (MonoId var : free_vars_of(mono)) {
+		if (!is_bound_to_env(var))
+			bind_to_env(var);
 	}
 }
 
 // qualifies all free variables in the given monotype
 PolyId TypecheckHelper::generalize(MonoId mono) {
-	auto free_vars = free_vars_of(mono);
 
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
-	for (MonoId var : free_vars) {
-		if (!has_type_var(var)) {
+	for (MonoId var : free_vars_of(mono)) {
+		if (!is_bound_to_env(var)) {
 			auto fresh_var = new_hidden_var();
 			new_vars.push_back(fresh_var);
 			mapping[var] = fresh_var;
