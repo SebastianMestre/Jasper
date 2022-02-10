@@ -16,8 +16,6 @@ struct SequenceExpression;
 
 } // namespace AST
 
-struct TypeSystemCore;
-
 namespace Frontend {
 
 struct CompileTimeEnvironment {
@@ -26,7 +24,6 @@ struct CompileTimeEnvironment {
 	};
 
 	std::vector<Scope> m_scopes;
-
 
 	CompileTimeEnvironment();
 
