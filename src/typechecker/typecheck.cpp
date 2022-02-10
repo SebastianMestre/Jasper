@@ -101,7 +101,7 @@ private:
 		return false;
 	}
 
-	void bind_var_if_not_present(MonoId var, TypeSystemCore& core) {
+	void bind_var_if_not_present(MonoId var) {
 		if (!has_type_var(var))
 			env().bind_to_current_scope(var);
 	}
@@ -112,7 +112,7 @@ void TypecheckHelper::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 	for (MonoId var : free_vars) {
-		bind_var_if_not_present(var, core());
+		bind_var_if_not_present(var);
 	}
 }
 
