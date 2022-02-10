@@ -70,7 +70,7 @@ private:
 		return env().scopes();
 	}
 
-	bool has_type_var(MonoId var, TypeSystemCore& core) {
+	bool has_type_var(MonoId var) {
 		auto scan_scope = [](Frontend::CompileTimeEnvironment::Scope const& scope, MonoId var) -> bool {
 			return scope.m_type_vars.count(var) != 0;
 		};
@@ -92,7 +92,7 @@ private:
 		for (auto& scope : scopes()) {
 			for (auto stored_var : scope.m_type_vars) {
 				std::unordered_set<MonoId> free_vars;
-				core.gather_free_vars(stored_var, free_vars);
+				core().gather_free_vars(stored_var, free_vars);
 				if (free_vars.count(var))
 					return true;
 			}
@@ -102,7 +102,7 @@ private:
 	}
 
 	void bind_var_if_not_present(MonoId var, TypeSystemCore& core) {
-		if (!has_type_var(var, core))
+		if (!has_type_var(var))
 			env().bind_to_current_scope(var);
 	}
 };
@@ -124,7 +124,7 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
 	for (MonoId var : free_vars) {
-		if (!has_type_var(var, core())) {
+		if (!has_type_var(var)) {
 			auto fresh_var = new_hidden_var();
 			new_vars.push_back(fresh_var);
 			mapping[var] = fresh_var;
