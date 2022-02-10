@@ -9,10 +9,11 @@
 
 namespace Frontend {
 
-CompileTimeEnvironment::CompileTimeEnvironment() {}
+CompileTimeEnvironment::CompileTimeEnvironment() {
+}
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
-	return m_scopes.empty() ? m_global_scope : m_scopes.back();
+	return m_scopes.empty() ? global_scope() : m_scopes.back();
 }
 
 void CompileTimeEnvironment::new_scope() {
@@ -44,7 +45,7 @@ bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
 	}
 
 	// fall back to global scope lookup
-	auto found = scan_scope(m_global_scope, var);
+	auto found = scan_scope(global_scope(), var);
 	if (found)
 		return true;
 
@@ -67,6 +68,11 @@ void CompileTimeEnvironment::bind_var_if_not_present(MonoId var, TypeSystemCore&
 
 void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
 	current_scope().m_type_vars.insert(var);
+}
+
+
+CompileTimeEnvironment::Scope& CompileTimeEnvironment::global_scope() {
+	return m_global_scope;
 }
 
 } // namespace Frontend

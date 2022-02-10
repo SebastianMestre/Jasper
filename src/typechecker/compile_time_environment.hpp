@@ -26,7 +26,6 @@ struct CompileTimeEnvironment {
 		std::unordered_set<MonoId> m_type_vars;
 	};
 
-	Scope m_global_scope;
 	std::vector<Scope> m_scopes;
 	std::vector<AST::FunctionLiteral*> m_function_stack;
 	std::vector<AST::SequenceExpression*> m_seq_expr_stack;
@@ -44,6 +43,11 @@ struct CompileTimeEnvironment {
 	void bind_to_current_scope(MonoId);
 
 	void compute_declaration_order(AST::Program* ast);
+
+	Scope& global_scope();
+
+private:
+	Scope m_global_scope;
 };
 
 } // namespace Frontend
