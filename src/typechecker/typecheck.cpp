@@ -75,19 +75,13 @@ private:
 			return scope.m_type_vars.count(var) != 0;
 		};
 
-		// scan nested scopes from the inside out
-		for (int i = scopes().size(); i-- > 1;) {
+		// scan nested scopes from the inside out, including
+		// the global scope, at index 0
+		for (int i = scopes().size(); i-- ;) {
 			auto found = scan_scope(scopes()[i], var);
 			if (found)
 				return true;
-			if (!scopes()[i].m_nested)
-				break;
 		}
-
-		// fall back to global scope lookup
-		auto found = scan_scope(global_scope(), var);
-		if (found)
-			return true;
 
 		for (auto& scope : scopes()) {
 			for (auto stored_var : scope.m_type_vars) {

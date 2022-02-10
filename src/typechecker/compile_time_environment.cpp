@@ -10,7 +10,7 @@
 namespace Frontend {
 
 CompileTimeEnvironment::CompileTimeEnvironment() {
-	m_scopes.push_back({false});
+	m_scopes.push_back({});
 }
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
@@ -18,11 +18,11 @@ CompileTimeEnvironment::Scope& CompileTimeEnvironment::current_scope() {
 }
 
 void CompileTimeEnvironment::new_scope() {
-	m_scopes.push_back({false});
+	m_scopes.push_back({});
 }
 
 void CompileTimeEnvironment::new_nested_scope() {
-	m_scopes.push_back({true});
+	m_scopes.push_back({});
 }
 
 void CompileTimeEnvironment::end_scope() {
@@ -33,7 +33,6 @@ void CompileTimeEnvironment::end_scope() {
 void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
 	current_scope().m_type_vars.insert(var);
 }
-
 
 CompileTimeEnvironment::Scope& CompileTimeEnvironment::global_scope() {
 	return m_scopes[0];

@@ -22,7 +22,6 @@ namespace Frontend {
 
 struct CompileTimeEnvironment {
 	struct Scope {
-		bool m_nested {false};
 		std::unordered_set<MonoId> m_type_vars;
 	};
 
