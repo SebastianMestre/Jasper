@@ -62,7 +62,11 @@ bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
 
 void CompileTimeEnvironment::bind_var_if_not_present(MonoId var, TypeSystemCore& core) {
 	if (!has_type_var(var, core))
-		current_scope().m_type_vars.insert(var);
+		bind_to_current_scope(var);
+}
+
+void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
+	current_scope().m_type_vars.insert(var);
 }
 
 } // namespace Frontend

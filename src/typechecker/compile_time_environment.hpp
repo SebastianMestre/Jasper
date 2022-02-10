@@ -41,6 +41,7 @@ struct CompileTimeEnvironment {
 
 	bool has_type_var(MonoId, TypeSystemCore&);
 	void bind_var_if_not_present(MonoId, TypeSystemCore&);
+	void bind_to_current_scope(MonoId);
 
 	void compute_declaration_order(AST::Program* ast);
 };
