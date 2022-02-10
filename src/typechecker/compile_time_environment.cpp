@@ -30,44 +30,6 @@ void CompileTimeEnvironment::end_scope() {
 	m_scopes.pop_back();
 }
 
-bool CompileTimeEnvironment::has_type_var(MonoId var, TypeSystemCore& core) {
-	// TODO: check that the given mono is actually a var
-
-	auto scan_scope = [](Scope const& scope, MonoId var) -> bool {
-		return scope.m_type_vars.count(var) != 0;
-	};
-
-	// scan nested scopes from the inside out
-	for (int i = scopes().size(); i-- > 1;) {
-		auto found = scan_scope(scopes()[i], var);
-		if (found)
-			return true;
-		if (!scopes()[i].m_nested)
-			break;
-	}
-
-	// fall back to global scope lookup
-	auto found = scan_scope(global_scope(), var);
-	if (found)
-		return true;
-
-	for (auto& scope : scopes()) {
-		for (auto stored_var : scope.m_type_vars) {
-			std::unordered_set<MonoId> free_vars;
-			core.gather_free_vars(stored_var, free_vars);
-			if (free_vars.count(var))
-				return true;
-		}
-	}
-
-	return false;
-}
-
-void CompileTimeEnvironment::bind_var_if_not_present(MonoId var, TypeSystemCore& core) {
-	if (!has_type_var(var, core))
-		bind_to_current_scope(var);
-}
-
 void CompileTimeEnvironment::bind_to_current_scope(MonoId var) {
 	current_scope().m_type_vars.insert(var);
 }

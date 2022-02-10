@@ -61,6 +61,50 @@ private:
 	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
 
 	TypeChecker& tc;
+
+	Frontend::CompileTimeEnvironment::Scope& global_scope() {
+		return env().global_scope();
+	}
+
+	std::vector<Frontend::CompileTimeEnvironment::Scope> const& scopes() {
+		return env().scopes();
+	}
+
+	bool has_type_var(MonoId var, TypeSystemCore& core) {
+		auto scan_scope = [](Frontend::CompileTimeEnvironment::Scope const& scope, MonoId var) -> bool {
+			return scope.m_type_vars.count(var) != 0;
+		};
+
+		// scan nested scopes from the inside out
+		for (int i = scopes().size(); i-- > 1;) {
+			auto found = scan_scope(scopes()[i], var);
+			if (found)
+				return true;
+			if (!scopes()[i].m_nested)
+				break;
+		}
+
+		// fall back to global scope lookup
+		auto found = scan_scope(global_scope(), var);
+		if (found)
+			return true;
+
+		for (auto& scope : scopes()) {
+			for (auto stored_var : scope.m_type_vars) {
+				std::unordered_set<MonoId> free_vars;
+				core.gather_free_vars(stored_var, free_vars);
+				if (free_vars.count(var))
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	void bind_var_if_not_present(MonoId var, TypeSystemCore& core) {
+		if (!has_type_var(var, core))
+			env().bind_to_current_scope(var);
+	}
 };
 
 
@@ -68,7 +112,7 @@ void TypecheckHelper::bind_free_vars(MonoId mono) {
 	std::unordered_set<MonoId> free_vars;
 	core().gather_free_vars(mono, free_vars);
 	for (MonoId var : free_vars) {
-		env().bind_var_if_not_present(var, core());
+		bind_var_if_not_present(var, core());
 	}
 }
 
@@ -80,7 +124,7 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
 	for (MonoId var : free_vars) {
-		if (!env().has_type_var(var, core())) {
+		if (!has_type_var(var, core())) {
 			auto fresh_var = new_hidden_var();
 			new_vars.push_back(fresh_var);
 			mapping[var] = fresh_var;
