@@ -276,9 +276,9 @@ static MonoId compute_mono(
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
+		MonoId mono;
 		assert(arg);
 		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
-		MonoId mono;
 		if (arg->type() == ASTTag::Identifier) {
 			auto identifier = static_cast<AST::Identifier*>(arg);
 			mono = compute_mono(identifier, tc);
