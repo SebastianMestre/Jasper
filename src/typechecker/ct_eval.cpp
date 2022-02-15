@@ -284,8 +284,7 @@ static MonoId compute_mono(
 			mono = compute_mono(identifier, tc);
 		} else {
 			auto type_term = static_cast<AST::TypeTerm*>(arg);
-			MonoId result = compute_mono(type_term, tc, alloc);
-			mono = result;
+			mono = compute_mono(type_term, tc, alloc);
 		}
 		args.push_back(mono);
 	}
