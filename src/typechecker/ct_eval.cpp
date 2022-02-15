@@ -271,11 +271,8 @@ static MonoId compute_mono(
 			MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
 			assert(uf.is(meta_type, Tag::Mono));
 
-			AST::AST* arg_handle;
-			{
-				auto decl = identifier->m_declaration;
-				arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-			}
+			auto decl = identifier->m_declaration;
+			AST::AST* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
 
 			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
 			MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
