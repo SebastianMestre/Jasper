@@ -275,16 +275,9 @@ static MonoId compute_mono(
 
 			AST::AST* arg_handle;
 			assert(uf.is(meta_type, Tag::Mono));
-			if (uf.is(meta_type, Tag::Term)) {
-				arg_handle = identifier;
-			} else if (uf.is(meta_type, Tag::Mono)) {
+			{
 				auto decl = identifier->m_declaration;
 				arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-			} else if (uf.is(meta_type, Tag::Func)) {
-				auto decl = identifier->m_declaration;
-				arg_handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-			} else {
-				assert(0 && "UNREACHABLE");
 			}
 
 			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
