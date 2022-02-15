@@ -185,7 +185,7 @@ build_map(
 	return structure;
 }
 
-static AST::TypeFunctionHandle* ct_eval(
+static TypeFunctionId frobble(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	std::vector<InternedString> fields = ast->m_fields;
@@ -195,6 +195,13 @@ static AST::TypeFunctionHandle* ct_eval(
 
 	TypeFunctionId result = tc.core().new_type_function(
 		TypeFunctionTag::Record, std::move(fields), std::move(structure));
+	return result;
+}
+
+static AST::TypeFunctionHandle* ct_eval(
+    AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	TypeFunctionId result = frobble(ast, tc, alloc);
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
 	node->m_value = result;
