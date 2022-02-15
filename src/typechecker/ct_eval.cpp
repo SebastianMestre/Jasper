@@ -278,9 +278,7 @@ static MonoId compute_mono(
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
-		MonoId mono;
-		mono = compute_mono(arg, tc, alloc);
-		args.push_back(mono);
+		args.push_back(compute_mono(arg, tc, alloc));
 	}
 
 	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
