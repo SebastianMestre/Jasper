@@ -254,7 +254,7 @@ static AST::Constructor* constructor_from_ast(
 }
 
 static MonoId compute_mono(
-    AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
+    AST::Identifier* ast, TypeChecker& tc) {
 
 	assert(ast->m_declaration);
 
@@ -264,8 +264,9 @@ static MonoId compute_mono(
 
 	auto decl = ast->m_declaration;
 	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
-	AST::MonoTypeHandle* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-	MonoId mono = arg_handle->m_value;
+
+	AST::MonoTypeHandle* handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+	MonoId mono = handle->m_value;
 	return mono;
 }
 
@@ -280,7 +281,7 @@ static MonoId compute_mono(
 		if (arg->type() == ASTTag::Identifier) {
 
 			auto identifier = static_cast<AST::Identifier*>(arg);
-			MonoId mono = compute_mono(identifier, tc, alloc);
+			MonoId mono = compute_mono(identifier, tc);
 			args.push_back(mono);
 		} else {
 			auto arg_handle = ct_eval(arg, tc, alloc);
