@@ -210,14 +210,21 @@ static AST::TypeFunctionHandle* ct_eval(
 	return node;
 }
 
-static AST::TypeFunctionHandle* ct_eval(
-    AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
+static TypeFunctionId fribble(
+	AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	std::unordered_map<InternedString, MonoId> structure =
 		build_map(ast->m_constructors, ast->m_types, tc, alloc);
 
 	TypeFunctionId result = tc.core().new_type_function(
 		TypeFunctionTag::Variant, {}, std::move(structure));
+
+	return result;
+}
+
+static AST::TypeFunctionHandle* ct_eval(
+    AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	TypeFunctionId result = fribble(ast, tc, alloc);
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
 	node->m_value = result;
