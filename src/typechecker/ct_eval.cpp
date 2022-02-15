@@ -21,6 +21,11 @@ static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, A
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	assert(
+	    ast->type() == ASTTag::Identifier ||
+	    ast->type() == ASTTag::UnionExpression ||
+	    ast->type() == ASTTag::StructExpression);
+
 	auto handle = ct_eval(ast, tc, alloc);
 	assert(handle->type() == ASTTag::TypeFunctionHandle);
 	return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
