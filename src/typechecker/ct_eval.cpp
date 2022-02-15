@@ -41,7 +41,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		auto handle = node;
 		assert(handle->type() == ASTTag::TypeFunctionHandle);
 
-		return handle->m_value;
+		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
 		auto handle = ct_eval(struct_expression, tc, alloc);
