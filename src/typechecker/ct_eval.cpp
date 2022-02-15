@@ -262,9 +262,19 @@ static MonoId compute_mono(
 		assert(arg);
 		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
 		if (arg->type() == ASTTag::Identifier) {
-			auto arg_handle = ct_eval(arg, tc, alloc);
-			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
-			MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
+
+			auto identifier = static_cast<AST::Identifier*>(arg);
+
+			assert(identifier->m_declaration);
+
+			auto& uf = tc.core().m_meta_core;
+			MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+			assert(uf.is(meta_type, Tag::Mono));
+
+			auto decl = identifier->m_declaration;
+			assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
+			AST::MonoTypeHandle* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+			MonoId mono = arg_handle->m_value;
 			args.push_back(mono);
 		} else {
 			auto type_term = static_cast<AST::TypeTerm*>(arg);
