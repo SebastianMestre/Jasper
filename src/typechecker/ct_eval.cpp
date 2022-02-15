@@ -265,7 +265,6 @@ static MonoId compute_mono(
 
 			auto identifier = static_cast<AST::Identifier*>(arg);
 
-			assert(identifier);
 			assert(identifier->m_declaration);
 
 			auto& uf = tc.core().m_meta_core;
