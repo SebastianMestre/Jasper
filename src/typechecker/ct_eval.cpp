@@ -285,10 +285,12 @@ static MonoId compute_mono(
 			args.push_back(mono);
 		} else {
 			auto type_term = static_cast<AST::TypeTerm*>(arg);
-			auto arg_handle = ct_eval(type_term, tc, alloc);
-			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
-			MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
+
+			MonoId result = compute_mono(type_term, tc, alloc);
+
+			MonoId mono = result;
 			args.push_back(mono);
+
 		}
 	}
 
