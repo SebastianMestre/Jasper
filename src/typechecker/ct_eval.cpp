@@ -46,7 +46,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 
 
 		assert(handle->type() == ASTTag::TypeFunctionHandle);
-		return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
+		return handle->m_value;
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		auto handle = ct_eval(identifier, tc, alloc);
