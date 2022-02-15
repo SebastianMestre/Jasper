@@ -253,9 +253,8 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static AST::MonoTypeHandle* ct_eval(
+static MonoId compute_mono(
     AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
 	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc, alloc);
 
 	std::vector<MonoId> args;
@@ -266,6 +265,13 @@ static AST::MonoTypeHandle* ct_eval(
 	}
 
 	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
+	return result;
+}
+
+static AST::MonoTypeHandle* ct_eval(
+    AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	MonoId result = compute_mono(ast, tc, alloc);
 
 	auto handle = alloc.make<AST::MonoTypeHandle>();
 	handle->m_value = result;
