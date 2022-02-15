@@ -45,6 +45,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 
 		auto& uf = tc.core().m_meta_core;
 		MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+		assert(uf.is(meta_type, Tag::Func));
 
 		if (!uf.is_constant(meta_type))
 			Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
