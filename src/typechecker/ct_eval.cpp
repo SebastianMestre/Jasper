@@ -274,6 +274,7 @@ static MonoId compute_mono(
 				Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
 
 			AST::AST* arg_handle;
+			assert(uf.is(meta_type, Tag::Mono));
 			if (uf.is(meta_type, Tag::Term)) {
 				arg_handle = identifier;
 			} else if (uf.is(meta_type, Tag::Mono)) {
