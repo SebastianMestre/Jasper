@@ -254,6 +254,22 @@ static AST::Constructor* constructor_from_ast(
 }
 
 static MonoId compute_mono(
+    AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	assert(ast->m_declaration);
+
+	auto& uf = tc.core().m_meta_core;
+	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
+	assert(uf.is(meta_type, Tag::Mono));
+
+	auto decl = ast->m_declaration;
+	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
+	AST::MonoTypeHandle* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+	MonoId mono = arg_handle->m_value;
+	return mono;
+}
+
+static MonoId compute_mono(
     AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc, alloc);
 
@@ -264,17 +280,7 @@ static MonoId compute_mono(
 		if (arg->type() == ASTTag::Identifier) {
 
 			auto identifier = static_cast<AST::Identifier*>(arg);
-
-			assert(identifier->m_declaration);
-
-			auto& uf = tc.core().m_meta_core;
-			MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
-			assert(uf.is(meta_type, Tag::Mono));
-
-			auto decl = identifier->m_declaration;
-			assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
-			AST::MonoTypeHandle* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-			MonoId mono = arg_handle->m_value;
+			MonoId mono = compute_mono(identifier, tc, alloc);
 			args.push_back(mono);
 		} else {
 			auto arg_handle = ct_eval(arg, tc, alloc);
