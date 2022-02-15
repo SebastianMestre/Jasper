@@ -261,7 +261,6 @@ static MonoId compute_mono(
 	for (auto& arg : ast->m_args) {
 		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
 		if (arg->type() == ASTTag::Identifier) {
-			AST::AST* arg_handle;
 
 			auto identifier = static_cast<AST::Identifier*>(arg);
 
@@ -274,6 +273,7 @@ static MonoId compute_mono(
 			if (!uf.is_constant(meta_type))
 				Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
 
+			AST::AST* arg_handle;
 			if (uf.is(meta_type, Tag::Term)) {
 				arg_handle = identifier;
 			} else if (uf.is(meta_type, Tag::Mono)) {
