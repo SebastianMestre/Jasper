@@ -158,29 +158,26 @@ static AST::Expr* ct_eval(
 }
 // types
 
-
-static AST::TypeFunctionHandle* ct_eval(
-    AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	TypeFunctionId result = compute_type_func(ast, tc);
+static AST::TypeFunctionHandle* wrap_in_type_func_handle(
+    AST::Expr* ast, TypeFunctionId value, AST::Allocator& alloc) {
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
-	node->m_value = result;
+	node->m_value = value;
 	node->m_syntax = ast;
 
 	return node;
 }
 
 static AST::TypeFunctionHandle* ct_eval(
+    AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+
+	return wrap_in_type_func_handle(ast, compute_type_func(ast, tc), alloc);
+}
+
+static AST::TypeFunctionHandle* ct_eval(
     AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	TypeFunctionId result = compute_type_func(ast, tc);
-
-	auto node = alloc.make<AST::TypeFunctionHandle>();
-	node->m_value = result;
-	node->m_syntax = ast;
-
-	return node;
+	return wrap_in_type_func_handle(ast, compute_type_func(ast, tc), alloc);
 }
 
 static AST::Constructor* constructor_from_ast(
