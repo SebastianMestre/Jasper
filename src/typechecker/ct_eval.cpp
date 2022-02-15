@@ -24,7 +24,7 @@ static TypeFunctionId compute_type_func(AST::StructExpression*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::Identifier*, TypeChecker&);
 
-static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc) {
+static int compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 	assert(
 	    ast->type() == ASTTag::Identifier ||
 	    ast->type() == ASTTag::UnionExpression ||
@@ -304,7 +304,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
-	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc);
+	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
@@ -415,7 +415,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
 				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-				TypeFunctionId tf = eval_then_get_type_func(handle->m_syntax, tc);
+				TypeFunctionId tf = compute_type_func(handle->m_syntax, tc);
 				tc.core().unify_type_function(tf, handle->m_value);
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
