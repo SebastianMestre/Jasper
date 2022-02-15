@@ -20,7 +20,7 @@ static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, A
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
-static TypeFunctionId fribble(AST::UnionExpression*, TypeChecker&, AST::Allocator&);
+static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&, AST::Allocator&);
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	assert(
@@ -30,7 +30,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 
 	if (ast->type() == ASTTag::UnionExpression) {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		TypeFunctionId result = fribble(union_expression, tc, alloc);
+		TypeFunctionId result = compute_type_func(union_expression, tc, alloc);
 		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
@@ -224,7 +224,7 @@ static AST::TypeFunctionHandle* ct_eval(
 	return node;
 }
 
-static TypeFunctionId fribble(
+static TypeFunctionId compute_type_func(
 	AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	std::unordered_map<InternedString, MonoId> structure =
 		build_map(ast->m_constructors, ast->m_types, tc, alloc);
@@ -238,7 +238,7 @@ static TypeFunctionId fribble(
 static AST::TypeFunctionHandle* ct_eval(
     AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	TypeFunctionId result = fribble(ast, tc, alloc);
+	TypeFunctionId result = compute_type_func(ast, tc, alloc);
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
 	node->m_value = result;
