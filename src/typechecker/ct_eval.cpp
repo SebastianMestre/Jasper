@@ -12,7 +12,6 @@
 
 namespace TypeChecker {
 
-static TypeFunctionId frobble(AST::StructExpression*, TypeChecker&, AST::Allocator&);
 static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -21,6 +20,7 @@ static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, A
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
+static TypeFunctionId compute_type_func(AST::StructExpression*, TypeChecker&, AST::Allocator&);
 static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&, AST::Allocator&);
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
@@ -35,7 +35,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		TypeFunctionId result = frobble(struct_expression, tc, alloc);
+		TypeFunctionId result = compute_type_func(struct_expression, tc, alloc);
 		return result;
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
@@ -199,7 +199,7 @@ build_map(
 	return structure;
 }
 
-static TypeFunctionId frobble(
+static TypeFunctionId compute_type_func(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	std::vector<InternedString> fields = ast->m_fields;
@@ -215,7 +215,7 @@ static TypeFunctionId frobble(
 static AST::TypeFunctionHandle* ct_eval(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	TypeFunctionId result = frobble(ast, tc, alloc);
+	TypeFunctionId result = compute_type_func(ast, tc, alloc);
 
 	auto node = alloc.make<AST::TypeFunctionHandle>();
 	node->m_value = result;
