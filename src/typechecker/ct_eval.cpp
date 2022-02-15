@@ -253,6 +253,8 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
+static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
+	
 static MonoId compute_mono(
     AST::Identifier* ast, TypeChecker& tc) {
 
@@ -276,22 +278,25 @@ static MonoId compute_mono(
 
 	std::vector<MonoId> args;
 	for (auto& arg : ast->m_args) {
-		assert(arg);
-		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
 		MonoId mono;
-		if (arg->type() == ASTTag::Identifier) {
-			auto identifier = static_cast<AST::Identifier*>(arg);
-			mono = compute_mono(identifier, tc);
-		} else {
-			auto type_term = static_cast<AST::TypeTerm*>(arg);
-			MonoId result = compute_mono(type_term, tc, alloc);
-			mono = result;
-		}
+		mono = compute_mono(arg, tc, alloc);
 		args.push_back(mono);
 	}
 
 	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
 	return result;
+}
+
+static MonoId compute_mono(AST::Expr* arg, TypeChecker& tc, AST::Allocator& alloc) {
+	assert(arg);
+	assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
+	if (arg->type() == ASTTag::Identifier) {
+		auto identifier = static_cast<AST::Identifier*>(arg);
+		return compute_mono(identifier, tc);
+	} else {
+		auto type_term = static_cast<AST::TypeTerm*>(arg);
+		return compute_mono(type_term, tc, alloc);
+	}
 }
 
 static AST::MonoTypeHandle* ct_eval(
