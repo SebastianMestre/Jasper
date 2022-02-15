@@ -294,7 +294,7 @@ static MonoId compute_mono(
 
 
 			assert(handle->type() == ASTTag::MonoTypeHandle);
-			MonoId mono = static_cast<AST::MonoTypeHandle*>(handle)->m_value;
+			MonoId mono = handle->m_value;
 			args.push_back(mono);
 
 		}
