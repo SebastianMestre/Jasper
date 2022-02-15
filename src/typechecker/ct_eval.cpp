@@ -47,20 +47,8 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
 		assert(uf.is(meta_type, Tag::Func));
 
-		if (!uf.is_constant(meta_type))
-			Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
-
-		if (uf.is(meta_type, Tag::Term)) {
-			handle = identifier;
-		} else if (uf.is(meta_type, Tag::Mono)) {
-			auto decl = identifier->m_declaration;
-			handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-		} else if (uf.is(meta_type, Tag::Func)) {
-			auto decl = identifier->m_declaration;
-			handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-		} else {
-			assert(0 && "UNREACHABLE");
-		}
+		auto decl = identifier->m_declaration;
+		handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
 
 		assert(handle->type() == ASTTag::TypeFunctionHandle);
 		return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
