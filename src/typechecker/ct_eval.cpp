@@ -38,8 +38,6 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 
-		AST::Expr* handle;
-
 		assert(identifier);
 		assert(identifier->m_declaration);
 
@@ -48,10 +46,9 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		assert(uf.is(meta_type, Tag::Func));
 
 		auto decl = identifier->m_declaration;
-		handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
+		assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
 
-		assert(handle->type() == ASTTag::TypeFunctionHandle);
-		return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
+		return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
 	}
 }
 
