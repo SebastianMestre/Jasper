@@ -31,12 +31,10 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 
 	if (ast->type() == ASTTag::UnionExpression) {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		TypeFunctionId result = compute_type_func(union_expression, tc, alloc);
-		return result;
+		return compute_type_func(union_expression, tc, alloc);
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		TypeFunctionId result = compute_type_func(struct_expression, tc, alloc);
-		return result;
+		return compute_type_func(struct_expression, tc, alloc);
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		auto handle = ct_eval(identifier, tc, alloc);
