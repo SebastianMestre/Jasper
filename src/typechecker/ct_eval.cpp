@@ -18,7 +18,7 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
-static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc);
+static MonoId compute_mono(AST::Expr*, TypeChecker&);
 
 static TypeFunctionId compute_type_func(AST::StructExpression*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&);
@@ -30,11 +30,9 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc) {
 	    ast->type() == ASTTag::StructExpression);
 
 	if (ast->type() == ASTTag::UnionExpression) {
-		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		return compute_type_func(union_expression, tc);
+		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
 	} else if (ast->type() == ASTTag::StructExpression) {
-		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		return compute_type_func(struct_expression, tc);
+		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 
@@ -286,8 +284,7 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static MonoId compute_mono(
-    AST::Identifier* ast, TypeChecker& tc) {
+static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 
 	assert(ast->m_declaration);
 
@@ -303,8 +300,7 @@ static MonoId compute_mono(
 	return mono;
 }
 
-static MonoId compute_mono(
-    AST::TypeTerm* ast, TypeChecker& tc) {
+static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 	TypeFunctionId type_function = eval_then_get_type_func(ast->m_callee, tc);
 
 	std::vector<MonoId> args;
@@ -316,15 +312,13 @@ static MonoId compute_mono(
 	return result;
 }
 
-static MonoId compute_mono(AST::Expr* arg, TypeChecker& tc) {
-	assert(arg);
-	assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
-	if (arg->type() == ASTTag::Identifier) {
-		auto identifier = static_cast<AST::Identifier*>(arg);
-		return compute_mono(identifier, tc);
+static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
+	assert(ast);
+	assert(ast->type() == ASTTag::Identifier || ast->type() == ASTTag::TypeTerm);
+	if (ast->type() == ASTTag::Identifier) {
+		return compute_mono(static_cast<AST::Identifier*>(ast), tc);
 	} else {
-		auto type_term = static_cast<AST::TypeTerm*>(arg);
-		return compute_mono(type_term, tc);
+		return compute_mono(static_cast<AST::TypeTerm*>(ast), tc);
 	}
 }
 
