@@ -288,12 +288,6 @@ static MonoId compute_mono(
 
 			MonoId result = compute_mono(type_term, tc, alloc);
 
-			auto handle = alloc.make<AST::MonoTypeHandle>();
-			handle->m_value = result;
-			handle->m_syntax = type_term;
-
-
-			assert(handle->type() == ASTTag::MonoTypeHandle);
 			MonoId mono = result;
 			args.push_back(mono);
 
