@@ -261,7 +261,31 @@ static MonoId compute_mono(
 	for (auto& arg : ast->m_args) {
 		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
 		if (arg->type() == ASTTag::Identifier) {
-			auto arg_handle = ct_eval(arg, tc, alloc);
+			AST::AST* arg_handle;
+
+			auto identifier = static_cast<AST::Identifier*>(arg);
+
+			assert(identifier);
+			assert(identifier->m_declaration);
+
+			auto& uf = tc.core().m_meta_core;
+			MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+
+			if (!uf.is_constant(meta_type))
+				Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
+
+			if (uf.is(meta_type, Tag::Term)) {
+				arg_handle = identifier;
+			} else if (uf.is(meta_type, Tag::Mono)) {
+				auto decl = identifier->m_declaration;
+				arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+			} else if (uf.is(meta_type, Tag::Func)) {
+				auto decl = identifier->m_declaration;
+				arg_handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
+			} else {
+				assert(0 && "UNREACHABLE");
+			}
+
 			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
 			MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
 			args.push_back(mono);
