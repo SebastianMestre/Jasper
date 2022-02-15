@@ -288,17 +288,14 @@ static MonoId compute_mono(
 }
 
 static MonoId compute_mono(AST::Expr* arg, TypeChecker& tc, AST::Allocator& alloc) {
-	MonoId mono;
 	assert(arg);
 	assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
 	if (arg->type() == ASTTag::Identifier) {
 		auto identifier = static_cast<AST::Identifier*>(arg);
-		mono = compute_mono(identifier, tc);
-		return mono;
+		return compute_mono(identifier, tc);
 	} else {
 		auto type_term = static_cast<AST::TypeTerm*>(arg);
-		mono = compute_mono(type_term, tc, alloc);
-		return mono;
+		return compute_mono(type_term, tc, alloc);
 	}
 }
 
