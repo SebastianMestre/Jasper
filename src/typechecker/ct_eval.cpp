@@ -18,11 +18,7 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
-static int eval_then_get_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto handle = ct_eval(ast, tc, alloc);
-	assert(handle->type() == ASTTag::MonoTypeHandle);
-	return static_cast<AST::MonoTypeHandle*>(handle)->m_value;
-}
+static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	auto handle = ct_eval(ast, tc, alloc);
@@ -175,7 +171,7 @@ build_map(
 	std::unordered_map<InternedString, MonoId> structure;
 	int n = names.size();
 	for (int i = 0; i < n; ++i){
-		MonoId mono = eval_then_get_mono(types[i], tc, alloc);
+		MonoId mono = compute_mono(types[i], tc, alloc);
 		InternedString name = names[i];
 		assert(!structure.count(name));
 		structure[name] = mono;
@@ -226,7 +222,7 @@ static AST::Constructor* constructor_from_ast(
 	constructor->m_syntax = ast;
 
 	if (uf.is(meta, Tag::Mono)) {
-		constructor->m_mono = eval_then_get_mono(ast, tc, alloc);
+		constructor->m_mono = compute_mono(ast, tc, alloc);
 	} else if (uf.is_ctor(meta)) {
 		assert(ast->type() == ASTTag::AccessExpression);
 
@@ -240,7 +236,7 @@ static AST::Constructor* constructor_from_ast(
 		MonoId dummy_monotype =
 		    tc.core().new_term(dummy_tf, {}, "Union Constructor Access");
 
-		MonoId monotype = eval_then_get_mono(access->m_target, tc, alloc);
+		MonoId monotype = compute_mono(access->m_target, tc, alloc);
 
 		tc.core().m_mono_core.unify(dummy_monotype, monotype);
 
@@ -253,8 +249,6 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
-	
 static MonoId compute_mono(
     AST::Identifier* ast, TypeChecker& tc) {
 
@@ -394,7 +388,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in type declaration";
 
 				auto handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-				MonoId mt = eval_then_get_mono(handle->m_syntax, tc, alloc);
+				MonoId mt = compute_mono(handle->m_syntax, tc, alloc);
 				tc.core().m_mono_core.unify(mt, handle->m_value);
 			} else {
 				if (decl->m_type_hint)
