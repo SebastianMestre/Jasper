@@ -30,17 +30,7 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 
 	if (ast->type() == ASTTag::UnionExpression) {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-
-
 		TypeFunctionId result = fribble(union_expression, tc, alloc);
-
-		auto node = alloc.make<AST::TypeFunctionHandle>();
-		node->m_value = result;
-		node->m_syntax = ast;
-
-		auto handle = node;
-		assert(handle->type() == ASTTag::TypeFunctionHandle);
-
 		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
