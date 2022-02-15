@@ -405,15 +405,14 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 static std::unordered_map<InternedString, MonoId> build_map(
     std::vector<InternedString> const&, std::vector<AST::Expr*> const&, TypeChecker&);
 
-static TypeFunctionId compute_type_func(AST::Identifier* identifier, TypeChecker& tc) {
-	assert(identifier);
-	assert(identifier->m_declaration);
+static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
+	assert(ast->m_declaration);
 
 	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 	assert(uf.is(meta_type, Tag::Func));
 
-	auto decl = identifier->m_declaration;
+	auto decl = ast->m_declaration;
 	assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
 
 	return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
@@ -457,7 +456,6 @@ static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 }
 
 static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
-
 	assert(ast->m_declaration);
 
 	auto& uf = tc.core().m_meta_core;
@@ -467,9 +465,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 	auto decl = ast->m_declaration;
 	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
 
-	AST::MonoTypeHandle* handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-	MonoId mono = handle->m_value;
-	return mono;
+	return static_cast<AST::MonoTypeHandle*>(decl->m_value)->m_value;
 }
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
