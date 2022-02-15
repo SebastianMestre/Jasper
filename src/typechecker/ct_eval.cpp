@@ -269,12 +269,12 @@ static MonoId compute_mono(
 
 			auto& uf = tc.core().m_meta_core;
 			MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+			assert(uf.is(meta_type, Tag::Mono));
 
 			if (!uf.is_constant(meta_type))
 				Log::fatal() << "Incomplete type inference on identifier" << identifier->text();
 
 			AST::AST* arg_handle;
-			assert(uf.is(meta_type, Tag::Mono));
 			{
 				auto decl = identifier->m_declaration;
 				arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
