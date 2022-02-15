@@ -18,10 +18,10 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
+static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
+
 static int eval_then_get_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto handle = ct_eval(ast, tc, alloc);
-	assert(handle->type() == ASTTag::MonoTypeHandle);
-	return static_cast<AST::MonoTypeHandle*>(handle)->m_value;
+	return compute_mono(ast, tc, alloc);
 }
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
@@ -253,8 +253,6 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
-	
 static MonoId compute_mono(
     AST::Identifier* ast, TypeChecker& tc) {
 
