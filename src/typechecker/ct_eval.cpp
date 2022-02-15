@@ -35,11 +35,9 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc) {
 	} else if (ast->type() == ASTTag::StructExpression) {
 		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
 	} else {
-		auto identifier = static_cast<AST::Identifier*>(ast);
-		return compute_type_func(identifier, tc);
+		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
 	}
 }
-
 
 static TypeFunctionId compute_type_func(AST::Identifier* identifier, TypeChecker& tc) {
 	assert(identifier);
