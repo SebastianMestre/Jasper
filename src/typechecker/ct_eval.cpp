@@ -273,8 +273,8 @@ static MonoId compute_mono(
 
 			auto decl = identifier->m_declaration;
 			AST::AST* arg_handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+			assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
 
-			assert(arg_handle->type() == ASTTag::MonoTypeHandle);
 			MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
 			args.push_back(mono);
 		} else {
