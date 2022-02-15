@@ -12,8 +12,13 @@
 
 namespace TypeChecker {
 
-static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
+
+void reify_types(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	ct_visit(ast, tc, alloc);
+}
+
+static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -395,10 +400,6 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 
 #undef DISPATCH
 #undef RETURN
-}
-
-void reify_types(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_visit(ast, tc, alloc);
 }
 
 static std::unordered_map<InternedString, MonoId> build_map(
