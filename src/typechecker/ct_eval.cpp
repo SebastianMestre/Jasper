@@ -261,7 +261,8 @@ static MonoId compute_mono(
 	for (auto& arg : ast->m_args) {
 		auto arg_handle = ct_eval(arg, tc, alloc);
 		assert(arg_handle->type() == ASTTag::MonoTypeHandle);
-		args.push_back(static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value);
+		MonoId mono = static_cast<AST::MonoTypeHandle*>(arg_handle)->m_value;
+		args.push_back(mono);
 	}
 
 	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
