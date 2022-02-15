@@ -12,46 +12,20 @@
 
 namespace TypeChecker {
 
-static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
+
+void reify_types(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	ct_visit(ast, tc, alloc);
+}
+
+static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static MonoId compute_mono(AST::Expr*, TypeChecker&);
+static TypeFunctionId compute_type_func(AST::Expr*, TypeChecker&);
 
-static TypeFunctionId compute_type_func(AST::StructExpression*, TypeChecker&);
-static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&);
-static TypeFunctionId compute_type_func(AST::Identifier*, TypeChecker&);
-
-static int compute_type_func(AST::Expr* ast, TypeChecker& tc) {
-	assert(
-	    ast->type() == ASTTag::Identifier ||
-	    ast->type() == ASTTag::UnionExpression ||
-	    ast->type() == ASTTag::StructExpression);
-
-	if (ast->type() == ASTTag::UnionExpression) {
-		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
-	} else if (ast->type() == ASTTag::StructExpression) {
-		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
-	} else {
-		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
-	}
-}
-
-static TypeFunctionId compute_type_func(AST::Identifier* identifier, TypeChecker& tc) {
-	assert(identifier);
-	assert(identifier->m_declaration);
-
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
-	assert(uf.is(meta_type, Tag::Func));
-
-	auto decl = identifier->m_declaration;
-	assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
-
-	return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
-}
 
 // literals
 
@@ -185,39 +159,6 @@ static AST::Expr* ct_eval(
 // types
 
 
-static
-std::unordered_map<InternedString, MonoId>
-build_map(
-    std::vector<InternedString> const& names,
-    std::vector<AST::Expr*> const& types,
-    TypeChecker& tc) {
-
-	assert(names.size() == types.size());
-
-	std::unordered_map<InternedString, MonoId> structure;
-	int n = names.size();
-	for (int i = 0; i < n; ++i){
-		MonoId mono = compute_mono(types[i], tc);
-		InternedString name = names[i];
-		assert(!structure.count(name));
-		structure[name] = mono;
-	}
-
-	return structure;
-}
-
-static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-
-	std::vector<InternedString> fields = ast->m_fields;
-
-	std::unordered_map<InternedString, MonoId> structure =
-	    build_map(ast->m_fields, ast->m_types, tc);
-
-	TypeFunctionId result = tc.core().new_type_function(
-		TypeFunctionTag::Record, std::move(fields), std::move(structure));
-	return result;
-}
-
 static AST::TypeFunctionHandle* ct_eval(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
@@ -228,16 +169,6 @@ static AST::TypeFunctionHandle* ct_eval(
 	node->m_syntax = ast;
 
 	return node;
-}
-
-static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	std::unordered_map<InternedString, MonoId> structure =
-		build_map(ast->m_constructors, ast->m_types, tc);
-
-	TypeFunctionId result = tc.core().new_type_function(
-		TypeFunctionTag::Variant, {}, std::move(structure));
-
-	return result;
 }
 
 static AST::TypeFunctionHandle* ct_eval(
@@ -285,44 +216,6 @@ static AST::Constructor* constructor_from_ast(
 	}
 
 	return constructor;
-}
-
-static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
-
-	assert(ast->m_declaration);
-
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
-	assert(uf.is(meta_type, Tag::Mono));
-
-	auto decl = ast->m_declaration;
-	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
-
-	AST::MonoTypeHandle* handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-	MonoId mono = handle->m_value;
-	return mono;
-}
-
-static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
-	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
-
-	std::vector<MonoId> args;
-	for (auto& arg : ast->m_args) {
-		args.push_back(compute_mono(arg, tc));
-	}
-
-	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
-	return result;
-}
-
-static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
-	assert(ast);
-	assert(ast->type() == ASTTag::Identifier || ast->type() == ASTTag::TypeTerm);
-	if (ast->type() == ASTTag::Identifier) {
-		return compute_mono(static_cast<AST::Identifier*>(ast), tc);
-	} else {
-		return compute_mono(static_cast<AST::TypeTerm*>(ast), tc);
-	}
 }
 
 static AST::MonoTypeHandle* ct_eval(
@@ -509,8 +402,115 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 #undef RETURN
 }
 
-void reify_types(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_visit(ast, tc, alloc);
+static std::unordered_map<InternedString, MonoId> build_map(
+    std::vector<InternedString> const&, std::vector<AST::Expr*> const&, TypeChecker&);
+
+static TypeFunctionId compute_type_func(AST::Identifier* identifier, TypeChecker& tc) {
+	assert(identifier);
+	assert(identifier->m_declaration);
+
+	auto& uf = tc.core().m_meta_core;
+	MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+	assert(uf.is(meta_type, Tag::Func));
+
+	auto decl = identifier->m_declaration;
+	assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
+
+	return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
+}
+
+static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
+
+	std::vector<InternedString> fields = ast->m_fields;
+
+	std::unordered_map<InternedString, MonoId> structure =
+	    build_map(ast->m_fields, ast->m_types, tc);
+
+	TypeFunctionId result = tc.core().new_type_function(
+		TypeFunctionTag::Record, std::move(fields), std::move(structure));
+	return result;
+}
+
+static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
+	std::unordered_map<InternedString, MonoId> structure =
+		build_map(ast->m_constructors, ast->m_types, tc);
+
+	TypeFunctionId result = tc.core().new_type_function(
+		TypeFunctionTag::Variant, {}, std::move(structure));
+
+	return result;
+}
+
+static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
+	assert(
+	    ast->type() == ASTTag::Identifier ||
+	    ast->type() == ASTTag::UnionExpression ||
+	    ast->type() == ASTTag::StructExpression);
+
+	if (ast->type() == ASTTag::UnionExpression) {
+		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
+	} else if (ast->type() == ASTTag::StructExpression) {
+		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
+	} else {
+		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
+	}
+}
+
+static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
+
+	assert(ast->m_declaration);
+
+	auto& uf = tc.core().m_meta_core;
+	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
+	assert(uf.is(meta_type, Tag::Mono));
+
+	auto decl = ast->m_declaration;
+	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
+
+	AST::MonoTypeHandle* handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
+	MonoId mono = handle->m_value;
+	return mono;
+}
+
+static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
+	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
+
+	std::vector<MonoId> args;
+	for (auto& arg : ast->m_args) {
+		args.push_back(compute_mono(arg, tc));
+	}
+
+	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
+	return result;
+}
+
+static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
+	assert(ast);
+	assert(ast->type() == ASTTag::Identifier || ast->type() == ASTTag::TypeTerm);
+	if (ast->type() == ASTTag::Identifier) {
+		return compute_mono(static_cast<AST::Identifier*>(ast), tc);
+	} else {
+		return compute_mono(static_cast<AST::TypeTerm*>(ast), tc);
+	}
+}
+
+static std::unordered_map<InternedString, MonoId> build_map(
+    std::vector<InternedString> const& names,
+    std::vector<AST::Expr*> const& types,
+    TypeChecker& tc) {
+
+	assert(names.size() == types.size());
+
+	std::unordered_map<InternedString, MonoId> structure;
+	int n = names.size();
+	for (int i = 0; i < n; ++i){
+		MonoId mono = compute_mono(types[i], tc);
+		InternedString name = names[i];
+		assert(!structure.count(name));
+		structure[name] = mono;
+	}
+
+	return structure;
 }
 
 } // namespace TypeChecker
