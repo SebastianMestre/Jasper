@@ -416,25 +416,17 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-
-	std::vector<InternedString> fields = ast->m_fields;
-
-	std::unordered_map<InternedString, MonoId> structure =
-	    build_map(ast->m_fields, ast->m_types, tc);
-
-	TypeFunctionId result = tc.core().new_type_function(
-		TypeFunctionTag::Record, std::move(fields), std::move(structure));
-	return result;
+	return tc.core().new_type_function(
+	    TypeFunctionTag::Record,
+	    ast->m_fields,
+	    build_map(ast->m_fields, ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	std::unordered_map<InternedString, MonoId> structure =
-		build_map(ast->m_constructors, ast->m_types, tc);
-
-	TypeFunctionId result = tc.core().new_type_function(
-		TypeFunctionTag::Variant, {}, std::move(structure));
-
-	return result;
+	return tc.core().new_type_function(
+	    TypeFunctionTag::Variant,
+	    {},
+	    build_map(ast->m_constructors, ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
@@ -473,8 +465,7 @@ static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 		args.push_back(compute_mono(arg, tc));
 	}
 
-	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
-	return result;
+	return tc.core().new_term(type_function, std::move(args), "from ast");
 }
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
