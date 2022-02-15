@@ -22,6 +22,7 @@ static MonoId compute_mono(AST::Expr*, TypeChecker&);
 
 static TypeFunctionId compute_type_func(AST::StructExpression*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::UnionExpression*, TypeChecker&);
+static TypeFunctionId compute_type_func(AST::Identifier*, TypeChecker&);
 
 static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc) {
 	assert(
@@ -35,19 +36,23 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc) {
 		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
-
-		assert(identifier);
-		assert(identifier->m_declaration);
-
-		auto& uf = tc.core().m_meta_core;
-		MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
-		assert(uf.is(meta_type, Tag::Func));
-
-		auto decl = identifier->m_declaration;
-		assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
-
-		return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
+		return compute_type_func(identifier, tc);
 	}
+}
+
+
+static TypeFunctionId compute_type_func(AST::Identifier* identifier, TypeChecker& tc) {
+	assert(identifier);
+	assert(identifier->m_declaration);
+
+	auto& uf = tc.core().m_meta_core;
+	MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+	assert(uf.is(meta_type, Tag::Func));
+
+	auto decl = identifier->m_declaration;
+	assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
+
+	return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
 }
 
 // literals
