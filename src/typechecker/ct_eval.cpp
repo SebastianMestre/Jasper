@@ -35,18 +35,8 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-
 		TypeFunctionId result = frobble(struct_expression, tc, alloc);
-
-		auto node = alloc.make<AST::TypeFunctionHandle>();
-		node->m_value = result;
-		node->m_syntax = struct_expression;
-
-		auto handle = node;
-
-
-		assert(handle->type() == ASTTag::TypeFunctionHandle);
-		return handle->m_value;
+		return result;
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		auto handle = ct_eval(identifier, tc, alloc);
