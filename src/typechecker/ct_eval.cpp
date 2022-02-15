@@ -278,20 +278,16 @@ static MonoId compute_mono(
 	for (auto& arg : ast->m_args) {
 		assert(arg);
 		assert(arg->type() == ASTTag::Identifier || arg->type() == ASTTag::TypeTerm);
+		MonoId mono;
 		if (arg->type() == ASTTag::Identifier) {
-
 			auto identifier = static_cast<AST::Identifier*>(arg);
-			MonoId mono = compute_mono(identifier, tc);
-			args.push_back(mono);
+			mono = compute_mono(identifier, tc);
 		} else {
 			auto type_term = static_cast<AST::TypeTerm*>(arg);
-
 			MonoId result = compute_mono(type_term, tc, alloc);
-
-			MonoId mono = result;
-			args.push_back(mono);
-
+			mono = result;
 		}
+		args.push_back(mono);
 	}
 
 	MonoId result = tc.core().new_term(type_function, std::move(args), "from ast");
