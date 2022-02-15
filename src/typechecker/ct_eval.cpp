@@ -37,9 +37,18 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		return compute_type_func(struct_expression, tc, alloc);
 	} else {
 		auto identifier = static_cast<AST::Identifier*>(ast);
-		auto handle = ct_eval(identifier, tc, alloc);
-		assert(handle->type() == ASTTag::TypeFunctionHandle);
-		return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
+
+		assert(identifier);
+		assert(identifier->m_declaration);
+
+		auto& uf = tc.core().m_meta_core;
+		MetaTypeId meta_type = uf.eval(identifier->m_meta_type);
+		assert(uf.is(meta_type, Tag::Func));
+
+		auto decl = identifier->m_declaration;
+		assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
+
+		return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
 	}
 }
 
