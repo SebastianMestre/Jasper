@@ -12,6 +12,7 @@
 
 namespace TypeChecker {
 
+static TypeFunctionId frobble(AST::StructExpression*, TypeChecker&, AST::Allocator&);
 static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -34,7 +35,16 @@ static int eval_then_get_type_func(AST::Expr* ast, TypeChecker& tc, AST::Allocat
 		return result;
 	} else if (ast->type() == ASTTag::StructExpression) {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		auto handle = ct_eval(struct_expression, tc, alloc);
+
+		TypeFunctionId result = frobble(struct_expression, tc, alloc);
+
+		auto node = alloc.make<AST::TypeFunctionHandle>();
+		node->m_value = result;
+		node->m_syntax = struct_expression;
+
+		auto handle = node;
+
+
 		assert(handle->type() == ASTTag::TypeFunctionHandle);
 		return static_cast<AST::TypeFunctionHandle*>(handle)->m_value;
 	} else {
