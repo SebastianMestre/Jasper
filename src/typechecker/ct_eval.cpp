@@ -306,7 +306,7 @@ static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-MonoId get_monotype_id(AST::Expr* ast) {
+static MonoId get_monotype_id(AST::Expr* ast) {
 	switch (ast->type()) {
 	case ASTTag::TypeTerm:
 		return static_cast<AST::TypeTerm*>(ast)->m_value;
@@ -498,8 +498,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 	assert(uf.is(meta_type, Tag::Mono));
 
-	auto decl = ast->m_declaration;
-	return get_monotype_id(decl->m_value);
+	return get_monotype_id(ast->m_declaration->m_value);
 }
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
