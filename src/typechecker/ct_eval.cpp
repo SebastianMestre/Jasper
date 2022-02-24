@@ -66,8 +66,7 @@ static AST::Expr* ct_eval(
 	if (uf.is(meta_type, Tag::Term)) {
 		return ast;
 	} else if (uf.is(meta_type, Tag::Mono)) {
-		auto decl = ast->m_declaration;
-		return static_cast<AST::MonoTypeHandle*>(decl->m_value);
+		return ast->m_declaration->m_value;
 	} else if (uf.is(meta_type, Tag::Func)) {
 		return ast->m_declaration->m_value;
 	}
@@ -204,15 +203,9 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static AST::MonoTypeHandle* ct_eval(
-    AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	MonoId result = compute_mono(ast, tc);
-
-	auto handle = alloc.make<AST::MonoTypeHandle>();
-	handle->m_value = result;
-	handle->m_syntax = ast;
-	return handle;
+static AST::TypeTerm* ct_eval(AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	ast->m_value = compute_mono(ast, tc);
+	return ast;
 }
 
 // statements
@@ -303,6 +296,26 @@ static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
+static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
+	switch (ast->type()) {
+	case ASTTag::TypeTerm:
+		return void(static_cast<AST::TypeTerm*>(ast)->m_value = tc.new_var());
+	case ASTTag::Identifier:
+		return void(stub_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value, tc));
+	default: assert(0);
+	}
+}
+
+MonoId get_monotype_id(AST::Expr* ast) {
+	switch (ast->type()) {
+	case ASTTag::TypeTerm:
+		return static_cast<AST::TypeTerm*>(ast)->m_value;
+	case ASTTag::Identifier:
+		return get_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value);
+	default: assert(0);
+	}
+}
+
 static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	auto& uf = tc.core().m_meta_core;
@@ -322,10 +335,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 		if (uf.is(meta_type, Tag::Func)) {
 			stub_type_function_id(decl.m_value, tc);
 		} else if (uf.is(meta_type, Tag::Mono)) {
-			auto handle = alloc.make<AST::MonoTypeHandle>();
-			handle->m_value = tc.new_var(); // should it be hidden?
-			handle->m_syntax = decl.m_value;
-			decl.m_value = handle;
+			stub_monotype_id(decl.m_value, tc);
 		}
 	}
 
@@ -352,9 +362,8 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
 
-				auto handle = static_cast<AST::MonoTypeHandle*>(decl->m_value);
-				MonoId mt = compute_mono(handle->m_syntax, tc);
-				tc.core().m_mono_core.unify(mt, handle->m_value);
+				MonoId mt = compute_mono(decl->m_value, tc);
+				tc.core().m_mono_core.unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
 					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);
@@ -429,7 +438,6 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
 		REJECT(BuiltinTypeFunction);
-		REJECT(MonoTypeHandle);
 		REJECT(Constructor);
 	}
 
@@ -491,9 +499,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 	assert(uf.is(meta_type, Tag::Mono));
 
 	auto decl = ast->m_declaration;
-	assert(decl->m_value->type() == ASTTag::MonoTypeHandle);
-
-	return static_cast<AST::MonoTypeHandle*>(decl->m_value)->m_value;
+	return get_monotype_id(decl->m_value);
 }
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {

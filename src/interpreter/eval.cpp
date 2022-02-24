@@ -354,10 +354,6 @@ void eval(AST::BuiltinTypeFunction* ast, Interpreter& e) {
 	return eval(ast->m_syntax, e);
 }
 
-void eval(AST::MonoTypeHandle* ast, Interpreter& e) {
-	return eval(ast->m_syntax, e);
-}
-
 void eval(AST::Constructor* ast, Interpreter& e) {
 	return eval(ast->m_syntax, e);
 }
@@ -406,7 +402,6 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
 		DISPATCH(BuiltinTypeFunction);
-		DISPATCH(MonoTypeHandle);
 		DISPATCH(Constructor);
 	}
 

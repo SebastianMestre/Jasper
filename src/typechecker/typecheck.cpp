@@ -133,6 +133,13 @@ void typecheck(AST::AST* ast, TypeChecker& tc) {
 
 static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
+static MonoId get_monotype_id(AST::Expr* ast) {
+	switch(ast->type()) {
+	case ASTTag::TypeTerm:
+		return static_cast<AST::TypeTerm*>(ast)->m_value;
+	default: assert(0);
+	}
+}
 
 // Literals
 void typecheck(AST::NumberLiteral* ast, TypecheckHelper& tc) {
@@ -301,9 +308,7 @@ void typecheck(AST::AccessExpression* ast, TypecheckHelper& tc) {
 void typecheck(AST::MatchExpression* ast, TypecheckHelper& tc) {
 	typecheck(&ast->m_target, tc);
 	if (ast->m_type_hint) {
-		assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
-		auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-		tc.unify(ast->m_target.m_value_type, handle->m_value);
+		tc.unify(ast->m_target.m_value_type, get_monotype_id(ast->m_type_hint));
 	}
 
 	ast->m_value_type = tc.new_var();
@@ -406,9 +411,7 @@ static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc) {
 	if (!ast->m_type_hint)
 		return;
 
-	assert(ast->m_type_hint->type() == ASTTag::MonoTypeHandle);
-	auto handle = static_cast<AST::MonoTypeHandle*>(ast->m_type_hint);
-	tc.unify(ast->m_value_type, handle->m_value);
+	tc.unify(ast->m_value_type, get_monotype_id(ast->m_type_hint));
 }
 
 // typecheck the value and make the type of the decl equal
@@ -510,7 +513,6 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(ReturnStatement);
 
 		IGNORE(BuiltinTypeFunction);
-		IGNORE(MonoTypeHandle);
 		IGNORE(Constructor);
 	}
 
