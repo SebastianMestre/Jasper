@@ -247,7 +247,7 @@ static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& all
 	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 }
 
-static TypeFunctionId get_foo(AST::Expr* ast) {
+static TypeFunctionId get_type_function_id(AST::Expr* ast) {
 	switch (ast->type()) {
 
 	case ASTTag::StructExpression: {
@@ -258,13 +258,11 @@ static TypeFunctionId get_foo(AST::Expr* ast) {
 	case ASTTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
 		return union_expression->m_value;
-		break;
 	}
 
 	case ASTTag::Identifier: {
 		auto identifier = static_cast<AST::Identifier*>(ast);
-		return get_foo(identifier->m_declaration->m_value);
-		break;
+		return get_type_function_id(identifier->m_declaration->m_value);
 	}
 	
 	case ASTTag::BuiltinTypeFunction: {
@@ -278,7 +276,7 @@ static TypeFunctionId get_foo(AST::Expr* ast) {
 	}
 }
 
-static void foo(AST::Expr* ast, TypeChecker& tc) {
+static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
 	case ASTTag::StructExpression: {
@@ -295,7 +293,7 @@ static void foo(AST::Expr* ast, TypeChecker& tc) {
 
 	case ASTTag::Identifier: {
 		auto identifier = static_cast<AST::Identifier*>(ast);
-		foo(identifier->m_declaration->m_value, tc);
+		stub_type_function_id(identifier->m_declaration->m_value, tc);
 		break;
 	}
 	
@@ -322,7 +320,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
-			foo(decl.m_value, tc);
+			stub_type_function_id(decl.m_value, tc);
 		} else if (uf.is(meta_type, Tag::Mono)) {
 			auto handle = alloc.make<AST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
@@ -349,7 +347,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
 				TypeFunctionId tf = compute_type_func(decl->m_value, tc);
-				tc.core().unify_type_function(tf, get_foo(decl->m_value));
+				tc.core().unify_type_function(tf, get_type_function_id(decl->m_value));
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
@@ -453,7 +451,7 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 	assert(uf.is(meta_type, Tag::Func));
 
 	auto decl = ast->m_declaration;
-	return get_foo(decl->m_value);
+	return get_type_function_id(decl->m_value);
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
