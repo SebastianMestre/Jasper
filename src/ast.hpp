@@ -300,13 +300,13 @@ struct TypeTerm : public Expr {
 	    : Expr {ASTTag::TypeTerm} {}
 };
 
-struct TypeFunctionHandle : public Expr {
+struct BuiltinTypeFunction : public Expr {
 	TypeFunctionId m_value;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 
-	TypeFunctionHandle()
-	    : Expr {ASTTag::TypeFunctionHandle} {}
+	BuiltinTypeFunction()
+	    : Expr {ASTTag::BuiltinTypeFunction} {}
 };
 
 struct MonoTypeHandle : public Expr {

@@ -350,7 +350,7 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 	e.m_stack.push(result.as_value());
 }
 
-void eval(AST::TypeFunctionHandle* ast, Interpreter& e) {
+void eval(AST::BuiltinTypeFunction* ast, Interpreter& e) {
 	return eval(ast->m_syntax, e);
 }
 
@@ -405,7 +405,7 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
-		DISPATCH(TypeFunctionHandle);
+		DISPATCH(BuiltinTypeFunction);
 		DISPATCH(MonoTypeHandle);
 		DISPATCH(Constructor);
 	}

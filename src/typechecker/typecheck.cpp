@@ -509,7 +509,7 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
 
-		IGNORE(TypeFunctionHandle);
+		IGNORE(BuiltinTypeFunction);
 		IGNORE(MonoTypeHandle);
 		IGNORE(Constructor);
 	}

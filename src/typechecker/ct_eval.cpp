@@ -69,8 +69,7 @@ static AST::Expr* ct_eval(
 		auto decl = ast->m_declaration;
 		return static_cast<AST::MonoTypeHandle*>(decl->m_value);
 	} else if (uf.is(meta_type, Tag::Func)) {
-		auto decl = ast->m_declaration;
-		return static_cast<AST::TypeFunctionHandle*>(decl->m_value);
+		return ast->m_declaration->m_value;
 	}
 
 	assert(0 && "UNREACHABLE");
@@ -158,26 +157,16 @@ static AST::Expr* ct_eval(
 }
 // types
 
-static AST::TypeFunctionHandle* wrap_in_type_func_handle(
-    AST::Expr* ast, TypeFunctionId value, AST::Allocator& alloc) {
-
-	auto node = alloc.make<AST::TypeFunctionHandle>();
-	node->m_value = value;
-	node->m_syntax = ast;
-
-	return node;
-}
-
 static AST::StructExpression* ct_eval(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	    ast->m_value = compute_type_func(ast, tc);
-	    return ast;
+	ast->m_value = compute_type_func(ast, tc);
+	return ast;
 }
 
-static AST::TypeFunctionHandle* ct_eval(
+static AST::UnionExpression* ct_eval(
     AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	return wrap_in_type_func_handle(ast, compute_type_func(ast, tc), alloc);
+	ast->m_value = compute_type_func(ast, tc);
+	return ast;
 }
 
 static AST::Constructor* constructor_from_ast(
@@ -278,8 +267,8 @@ static TypeFunctionId get_foo(AST::Expr* ast) {
 		break;
 	}
 	
-	case ASTTag::TypeFunctionHandle: {
-		auto handle = static_cast<AST::TypeFunctionHandle*>(ast);
+	case ASTTag::BuiltinTypeFunction: {
+		auto handle = static_cast<AST::BuiltinTypeFunction*>(ast);
 		return handle->m_value;
 	}
 	
@@ -441,7 +430,7 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
-		REJECT(TypeFunctionHandle);
+		REJECT(BuiltinTypeFunction);
 		REJECT(MonoTypeHandle);
 		REJECT(Constructor);
 	}
