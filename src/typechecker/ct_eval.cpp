@@ -69,8 +69,7 @@ static AST::Expr* ct_eval(
 		auto decl = ast->m_declaration;
 		return static_cast<AST::MonoTypeHandle*>(decl->m_value);
 	} else if (uf.is(meta_type, Tag::Func)) {
-		auto decl = ast->m_declaration;
-		return static_cast<AST::TypeFunctionHandle*>(decl->m_value);
+		return ast->m_declaration->m_value;
 	}
 
 	assert(0 && "UNREACHABLE");
@@ -158,26 +157,16 @@ static AST::Expr* ct_eval(
 }
 // types
 
-static AST::TypeFunctionHandle* wrap_in_type_func_handle(
-    AST::Expr* ast, TypeFunctionId value, AST::Allocator& alloc) {
-
-	auto node = alloc.make<AST::TypeFunctionHandle>();
-	node->m_value = value;
-	node->m_syntax = ast;
-
-	return node;
-}
-
-static AST::TypeFunctionHandle* ct_eval(
+static AST::StructExpression* ct_eval(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	return wrap_in_type_func_handle(ast, compute_type_func(ast, tc), alloc);
+	ast->m_value = compute_type_func(ast, tc);
+	return ast;
 }
 
-static AST::TypeFunctionHandle* ct_eval(
+static AST::UnionExpression* ct_eval(
     AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	return wrap_in_type_func_handle(ast, compute_type_func(ast, tc), alloc);
+	ast->m_value = compute_type_func(ast, tc);
+	return ast;
 }
 
 static AST::Constructor* constructor_from_ast(
@@ -258,6 +247,62 @@ static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& all
 	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 }
 
+static TypeFunctionId get_type_function_id(AST::Expr* ast) {
+	switch (ast->type()) {
+
+	case ASTTag::StructExpression: {
+		auto struct_expression = static_cast<AST::StructExpression*>(ast);
+		return struct_expression->m_value;
+	}
+
+	case ASTTag::UnionExpression: {
+		auto union_expression = static_cast<AST::UnionExpression*>(ast);
+		return union_expression->m_value;
+	}
+
+	case ASTTag::Identifier: {
+		auto identifier = static_cast<AST::Identifier*>(ast);
+		return get_type_function_id(identifier->m_declaration->m_value);
+	}
+	
+	case ASTTag::BuiltinTypeFunction: {
+		auto handle = static_cast<AST::BuiltinTypeFunction*>(ast);
+		return handle->m_value;
+	}
+	
+	default:
+		assert(0);
+		break;
+	}
+}
+
+static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
+	switch (ast->type()) {
+
+	case ASTTag::StructExpression: {
+		auto struct_expression = static_cast<AST::StructExpression*>(ast);
+		struct_expression->m_value = tc.core().new_type_function_var();
+		break;
+	}
+
+	case ASTTag::UnionExpression: {
+		auto union_expression = static_cast<AST::UnionExpression*>(ast);
+		union_expression->m_value = tc.core().new_type_function_var();
+		break;
+	}
+
+	case ASTTag::Identifier: {
+		auto identifier = static_cast<AST::Identifier*>(ast);
+		stub_type_function_id(identifier->m_declaration->m_value, tc);
+		break;
+	}
+	
+	default:
+		assert(0);
+		break;
+	}
+}
+
 static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	auto& uf = tc.core().m_meta_core;
@@ -275,10 +320,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 
 		// put a dummy var where required.
 		if (uf.is(meta_type, Tag::Func)) {
-			auto handle = alloc.make<AST::TypeFunctionHandle>();
-			handle->m_value = tc.core().new_type_function_var();
-			handle->m_syntax = decl.m_value;
-			decl.m_value = handle;
+			stub_type_function_id(decl.m_value, tc);
 		} else if (uf.is(meta_type, Tag::Mono)) {
 			auto handle = alloc.make<AST::MonoTypeHandle>();
 			handle->m_value = tc.new_var(); // should it be hidden?
@@ -304,9 +346,8 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
-				auto handle = static_cast<AST::TypeFunctionHandle*>(decl->m_value);
-				TypeFunctionId tf = compute_type_func(handle->m_syntax, tc);
-				tc.core().unify_type_function(tf, handle->m_value);
+				TypeFunctionId tf = compute_type_func(decl->m_value, tc);
+				tc.core().unify_type_function(tf, get_type_function_id(decl->m_value));
 			} else if (uf.is(meta_type, Tag::Mono)) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
@@ -387,7 +428,7 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
-		REJECT(TypeFunctionHandle);
+		REJECT(BuiltinTypeFunction);
 		REJECT(MonoTypeHandle);
 		REJECT(Constructor);
 	}
@@ -410,9 +451,7 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 	assert(uf.is(meta_type, Tag::Func));
 
 	auto decl = ast->m_declaration;
-	assert(decl->m_value->type() == ASTTag::TypeFunctionHandle);
-
-	return static_cast<AST::TypeFunctionHandle*>(decl->m_value)->m_value;
+	return get_type_function_id(decl->m_value);
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {

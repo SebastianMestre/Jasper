@@ -190,7 +190,7 @@ void TypeChecker::declare_builtin_typefunc(
     InternedString const& name, TypeFunctionId typefunc) {
 	auto decl = new_builtin_declaration(name);
 
-	auto handle = m_ast_allocator->make<AST::TypeFunctionHandle>();
+	auto handle = m_ast_allocator->make<AST::BuiltinTypeFunction>();
 	handle->m_value = typefunc;
 	decl->m_value = handle;
 	decl->m_meta_type = core().m_meta_core.make_const_node(Tag::Func);

@@ -21,7 +21,7 @@
 	X(UnionExpression)                                                         \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
-	X(TypeFunctionHandle)                                                      \
+	X(BuiltinTypeFunction)                                                      \
 	X(MonoTypeHandle)                                                          \
 	X(Constructor)                                                             \
 	/* All before this point are expressions */                                \

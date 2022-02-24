@@ -277,6 +277,7 @@ struct WhileStatement : public AST {
 struct UnionExpression : public Expr {
 	std::vector<InternedString> m_constructors;
 	std::vector<Expr*> m_types;
+	TypeFunctionId m_value;
 
 	UnionExpression()
 	    : Expr {ASTTag::UnionExpression} {}
@@ -285,6 +286,7 @@ struct UnionExpression : public Expr {
 struct StructExpression : public Expr {
 	std::vector<InternedString> m_fields;
 	std::vector<Expr*> m_types;
+	TypeFunctionId m_value;
 
 	StructExpression()
 	    : Expr {ASTTag::StructExpression} {}
@@ -298,13 +300,13 @@ struct TypeTerm : public Expr {
 	    : Expr {ASTTag::TypeTerm} {}
 };
 
-struct TypeFunctionHandle : public Expr {
+struct BuiltinTypeFunction : public Expr {
 	TypeFunctionId m_value;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 
-	TypeFunctionHandle()
-	    : Expr {ASTTag::TypeFunctionHandle} {}
+	BuiltinTypeFunction()
+	    : Expr {ASTTag::BuiltinTypeFunction} {}
 };
 
 struct MonoTypeHandle : public Expr {
