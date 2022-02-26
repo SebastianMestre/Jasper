@@ -295,6 +295,7 @@ struct StructExpression : public Expr {
 struct TypeTerm : public Expr {
 	Expr* m_callee;
 	std::vector<Expr*> m_args; // should these be TypeTerms?
+	MonoId m_value {-1};
 
 	TypeTerm()
 	    : Expr {ASTTag::TypeTerm} {}
@@ -307,15 +308,6 @@ struct BuiltinTypeFunction : public Expr {
 
 	BuiltinTypeFunction()
 	    : Expr {ASTTag::BuiltinTypeFunction} {}
-};
-
-struct MonoTypeHandle : public Expr {
-	MonoId m_value;
-	// points to the ast node this one was made from
-	Expr* m_syntax;
-
-	MonoTypeHandle()
-	    : Expr {ASTTag::MonoTypeHandle} {}
 };
 
 struct Constructor : public Expr {

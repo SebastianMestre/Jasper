@@ -195,7 +195,6 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(TypeTerm);
 
 		DO_NOTHING(BuiltinTypeFunction);
-		DO_NOTHING(MonoTypeHandle);
 		DO_NOTHING(Constructor);
 	}
 

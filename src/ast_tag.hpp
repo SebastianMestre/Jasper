@@ -22,7 +22,6 @@
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
 	X(BuiltinTypeFunction)                                                      \
-	X(MonoTypeHandle)                                                          \
 	X(Constructor)                                                             \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
