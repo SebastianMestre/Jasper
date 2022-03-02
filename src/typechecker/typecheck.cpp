@@ -190,11 +190,9 @@ void typecheck(AST::CallExpression* ast, int expected_type, TypecheckHelper& tc)
 	for (int i = 0; i < argument_count; ++i) {
 		auto& arg = ast->m_args[i];
 		typecheck(arg, arg_types[i], tc);
-		tc.unify(arg->m_value_type, arg_types[i]); // TODO remove
 	}
 
 	auto func_type = ast->m_callee->m_value_type;
-	tc.unify(func_type, expected_func_type); // TODO remove
 
 	ast->m_value_type = result_type;
 }
@@ -202,6 +200,7 @@ void typecheck(AST::CallExpression* ast, int expected_type, TypecheckHelper& tc)
 void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc) {
 	tc.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
+	// TODO: consume return-type type-hints
 	MonoId result_type = tc.new_var();
 
 	int const argument_count = ast->m_args.size();
@@ -210,28 +209,20 @@ void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc
 	for (int i = 0; i < argument_count; ++i)
 		arg_types.push_back(tc.new_var());
 
-	std::vector<MonoId> func_type_list = arg_types;
+	for (int i = 0; i < argument_count; ++i) {
+		auto& arg = ast->m_args[i];
+		arg.m_value_type = arg_types[i];
+		process_type_hint(&arg, tc);
+	}
+
+	std::vector<MonoId> func_type_list = std::move(arg_types);
 	func_type_list.push_back(result_type);
 
 	auto func_type = tc.new_term(BuiltinType::Function, std::move(func_type_list));
-	tc.unify(func_type, expected_type);
-
-	{
-		// TODO: consume return-type type-hints
-		ast->m_return_type = result_type;
-
-		for (int i = 0; i < argument_count; ++i) {
-			auto& arg = ast->m_args[i];
-			arg.m_value_type = arg_types[i];
-			process_type_hint(&arg, tc);
-		}
-
-		ast->m_value_type = func_type;
-	}
+	tc.unify(expected_type, ast->m_value_type = func_type);
 
 	// scan body
 	typecheck(ast->m_body, result_type, tc);
-	tc.unify(result_type, ast->m_body->m_value_type); // TODO remove
 
 	tc.end_scope();
 }
@@ -240,38 +231,30 @@ void typecheck(AST::IndexExpression* ast, int expected_type, TypecheckHelper& tc
 	auto var = tc.new_var();
 	auto arr = tc.new_term(BuiltinType::Array, {var});
 
-	typecheck(ast->m_callee, var, tc);
+	tc.unify(expected_type, ast->m_value_type = var);
+	typecheck(ast->m_callee, arr, tc);
 	typecheck(ast->m_index, tc.mono_int(), tc);
-
-	tc.unify(arr, ast->m_callee->m_value_type); // TODO remove
-	tc.unify(tc.mono_int(), ast->m_index->m_value_type); // TODO remove
-
-	ast->m_value_type = var;
 }
 
 void typecheck(AST::TernaryExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_condition, tc.mono_boolean(), tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean()); // TODO remove
-
 	auto value_type = tc.new_var();
+
+	typecheck(ast->m_condition, tc.mono_boolean(), tc);
+
+	tc.unify(expected_type, ast->m_value_type = value_type);
 	typecheck(ast->m_then_expr, value_type, tc);
 	typecheck(ast->m_else_expr, value_type, tc);
-
-	tc.unify(value_type, ast->m_else_expr->m_value_type); // TODO remove
-	tc.unify(value_type, ast->m_then_expr->m_value_type); // TODO remove
-
-	ast->m_value_type = value_type;
 }
 
 void typecheck(AST::AccessExpression* ast, int expected_type, TypecheckHelper& tc) {
-	// TODO look over more carefuly after conversion to algorithm M
-	auto target_type = tc.new_var();
-	typecheck(ast->m_target, target_type, tc);
-	tc.unify(target_type, ast->m_target->m_value_type); // TODO remove
+	// TODO is this the right order of operations?
+	// should we unify term_type and target_type before we typecheck the target?
 
-	// should this be a hidden type var?
+	auto target_type = tc.new_var();
 	MonoId member_type = tc.new_var();
-	ast->m_value_type = member_type;
+
+	tc.unify(expected_type, ast->m_value_type = member_type);
+	typecheck(ast->m_target, target_type, tc);
 
 	TypeFunctionId dummy_tf = tc.core().new_type_function(
 	    TypeFunctionTag::Record,
@@ -288,12 +271,12 @@ void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc
 	if (ast->m_type_hint) {
 		MonoId mono = get_monotype_id(ast->m_type_hint);
 		typecheck(&ast->m_target, mono, tc);
-		tc.unify(ast->m_target.m_value_type, mono); // TODO remove
 	} else {
 		typecheck(&ast->m_target, tc.new_var(), tc);
 	}
 
-	ast->m_value_type = tc.new_var();
+	MonoId result_type = tc.new_var();
+	tc.unify(expected_type, ast->m_value_type = result_type);
 
 	std::unordered_map<InternedString, MonoId> dummy_structure;
 	for (auto& kv : ast->m_cases) {
@@ -307,8 +290,7 @@ void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc
 		process_type_hint(&case_data.m_declaration, tc);
 
 		// unify type of match with type of cases
-		typecheck(case_data.m_expression, ast->m_value_type, tc);
-		tc.unify(ast->m_value_type, case_data.m_expression->m_value_type); // TODO remove
+		typecheck(case_data.m_expression, result_type, tc);
 
 		// get the structure of the match expression for a dummy
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
@@ -328,6 +310,12 @@ void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc
 }
 
 void typecheck(AST::ConstructorExpression* ast, int expected_type, TypecheckHelper& tc) {
+	// TODO This is weird.
+	// here we expect the constructor to be an AST::Constructor, and we call typecheck on it
+	// but typecheck on AST::Constructor does literally nothing
+	// Also, this seemingly doesn't support storing a constructor in a variable?
+	// Or maybe that gets handled in ct_eval?
+
 	typecheck(ast->m_constructor, tc.new_var(), tc);
 
 	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
@@ -341,7 +329,6 @@ void typecheck(AST::ConstructorExpression* ast, int expected_type, TypecheckHelp
 		for (int i = 0; i < ast->m_args.size(); ++i) {
 			MonoId field_type = tf_data.structure[tf_data.fields[i]];
 			typecheck(ast->m_args[i], field_type, tc);
-			tc.unify(field_type, ast->m_args[i]->m_value_type); // TODO remove
 		}
 	// match the argument type with the constructor used
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
@@ -350,15 +337,13 @@ void typecheck(AST::ConstructorExpression* ast, int expected_type, TypecheckHelp
 		InternedString id = constructor->m_id;
 		MonoId constructor_type = tf_data.structure[id];
 		typecheck(ast->m_args[0], constructor_type, tc);
-
-		tc.unify(constructor_type, ast->m_args[0]->m_value_type); // TODO remove
 	}
 
-	ast->m_value_type = constructor->m_mono;
+	tc.unify(expected_type, ast->m_value_type = constructor->m_mono);
 }
 
 void typecheck(AST::SequenceExpression* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.new_var();
+	tc.unify(expected_type, ast->m_value_type = tc.new_var());
 	typecheck_visit(ast->m_body, tc);
 }
 
