@@ -202,28 +202,36 @@ void typecheck(AST::CallExpression* ast, int expected_type, TypecheckHelper& tc)
 void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc) {
 	tc.new_nested_scope(); // NOTE: this is nested because of lexical scoping
 
+	MonoId result_type = tc.new_var();
+
+	int const argument_count = ast->m_args.size();
+	std::vector<MonoId> arg_types;
+
+	for (int i = 0; i < argument_count; ++i)
+		arg_types.push_back(tc.new_var());
+
+	std::vector<MonoId> func_type_list = arg_types;
+	func_type_list.push_back(result_type);
+
+	auto func_type = tc.new_term(BuiltinType::Function, std::move(func_type_list));
+	if( expected_type != -1) tc.unify(func_type, expected_type); // TODO remove condition
+
 	{
 		// TODO: consume return-type type-hints
-		ast->m_return_type = tc.new_var();
+		ast->m_return_type = result_type;
 
-		std::vector<MonoId> arg_types;
-
-		for (auto& arg : ast->m_args) {
-			arg.m_value_type = tc.new_var();
+		for (int i = 0; i < argument_count; ++i) {
+			auto& arg = ast->m_args[i];
+			arg.m_value_type = arg_types[i];
 			process_type_hint(&arg, tc);
-			arg_types.push_back(arg.m_value_type);
 		}
 
-		// return type
-		arg_types.push_back(ast->m_return_type);
-
-		ast->m_value_type =
-		    tc.new_term(BuiltinType::Function, std::move(arg_types));
+		ast->m_value_type = func_type;
 	}
 
 	// scan body
-	typecheck(ast->m_body, -1, tc);
-	tc.unify(ast->m_return_type, ast->m_body->m_value_type);
+	typecheck(ast->m_body, result_type, tc);
+	tc.unify(result_type, ast->m_body->m_value_type); // TODO remove
 
 	tc.end_scope();
 }
