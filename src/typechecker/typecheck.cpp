@@ -328,7 +328,7 @@ void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc
 }
 
 void typecheck(AST::ConstructorExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_constructor, -1, tc);
+	typecheck(ast->m_constructor, tc.new_var(), tc);
 
 	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
 	assert(constructor->type() == ASTTag::Constructor);
@@ -339,19 +339,19 @@ void typecheck(AST::ConstructorExpression* ast, int expected_type, TypecheckHelp
 	if (tf_data.tag == TypeFunctionTag::Record) {
 		assert(tf_data.fields.size() == ast->m_args.size());
 		for (int i = 0; i < ast->m_args.size(); ++i) {
-			typecheck(ast->m_args[i], -1, tc);
 			MonoId field_type = tf_data.structure[tf_data.fields[i]];
-			tc.unify(field_type, ast->m_args[i]->m_value_type);
+			typecheck(ast->m_args[i], field_type, tc);
+			tc.unify(field_type, ast->m_args[i]->m_value_type); // TODO remove
 		}
 	// match the argument type with the constructor used
 	} else if (tf_data.tag == TypeFunctionTag::Variant) {
 		assert(ast->m_args.size() == 1);
 
-		typecheck(ast->m_args[0], -1, tc);
 		InternedString id = constructor->m_id;
 		MonoId constructor_type = tf_data.structure[id];
+		typecheck(ast->m_args[0], constructor_type, tc);
 
-		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
+		tc.unify(constructor_type, ast->m_args[0]->m_value_type); // TODO remove
 	}
 
 	ast->m_value_type = constructor->m_mono;
@@ -404,8 +404,8 @@ void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
-	typecheck(ast->m_value, -1, tc);
-	tc.unify(ast->m_value_type, ast->m_value->m_value_type);
+	typecheck(ast->m_value, ast->m_value_type, tc);
+	tc.unify(ast->m_value_type, ast->m_value->m_value_type); // TODO remove
 }
 
 void typecheck_visit(AST::Block* ast, TypecheckHelper& tc) {
@@ -416,8 +416,8 @@ void typecheck_visit(AST::Block* ast, TypecheckHelper& tc) {
 }
 
 void typecheck_visit(AST::IfElseStatement* ast, TypecheckHelper& tc) {
-	typecheck(ast->m_condition, -1, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	typecheck(ast->m_condition, tc.mono_boolean(), tc);
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean()); // TODO remove
 
 	typecheck_visit(ast->m_body, tc);
 
@@ -428,19 +428,19 @@ void typecheck_visit(AST::IfElseStatement* ast, TypecheckHelper& tc) {
 void typecheck_visit(AST::WhileStatement* ast, TypecheckHelper& tc) {
 	// TODO: Why do while statements create a new nested scope?
 	tc.new_nested_scope();
-	typecheck(ast->m_condition, -1, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	typecheck(ast->m_condition, tc.mono_boolean(), tc);
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean()); // TODO remove
 
 	typecheck_visit(ast->m_body, tc);
 	tc.end_scope();
 }
 
 void typecheck_visit(AST::ReturnStatement* ast, TypecheckHelper& tc) {
-	typecheck(ast->m_value, -1, tc);
+	auto seq_expr = ast->m_surrounding_seq_expr;
+	typecheck(ast->m_value, seq_expr->m_value_type, tc);
 
 	auto mono = ast->m_value->m_value_type;
-	auto seq_expr = ast->m_surrounding_seq_expr;
-	tc.unify(seq_expr->m_value_type, mono);
+	tc.unify(seq_expr->m_value_type, mono); // TODO remove
 }
 
 void typecheck_visit(AST::Declaration* ast, TypecheckHelper& tc) {
@@ -507,7 +507,7 @@ static void typecheck_visit(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(Declaration);
 		DISPATCH(Program);
 	default:
-		typecheck(ast, -1, tc);
+		typecheck(ast, tc.new_var(), tc);
 		return;
 	}
 }
