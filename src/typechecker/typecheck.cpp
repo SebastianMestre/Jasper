@@ -256,7 +256,10 @@ void typecheck(AST::TernaryExpression* ast, int expected_type, TypecheckHelper& 
 }
 
 void typecheck(AST::AccessExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_target, -1, tc);
+	// TODO look over more carefuly after conversion to algorithm M
+	auto target_type = tc.new_var();
+	typecheck(ast->m_target, target_type, tc);
+	tc.unify(target_type, ast->m_target->m_value_type); // TODO remove
 
 	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
@@ -270,7 +273,7 @@ void typecheck(AST::AccessExpression* ast, int expected_type, TypecheckHelper& t
 	    true);
 	MonoId term_type = tc.new_term(dummy_tf, {}, "record instance");
 
-	tc.unify(ast->m_target->m_value_type, term_type);
+	tc.unify(target_type, term_type);
 }
 
 void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc) {
