@@ -152,7 +152,7 @@ void typecheck(AST::NullLiteral* ast, int expected_type, TypecheckHelper& tc) {
 void typecheck(AST::ArrayLiteral* ast, int expected_type, TypecheckHelper& tc) {
 	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
-		typecheck(element, -1, tc);
+		typecheck(element, element_type, tc);
 		tc.unify(element_type, element->m_value_type);
 	}
 
@@ -230,7 +230,7 @@ void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc
 
 void typecheck(AST::IndexExpression* ast, int expected_type, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, -1, tc);
-	typecheck(ast->m_index, -1, tc);
+	typecheck(ast->m_index, tc.mono_int(), tc);
 
 	auto var = tc.new_var();
 	auto arr = tc.new_term(BuiltinType::Array, {var});
