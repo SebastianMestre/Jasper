@@ -285,9 +285,12 @@ void typecheck(AST::AccessExpression* ast, int expected_type, TypecheckHelper& t
 }
 
 void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(&ast->m_target, -1, tc);
 	if (ast->m_type_hint) {
-		tc.unify(ast->m_target.m_value_type, get_monotype_id(ast->m_type_hint));
+		MonoId mono = get_monotype_id(ast->m_type_hint);
+		typecheck(&ast->m_target, mono, tc);
+		tc.unify(ast->m_target.m_value_type, mono); // TODO remove
+	} else {
+		typecheck(&ast->m_target, tc.new_var(), tc);
 	}
 
 	ast->m_value_type = tc.new_var();
@@ -304,8 +307,8 @@ void typecheck(AST::MatchExpression* ast, int expected_type, TypecheckHelper& tc
 		process_type_hint(&case_data.m_declaration, tc);
 
 		// unify type of match with type of cases
-		typecheck(case_data.m_expression, -1, tc);
-		tc.unify(ast->m_value_type, case_data.m_expression->m_value_type);
+		typecheck(case_data.m_expression, ast->m_value_type, tc);
+		tc.unify(ast->m_value_type, case_data.m_expression->m_value_type); // TODO remove
 
 		// get the structure of the match expression for a dummy
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
