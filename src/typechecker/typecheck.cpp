@@ -130,23 +130,23 @@ static MonoId get_monotype_id(AST::Expr* ast) {
 
 // Literals
 void typecheck(AST::NumberLiteral* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_float();
+	tc.unify(expected_type, ast->m_value_type = tc.mono_float());
 }
 
 void typecheck(AST::IntegerLiteral* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_int();
+	tc.unify(expected_type, ast->m_value_type = tc.mono_int());
 }
 
 void typecheck(AST::StringLiteral* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_string();
+	tc.unify(expected_type, ast->m_value_type = tc.mono_string());
 }
 
 void typecheck(AST::BooleanLiteral* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_boolean();
+	tc.unify(expected_type, ast->m_value_type = tc.mono_boolean());
 }
 
 void typecheck(AST::NullLiteral* ast, int expected_type, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_unit();
+	tc.unify(expected_type, ast->m_value_type = tc.mono_unit());
 }
 
 void typecheck(AST::ArrayLiteral* ast, int expected_type, TypecheckHelper& tc) {
