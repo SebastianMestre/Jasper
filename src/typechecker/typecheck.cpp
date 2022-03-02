@@ -237,14 +237,14 @@ void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc
 }
 
 void typecheck(AST::IndexExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_callee, -1, tc);
-	typecheck(ast->m_index, tc.mono_int(), tc);
-
 	auto var = tc.new_var();
 	auto arr = tc.new_term(BuiltinType::Array, {var});
-	tc.unify(arr, ast->m_callee->m_value_type);
 
-	tc.unify(tc.mono_int(), ast->m_index->m_value_type);
+	typecheck(ast->m_callee, var, tc);
+	typecheck(ast->m_index, tc.mono_int(), tc);
+
+	tc.unify(arr, ast->m_callee->m_value_type); // TODO remove
+	tc.unify(tc.mono_int(), ast->m_index->m_value_type); // TODO remove
 
 	ast->m_value_type = var;
 }
