@@ -214,7 +214,7 @@ void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc
 	func_type_list.push_back(result_type);
 
 	auto func_type = tc.new_term(BuiltinType::Function, std::move(func_type_list));
-	if( expected_type != -1) tc.unify(func_type, expected_type); // TODO remove condition
+	tc.unify(func_type, expected_type);
 
 	{
 		// TODO: consume return-type type-hints
