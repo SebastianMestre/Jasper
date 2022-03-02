@@ -176,7 +176,7 @@ void typecheck(AST::CallExpression* ast, int expected_type, TypecheckHelper& tc)
 
 	int const argument_count = ast->m_args.size();
 
-	MonoId result_type = tc.new_var();
+	MonoId result_type = expected_type;
 	std::vector<MonoId> arg_types;
 	for (int i = 0; i < argument_count; ++i)
 		arg_types.push_back(tc.new_var());
