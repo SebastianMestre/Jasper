@@ -111,21 +111,6 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	return core().new_poly(base, std::move(new_vars));
 }
 
-// Hindley-Milner [App], modified for multiple argument functions.
-MonoId TypecheckHelper::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-
-	MonoId return_type = new_hidden_var();
-	args_types.push_back(return_type);
-
-	MonoId deduced_func_type =
-	    new_term(BuiltinType::Function, std::move(args_types));
-
-	unify(func_type, deduced_func_type);
-
-	return return_type;
-}
-
-
 void typecheck(AST::AST* ast, int expected_type, TypecheckHelper& tc);
 
 void typecheck(AST::AST* ast, TypeChecker& tc) {
@@ -188,16 +173,30 @@ void typecheck(AST::Identifier* ast, int expected_type, TypecheckHelper& tc) {
 }
 
 void typecheck(AST::CallExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_callee, -1, tc);
-	for (auto& arg : ast->m_args)
-		typecheck(arg, -1, tc);
 
+	int const argument_count = ast->m_args.size();
+
+	MonoId result_type = tc.new_var();
 	std::vector<MonoId> arg_types;
-	for (auto& arg : ast->m_args)
-		arg_types.push_back(arg->m_value_type);
+	for (int i = 0; i < argument_count; ++i)
+		arg_types.push_back(tc.new_var());
 
-	ast->m_value_type =
-	    tc.rule_app(std::move(arg_types), ast->m_callee->m_value_type);
+	std::vector<MonoId> func_type_list = arg_types;
+	func_type_list.push_back(result_type);
+	MonoId expected_func_type =
+	    tc.new_term(BuiltinType::Function, std::move(func_type_list));
+
+	typecheck(ast->m_callee, expected_func_type, tc);
+	for (int i = 0; i < argument_count; ++i) {
+		auto& arg = ast->m_args[i];
+		typecheck(arg, arg_types[i], tc);
+		tc.unify(arg->m_value_type, arg_types[i]); // TODO remove
+	}
+
+	auto func_type = ast->m_callee->m_value_type;
+	tc.unify(func_type, expected_func_type); // TODO remove
+
+	ast->m_value_type = result_type;
 }
 
 void typecheck(AST::FunctionLiteral* ast, int expected_type, TypecheckHelper& tc) {
