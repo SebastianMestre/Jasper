@@ -242,15 +242,17 @@ void typecheck(AST::IndexExpression* ast, int expected_type, TypecheckHelper& tc
 }
 
 void typecheck(AST::TernaryExpression* ast, int expected_type, TypecheckHelper& tc) {
-	typecheck(ast->m_condition, -1, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	typecheck(ast->m_condition, tc.mono_boolean(), tc);
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean()); // TODO remove
 
-	typecheck(ast->m_then_expr, -1, tc);
-	typecheck(ast->m_else_expr, -1, tc);
+	auto value_type = tc.new_var();
+	typecheck(ast->m_then_expr, value_type, tc);
+	typecheck(ast->m_else_expr, value_type, tc);
 
-	tc.unify(ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
+	tc.unify(value_type, ast->m_else_expr->m_value_type); // TODO remove
+	tc.unify(value_type, ast->m_then_expr->m_value_type); // TODO remove
 
-	ast->m_value_type = ast->m_then_expr->m_value_type;
+	ast->m_value_type = value_type;
 }
 
 void typecheck(AST::AccessExpression* ast, int expected_type, TypecheckHelper& tc) {
