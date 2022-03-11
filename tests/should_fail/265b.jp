@@ -1,0 +1,14 @@
+fn __invoke() {
+  f := fn() => array{};
+  a := f(); // has type array<:a:> (note lack of forall, due to new logic)
+
+  // seems like it would generalize and have type forall b. array<:b:>, due to it being an identifier
+  b := a;
+  a1 : array<:int<::>:> = b;
+  a2 : array<:string<::>:> = b;
+
+  array_append(a1, 10);
+  array_append(a2, "");
+
+  return 0;
+};
