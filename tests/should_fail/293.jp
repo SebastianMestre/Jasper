@@ -1,0 +1,7 @@
+fn __invoke() {
+  x := array{};
+  g := fn () => x[0][0];
+  array_append(array{3});
+  z := array{ "z"; g(); };
+  return 0;
+};

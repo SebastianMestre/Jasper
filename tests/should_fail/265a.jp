@@ -1,0 +1,20 @@
+fn __invoke() {
+  // infer f : forall a. () -> array<:a:>
+  f := fn() => array{};
+
+  // instanciate f, then generalize, infer arr : forall b. array<:b:>... wth???
+  arr := f();
+
+  // instanciate arr with b=int<::>, infer a1 : array<:int<::>:>
+  a1 : array<:int<::>:> = arr;
+
+   // instanciate arr with b=string<::>, infer a2 : array<:string<::>:>
+  a2 : array<:string<::>:> = arr;
+
+  array_append(a1, 10); // ok, a1 is array of int
+  array_append(a2, ""); // ok, a2 is array of string
+
+  // arr := array { 10; ""; };
+
+  return 0;
+};
