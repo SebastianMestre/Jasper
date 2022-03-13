@@ -44,9 +44,16 @@ ErrorReport make_located_error(string_view text, Token const* token) {
 
 ErrorReport make_expected_error(string_view expected, Token const* found_token) {
 	std::stringstream ss;
-	ss << "Expected " << expected << " but got "
-	   << token_string[int(found_token->m_type)] << ' ' << found_token->m_text
-	   << " instead";
+
+	ss << "Expected " << expected << " but got ";
+
+	if (found_token->m_type == TokenTag::END) {
+		ss << "to the end of the file";
+	} else {
+		ss << token_string[int(found_token->m_type)] << ' ' << found_token->m_text;
+	}
+
+	ss << " instead";
 
 	return make_located_error(ss.str(), found_token);
 }
