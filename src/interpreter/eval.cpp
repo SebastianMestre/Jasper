@@ -182,7 +182,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 	eval(ast->m_index, e);
 
-	auto index = e.m_stack.pop_unsafe().get_integer();
+	auto index = value_of(e.m_stack.pop_unsafe()).get_integer();
 
 	auto callee_ptr = e.m_stack.pop_unsafe();
 	auto* callee = value_as<Array>(callee_ptr);
