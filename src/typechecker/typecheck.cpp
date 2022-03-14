@@ -424,49 +424,6 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	generalize(ast, tc);
 }
 
-void typecheck_impl(AST::Program* ast, TypecheckHelper& tc) {
-
-	auto const& comps = tc.declaration_order();
-	for (auto const& decls : comps) {
-
-		bool type_in_component = false;
-		bool non_type_in_component = false;
-		for (auto decl : decls) {
-
-			if (tc.is_type(decl->m_meta_type))
-				type_in_component = true;
-			if (tc.is_term(decl->m_meta_type))
-				non_type_in_component = true;
-		}
-
-		// we don't deal with types and non-types in the same component.
-		if (type_in_component && non_type_in_component)
-			Log::fatal() << "found reference cycle with types and values";
-
-		if (type_in_component)
-			continue;
-
-		tc.new_nested_scope();
-
-		// set up some dummy types on every decl
-		for (auto decl : decls) {
-			decl->m_value_type = tc.new_var();
-		}
-
-		for (auto decl : decls) {
-			process_contents(decl, tc);
-		}
-
-		tc.end_scope();
-
-		// generalize all the decl types, so that they are
-		// identified as polymorphic in the next rec-block
-		for (auto decl : decls) {
-			generalize(decl, tc);
-		}
-	}
-}
-
 static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
@@ -479,7 +436,6 @@ static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 	// TODO: Compound literals
 	switch (ast->type()) {
 		DISPATCH(Declaration);
-		DISPATCH(Program);
 
 		DISPATCH(Block);
 		DISPATCH(WhileStatement);
@@ -537,8 +493,51 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 
 
 void typecheck_program(AST::AST* ast, TypecheckHelper& tc) {
+	// NOTE: we don't actually do anything with `ast`: what we really care about
+	// has already been precomputed and stored in `tc`. This is not the most
+	// friendliest API, so maybe we could look into changing it?
+
 	assert(ast->type() == ASTTag::Program);
-	return typecheck_impl(static_cast<AST::Program*>(ast), tc);
+
+	auto const& comps = tc.declaration_order();
+	for (auto const& decls : comps) {
+
+		bool type_in_component = false;
+		bool non_type_in_component = false;
+		for (auto decl : decls) {
+
+			if (tc.is_type(decl->m_meta_type))
+				type_in_component = true;
+			if (tc.is_term(decl->m_meta_type))
+				non_type_in_component = true;
+		}
+
+		// we don't deal with types and non-types in the same component.
+		if (type_in_component && non_type_in_component)
+			Log::fatal() << "found reference cycle with types and values";
+
+		if (type_in_component)
+			continue;
+
+		tc.new_nested_scope();
+
+		// set up some dummy types on every decl
+		for (auto decl : decls) {
+			decl->m_value_type = tc.new_var();
+		}
+
+		for (auto decl : decls) {
+			process_contents(decl, tc);
+		}
+
+		tc.end_scope();
+
+		// generalize all the decl types, so that they are
+		// identified as polymorphic in the next rec-block
+		for (auto decl : decls) {
+			generalize(decl, tc);
+		}
+	}
 }
 
 } // namespace TypeChecker
