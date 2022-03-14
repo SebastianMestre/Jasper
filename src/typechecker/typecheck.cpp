@@ -17,7 +17,6 @@ struct TypecheckHelper {
 
 	void bind_free_vars(MonoId mono);
 	PolyId generalize(MonoId mono);
-	MonoId rule_app(std::vector<MonoId> args_types, MonoId func_type);
 
 	MonoId mono_int() { return tc.mono_int(); }
 	MonoId mono_float() { return tc.mono_float(); }
@@ -115,21 +114,6 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	return core().new_poly(base, std::move(new_vars));
 }
 
-// Hindley-Milner [App], modified for multiple argument functions.
-MonoId TypecheckHelper::rule_app(std::vector<MonoId> args_types, MonoId func_type) {
-
-	MonoId return_type = new_hidden_var();
-	args_types.push_back(return_type);
-
-	MonoId deduced_func_type =
-	    new_term(BuiltinType::Function, std::move(args_types));
-
-	unify(func_type, deduced_func_type);
-
-	return return_type;
-}
-
-
 void typecheck(AST::AST* ast, TypecheckHelper& tc);
 
 void typecheck(AST::AST* ast, TypeChecker& tc) {
@@ -208,19 +192,25 @@ void typecheck(AST::IfElseStatement* ast, TypecheckHelper& tc) {
 		typecheck(ast->m_else_body, tc);
 }
 
+// Implements [App] rule, extended for functions with multiple arguments
 void typecheck(AST::CallExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
-	for (auto& arg : ast->m_args)
-		typecheck(arg, tc);
 
 	std::vector<MonoId> arg_types;
-	for (auto& arg : ast->m_args)
+	for (auto& arg : ast->m_args) {
+		typecheck(arg, tc);
 		arg_types.push_back(arg->m_value_type);
+	}
 
-	ast->m_value_type =
-	    tc.rule_app(std::move(arg_types), ast->m_callee->m_value_type);
+	MonoId result_type = tc.new_hidden_var();
+	MonoId expected_callee_type = tc.make_function_type(std::move(arg_types), result_type);
+	MonoId callee_type = ast->m_callee->m_value_type;
+	tc.unify(callee_type, expected_callee_type);
+
+	ast->m_value_type = result_type;
 }
 
+// Implements [Abs] rule, extended for functions with multiple arguments
 void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 	tc.new_nested_scope();
 
@@ -233,7 +223,6 @@ void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 		process_type_hint(&arg, tc);
 		arg_types.push_back(arg.m_value_type);
 	}
-
 
 	typecheck(ast->m_body, tc);
 
