@@ -48,6 +48,12 @@ struct TypecheckHelper {
 		return core().new_term(type_function, std::move(arguments), debug_data);
 	}
 
+	MonoId make_function_type(std::vector<MonoId> args_types, int return_type) {
+		// return type goes last in a function type
+		args_types.push_back(return_type);
+		return new_term(BuiltinType::Function, std::move(args_types));
+	}
+
 private:
 	bool meta_type_is(MetaTypeId i, Tag t) {
 		i = get_resolved_meta_type(i);
@@ -216,30 +222,22 @@ void typecheck(AST::CallExpression* ast, TypecheckHelper& tc) {
 }
 
 void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
-	tc.new_nested_scope(); // NOTE: this is nested because of lexical scoping
+	tc.new_nested_scope();
 
-	{
-		// TODO: consume return-type type-hints
-		ast->m_return_type = tc.new_var();
+	// TODO: consume return-type type-hints
 
-		std::vector<MonoId> arg_types;
+	std::vector<MonoId> arg_types;
 
-		for (auto& arg : ast->m_args) {
-			arg.m_value_type = tc.new_var();
-			process_type_hint(&arg, tc);
-			arg_types.push_back(arg.m_value_type);
-		}
-
-		// return type
-		arg_types.push_back(ast->m_return_type);
-
-		ast->m_value_type =
-		    tc.new_term(BuiltinType::Function, std::move(arg_types));
+	for (auto& arg : ast->m_args) {
+		arg.m_value_type = tc.new_var();
+		process_type_hint(&arg, tc);
+		arg_types.push_back(arg.m_value_type);
 	}
 
-	// scan body
+
 	typecheck(ast->m_body, tc);
-	tc.unify(ast->m_return_type, ast->m_body->m_value_type);
+
+	ast->m_value_type = tc.make_function_type(std::move(arg_types), ast->m_body->m_value_type);
 
 	tc.end_scope();
 }
