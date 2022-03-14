@@ -1,10 +1,10 @@
 #pragma once
 
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#include "../algorithms/unification.hpp"
 #include "../algorithms/union_find.hpp"
 #include "../utils/interned_string.hpp"
 #include "meta_unifier.hpp"
@@ -47,7 +47,45 @@ struct PolyData {
 };
 
 struct TypeSystemCore {
-	Unification::Core m_mono_core;
+
+
+	enum class Tag { Var, Term, };
+
+	struct NodeHeader {
+		Tag tag;
+		int data_idx;
+		const char* debug {nullptr};
+	};
+
+	struct TermData {
+		int function_id; // external id
+		std::vector<int> argument_idx;
+	};
+
+	std::function<void(int,int)> ll_unify_function;
+	std::vector<NodeHeader> ll_node_header;
+	std::vector<TermData> ll_term_data;
+
+	bool ll_occurs(int v, int i);
+
+	int ll_find(int i);
+	int ll_find_term(int i);
+	int ll_find_function(int i);
+
+	void ll_unify(int i, int j);
+
+	int ll_new_var(const char* debug = nullptr);
+	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
+
+	bool ll_is_var(int i);
+	bool ll_is_term(int i);
+
+	void ll_print_node(int node_header, int d = 0);
+
+
+
+
+
 	MetaUnifier m_meta_core;
 
 	TypeSystemCore();

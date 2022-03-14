@@ -166,11 +166,11 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 }
 
 MonoId TypeChecker::new_hidden_var() {
-	return core().m_mono_core.ll_new_var();
+	return core().ll_new_var();
 }
 
 MonoId TypeChecker::new_var() {
-	MonoId result = core().m_mono_core.ll_new_var();
+	MonoId result = core().ll_new_var();
 	env().current_scope().m_type_vars.insert(result);
 	return result;
 }

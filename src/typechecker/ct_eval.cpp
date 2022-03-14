@@ -192,7 +192,7 @@ static AST::Constructor* constructor_from_ast(
 
 		MonoId monotype = compute_mono(access->m_target, tc);
 
-		tc.core().m_mono_core.ll_unify(dummy_monotype, monotype);
+		tc.core().ll_unify(dummy_monotype, monotype);
 
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
@@ -363,7 +363,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in type declaration";
 
 				MonoId mt = compute_mono(decl->m_value, tc);
-				tc.core().m_mono_core.ll_unify(mt, get_monotype_id(decl->m_value));
+				tc.core().ll_unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
 					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);
