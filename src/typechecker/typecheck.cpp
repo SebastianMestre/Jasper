@@ -157,7 +157,7 @@ void typecheck(AST::NullLiteral* ast, TypecheckHelper& tc) {
 }
 
 void typecheck(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
-	auto element_type = tc.new_var();
+	auto element_type = tc.new_hidden_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element, tc);
 		tc.unify(element_type, element->m_value_type);
@@ -167,16 +167,16 @@ void typecheck(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
 	    tc.new_term(BuiltinType::Array, {element_type}, "Array Literal");
 }
 
+// Implements [Var] rule
 void typecheck(AST::Identifier* ast, TypecheckHelper& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
 	assert(tc.is_term(declaration->m_meta_type));
 
-	// here we implement the [var] rule
 	ast->m_value_type = declaration->m_is_polymorphic
-	                        ? tc.inst_fresh(declaration->m_decl_type)
-	                        : declaration->m_value_type;
+		? tc.inst_fresh(declaration->m_decl_type)
+		: declaration->m_value_type;
 }
 
 // Implements [App] rule, extended for functions with multiple arguments
@@ -222,7 +222,7 @@ void typecheck(AST::IndexExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
 
-	auto var = tc.new_var();
+	auto var = tc.new_hidden_var();
 	auto arr = tc.new_term(BuiltinType::Array, {var});
 	tc.unify(arr, ast->m_callee->m_value_type);
 
@@ -378,7 +378,7 @@ void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 }
 
 static void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.new_var();
+	ast->m_value_type = tc.new_hidden_var();
 	typecheck_stmt(ast->m_body, tc);
 }
 
