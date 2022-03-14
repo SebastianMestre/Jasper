@@ -179,23 +179,6 @@ void typecheck(AST::Identifier* ast, TypecheckHelper& tc) {
 	                        : declaration->m_value_type;
 }
 
-static void typecheck_stmt(AST::Block* ast, TypecheckHelper& tc) {
-	tc.new_nested_scope();
-	for (auto& child : ast->m_body)
-		typecheck_stmt(child, tc);
-	tc.end_scope();
-}
-
-static void typecheck_stmt(AST::IfElseStatement* ast, TypecheckHelper& tc) {
-	typecheck(ast->m_condition, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
-
-	typecheck_stmt(ast->m_body, tc);
-
-	if (ast->m_else_body)
-		typecheck_stmt(ast->m_else_body, tc);
-}
-
 // Implements [App] rule, extended for functions with multiple arguments
 void typecheck(AST::CallExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
@@ -233,24 +216,6 @@ void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.make_function_type(std::move(arg_types), ast->m_body->m_value_type);
 
 	tc.end_scope();
-}
-
-static void typecheck_stmt(AST::WhileStatement* ast, TypecheckHelper& tc) {
-	// TODO: Why do while statements create a new nested scope?
-	tc.new_nested_scope();
-	typecheck(ast->m_condition, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
-
-	typecheck_stmt(ast->m_body, tc);
-	tc.end_scope();
-}
-
-static void typecheck_stmt(AST::ReturnStatement* ast, TypecheckHelper& tc) {
-	typecheck(ast->m_value, tc);
-
-	auto mono = ast->m_value->m_value_type;
-	auto seq_expr = ast->m_surrounding_seq_expr;
-	tc.unify(seq_expr->m_value_type, mono);
 }
 
 void typecheck(AST::IndexExpression* ast, TypecheckHelper& tc) {
@@ -366,11 +331,6 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 	ast->m_value_type = constructor->m_mono;
 }
 
-void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.new_var();
-	typecheck_stmt(ast->m_body, tc);
-}
-
 // this function implements 'the value restriction', a technique
 // that enables type inference on mutable datatypes
 static bool is_value_expression(AST::AST* ast) {
@@ -417,7 +377,47 @@ void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 	tc.unify(ast->m_value_type, ast->m_value->m_value_type);
 }
 
-void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
+static void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
+	ast->m_value_type = tc.new_var();
+	typecheck_stmt(ast->m_body, tc);
+}
+
+static void typecheck_stmt(AST::Block* ast, TypecheckHelper& tc) {
+	tc.new_nested_scope();
+	for (auto& child : ast->m_body)
+		typecheck_stmt(child, tc);
+	tc.end_scope();
+}
+
+static void typecheck_stmt(AST::IfElseStatement* ast, TypecheckHelper& tc) {
+	typecheck(ast->m_condition, tc);
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+
+	typecheck_stmt(ast->m_body, tc);
+
+	if (ast->m_else_body)
+		typecheck_stmt(ast->m_else_body, tc);
+}
+
+static void typecheck_stmt(AST::WhileStatement* ast, TypecheckHelper& tc) {
+	// TODO: Why do while statements create a new scope?
+	tc.new_nested_scope();
+	typecheck(ast->m_condition, tc);
+	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+
+	typecheck_stmt(ast->m_body, tc);
+	tc.end_scope();
+}
+
+static void typecheck_stmt(AST::ReturnStatement* ast, TypecheckHelper& tc) {
+	typecheck(ast->m_value, tc);
+
+	auto mono = ast->m_value->m_value_type;
+	auto seq_expr = ast->m_surrounding_seq_expr;
+	tc.unify(seq_expr->m_value_type, mono);
+}
+
+static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
