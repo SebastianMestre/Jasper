@@ -6,19 +6,19 @@
 #include "../log/log.hpp"
 
 TypeSystemCore::TypeSystemCore() {
+}
 
-	ll_unify_function = [this](int a, int b) {
-		a = ll_find_term(a);
-		b = ll_find_term(b);
+void TypeSystemCore::ll_unify_function(int a, int b) {
+	a = ll_find_term(a);
+	b = ll_find_term(b);
 
-		if (a == b)
-			return;
-	
-		TermData& a_data = ll_term_data[a];
-		TermData& b_data = ll_term_data[b];
+	if (a == b)
+		return;
 
-		unify_type_function(a_data.function_id, b_data.function_id);
-	};
+	TermData& a_data = ll_term_data[a];
+	TermData& b_data = ll_term_data[b];
+
+	unify_type_function(a_data.function_id, b_data.function_id);
 }
 
 

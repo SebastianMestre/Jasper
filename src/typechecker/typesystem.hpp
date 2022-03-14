@@ -62,7 +62,7 @@ struct TypeSystemCore {
 		std::vector<int> argument_idx;
 	};
 
-	std::function<void(int,int)> ll_unify_function;
+	void ll_unify_function(int, int);
 	std::vector<NodeHeader> ll_node_header;
 	std::vector<TermData> ll_term_data;
 
