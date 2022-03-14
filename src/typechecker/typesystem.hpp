@@ -48,47 +48,10 @@ struct PolyData {
 
 struct TypeSystemCore {
 
-
-	enum class Tag { Var, Term, };
-
-	struct NodeHeader {
-		Tag tag;
-		int data_idx;
-		const char* debug {nullptr};
-	};
-
-	struct TermData {
-		int function_id; // external id
-		std::vector<int> argument_idx;
-	};
-
-	void ll_unify_function(int, int);
-	std::vector<NodeHeader> ll_node_header;
-	std::vector<TermData> ll_term_data;
-
-	bool ll_occurs(int v, int i);
-
-	int ll_find(int i);
-	int ll_find_term(int i);
-	int ll_find_function(int i);
-
-	void ll_unify(int i, int j);
+	TypeSystemCore();
 
 	int ll_new_var(const char* debug = nullptr);
-	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
-
-	bool ll_is_var(int i);
-	bool ll_is_term(int i);
-
-	void ll_print_node(int node_header, int d = 0);
-
-
-
-
-
-	MetaUnifier m_meta_core;
-
-	TypeSystemCore();
+	void ll_unify(int i, int j);
 
 	MonoId new_term(
 	    TypeFunctionId type_function,
@@ -116,6 +79,35 @@ struct TypeSystemCore {
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
 
 private:
+
+	enum class Tag { Var, Term, };
+
+	struct NodeHeader {
+		Tag tag;
+		int data_idx;
+		const char* debug {nullptr};
+	};
+
+	struct TermData {
+		int function_id; // external id
+		std::vector<int> argument_idx;
+	};
+
+	void ll_unify_function(int, int);
+
+	bool ll_occurs(int v, int i);
+
+	int ll_find(int i);
+	int ll_find_term(int i);
+	int ll_find_function(int i);
+
+
+
+	bool ll_is_var(int i);
+	bool ll_is_term(int i);
+
+	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
+	void ll_print_node(int node_header, int d = 0);
 	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
 	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
 	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
@@ -129,7 +121,12 @@ private:
 	    std::unordered_map<InternedString, MonoId> structure,
 	    TypeFunctionStrength);
 
+public:
+	MetaUnifier m_meta_core;
+private:
 	std::vector<TypeFunctionData> m_type_functions;
 	std::vector<PolyData> poly_data;
 	UnionFind m_type_function_uf;
+	std::vector<NodeHeader> ll_node_header;
+	std::vector<TermData> ll_term_data;
 };
