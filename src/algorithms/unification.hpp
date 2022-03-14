@@ -20,25 +20,25 @@ struct Core {
 		std::vector<int> argument_idx;
 	};
 
-	std::function<void(Core&, int,int)> unify_function;
-	std::vector<NodeHeader> node_header;
-	std::vector<TermData> term_data;
+	std::function<void(Core&, int,int)> ll_unify_function;
+	std::vector<NodeHeader> ll_node_header;
+	std::vector<TermData> ll_term_data;
 
-	bool occurs(int v, int i);
+	bool ll_occurs(int v, int i);
 
-	int find(int i);
-	int find_term(int i);
-	int find_function(int i);
+	int ll_find(int i);
+	int ll_find_term(int i);
+	int ll_find_function(int i);
 
-	void unify(int i, int j);
+	void ll_unify(int i, int j);
 
-	int new_var(const char* debug = nullptr);
-	int new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
+	int ll_new_var(const char* debug = nullptr);
+	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
 
-	bool is_var(int i);
-	bool is_term(int i);
+	bool ll_is_var(int i);
+	bool ll_is_term(int i);
 
-	void print_node(int node_header, int d = 0);
+	void ll_print_node(int node_header, int d = 0);
 };
 
 } // namespace Unification

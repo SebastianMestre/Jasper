@@ -6,15 +6,15 @@
 
 TypeSystemCore::TypeSystemCore() {
 
-	m_mono_core.unify_function = [this](Unification::Core& core, int a, int b) {
-		a = core.find_term(a);
-		b = core.find_term(b);
+	m_mono_core.ll_unify_function = [this](Unification::Core& core, int a, int b) {
+		a = core.ll_find_term(a);
+		b = core.ll_find_term(b);
 
 		if (a == b)
 			return;
 	
-		Unification::Core::TermData& a_data = core.term_data[a];
-		Unification::Core::TermData& b_data = core.term_data[b];
+		Unification::Core::TermData& a_data = core.ll_term_data[a];
+		Unification::Core::TermData& b_data = core.ll_term_data[b];
 
 		unify_type_function(a_data.function_id, b_data.function_id);
 	};
@@ -32,7 +32,7 @@ MonoId TypeSystemCore::new_term(
 		unify_type_function(tf, dummy_tf);
 	}
 
-	return m_mono_core.new_term(tf, std::move(args), tag);
+	return m_mono_core.ll_new_term(tf, std::move(args), tag);
 }
 
 PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
@@ -51,8 +51,8 @@ MonoId TypeSystemCore::inst_impl(
 	// NOTE(Mestre): Is just calling find good enough? It means we
 	// should only ever qualify variables that are their own
 	// representative, which does seem to make sense. I think.
-	mono = m_mono_core.find(mono);
-	Unification::Core::NodeHeader header = m_mono_core.node_header[mono];
+	mono = m_mono_core.ll_find(mono);
+	Unification::Core::NodeHeader header = m_mono_core.ll_node_header[mono];
 
 	if (header.tag == Unification::Core::Tag::Var) {
 		auto it = mapping.find(mono);
@@ -60,9 +60,9 @@ MonoId TypeSystemCore::inst_impl(
 	} else {
 		TermId term = header.data_idx;
 		std::vector<MonoId> new_args;
-		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
+		for (MonoId arg : m_mono_core.ll_term_data[term].argument_idx)
 			new_args.push_back(inst_impl(arg, mapping));
-		return new_term(m_mono_core.term_data[term].function_id, std::move(new_args));
+		return new_term(m_mono_core.ll_term_data[term].function_id, std::move(new_args));
 	}
 }
 
@@ -82,19 +82,19 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	std::vector<MonoId> vals;
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
-		vals.push_back(m_mono_core.new_var());
+		vals.push_back(m_mono_core.ll_new_var());
 	return inst_with(poly, vals);
 }
 
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
-	mono = m_mono_core.find(mono);
-	const Unification::Core::NodeHeader& header = m_mono_core.node_header[mono];
+	mono = m_mono_core.ll_find(mono);
+	const Unification::Core::NodeHeader& header = m_mono_core.ll_node_header[mono];
 
 	if (header.tag == Unification::Core::Tag::Var) {
 		free_vars.insert(mono);
 	} else {
 		TermId term = header.data_idx;
-		for (MonoId arg : m_mono_core.term_data[term].argument_idx)
+		for (MonoId arg : m_mono_core.ll_term_data[term].argument_idx)
 			gather_free_vars(arg, free_vars);
 	}
 }
@@ -134,7 +134,7 @@ TypeFunctionId TypeSystemCore::create_type_function(
 }
 
 TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
-	TypeFunctionId tf = m_mono_core.find_function(mono);
+	TypeFunctionId tf = m_mono_core.ll_find_function(mono);
 	return get_type_function_data(tf);
 }
 
@@ -190,7 +190,7 @@ void TypeSystemCore::unify_type_function_data(TypeFunctionData& a_data, TypeFunc
 
 		bool const b_has_field = kv_b != b_data.structure.end();
 		if (b_has_field)
-			m_mono_core.unify(kv_a.second, kv_b->second);
+			m_mono_core.ll_unify(kv_a.second, kv_b->second);
 		else if (can_add_fields_to_b)
 			b_data.structure.insert(kv_a);
 		else
