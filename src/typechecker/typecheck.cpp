@@ -429,10 +429,6 @@ static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 	case ASTTag::type:                                                    \
 		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
 
-#define IGNORE(type)                                                           \
-	case ASTTag::type:                                                    \
-		return;
-
 	// TODO: Compound literals
 	switch (ast->type()) {
 		DISPATCH(Declaration);
@@ -449,7 +445,6 @@ static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 	             << ast_string[(int)ast->type()];
 
 #undef DISPATCH
-#undef IGNORE
 }
 
 void typecheck(AST::AST* ast, TypecheckHelper& tc) {
@@ -490,7 +485,6 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 #undef DISPATCH
 #undef IGNORE
 }
-
 
 void typecheck_program(AST::AST* ast, TypecheckHelper& tc) {
 	// NOTE: we don't actually do anything with `ast`: what we really care about
