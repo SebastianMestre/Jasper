@@ -233,7 +233,8 @@ TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
 
 bool TypeSystemCore::ll_occurs(int v, int i){
 	assert(ll_node_header[v].tag == Tag::Var);
-	assert(ll_node_header[v].data_idx == v);
+	int var_id = ll_node_header[v].data_idx;
+	assert(m_substitution[var_id] == -1);
 
 	i = ll_find(i);
 
@@ -241,7 +242,7 @@ bool TypeSystemCore::ll_occurs(int v, int i){
 		return true;
 
 	if (ll_node_header[i].tag == Tag::Var)
-		return false;
+		return ll_node_header[i].data_idx == var_id;
 
 	int ti = ll_node_header[i].data_idx;
 	for (int c : ll_term_data[ti].argument_idx)
@@ -253,8 +254,8 @@ bool TypeSystemCore::ll_occurs(int v, int i){
 
 int TypeSystemCore::ll_find(int i) {
 	if (ll_node_header[i].tag == Tag::Term) return i;
-	if (ll_node_header[i].data_idx == i) return i;
-	return ll_node_header[i].data_idx = ll_find(ll_node_header[i].data_idx);
+	if (m_substitution[ll_node_header[i].data_idx] == -1) return i;
+	return ll_find(m_substitution[ll_node_header[i].data_idx]);
 }
 
 int TypeSystemCore::ll_find_term(int i) {
@@ -268,9 +269,16 @@ int TypeSystemCore::ll_find_function(int i) {
 	return ll_term_data[i].function_id;
 }
 
+void TypeSystemCore::establish_substitution(int var_id, int type_id) {
+	assert(m_substitution[var_id] == -1);
+	m_substitution[var_id] = type_id;
+}
+
 void TypeSystemCore::ll_unify(int i, int j) {
 	i = ll_find(i);
 	j = ll_find(j);
+
+	if (i == j) return;
 
 	if (ll_node_header[j].tag == Tag::Var)
 		std::swap(i, j);
@@ -280,7 +288,7 @@ void TypeSystemCore::ll_unify(int i, int j) {
 		if (ll_node_header[j].tag == Tag::Term)
 			assert(!ll_occurs(i, j));
 
-		ll_node_header[i].data_idx = j;
+		establish_substitution(ll_node_header[i].data_idx, j);
 
 	} else {
 		int vi = ll_node_header[i].data_idx;
@@ -295,8 +303,13 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var(char const* debug) {
+	int var_id = m_var_counter++;
+
+	assert(m_substitution.size() == var_id);
+	m_substitution.push_back(-1);
+
 	int id = ll_node_header.size();
-	ll_node_header.push_back({Tag::Var, id, debug});
+	ll_node_header.push_back({Tag::Var, var_id, debug});
 	return id;
 }
 

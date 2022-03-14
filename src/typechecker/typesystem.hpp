@@ -101,8 +101,6 @@ private:
 	int ll_find_term(int i);
 	int ll_find_function(int i);
 
-
-
 	bool ll_is_var(int i);
 	bool ll_is_term(int i);
 
@@ -121,6 +119,7 @@ private:
 	    std::unordered_map<InternedString, MonoId> structure,
 	    TypeFunctionStrength);
 
+	void establish_substitution(int var_id, int type_id);
 public:
 	MetaUnifier m_meta_core;
 private:
@@ -129,4 +128,10 @@ private:
 	UnionFind m_type_function_uf;
 	std::vector<NodeHeader> ll_node_header;
 	std::vector<TermData> ll_term_data;
+
+	std::vector<MonoId> m_substitution;
+
+	int m_var_counter {0};
+	int m_term_counter {0};
+	int m_type_counter {0};
 };
