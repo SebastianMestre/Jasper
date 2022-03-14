@@ -116,9 +116,13 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 
 void typecheck(AST::AST* ast, TypecheckHelper& tc);
 
+void typecheck_program(AST::AST* ast, TypecheckHelper& tc);
+
+static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc);
+
 void typecheck(AST::AST* ast, TypeChecker& tc) {
 	TypecheckHelper f = {tc};
-	typecheck(ast, f);
+	typecheck_program(ast, f);
 }
 
 static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
@@ -175,21 +179,21 @@ void typecheck(AST::Identifier* ast, TypecheckHelper& tc) {
 	                        : declaration->m_value_type;
 }
 
-void typecheck(AST::Block* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::Block* ast, TypecheckHelper& tc) {
 	tc.new_nested_scope();
 	for (auto& child : ast->m_body)
-		typecheck(child, tc);
+		typecheck_stmt(child, tc);
 	tc.end_scope();
 }
 
-void typecheck(AST::IfElseStatement* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::IfElseStatement* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_condition, tc);
 	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body, tc);
+	typecheck_stmt(ast->m_body, tc);
 
 	if (ast->m_else_body)
-		typecheck(ast->m_else_body, tc);
+		typecheck_stmt(ast->m_else_body, tc);
 }
 
 // Implements [App] rule, extended for functions with multiple arguments
@@ -231,17 +235,17 @@ void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 	tc.end_scope();
 }
 
-void typecheck(AST::WhileStatement* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::WhileStatement* ast, TypecheckHelper& tc) {
 	// TODO: Why do while statements create a new nested scope?
 	tc.new_nested_scope();
 	typecheck(ast->m_condition, tc);
 	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
 
-	typecheck(ast->m_body, tc);
+	typecheck_stmt(ast->m_body, tc);
 	tc.end_scope();
 }
 
-void typecheck(AST::ReturnStatement* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::ReturnStatement* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_value, tc);
 
 	auto mono = ast->m_value->m_value_type;
@@ -364,7 +368,7 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
 void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.new_var();
-	typecheck(ast->m_body, tc);
+	typecheck_stmt(ast->m_body, tc);
 }
 
 // this function implements 'the value restriction', a technique
@@ -413,14 +417,14 @@ void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 	tc.unify(ast->m_value_type, ast->m_value->m_value_type);
 }
 
-void typecheck(AST::Declaration* ast, TypecheckHelper& tc) {
+void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
 	generalize(ast, tc);
 }
 
-void typecheck(AST::Program* ast, TypecheckHelper& tc) {
+void typecheck_impl(AST::Program* ast, TypecheckHelper& tc) {
 
 	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
@@ -463,6 +467,35 @@ void typecheck(AST::Program* ast, TypecheckHelper& tc) {
 	}
 }
 
+static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                    \
+		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
+
+#define IGNORE(type)                                                           \
+	case ASTTag::type:                                                    \
+		return;
+
+	// TODO: Compound literals
+	switch (ast->type()) {
+		DISPATCH(Declaration);
+		DISPATCH(Program);
+
+		DISPATCH(Block);
+		DISPATCH(WhileStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ReturnStatement);
+
+		default: return typecheck(ast, tc);
+	}
+
+	Log::fatal() << "(internal) CST type not handled in typecheck: "
+	             << ast_string[(int)ast->type()];
+
+#undef DISPATCH
+#undef IGNORE
+}
+
 void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
@@ -491,14 +524,6 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(Declaration);
-		DISPATCH(Program);
-
-		DISPATCH(Block);
-		DISPATCH(WhileStatement);
-		DISPATCH(IfElseStatement);
-		DISPATCH(ReturnStatement);
-
 		IGNORE(BuiltinTypeFunction);
 		IGNORE(Constructor);
 	}
@@ -510,5 +535,10 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 #undef IGNORE
 }
 
+
+void typecheck_program(AST::AST* ast, TypecheckHelper& tc) {
+	assert(ast->type() == ASTTag::Program);
+	return typecheck_impl(static_cast<AST::Program*>(ast), tc);
+}
 
 } // namespace TypeChecker
