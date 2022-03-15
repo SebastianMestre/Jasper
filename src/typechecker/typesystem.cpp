@@ -8,20 +8,6 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
-void TypeSystemCore::ll_unify_function(int a, int b) {
-	a = ll_find_term(a);
-	b = ll_find_term(b);
-
-	if (a == b)
-		return;
-
-	TermData& a_data = ll_term_data[a];
-	TermData& b_data = ll_term_data[b];
-
-	unify_type_function(a_data.function_id, b_data.function_id);
-}
-
-
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
 	tf = find_type_function(tf);
@@ -49,9 +35,6 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 MonoId TypeSystemCore::inst_impl(
     MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
 
-	// NOTE(Mestre): Is just calling find good enough? It means we
-	// should only ever qualify variables that are their own
-	// representative, which does seem to make sense. I think.
 	mono = ll_find(mono);
 	NodeHeader header = ll_node_header[mono];
 
@@ -134,8 +117,11 @@ TypeFunctionId TypeSystemCore::create_type_function(
 	return result;
 }
 
-TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono){
-	TypeFunctionId tf = ll_find_function(mono);
+TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono) {
+	mono = ll_find(mono);
+	assert(ll_is_term(mono) && "tried to find function of non term");
+	int t = ll_node_header[mono].data_idx;
+	TypeFunctionId tf = ll_term_data[t].function_id;
 	return get_type_function_data(tf);
 }
 
@@ -168,110 +154,33 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		auto& i_data = get_type_function_data(i);
 		auto& j_data = get_type_function_data(j);
 		point_type_function_at_another(i, j);
-		unify_type_function_data(i_data, j_data);
 		return;
 	}
 
 	Log::fatal() << "unified different typefuncs";
 }
 
-void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
-	m_type_function_uf.join_left_to_right(a, b);
-}
-
-void TypeSystemCore::unify_type_function_data(TypeFunctionData& a_data, TypeFunctionData& b_data) {
-	assert(a_data.strength == TypeFunctionStrength::Half);
-
-	b_data.argument_count = compute_new_argument_count(a_data, b_data);
-
-	bool can_add_fields_to_b = b_data.strength != TypeFunctionStrength::Full ;
-	for (auto& kv_a : a_data.structure) {
-		auto const& field_name = kv_a.first;
-		auto const kv_b = b_data.structure.find(field_name);
-
-		bool const b_has_field = kv_b != b_data.structure.end();
-		if (b_has_field)
-			ll_unify(kv_a.second, kv_b->second);
-		else if (can_add_fields_to_b)
-			b_data.structure.insert(kv_a);
-		else
-			Log::fatal() << "Accessing non-existing field '" << field_name << "' of a record";
-	}
-
-}
-
-int TypeSystemCore::compute_new_argument_count(
-    TypeFunctionData const& a_data, TypeFunctionData const& b_data) const {
-
-	if (a_data.argument_count == b_data.argument_count)
-		return a_data.argument_count;
-
-	if (b_data.strength == TypeFunctionStrength::Half || b_data.argument_count == -1)
-		return -1;
-
-	auto present_argument_count = [](int x) -> std::string {
-		return x == -1 ? "variadic" : std::to_string(x);
-	};
-	std::string argc_a = present_argument_count(a_data.argument_count);
-	std::string argc_b = present_argument_count(b_data.argument_count);
-	Log::fatal() << "Deduced type functions with incompatible argument "
-	                "counts to be equal (with "
-	             << argc_a << " and " << argc_b << " arguments)";
-}
-
-TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
-	return m_type_functions[find_type_function(tf)];
-}
-
-TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
-	return m_type_function_uf.find(tf);
-}
-
-
-
-
-
-bool TypeSystemCore::ll_occurs(int v, int i){
-	assert(ll_node_header[v].tag == Tag::Var);
-	int var_id = ll_node_header[v].data_idx;
-	assert(m_substitution[var_id] == -1);
-
+bool TypeSystemCore::occurs(VarId v, MonoId i) {
 	i = ll_find(i);
 
-	if (i == v)
-		return true;
-
-	if (ll_node_header[i].tag == Tag::Var)
-		return ll_node_header[i].data_idx == var_id;
+	if (ll_is_var(i))
+		return equals_var(i, v);
 
 	int ti = ll_node_header[i].data_idx;
 	for (int c : ll_term_data[ti].argument_idx)
-		if (ll_occurs(v, c))
+		if (occurs(v, c))
 			return true;
 
 	return false;
 }
 
-int TypeSystemCore::ll_find(int i) {
-	if (ll_node_header[i].tag == Tag::Term) return i;
-	if (m_substitution[ll_node_header[i].data_idx] == -1) return i;
-	return ll_find(m_substitution[ll_node_header[i].data_idx]);
+void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
+	// TODO
+	return;
 }
 
-int TypeSystemCore::ll_find_term(int i) {
-	i = ll_find(i);
-	return ll_is_term(i) ? ll_node_header[i].data_idx : -1;
-}
-
-int TypeSystemCore::ll_find_function(int i) {
-	i = ll_find_term(i);
-	assert(i != -1 && "tried to find function of non term");
-	return ll_term_data[i].function_id;
-}
-
-void TypeSystemCore::establish_substitution(int var_id, int type_id) {
-	assert(m_substitution[var_id] == -1);
-	m_substitution[var_id] = type_id;
+bool TypeSystemCore::satisfies(MonoId t, Constraint const& c) {
+	return true;
 }
 
 void TypeSystemCore::ll_unify(int i, int j) {
@@ -285,16 +194,27 @@ void TypeSystemCore::ll_unify(int i, int j) {
 
 	if (ll_node_header[i].tag == Tag::Var) {
 
-		if (ll_node_header[j].tag == Tag::Term)
-			assert(!ll_occurs(i, j));
+		auto vi = get_var_id(i);
 
-		establish_substitution(ll_node_header[i].data_idx, j);
+		if (ll_node_header[j].tag == Tag::Term) {
+			assert(!occurs(vi, j));
+			assert(satisfies(j, m_constraints[static_cast<int>(vi)]));
+		} else {
+			auto vj = get_var_id(j);
+			combine_constraints_left_to_right(vi, vj);
+		}
+		establish_substitution(vi, j);
 
 	} else {
 		int vi = ll_node_header[i].data_idx;
 		int vj = ll_node_header[j].data_idx;
 
-		ll_unify_function(i, j);
+		if (vi != vj) {
+			TermData& i_data = ll_term_data[vi];
+			TermData& j_data = ll_term_data[vj];
+
+			unify_type_function(i_data.function_id, j_data.function_id);
+		}
 
 		assert(ll_term_data[vi].argument_idx.size() == ll_term_data[vj].argument_idx.size());
 		for (int k = 0; k < ll_term_data[vi].argument_idx.size(); ++k)
@@ -303,13 +223,18 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var(char const* debug) {
-	int var_id = m_var_counter++;
-
-	assert(m_substitution.size() == var_id);
-	m_substitution.push_back(-1);
+	VarId var_id = fresh_var_id({});
 
 	int id = ll_node_header.size();
-	ll_node_header.push_back({Tag::Var, var_id, debug});
+	ll_node_header.push_back({Tag::Var, static_cast<int>(var_id), debug});
+	return id;
+}
+
+int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
+	VarId var_id = fresh_var_id(std::move(c));
+
+	int id = ll_node_header.size();
+	ll_node_header.push_back({Tag::Var, static_cast<int>(var_id), debug});
 	return id;
 }
 
@@ -320,6 +245,32 @@ int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug)
 	return id;
 }
 
+
+int TypeSystemCore::ll_find(int i) {
+	if (ll_node_header[i].tag == Tag::Term) return i;
+	if (m_substitution[ll_node_header[i].data_idx] == -1) return i;
+	return ll_find(m_substitution[ll_node_header[i].data_idx]);
+}
+
+VarId TypeSystemCore::get_var_id(MonoId i) {
+	assert(ll_is_var(i));
+	return static_cast<VarId>(ll_node_header[i].data_idx);
+}
+
+VarId TypeSystemCore::fresh_var_id(Constraint c) {
+	int result = m_var_counter++;
+	assert(m_substitution.size() == result);
+	assert(m_constraints.size() == result);
+	m_substitution.push_back(-1);
+	m_constraints.push_back(std::move(c));
+	return static_cast<VarId>(result);
+}
+
+void TypeSystemCore::establish_substitution(VarId var_id, int type_id) {
+	assert(m_substitution[static_cast<int>(var_id)] == -1);
+	m_substitution[static_cast<int>(var_id)] = type_id;
+}
+
 bool TypeSystemCore::ll_is_term(int i) {
 	return ll_node_header[i].tag == Tag::Term;
 }
@@ -328,28 +279,18 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-void TypeSystemCore::ll_print_node(int header, int d) {
-	NodeHeader& node = ll_node_header[ll_find(header)];
-
-	for (int i = d; i--;)
-		std::cerr << ' ';
-	std::cerr << "[" << header;
-	if (node.debug) std::cerr << " | " << node.debug;
-	std::cerr << "] ";
-	if (node.tag == Tag::Var) {
-		if (node.data_idx == header) {
-			std::cerr << "Free Var\n";
-		} else {
-			std::cerr << "Var\n";
-			ll_print_node(node.data_idx, d + 1);
-		}
-	} else {
-		TermData& data = ll_term_data[node.data_idx];
-		std::cerr << "Term " << node.data_idx << " (tf " << data.function_id << ")\n";
-		for (const auto arg : data.argument_idx)
-			ll_print_node(arg, d + 1);
-	}
+void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
+	m_type_function_uf.join_left_to_right(a, b);
 }
 
+TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
+	return m_type_functions[find_type_function(tf)];
+}
 
+TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
+	return m_type_function_uf.find(tf);
+}
 
+bool TypeSystemCore::equals_var(MonoId t, VarId v) {
+	return ll_is_var(t) && static_cast<VarId>(ll_node_header[t].data_idx) == v;
+}

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -19,6 +18,8 @@
 // If it has 'Full' strength, we only accept exact matches during unification.
 // We don't allow unifying two different full-strength type functions
 enum class TypeFunctionStrength { None, Half, Full };
+
+enum class VarId {};
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
@@ -46,6 +47,15 @@ struct PolyData {
 	std::vector<MonoId> vars;
 };
 
+struct Constraint {
+	enum class Shape {
+		Unknown, Variant, Record
+	};
+
+	std::unordered_map<InternedString, MonoId> structure;
+	Shape shape;
+};
+
 struct TypeSystemCore {
 
 	TypeSystemCore();
@@ -67,6 +77,37 @@ struct TypeSystemCore {
 	    std::unordered_map<InternedString, MonoId> structure,
 	    bool dummy = false);
 
+	TypeFunctionId new_type_function_for_ct_eval1(
+	    std::vector<InternedString> fields,
+	    std::unordered_map<InternedString, MonoId> structure) {
+		return new_type_function(
+		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
+	}
+
+	TypeFunctionId new_type_function_for_ct_eval2(
+	    std::unordered_map<InternedString, MonoId> structure) {
+		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
+	}
+
+	// dummy with one constructor, the one used
+	MonoId new_dummy_for_ct_eval(InternedString member) {
+		return new_constrained_var(
+		    {{{member, ll_new_var()}}, Constraint::Shape::Variant},
+		    "Union Constructor Access");
+	}
+
+	MonoId new_dummy_for_typecheck1(
+		std::unordered_map<InternedString, MonoId> structure) {
+		return new_constrained_var(
+		    {std::move(structure), Constraint::Shape::Variant});
+	}
+
+	MonoId new_dummy_for_typecheck2(
+		std::unordered_map<InternedString, MonoId> structure) {
+		return new_constrained_var(
+		    {std::move(structure), Constraint::Shape::Record});
+	}
+
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
 
@@ -77,8 +118,9 @@ struct TypeSystemCore {
 	TypeFunctionData& type_function_data_of(MonoId);
 	TypeFunctionId new_type_function_var();
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
-
 private:
+
+	int new_constrained_var(Constraint c, char const* debug = nullptr);
 
 	enum class Tag { Var, Term, };
 
@@ -93,10 +135,6 @@ private:
 		std::vector<int> argument_idx;
 	};
 
-	void ll_unify_function(int, int);
-
-	bool ll_occurs(int v, int i);
-
 	int ll_find(int i);
 	int ll_find_term(int i);
 	int ll_find_function(int i);
@@ -105,7 +143,6 @@ private:
 	bool ll_is_term(int i);
 
 	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
-	void ll_print_node(int node_header, int d = 0);
 	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
 	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
 	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
@@ -119,17 +156,34 @@ private:
 	    std::unordered_map<InternedString, MonoId> structure,
 	    TypeFunctionStrength);
 
-	void establish_substitution(int var_id, int type_id);
+	void establish_substitution(VarId var_id, int type_id);
+	VarId fresh_var_id(Constraint);
+
+	bool occurs(VarId v, MonoId i);
+	bool equals_var(MonoId t, VarId v);
+	void combine_constraints_left_to_right(VarId vi, VarId vj);
+	bool satisfies(MonoId t, Constraint const& c);
+	VarId get_var_id(MonoId i);
+
 public:
 	MetaUnifier m_meta_core;
 private:
+	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;
-	std::vector<PolyData> poly_data;
 	UnionFind m_type_function_uf;
+
+	// per-poly data
+	std::vector<PolyData> poly_data;
+
+	// per-type data
 	std::vector<NodeHeader> ll_node_header;
+
+	// per-term data
 	std::vector<TermData> ll_term_data;
 
+	// per-var data
 	std::vector<MonoId> m_substitution;
+	std::vector<Constraint> m_constraints;
 
 	int m_var_counter {0};
 	int m_term_counter {0};

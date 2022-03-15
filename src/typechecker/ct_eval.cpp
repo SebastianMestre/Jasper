@@ -182,13 +182,7 @@ static AST::Constructor* constructor_from_ast(
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
-		// dummy with one constructor, the one used
-		std::unordered_map<InternedString, MonoId> structure;
-		structure[access->m_member] = tc.new_var();
-		TypeFunctionId dummy_tf = tc.core().new_type_function(
-		    TypeFunctionTag::Variant, {}, std::move(structure), true);
-		MonoId dummy_monotype =
-		    tc.core().new_term(dummy_tf, {}, "Union Constructor Access");
+		MonoId dummy_monotype = tc.core().new_dummy_for_ct_eval(access->m_member);
 
 		MonoId monotype = compute_mono(access->m_target, tc);
 
@@ -463,16 +457,12 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function(
-	    TypeFunctionTag::Record,
-	    ast->m_fields,
-	    build_map(ast->m_fields, ast->m_types, tc));
+	return tc.core().new_type_function_for_ct_eval1(
+	    ast->m_fields, build_map(ast->m_fields, ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function(
-	    TypeFunctionTag::Variant,
-	    {},
+	return tc.core().new_type_function_for_ct_eval2(
 	    build_map(ast->m_constructors, ast->m_types, tc));
 }
 
