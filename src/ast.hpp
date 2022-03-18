@@ -149,7 +149,6 @@ struct FunctionLiteral : public Expr {
 		int inner_frame_offset{INT_MIN};
 	};
 
-	MonoId m_return_type;
 	Expr* m_body;
 	std::vector<Declaration> m_args;
 	std::unordered_map<InternedString, CaptureData> m_captures;
