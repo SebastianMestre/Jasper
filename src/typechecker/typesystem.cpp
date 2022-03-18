@@ -125,6 +125,17 @@ TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono) {
 	return get_type_function_data(tf);
 }
 
+static InternedString print_a_thing(int x) {
+	if (x == 0) return "function";
+	if (x == 1) return "int";
+	if (x == 2) return "float";
+	if (x == 3) return "string";
+	if (x == 4) return "array";
+	if (x == 5) return "boolean";
+	if (x == 6) return "unit";
+	return "a user defined type";
+}
+
 void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 	i = find_type_function(i);
 	j = find_type_function(j);
@@ -133,8 +144,10 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		return;
 
 	if (get_type_function_data(i).strength == TypeFunctionStrength::Full &&
-		get_type_function_data(j).strength == TypeFunctionStrength::Full)
-		Log::fatal() << "unified different type functions";
+		get_type_function_data(j).strength == TypeFunctionStrength::Full) {
+		Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
+		// Log::fatal() << "unified different type functions";
+	}
 
 	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
 		std::swap(i, j);
