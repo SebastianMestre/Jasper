@@ -74,8 +74,7 @@ struct TypeSystemCore {
 	TypeFunctionId new_type_function(
 	    TypeFunctionTag type,
 	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure,
-	    bool dummy = false);
+	    std::unordered_map<InternedString, MonoId> structure);
 
 	TypeFunctionId new_type_function_for_ct_eval1(
 	    std::vector<InternedString> fields,

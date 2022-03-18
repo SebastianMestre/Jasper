@@ -93,11 +93,9 @@ TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
 TypeFunctionId TypeSystemCore::new_type_function(
     TypeFunctionTag type,
     std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure,
-    bool dummy) {
-	auto strength = dummy ? TypeFunctionStrength::Half : TypeFunctionStrength::Full;
+    std::unordered_map<InternedString, MonoId> structure) {
 	return create_type_function(
-	    type, 0, std::move(fields), std::move(structure), strength);
+	    type, 0, std::move(fields), std::move(structure), TypeFunctionStrength::Full);
 }
 
 TypeFunctionId TypeSystemCore::new_type_function_var() {
