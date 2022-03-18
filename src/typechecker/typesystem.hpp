@@ -157,7 +157,6 @@ private:
 	    TypeFunctionStrength);
 
 	void establish_substitution(VarId var_id, int type_id);
-	VarId fresh_var_id(Constraint);
 
 	bool occurs(VarId v, MonoId i);
 	bool equals_var(MonoId t, VarId v);

@@ -227,18 +227,22 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var(char const* debug) {
-	VarId var_id = fresh_var_id({});
-
-	int id = ll_node_header.size();
-	ll_node_header.push_back({Tag::Var, static_cast<int>(var_id), debug});
-	return id;
+	return new_constrained_var({}, debug);
 }
 
 int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
-	VarId var_id = fresh_var_id(std::move(c));
+	int var_id = m_var_counter++;
+	int uf_node = m_type_var_uf.new_node();
+
+	assert(uf_node == var_id);
+	assert(m_substitution.size() == var_id);
+	assert(m_constraints.size() == var_id);
+	m_substitution.push_back(-1);
+	m_constraints.push_back(std::move(c));
 
 	int id = ll_node_header.size();
-	ll_node_header.push_back({Tag::Var, static_cast<int>(var_id), debug});
+	ll_node_header.push_back({Tag::Var, var_id, debug});
+
 	return id;
 }
 
@@ -260,17 +264,6 @@ int TypeSystemCore::ll_find(int i) {
 VarId TypeSystemCore::get_var_id(MonoId i) {
 	assert(ll_is_var(i));
 	return static_cast<VarId>(m_type_var_uf.find(ll_node_header[i].data_idx));
-}
-
-VarId TypeSystemCore::fresh_var_id(Constraint c) {
-	int result = m_var_counter++;
-	int uf_node = m_type_var_uf.new_node();
-	assert(uf_node == result);
-	assert(m_substitution.size() == result);
-	assert(m_constraints.size() == result);
-	m_substitution.push_back(-1);
-	m_constraints.push_back(std::move(c));
-	return static_cast<VarId>(result);
 }
 
 void TypeSystemCore::establish_substitution(VarId var_id, int type_id) {
