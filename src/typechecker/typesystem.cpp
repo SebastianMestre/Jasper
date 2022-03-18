@@ -240,17 +240,19 @@ int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
 	m_substitution.push_back(-1);
 	m_constraints.push_back(std::move(c));
 
-	int id = ll_node_header.size();
+	int type_id = m_type_counter++;
+	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Var, var_id, debug});
 
-	return id;
+	return type_id;
 }
 
 int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug) {
-	int id = ll_node_header.size();
+	int type_id = m_type_counter++;
+	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size()), debug});
 	ll_term_data.push_back({f, std::move(args)});
-	return id;
+	return type_id;
 }
 
 
