@@ -174,6 +174,11 @@ bool TypeSystemCore::occurs(VarId v, MonoId i) {
 	return false;
 }
 
+void TypeSystemCore::unify_vars_left_to_right(VarId vi, VarId vj) {
+	combine_constraints_left_to_right(vi, vj);
+	m_type_var_uf.join_left_to_right(static_cast<int>(vi), static_cast<int>(vj));
+}
+
 void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
 	// TODO
 	return;
@@ -189,21 +194,20 @@ void TypeSystemCore::ll_unify(int i, int j) {
 
 	if (i == j) return;
 
-	if (ll_node_header[j].tag == Tag::Var)
+	if (ll_is_var(j))
 		std::swap(i, j);
 
-	if (ll_node_header[i].tag == Tag::Var) {
+	if (ll_is_var(i)) {
 
 		auto vi = get_var_id(i);
 
 		if (ll_node_header[j].tag == Tag::Term) {
 			assert(!occurs(vi, j));
 			assert(satisfies(j, m_constraints[static_cast<int>(vi)]));
+			establish_substitution(vi, j);
 		} else {
-			auto vj = get_var_id(j);
-			combine_constraints_left_to_right(vi, vj);
+			unify_vars_left_to_right(vi, get_var_id(j));
 		}
-		establish_substitution(vi, j);
 
 	} else {
 		int vi = ll_node_header[i].data_idx;
@@ -247,18 +251,21 @@ int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug)
 
 
 int TypeSystemCore::ll_find(int i) {
-	if (ll_node_header[i].tag == Tag::Term) return i;
-	if (m_substitution[ll_node_header[i].data_idx] == -1) return i;
-	return ll_find(m_substitution[ll_node_header[i].data_idx]);
+	if (!ll_is_var(i)) return i;
+	VarId vi = get_var_id(i);
+	if (m_substitution[static_cast<int>(vi)] == -1) return i;
+	return ll_find(m_substitution[static_cast<int>(vi)]);
 }
 
 VarId TypeSystemCore::get_var_id(MonoId i) {
 	assert(ll_is_var(i));
-	return static_cast<VarId>(ll_node_header[i].data_idx);
+	return static_cast<VarId>(m_type_var_uf.find(ll_node_header[i].data_idx));
 }
 
 VarId TypeSystemCore::fresh_var_id(Constraint c) {
 	int result = m_var_counter++;
+	int uf_node = m_type_var_uf.new_node();
+	assert(uf_node == result);
 	assert(m_substitution.size() == result);
 	assert(m_constraints.size() == result);
 	m_substitution.push_back(-1);

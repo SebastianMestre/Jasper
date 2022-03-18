@@ -161,6 +161,7 @@ private:
 
 	bool occurs(VarId v, MonoId i);
 	bool equals_var(MonoId t, VarId v);
+	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(MonoId t, Constraint const& c);
 	VarId get_var_id(MonoId i);
@@ -184,6 +185,7 @@ private:
 	// per-var data
 	std::vector<MonoId> m_substitution;
 	std::vector<Constraint> m_constraints;
+	UnionFind m_type_var_uf;
 
 	int m_var_counter {0};
 	int m_term_counter {0};
