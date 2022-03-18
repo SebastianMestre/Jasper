@@ -179,6 +179,16 @@ void TypeSystemCore::unify_vars_left_to_right(VarId vi, VarId vj) {
 
 void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
 	// TODO
+	auto& i_constraints = m_constraints[static_cast<int>(vi)];
+	auto& j_constraints = m_constraints[static_cast<int>(vj)];
+	for (auto const& kv : i_constraints.structure) {
+		auto it = j_constraints.structure.find(kv.first);
+		if (it == j_constraints.structure.end()) {
+			j_constraints.structure.insert(kv);
+		} else {
+			ll_unify(kv.second, it->second);
+		}
+	}
 	return;
 }
 
