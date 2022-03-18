@@ -17,7 +17,7 @@
 // allow adding to it, but not removing.
 // If it has 'Full' strength, we only accept exact matches during unification.
 // We don't allow unifying two different full-strength type functions
-enum class TypeFunctionStrength { None, Half, Full };
+enum class TypeFunctionStrength { None, Full };
 
 enum class VarId {};
 
