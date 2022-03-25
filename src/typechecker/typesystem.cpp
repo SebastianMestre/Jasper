@@ -155,7 +155,7 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		return;
 	}
 
-	Log::fatal() << "unified different typefuncs";
+	assert(false);
 }
 
 bool TypeSystemCore::occurs(VarId v, MonoId i) {

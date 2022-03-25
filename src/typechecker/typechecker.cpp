@@ -19,11 +19,11 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	core().new_builtin_type_function(0);  // 5  | boolean
 	core().new_builtin_type_function(0);  // 6  | unit
 
-	core().new_term(1, {}, "builtin int");    // 0 | int(<>)
-	core().new_term(2, {}, "builtin float");  // 1 | float(<>)
-	core().new_term(3, {}, "builtin string"); // 2 | string(<>)
-	core().new_term(5, {}, "builtin bool");   // 3 | boolean(<>)
-	core().new_term(6, {}, "builtin unit");   // 4 | unit(<>)
+	core().new_term(BuiltinType::Int, {}, "builtin int");       // 0 | int<::>
+	core().new_term(BuiltinType::Float, {}, "builtin float");   // 1 | float<::>
+	core().new_term(BuiltinType::String, {}, "builtin string"); // 2 | string<::>
+	core().new_term(BuiltinType::Boolean, {}, "builtin bool");  // 3 | boolean<::>
+	core().new_term(BuiltinType::Unit, {}, "builtin unit");     // 4 | unit<::>
 
 	// TODO: put this in a better place
 	// TODO: refactor, figure out a nice way to build types
