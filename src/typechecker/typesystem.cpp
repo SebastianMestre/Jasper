@@ -263,12 +263,11 @@ int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug)
 	return type_id;
 }
 
-
 int TypeSystemCore::ll_find(int i) {
 	if (!ll_is_var(i)) return i;
 	VarId vi = get_var_id(i);
 	if (m_substitution[static_cast<int>(vi)] == -1) return i;
-	return ll_find(m_substitution[static_cast<int>(vi)]);
+	return m_substitution[static_cast<int>(vi)];
 }
 
 VarId TypeSystemCore::get_var_id(MonoId i) {
