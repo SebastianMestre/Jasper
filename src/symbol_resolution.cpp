@@ -109,9 +109,10 @@ private:
 		if (!declaration) {
 			// TODO: clean up how we build error reports
 			auto token = ast->token();
+			SourceLocation token_location = file_context.char_offset_to_location(token->m_start_offset);
 			return make_located_error(
 				"accessed undeclared identifier '" + ast->text().str() + "'",
-				token->m_source_location.start);
+				token_location);
 		}
 
 		ast->m_declaration = declaration;
