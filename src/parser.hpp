@@ -10,6 +10,10 @@ struct CST;
 struct Allocator;
 }
 
+namespace Frontend {
+struct Context;
+}
+
 template <typename T>
 struct Writer {
 	ErrorReport m_error {};
@@ -54,5 +58,5 @@ struct Writer {
 	}
 };
 
-Writer<CST::CST*> parse_program(TokenArray const&, CST::Allocator&);
-Writer<CST::CST*> parse_expression(TokenArray const&, CST::Allocator&);
+Writer<CST::CST*> parse_program(TokenArray const&, Frontend::Context const&, CST::Allocator&);
+Writer<CST::CST*> parse_expression(TokenArray const&, Frontend::Context const&, CST::Allocator&);

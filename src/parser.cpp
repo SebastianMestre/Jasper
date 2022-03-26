@@ -65,11 +65,13 @@ ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
 struct Parser {
 	/* token handler */
 	TokenArray const& m_tokens;
+	Frontend::Context const& m_file_context;
 	CST::Allocator& m_cst_allocator;
 	int m_token_cursor { 0 };
 
-	Parser(TokenArray const& tokens, CST::Allocator& cst_allocator)
+	Parser(TokenArray const& tokens, Frontend::Context const& file_context, CST::Allocator& cst_allocator)
 	    : m_tokens {tokens}
+		, m_file_context {file_context}
 	    , m_cst_allocator {cst_allocator} {}
 
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
@@ -1185,12 +1187,12 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-Writer<CST::CST*> parse_program(TokenArray const& ta, CST::Allocator& allocator) {
-	Parser p {ta, allocator};
+Writer<CST::CST*> parse_program(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
+	Parser p {ta, file_context, allocator};
 	return p.parse_top_level();
 }
 
-Writer<CST::CST*> parse_expression(TokenArray const& ta, CST::Allocator& allocator) {
-	Parser p {ta, allocator};
+Writer<CST::CST*> parse_expression(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
+	Parser p {ta, file_context, allocator};
 	return p.parse_expression();
 }

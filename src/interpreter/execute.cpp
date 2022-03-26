@@ -32,7 +32,7 @@ ExitStatus execute(
 	TokenArray const ta = tokenize(source.c_str());
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_program(ta, cst_allocator);
+	auto parse_result = parse_program(ta, file_context, cst_allocator);
 
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
@@ -99,7 +99,7 @@ Value eval_expression(
 	TokenArray const ta = tokenize(expr.c_str());
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_expression(ta, cst_allocator);
+	auto parse_result = parse_expression(ta, file_context, cst_allocator);
 	// TODO: handle parse error
 	auto cst = parse_result.m_result;
 
