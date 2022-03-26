@@ -382,7 +382,7 @@ TokenArray tokenize(char const* p) {
 
 		eat_whitespace();
 	}
-	ta.push_back({TokenTag::END, InternedString()});
+	ta.push_back({TokenTag::END, InternedString(), p-code_start});
 
 	return ta;
 }
