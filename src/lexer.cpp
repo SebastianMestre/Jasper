@@ -387,41 +387,5 @@ TokenArray tokenize(char const* p) {
 	}
 	ta.push_back({TokenTag::END, InternedString()});
 
-	// resolve source locations
-	{
-		int const real_token_count = ta.size() - 1;
-		int code_idx = 0;
-		int line = 0;
-		int col = 0;
-
-		auto advance_until = [&] (int end_idx) {
-			for (; code_idx < end_idx; ++code_idx) {
-				if (code_start[code_idx] == '\n') {
-					line += 1;
-					col = 0;
-				} else {
-					col += 1;
-				}
-			}
-		};
-
-		for (int i = 0; i < real_token_count; ++i) {
-			auto& token = ta.at(i);
-
-			int code_idx1 = token.m_source_location.start.line;
-			int code_idx2 = token.m_source_location.end.line;
-
-			advance_until(code_idx1);
-
-			token.m_source_location.start.line = line;
-			token.m_source_location.start.col = col;
-
-			advance_until(code_idx2);
-
-			token.m_source_location.end.line = line;
-			token.m_source_location.end.col = col;
-		}
-	}
-
 	return ta;
 }
