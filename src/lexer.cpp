@@ -310,13 +310,13 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 		ta.push_back({
 			TokenTag::IDENTIFIER,
 			InternedString(str.begin(), str.size()),
-			0, 0, 0, 0, start_offset
+			start_offset
 		});
 	} else {
 		ta.push_back({
 			KeywordLexer::token_tags[state - 1],
 			KeywordLexer::fixed_strings[state - 1],
-			0, 0, 0, 0, start_offset
+			start_offset
 		});
 	}
 }
@@ -360,7 +360,6 @@ TokenArray tokenize(char const* p) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				MainLexer::fixed_strings[state - 1],
-				{{p0 - code_start}, {p - code_start}},
 				p0 - code_start,
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
@@ -371,14 +370,12 @@ TokenArray tokenize(char const* p) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0 + 1, p - p0 - 2),
-				{{p0 - code_start}, {p - code_start}},
 				p0 - code_start,
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0, p - p0),
-				{{p0 - code_start}, {p - code_start}},
 				p0 - code_start,
 			});
 		}
