@@ -297,7 +297,7 @@ static void print_error(char const* p) {
 	printf("Error -- last two chars are: %c%c\n", *(p-2), *(p-1));
 }
 
-static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, string_view str) {
+static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, string_view str, int start_offset) {
 
 	int state = state_count - 1;
 	for (int i = 0; i < str.size(); ++i) {
@@ -310,13 +310,13 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 		ta.push_back({
 			TokenTag::IDENTIFIER,
 			InternedString(str.begin(), str.size()),
-			0, 0, 0, 0
+			0, 0, 0, 0, start_offset
 		});
 	} else {
 		ta.push_back({
 			KeywordLexer::token_tags[state - 1],
 			KeywordLexer::fixed_strings[state - 1],
-			0, 0, 0, 0,
+			0, 0, 0, 0, start_offset
 		});
 	}
 }
@@ -360,23 +360,26 @@ TokenArray tokenize(char const* p) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				MainLexer::fixed_strings[state - 1],
-				{{p0 - code_start}, {p - code_start}}
+				{{p0 - code_start}, {p - code_start}},
+				p0 - code_start,
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
-			push_identifier_or_keyword(ka, ta, string_view(p0, p - p0));
+			push_identifier_or_keyword(ka, ta, string_view(p0, p - p0), p0 - code_start);
 		} else if(state == MainLexer::EndStates::Comment) {
 			// do nothing.
 		} else if(state == MainLexer::EndStates::String) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0 + 1, p - p0 - 2),
-				{{p0 - code_start}, {p - code_start}}
+				{{p0 - code_start}, {p - code_start}},
+				p0 - code_start,
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
 				InternedString(p0, p - p0),
-				{{p0 - code_start}, {p - code_start}}
+				{{p0 - code_start}, {p - code_start}},
+				p0 - code_start,
 			});
 		}
 
