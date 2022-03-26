@@ -4,6 +4,7 @@
 #include "./utils/string_view.hpp"
 #include "cst.hpp"
 #include "cst_allocator.hpp"
+#include "frontend_context.hpp"
 #include "token_array.hpp"
 
 #include <sstream>
@@ -38,29 +39,6 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ErrorReport make_located_error(string_view text, Token const* token) {
-	return make_located_error(text, token->m_source_location.start);
-}
-
-ErrorReport make_expected_error(string_view expected, Token const* found_token) {
-	std::stringstream ss;
-
-	ss << "Expected " << expected << " but got ";
-
-	if (found_token->m_type == TokenTag::END) {
-		ss << "to the end of the file";
-	} else {
-		ss << token_string[int(found_token->m_type)] << ' ' << found_token->m_text;
-	}
-
-	ss << " instead";
-
-	return make_located_error(ss.str(), found_token);
-}
-
-ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
-	return make_expected_error(token_string[int(tag)], found_token);
-}
 
 struct Parser {
 	/* token handler */
@@ -110,6 +88,31 @@ struct Parser {
 	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(bool);
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
+
+	ErrorReport make_located_error(string_view text, Token const* token) {
+		SourceLocation token_location = m_file_context.char_offset_to_location(token->m_start_offset);
+		return ::make_located_error(text, token_location);
+	}
+
+	ErrorReport make_expected_error(string_view expected, Token const* found_token) {
+		std::stringstream ss;
+
+		ss << "Expected " << expected << " but got ";
+
+		if (found_token->m_type == TokenTag::END) {
+			ss << "to the end of the file";
+		} else {
+			ss << token_string[int(found_token->m_type)] << ' ' << found_token->m_text;
+		}
+
+		ss << " instead";
+
+		return make_located_error(ss.str(), found_token);
+	}
+
+	ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
+		return make_expected_error(token_string[int(tag)], found_token);
+	}
 
 	void advance_token_cursor() {
 		m_token_cursor += 1;
