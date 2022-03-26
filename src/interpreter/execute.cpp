@@ -4,6 +4,7 @@
 #include "../ast_allocator.hpp"
 #include "../compute_offsets.hpp"
 #include "../cst_allocator.hpp"
+#include "../frontend_context.hpp"
 #include "../lexer.hpp"
 #include "../parser.hpp"
 #include "../symbol_resolution.hpp"
@@ -26,6 +27,8 @@ ExitStatus execute(
 	ExecuteSettings settings,
 	Runner* runner
 ) {
+
+	Frontend::Context file_context = {source};
 	TokenArray const ta = tokenize(source.c_str());
 
 	CST::Allocator cst_allocator;
@@ -57,7 +60,7 @@ ExitStatus execute(
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
-		auto err = Frontend::resolve_symbols(ast, context);
+		auto err = Frontend::resolve_symbols(ast, file_context, context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatus::StaticError;
@@ -92,6 +95,7 @@ Value eval_expression(
 	Interpreter& env,
 	Frontend::SymbolTable& context
 ) {
+	Frontend::Context file_context = {expr};
 	TokenArray const ta = tokenize(expr.c_str());
 
 	CST::Allocator cst_allocator;
@@ -103,7 +107,7 @@ Value eval_expression(
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	{
-		auto err = Frontend::resolve_symbols(ast, context);
+		auto err = Frontend::resolve_symbols(ast, file_context, context);
 		if (!err.ok()) {
 			err.print();
 			return env.null();

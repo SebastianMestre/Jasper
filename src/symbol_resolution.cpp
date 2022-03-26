@@ -8,6 +8,7 @@
 #include "./utils/error_report.hpp"
 #include "./utils/interned_string.hpp"
 #include "ast.hpp"
+#include "frontend_context.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
 
@@ -67,8 +68,9 @@ struct PtrStack {
 	}
 
 struct SymbolResolutionCommand {
-	SymbolResolutionCommand(SymbolTable& symbol_table)
-	    : symbol_table {symbol_table} {}
+	SymbolResolutionCommand(Context const& file_context, SymbolTable& symbol_table)
+		: file_context {file_context}
+		, symbol_table {symbol_table} {}
 
 	ErrorReport handle(AST::AST* ast) {
 		return resolve(ast);
@@ -76,6 +78,7 @@ struct SymbolResolutionCommand {
 
 private:
 
+	Context const& file_context;
 	SymbolTable& symbol_table;
 	TopLevelDeclTracker top_level;
 	PtrStack<AST::FunctionLiteral> functions;
@@ -357,8 +360,8 @@ private:
 
 #undef CHECK_AND_RETURN
 
-[[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, SymbolTable& env) {
-	auto command = SymbolResolutionCommand {env};
+[[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, Context const& file_context, SymbolTable& env) {
+	auto command = SymbolResolutionCommand {file_context, env};
 	return command.handle(ast);
 }
 
