@@ -182,17 +182,11 @@ static AST::Constructor* constructor_from_ast(
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
-		// dummy with one constructor, the one used
-		std::unordered_map<InternedString, MonoId> structure;
-		structure[access->m_member] = tc.new_var();
-		TypeFunctionId dummy_tf = tc.core().new_type_function(
-		    TypeFunctionTag::Variant, {}, std::move(structure), true);
-		MonoId dummy_monotype =
-		    tc.core().new_term(dummy_tf, {}, "Union Constructor Access");
+		MonoId dummy_monotype = tc.core().new_dummy_for_ct_eval(access->m_member);
 
 		MonoId monotype = compute_mono(access->m_target, tc);
 
-		tc.core().m_mono_core.unify(dummy_monotype, monotype);
+		tc.core().ll_unify(dummy_monotype, monotype);
 
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
@@ -363,7 +357,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 					Log::fatal() << "type hint not allowed in type declaration";
 
 				MonoId mt = compute_mono(decl->m_value, tc);
-				tc.core().m_mono_core.unify(mt, get_monotype_id(decl->m_value));
+				tc.core().ll_unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
 					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);
@@ -463,16 +457,12 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function(
-	    TypeFunctionTag::Record,
-	    ast->m_fields,
-	    build_map(ast->m_fields, ast->m_types, tc));
+	return tc.core().new_type_function_for_ct_eval1(
+	    ast->m_fields, build_map(ast->m_fields, ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function(
-	    TypeFunctionTag::Variant,
-	    {},
+	return tc.core().new_type_function_for_ct_eval2(
 	    build_map(ast->m_constructors, ast->m_types, tc));
 }
 

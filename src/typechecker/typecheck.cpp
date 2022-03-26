@@ -33,7 +33,7 @@ struct TypecheckHelper {
 	void new_nested_scope() { tc.m_env.new_nested_scope(); }
 	void end_scope() { tc.m_env.end_scope(); }
 
-	void unify(MonoId i, MonoId j) { core().m_mono_core.unify(i, j); }
+	void unify(MonoId i, MonoId j) { core().ll_unify(i, j); }
 
 	bool is_type(MetaTypeId i) { return meta_type_is(i, Tag::Func) || meta_type_is(i, Tag::Mono); }
 	bool is_term(MetaTypeId i) { return meta_type_is(i, Tag::Term); }
@@ -45,6 +45,15 @@ struct TypecheckHelper {
 	    std::vector<MonoId> arguments,
 	    char const* debug_data = nullptr) {
 		return core().new_term(type_function, std::move(arguments), debug_data);
+	}
+
+
+	MonoId make_dummy_variant_type(std::unordered_map<InternedString, MonoId> structure) {
+		return core().new_dummy_for_typecheck1(std::move(structure));
+	}
+
+	MonoId make_dummy_record_type(std::unordered_map<InternedString, MonoId> structure) {
+		return core().new_dummy_for_typecheck2(std::move(structure));
 	}
 
 	MonoId make_function_type(std::vector<MonoId> args_types, int return_type) {
@@ -250,13 +259,7 @@ void typecheck(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	TypeFunctionId dummy_tf = tc.core().new_type_function(
-	    TypeFunctionTag::Record,
-	    // we don't care about field order in dummies
-	    {},
-	    {{ast->m_member, member_type}},
-	    true);
-	MonoId term_type = tc.new_term(dummy_tf, {}, "record instance");
+	MonoId term_type = tc.make_dummy_record_type({{ast->m_member, member_type}});
 
 	tc.unify(ast->m_target->m_value_type, term_type);
 }
@@ -288,16 +291,7 @@ void typecheck(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
 	}
 
-	TypeFunctionId dummy_tf = tc.core().new_type_function(
-	    TypeFunctionTag::Variant,
-	    // we don't care about field order in dummies
-	    {},
-	    std::move(dummy_structure),
-	    true);
-
-	// TODO: support user-defined polymorphic datatypes, and the notion of 'not
-	// knowing' the arguments to a typefunc.
-	MonoId term_type = tc.new_term(dummy_tf, {}, "match variant dummy");
+	MonoId term_type = tc.make_dummy_variant_type(std::move(dummy_structure));
 	tc.unify(ast->m_target.m_value_type, term_type);
 }
 

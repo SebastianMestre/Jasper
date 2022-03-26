@@ -17,9 +17,9 @@ struct BuiltinType {
 	static constexpr TypeFunctionId Float {2};
 	static constexpr TypeFunctionId String {3};
 	static constexpr TypeFunctionId Array {4};
-	static constexpr TypeFunctionId Boolean {6};
-	static constexpr TypeFunctionId Unit {7};
-	static constexpr int amount_ {8};
+	static constexpr TypeFunctionId Boolean {5};
+	static constexpr TypeFunctionId Unit {6};
+	static constexpr int amount_ {7};
 };
 
 } // namespace TypeChecker
