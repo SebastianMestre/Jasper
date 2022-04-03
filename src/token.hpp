@@ -10,5 +10,5 @@ struct Token {
 	/* source code representation of token */
 	InternedString m_text;
 
-	SourceRange m_source_location;
+	int m_start_offset;
 };

@@ -37,6 +37,7 @@ COMMON_TARGETS := \
 	ast \
 	compute_offsets \
 	cst \
+	frontend_context \
 	lexer \
 	parser \
 	symbol_resolution \

@@ -4,6 +4,7 @@
 #include "./utils/string_view.hpp"
 #include "cst.hpp"
 #include "cst_allocator.hpp"
+#include "frontend_context.hpp"
 #include "token_array.hpp"
 
 #include <sstream>
@@ -38,38 +39,17 @@ bool handle_error(Writer<T>& lhs, Writer<U>&& rhs) {
 	return false;
 }
 
-ErrorReport make_located_error(string_view text, Token const* token) {
-	return make_located_error(text, token->m_source_location.start);
-}
-
-ErrorReport make_expected_error(string_view expected, Token const* found_token) {
-	std::stringstream ss;
-
-	ss << "Expected " << expected << " but got ";
-
-	if (found_token->m_type == TokenTag::END) {
-		ss << "to the end of the file";
-	} else {
-		ss << token_string[int(found_token->m_type)] << ' ' << found_token->m_text;
-	}
-
-	ss << " instead";
-
-	return make_located_error(ss.str(), found_token);
-}
-
-ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
-	return make_expected_error(token_string[int(tag)], found_token);
-}
 
 struct Parser {
 	/* token handler */
 	TokenArray const& m_tokens;
+	Frontend::Context const& m_file_context;
 	CST::Allocator& m_cst_allocator;
 	int m_token_cursor { 0 };
 
-	Parser(TokenArray const& tokens, CST::Allocator& cst_allocator)
+	Parser(TokenArray const& tokens, Frontend::Context const& file_context, CST::Allocator& cst_allocator)
 	    : m_tokens {tokens}
+		, m_file_context {file_context}
 	    , m_cst_allocator {cst_allocator} {}
 
 	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
@@ -108,6 +88,31 @@ struct Parser {
 	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(bool);
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
+
+	ErrorReport make_located_error(string_view text, Token const* token) {
+		SourceLocation token_location = m_file_context.char_offset_to_location(token->m_start_offset);
+		return ::make_located_error(text, token_location);
+	}
+
+	ErrorReport make_expected_error(string_view expected, Token const* found_token) {
+		std::stringstream ss;
+
+		ss << "Expected " << expected << " but got ";
+
+		if (found_token->m_type == TokenTag::END) {
+			ss << "to the end of the file";
+		} else {
+			ss << token_string[int(found_token->m_type)] << ' ' << found_token->m_text;
+		}
+
+		ss << " instead";
+
+		return make_located_error(ss.str(), found_token);
+	}
+
+	ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
+		return make_expected_error(token_string[int(tag)], found_token);
+	}
 
 	void advance_token_cursor() {
 		m_token_cursor += 1;
@@ -1185,12 +1190,12 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-Writer<CST::CST*> parse_program(TokenArray const& ta, CST::Allocator& allocator) {
-	Parser p {ta, allocator};
+Writer<CST::CST*> parse_program(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
+	Parser p {ta, file_context, allocator};
 	return p.parse_top_level();
 }
 
-Writer<CST::CST*> parse_expression(TokenArray const& ta, CST::Allocator& allocator) {
-	Parser p {ta, allocator};
+Writer<CST::CST*> parse_expression(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
+	Parser p {ta, file_context, allocator};
 	return p.parse_expression();
 }

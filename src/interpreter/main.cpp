@@ -6,6 +6,7 @@
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
 #include "../cst_allocator.hpp"
+#include "../frontend_context.hpp"
 #include "../lexer.hpp"
 #include "../parser.hpp"
 #include "../symbol_table.hpp"
@@ -53,7 +54,7 @@ int main(int argc, char** argv) {
 			    TokenArray const ta = tokenize("__invoke()");
 
 			    CST::Allocator cst_allocator;
-			    auto top_level_call_ast = parse_expression(ta, cst_allocator);
+			    auto top_level_call_ast = parse_expression(ta, {}, cst_allocator);
 
 			    AST::Allocator ast_allocator;
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
