@@ -61,14 +61,14 @@ f := fn (x) {
 };
 ```
 
-### Opérateur pipeline ou opérateur pizza
+### Opérateur pipeline
 
-L'opérateur pizza nous permet d'écrire des pipelines dans notre code. C'est très pratique
+L'opérateur pipeline nous permet d'écrire des pipelines dans notre code. C'est très pratique
 pour deux choses :
  - Étendre la fonctionnalité d'un objet sans lui ajouter de dépendances
  - Écrire le code dans un style fonctionnel
  
-L'opérateur pizza transforme une expression de la forme `x |> f(y,...)` en `f(x,y,...)`
+L'opérateur pipeline transforme une expression de la forme `x |> f(y,...)` en `f(x,y,...)`
 
 Voici ici un exemple d'utilisation, adjoint de sa version désucrée :
 
