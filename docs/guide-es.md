@@ -71,7 +71,7 @@ es muy util para dos cosas:
  - Extender la funcionalidad de un objeto sin agregarle dependencias
  - Escribir codigo functional en estilo imperativo
 
-El operador pizza transforma una expresion de la forma `x |> f(y...)` a una de
+El operador pipeline transforma una expresion de la forma `x |> f(y...)` a una de
 la forma `f(x,y...)`.
 
 Aca hay un ejemplo de uso junto a su version des-azucarada:

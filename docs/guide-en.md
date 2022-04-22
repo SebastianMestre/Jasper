@@ -71,7 +71,7 @@ It is very useful for two things:
  - Extending the functionality of an object without adding dependencies
  - Write functional code in imperative style
 
-The pizza operator converts an expression like `x |> f(y,z)` into `f(x,y,z)`
+The pipeline operator converts an expression like `x |> f(y,z)` into `f(x,y,z)`
 
 Here is an example of their use, along with its desugared version:
 
