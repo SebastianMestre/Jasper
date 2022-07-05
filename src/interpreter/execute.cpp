@@ -59,7 +59,7 @@ ExitStatus execute(
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
-		auto err = Frontend::resolve_symbols(ast, lexer_result.file_context, context);
+		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatus::StaticError;
@@ -105,7 +105,7 @@ Value eval_expression(
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	{
-		auto err = Frontend::resolve_symbols(ast, lexer_result.file_context, context);
+		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);
 		if (!err.ok()) {
 			err.print();
 			return env.null();

@@ -1195,11 +1195,13 @@ Writer<CST::CST*> Parser::parse_type_function() {
 ParserResult parse_program(LexerResult const& lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::CST*> w = p.parse_top_level();
-	return {w.m_result, std::move(w.m_error)};
+	// TODO: don't copy the file context.
+	return {w.m_result, lexer_result.file_context, std::move(w.m_error)};
 }
 
 ParserResult parse_expression(LexerResult const& lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::CST*> w = p.parse_expression();
-	return {w.m_result, std::move(w.m_error)};
+	// TODO: don't copy the file context.
+	return {w.m_result, lexer_result.file_context, std::move(w.m_error)};
 }
