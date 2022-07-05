@@ -5,6 +5,7 @@
 #include "cst.hpp"
 #include "cst_allocator.hpp"
 #include "frontend_context.hpp"
+#include "lexer_result.hpp"
 #include "token_array.hpp"
 
 #include <sstream>
@@ -1190,12 +1191,12 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-Writer<CST::CST*> parse_program(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
-	Parser p {ta, file_context, allocator};
+Writer<CST::CST*> parse_program(LexerResult const& lexer_result, CST::Allocator& allocator) {
+	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	return p.parse_top_level();
 }
 
-Writer<CST::CST*> parse_expression(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
-	Parser p {ta, file_context, allocator};
+Writer<CST::CST*> parse_expression(LexerResult const& lexer_result, CST::Allocator& allocator) {
+	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	return p.parse_expression();
 }

@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 			    LexerResult lexer_result = tokenize({"__invoke()"});
 
 			    CST::Allocator cst_allocator;
-			    auto top_level_call_ast = parse_expression(lexer_result.tokens, {}, cst_allocator);
+			    auto top_level_call_ast = parse_expression(lexer_result, cst_allocator);
 
 			    AST::Allocator ast_allocator;
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);

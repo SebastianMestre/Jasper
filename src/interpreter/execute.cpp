@@ -31,7 +31,7 @@ ExitStatus execute(
 	LexerResult lexer_result = tokenize({source});
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_program(lexer_result.tokens, lexer_result.file_context, cst_allocator);
+	auto parse_result = parse_program(lexer_result, cst_allocator);
 
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
@@ -97,7 +97,7 @@ Value eval_expression(
 	LexerResult lexer_result = tokenize({expr});
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_expression(lexer_result.tokens, lexer_result.file_context, cst_allocator);
+	auto parse_result = parse_expression(lexer_result, cst_allocator);
 	// TODO: handle parse error
 	auto cst = parse_result.m_result;
 
