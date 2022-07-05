@@ -30,7 +30,7 @@ ExitStatus execute(
 ) {
 
 	Frontend::Context file_context = {source};
-	TokenArray const ta = tokenize(source.c_str());
+	TokenArray const ta = tokenize(file_context);
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_program(ta, file_context, cst_allocator);
@@ -97,7 +97,7 @@ Value eval_expression(
 	Frontend::SymbolTable& context
 ) {
 	Frontend::Context file_context = {expr};
-	TokenArray const ta = tokenize(expr.c_str());
+	TokenArray const ta = tokenize(file_context);
 
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_expression(ta, file_context, cst_allocator);

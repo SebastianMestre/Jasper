@@ -1,5 +1,6 @@
 #pragma once
 
+#include "frontend_context.hpp"
 #include "token_array.hpp"
 
-TokenArray tokenize(char const* p);
+TokenArray tokenize(Frontend::Context);
