@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "./utils/writer.hpp"
+#include "./parser_result.hpp"
 
 namespace CST {
 struct CST;
@@ -11,5 +11,5 @@ struct Allocator;
 
 struct LexerResult;
 
-Writer<CST::CST*> parse_program(LexerResult const&, CST::Allocator&);
-Writer<CST::CST*> parse_expression(LexerResult const&, CST::Allocator&);
+ParserResult parse_program(LexerResult const&, CST::Allocator&);
+ParserResult parse_expression(LexerResult const&, CST::Allocator&);

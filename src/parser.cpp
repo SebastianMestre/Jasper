@@ -2,6 +2,7 @@
 
 #include "./utils/error_report.hpp"
 #include "./utils/string_view.hpp"
+#include "./utils/writer.hpp"
 #include "cst.hpp"
 #include "cst_allocator.hpp"
 #include "frontend_context.hpp"
@@ -1191,12 +1192,14 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-Writer<CST::CST*> parse_program(LexerResult const& lexer_result, CST::Allocator& allocator) {
+ParserResult parse_program(LexerResult const& lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
-	return p.parse_top_level();
+	Writer<CST::CST*> w = p.parse_top_level();
+	return {w.m_result, std::move(w.m_error)};
 }
 
-Writer<CST::CST*> parse_expression(LexerResult const& lexer_result, CST::Allocator& allocator) {
+ParserResult parse_expression(LexerResult const& lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
-	return p.parse_expression();
+	Writer<CST::CST*> w = p.parse_expression();
+	return {w.m_result, std::move(w.m_error)};
 }

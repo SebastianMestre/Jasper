@@ -55,12 +55,12 @@ int main(int argc, char** argv) {
 			    LexerResult lexer_result = tokenize({"__invoke()"});
 
 			    CST::Allocator cst_allocator;
-			    auto top_level_call_ast = parse_expression(lexer_result, cst_allocator);
+			    auto parser_result = parse_expression(lexer_result, cst_allocator);
 
 			    AST::Allocator ast_allocator;
-			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
+			    auto ast = AST::convert_ast(parser_result.cst(), ast_allocator);
 
-				eval(top_level_call, env);
+				eval(ast, env);
 			    auto result = env.m_stack.pop_unsafe();
 
 				Interpreter::print(result);

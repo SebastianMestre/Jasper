@@ -34,11 +34,11 @@ ExitStatus execute(
 	auto parse_result = parse_program(lexer_result, cst_allocator);
 
 	if (not parse_result.ok()) {
-		parse_result.m_error.print();
+		parse_result.error().print();
 		return ExitStatus::ParseError;
 	}
 
-	auto cst = parse_result.m_result;
+	auto cst = parse_result.cst();
 
 	if (settings.dump_cst)
 		print(cst, 1);
@@ -99,7 +99,7 @@ Value eval_expression(
 	CST::Allocator cst_allocator;
 	auto parse_result = parse_expression(lexer_result, cst_allocator);
 	// TODO: handle parse error
-	auto cst = parse_result.m_result;
+	auto cst = parse_result.cst();
 
 	AST::Allocator ast_allocator;
 	auto ast = AST::convert_ast(cst, ast_allocator);
