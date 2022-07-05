@@ -5,6 +5,7 @@
 
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../convert_ast.hpp"
 #include "../cst_allocator.hpp"
 #include "../frontend_context.hpp"
 #include "../lexer.hpp"
