@@ -7,6 +7,7 @@
 #include "../cst_allocator.hpp"
 #include "../frontend_context.hpp"
 #include "../lexer.hpp"
+#include "../log/log.hpp"
 #include "../parser.hpp"
 #include "../symbol_resolution.hpp"
 #include "../symbol_table.hpp"
@@ -28,28 +29,25 @@ ExitStatus execute(
 	ExecuteSettings settings,
 	Runner* runner
 ) {
+	CST::Allocator cst_allocator;
+	AST::Allocator ast_allocator;
+
 	LexerResult lexer_result = tokenize({source});
 
-	CST::Allocator cst_allocator;
-	auto parse_result = parse_program(lexer_result, cst_allocator);
+	auto parse_result = parse_program(std::move(lexer_result), cst_allocator);
 
 	if (not parse_result.ok()) {
 		parse_result.error().print();
 		return ExitStatus::ParseError;
 	}
 
-	auto cst = parse_result.cst();
-
 	if (settings.dump_cst)
-		print(cst, 1);
+		print(parse_result.cst(), 1);
 
-	// Can this even happen? parse_program should always either return a
-	// Program or an error
-	if (cst->type() != CSTTag::Program)
-		return ExitStatus::TopLevelTypeError;
+	// TODO: replace runtime check with type safety
+	assert(parse_result.cst()->type() == CSTTag::Program);
 
-	AST::Allocator ast_allocator;
-	auto ast = AST::convert_ast(cst, ast_allocator);
+	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
 
 	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};
@@ -94,15 +92,19 @@ Value eval_expression(
 	Interpreter& env,
 	Frontend::SymbolTable& context
 ) {
+	CST::Allocator cst_allocator;
+	AST::Allocator ast_allocator;
+
 	LexerResult lexer_result = tokenize({expr});
 
-	CST::Allocator cst_allocator;
-	auto parse_result = parse_expression(lexer_result, cst_allocator);
-	// TODO: handle parse error
-	auto cst = parse_result.cst();
+	auto parse_result = parse_expression(std::move(lexer_result), cst_allocator);
 
-	AST::Allocator ast_allocator;
-	auto ast = AST::convert_ast(cst, ast_allocator);
+	if (!parse_result.ok()) {
+		parse_result.error().print();
+		Log::fatal() << "parser error";
+	}
+
+	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
 
 	{
 		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);

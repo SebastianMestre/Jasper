@@ -1192,16 +1192,14 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-ParserResult parse_program(LexerResult const& lexer_result, CST::Allocator& allocator) {
+ParserResult parse_program(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::CST*> w = p.parse_top_level();
-	// TODO: don't copy the file context.
-	return {w.m_result, lexer_result.file_context, std::move(w.m_error)};
+	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }
 
-ParserResult parse_expression(LexerResult const& lexer_result, CST::Allocator& allocator) {
+ParserResult parse_expression(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::CST*> w = p.parse_expression();
-	// TODO: don't copy the file context.
-	return {w.m_result, lexer_result.file_context, std::move(w.m_error)};
+	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }

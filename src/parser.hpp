@@ -2,14 +2,12 @@
 
 #include <string>
 
+#include "./lexer_result.hpp"
 #include "./parser_result.hpp"
 
 namespace CST {
-struct CST;
 struct Allocator;
 }
 
-struct LexerResult;
-
-ParserResult parse_program(LexerResult const&, CST::Allocator&);
-ParserResult parse_expression(LexerResult const&, CST::Allocator&);
+ParserResult parse_program(LexerResult, CST::Allocator&);
+ParserResult parse_expression(LexerResult, CST::Allocator&);
