@@ -387,6 +387,9 @@ static TokenArray tokenize(char const* p) {
 	return ta;
 }
 
-TokenArray tokenize(Frontend::Context ctx) {
-	return tokenize(ctx.source.c_str());
+LexerResult tokenize(Frontend::Context ctx) {
+	LexerResult result;
+	result.tokens = tokenize(ctx.source.c_str());
+	result.file_context = std::move(ctx);
+	return result;
 }

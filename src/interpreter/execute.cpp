@@ -28,12 +28,10 @@ ExitStatus execute(
 	ExecuteSettings settings,
 	Runner* runner
 ) {
-
-	Frontend::Context file_context = {source};
-	TokenArray const ta = tokenize(file_context);
+	LexerResult lexer_result = tokenize({source});
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_program(ta, file_context, cst_allocator);
+	auto parse_result = parse_program(lexer_result.tokens, lexer_result.file_context, cst_allocator);
 
 	if (not parse_result.ok()) {
 		parse_result.m_error.print();
@@ -61,7 +59,7 @@ ExitStatus execute(
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
-		auto err = Frontend::resolve_symbols(ast, file_context, context);
+		auto err = Frontend::resolve_symbols(ast, lexer_result.file_context, context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatus::StaticError;
@@ -96,11 +94,10 @@ Value eval_expression(
 	Interpreter& env,
 	Frontend::SymbolTable& context
 ) {
-	Frontend::Context file_context = {expr};
-	TokenArray const ta = tokenize(file_context);
+	LexerResult lexer_result = tokenize({expr});
 
 	CST::Allocator cst_allocator;
-	auto parse_result = parse_expression(ta, file_context, cst_allocator);
+	auto parse_result = parse_expression(lexer_result.tokens, lexer_result.file_context, cst_allocator);
 	// TODO: handle parse error
 	auto cst = parse_result.m_result;
 
@@ -108,7 +105,7 @@ Value eval_expression(
 	auto ast = AST::convert_ast(cst, ast_allocator);
 
 	{
-		auto err = Frontend::resolve_symbols(ast, file_context, context);
+		auto err = Frontend::resolve_symbols(ast, lexer_result.file_context, context);
 		if (!err.ok()) {
 			err.print();
 			return env.null();

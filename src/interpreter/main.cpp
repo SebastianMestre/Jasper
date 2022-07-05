@@ -52,10 +52,10 @@ int main(int argc, char** argv) {
 		    // TODO: We need to clean this up
 
 		    {
-			    TokenArray const ta = tokenize({"__invoke()"});
+			    LexerResult lexer_result = tokenize({"__invoke()"});
 
 			    CST::Allocator cst_allocator;
-			    auto top_level_call_ast = parse_expression(ta, {}, cst_allocator);
+			    auto top_level_call_ast = parse_expression(lexer_result.tokens, {}, cst_allocator);
 
 			    AST::Allocator ast_allocator;
 			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
