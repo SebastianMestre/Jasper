@@ -10,8 +10,8 @@ struct ErrorReport {
 	std::string m_text;
 	std::vector<ErrorReport> m_sub_errors;
 
-	bool ok();
-	void print(int d = 1);
+	bool ok() const;
+	void print(int d = 1) const;
 };
 
 ErrorReport make_located_error(string_view text, SourceLocation location);

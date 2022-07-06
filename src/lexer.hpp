@@ -1,5 +1,7 @@
 #pragma once
 
+#include "frontend_context.hpp"
+#include "lexer_result.hpp"
 #include "token_array.hpp"
 
-TokenArray tokenize(char const* p);
+LexerResult tokenize(Frontend::Context);

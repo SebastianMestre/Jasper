@@ -47,10 +47,6 @@ struct Expr : public AST {
 	MonoId m_value_type {-1};
 };
 
-struct Allocator;
-
-AST* convert_ast(CST::CST*, Allocator& alloc);
-
 struct FunctionLiteral;
 struct SequenceExpression;
 

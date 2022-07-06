@@ -5,6 +5,7 @@
 
 #include "../ast.hpp"
 #include "../ast_allocator.hpp"
+#include "../convert_ast.hpp"
 #include "../cst_allocator.hpp"
 #include "../frontend_context.hpp"
 #include "../lexer.hpp"
@@ -42,31 +43,30 @@ int main(int argc, char** argv) {
 	Interpreter::ExecuteSettings settings;
 
 	ExitStatus exit_code = execute(
-	    source,
-	    settings,
-	    +[](Interpreter::Interpreter& env,
-	        Frontend::SymbolTable& context) -> ExitStatus {
-		    // NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
-		    // this means we need to create a call expression node to run the program.
-		    // TODO: We need to clean this up
+		source,
+		settings,
+		+[](Interpreter::Interpreter& env,
+		    Frontend::SymbolTable& context) -> ExitStatus {
+			// NOTE: We currently implement funcion evaluation in eval(ASTCallExpression)
+			// this means we need to create a call expression node to run the program.
 
-		    {
-			    TokenArray const ta = tokenize("__invoke()");
+			{
+				LexerResult lexer_result = tokenize({"__invoke()"});
 
-			    CST::Allocator cst_allocator;
-			    auto top_level_call_ast = parse_expression(ta, {}, cst_allocator);
+				CST::Allocator cst_allocator;
+				auto parser_result = parse_expression(lexer_result, cst_allocator);
 
-			    AST::Allocator ast_allocator;
-			    auto top_level_call = AST::convert_ast(top_level_call_ast.m_result, ast_allocator);
+				AST::Allocator ast_allocator;
+				auto ast = AST::convert_ast(parser_result.cst(), ast_allocator);
 
-				eval(top_level_call, env);
-			    auto result = env.m_stack.pop_unsafe();
+				eval(ast, env);
+				auto result = env.m_stack.pop_unsafe();
 
 				Interpreter::print(result);
-		    }
+			}
 
-		    return ExitStatus::Ok;
-	    });
+			return ExitStatus::Ok;
+		});
 
 	return static_cast<int>(exit_code);
 }

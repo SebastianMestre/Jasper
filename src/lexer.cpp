@@ -321,7 +321,7 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 	}
 }
 
-TokenArray tokenize(char const* p) {
+static TokenArray tokenize(char const* p) {
 	// Implementation detail: We store indices into the source buffer
 	// in the source_locations at first, then resolve them in another pass.
 
@@ -385,4 +385,11 @@ TokenArray tokenize(char const* p) {
 	ta.push_back({TokenTag::END, InternedString(), p-code_start});
 
 	return ta;
+}
+
+LexerResult tokenize(Frontend::Context ctx) {
+	LexerResult result;
+	result.tokens = tokenize(ctx.source.c_str());
+	result.file_context = std::move(ctx);
+	return result;
 }

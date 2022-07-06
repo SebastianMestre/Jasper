@@ -36,6 +36,7 @@ COMMON_TARGETS := \
 	utils/string_view \
 	ast \
 	compute_offsets \
+	convert_ast \
 	cst \
 	frontend_context \
 	lexer \

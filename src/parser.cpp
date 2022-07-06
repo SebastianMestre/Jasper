@@ -2,9 +2,11 @@
 
 #include "./utils/error_report.hpp"
 #include "./utils/string_view.hpp"
+#include "./utils/writer.hpp"
 #include "cst.hpp"
 #include "cst_allocator.hpp"
 #include "frontend_context.hpp"
+#include "lexer_result.hpp"
 #include "token_array.hpp"
 
 #include <sstream>
@@ -1190,12 +1192,14 @@ Writer<CST::CST*> Parser::parse_type_function() {
 #undef CHECK_AND_RETURN
 #undef REQUIRE
 
-Writer<CST::CST*> parse_program(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
-	Parser p {ta, file_context, allocator};
-	return p.parse_top_level();
+ParserResult parse_program(LexerResult lexer_result, CST::Allocator& allocator) {
+	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
+	Writer<CST::CST*> w = p.parse_top_level();
+	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }
 
-Writer<CST::CST*> parse_expression(TokenArray const& ta, Frontend::Context const& file_context, CST::Allocator& allocator) {
-	Parser p {ta, file_context, allocator};
-	return p.parse_expression();
+ParserResult parse_expression(LexerResult lexer_result, CST::Allocator& allocator) {
+	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
+	Writer<CST::CST*> w = p.parse_expression();
+	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }

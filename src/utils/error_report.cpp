@@ -3,11 +3,11 @@
 #include <iostream>
 #include <sstream>
 
-bool ErrorReport::ok() {
+bool ErrorReport::ok() const {
 	return m_sub_errors.empty() && m_text.empty();
 }
 
-void ErrorReport::print(int d) {
+void ErrorReport::print(int d) const {
 	for (int i = 0; i < d; ++i)
 		std::cerr << '-';
 
