@@ -22,3 +22,7 @@ ErrorReport make_located_error(string_view text, SourceLocation location) {
 	ss << "At " << location.to_string() << " : " << text;
 	return ErrorReport {ss.str()};
 }
+
+void ErrorReport::add_sub_error(ErrorReport other) {
+	m_sub_errors.push_back(std::move(other));
+}
