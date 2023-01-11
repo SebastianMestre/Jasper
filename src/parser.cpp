@@ -151,13 +151,17 @@ struct Parser {
 	}
 };
 
-#define CHECK_AND_EXTRACT(writer)                                              \
-	if (!writer.ok())                                                          \
-		return std::move(writer).error();
-
 #define REQUIRE(result, token)                                                 \
 	if (handle_error(result, require(token)))                                  \
 		return result;
+
+#define TRY(x)                                                                 \
+	({                                                                         \
+		auto _temporary = x;                                                   \
+		if (not _temporary.ok())                                               \
+			return std::move(_temporary).error();                              \
+		_temporary.m_result;                                                   \
+	})
 
 #define TRY_WITH(lhs, x)                                                       \
 	({                                                                         \
@@ -191,10 +195,8 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 		return make_writer(std::move(expressions));
 
 	while (1) {
-		auto expression = parse_expression();
-		CHECK_AND_EXTRACT(expression);
 
-		expressions.push_back(expression.m_result);
+		expressions.push_back(TRY(parse_expression()));
 
 		auto p0 = peek();
 
@@ -412,9 +414,7 @@ Writer<CST::CST*> Parser::parse_full_expression(int bp) {
 }
 
 Writer<CST::CST*> Parser::parse_expression(int bp) {
-	auto lhs = parse_terminal();
-	CHECK_AND_EXTRACT(lhs);
-	return parse_expression(lhs.m_result, bp);
+	return parse_expression(TRY(parse_terminal()), bp);
 }
 
 /* The algorithm used here is called 'Pratt Parsing'
@@ -448,12 +448,11 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 			break;
 
 		if (op->m_type == TokenTag::PAREN_OPEN) {
-			auto args = parse_argument_list();
-			CHECK_AND_EXTRACT(args);
+			auto args = TRY(parse_argument_list());
 
 			auto e = m_cst_allocator.make<CST::CallExpression>();
 			e->m_callee = lhs;
-			e->m_args = std::move(args.m_result);
+			e->m_args = std::move(args);
 			lhs = e;
 
 			continue;
@@ -462,52 +461,47 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		if (op->m_type == TokenTag::BRACKET_OPEN) {
 			advance_token_cursor();
 
-			auto index = parse_expression();
-			CHECK_AND_EXTRACT(index);
+			auto index = TRY(parse_expression());
 
-			auto bracket_close = require(TokenTag::BRACKET_CLOSE);
-			CHECK_AND_EXTRACT(bracket_close);
+			TRY(require(TokenTag::BRACKET_CLOSE));
 
 			auto e = m_cst_allocator.make<CST::IndexExpression>();
 			e->m_callee = lhs;
-			e->m_index = index.m_result;
+			e->m_index = index;
 			lhs = e;
 
 			continue;
 		}
 
 		if (match(TokenTag::POLY_OPEN)) {
-			auto args = parse_type_term_arguments();
-			CHECK_AND_EXTRACT(args);
+			auto args = TRY(parse_type_term_arguments());
 
 			auto e = m_cst_allocator.make<CST::TypeTerm>();
 			e->m_callee = lhs;
-			e->m_args = std::move(args.m_result);
+			e->m_args = std::move(args);
 			lhs = e;
 
 			continue;
 		}
 
 		if (consume(TokenTag::DOT)) {
-			auto member = require(TokenTag::IDENTIFIER);
-			CHECK_AND_EXTRACT(member);
+			auto member = TRY(require(TokenTag::IDENTIFIER));
 
 			auto e = m_cst_allocator.make<CST::AccessExpression>();
 			e->m_record = lhs;
-			e->m_member = member.m_result;
+			e->m_member = member;
 			lhs = e;
 
 			continue;
 		}
 
 		if (consume(TokenTag::BRACE_OPEN)) {
-			auto args =
-			    parse_expression_list(TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true);
-			CHECK_AND_EXTRACT(args);
+			auto args = TRY(parse_expression_list(
+			    TokenTag::SEMICOLON, TokenTag::BRACE_CLOSE, true));
 
 			auto e = m_cst_allocator.make<CST::ConstructorExpression>();
 			e->m_constructor = lhs;
-			e->m_args = std::move(args.m_result);
+			e->m_args = std::move(args);
 			lhs = e;
 
 			continue;
@@ -608,51 +602,43 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
-		auto function = parse_function();
-		CHECK_AND_EXTRACT(function);
-		return function;
+		auto function = TRY(parse_function());
+		return make_writer(function);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_IF) {
-		auto ternary = parse_ternary_expression();
-		CHECK_AND_EXTRACT(ternary);
-		return ternary;
+		auto ternary = TRY(parse_ternary_expression());
+		return make_writer(ternary);
 	}
 
 	// parse a parenthesized expression.
 	if (token->m_type == TokenTag::PAREN_OPEN) {
 		advance_token_cursor();
-		auto expr = parse_expression();
-		CHECK_AND_EXTRACT(expr);
-		auto paren = require(TokenTag::PAREN_CLOSE);
-		CHECK_AND_EXTRACT(paren);
-		return expr;
+		auto expr = TRY(parse_expression());
+		TRY(require(TokenTag::PAREN_CLOSE));
+		return make_writer(expr);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_ARRAY) {
-		auto array = parse_array_literal();
-		CHECK_AND_EXTRACT(array);
-		return array;
+		auto array = TRY(parse_array_literal());
+		return make_writer(array);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_UNION ||
 	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
-		auto type = parse_type_function();
-		CHECK_AND_EXTRACT(type);
-		return type;
+		auto type = TRY(parse_type_function());
+		return make_writer(type);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_MATCH) {
-		auto match_expr = parse_match_expression();
-		CHECK_AND_EXTRACT(match_expr);
-		return match_expr;
+		auto match_expr = TRY(parse_match_expression());
+		return make_writer(match_expr);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_SEQ) {
-		auto expr = parse_sequence_expression();
-		CHECK_AND_EXTRACT(expr);
-		return expr;
+		auto expr = TRY(parse_sequence_expression());
+		return make_writer(expr);
 	}
 
 	return make_expected_error("a literal, a conditional expression, or an identifier", token);
@@ -745,11 +731,9 @@ Writer<CST::FuncParameters> Parser::parse_function_parameters() {
 		arg_data.m_identifier_token = peek();
 		advance_token_cursor();
 
+		// optionally consume a type hint
 		if (consume(TokenTag::DECLARE)) {
-			// optionally consume a type hint
-			auto type = parse_type_term();
-			CHECK_AND_EXTRACT(type);
-			arg_data.m_type_hint = type.m_result;
+			arg_data.m_type_hint = TRY(parse_type_term());
 		}
 
 		args_data.push_back(std::move(arg_data));
@@ -783,15 +767,14 @@ Writer<CST::CST*> Parser::parse_function() {
 
 	REQUIRE(result, TokenTag::KEYWORD_FN);
 
-	auto func_args = parse_function_parameters();
-	CHECK_AND_EXTRACT(func_args);
+	auto func_args = TRY(parse_function_parameters());
 
 	if (consume(TokenTag::ARROW)) {
 		auto expression = TRY_WITH(result, parse_expression());
 
 		auto e = m_cst_allocator.make<CST::FunctionLiteral>();
 		e->m_body = expression;
-		e->m_args = std::move(func_args.m_result);
+		e->m_args = std::move(func_args);
 
 		return make_writer<CST::CST*>(e);
 	} else if (match(TokenTag::BRACE_OPEN)) {
@@ -799,7 +782,7 @@ Writer<CST::CST*> Parser::parse_function() {
 
 		auto e = m_cst_allocator.make<CST::BlockFunctionLiteral>();
 		e->m_body = block;
-		e->m_args = std::move(func_args.m_result);
+		e->m_args = std::move(func_args);
 
 		return make_writer<CST::CST*>(e);
 	} else {
