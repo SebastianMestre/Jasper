@@ -183,7 +183,7 @@ Writer<CST::CST*> Parser::parse_top_level() {
 
 	auto e = m_cst_allocator.make<CST::Program>();
 	e->m_declarations = std::move(declarations);
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
@@ -518,7 +518,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		lhs = e;
 	}
 
-	return make_writer<CST::CST*>(lhs);
+	return make_writer(lhs);
 }
 
 /* We say a terminal is any expression that is not an infix expression.
@@ -530,21 +530,21 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	if (token->m_type == TokenTag::KEYWORD_NULL) {
 		auto e = m_cst_allocator.make<CST::NullLiteral>();
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_TRUE) {
 		auto e = m_cst_allocator.make<CST::BooleanLiteral>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FALSE) {
 		auto e = m_cst_allocator.make<CST::BooleanLiteral>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::SUB || token->m_type == TokenTag::ADD) {
@@ -558,14 +558,14 @@ Writer<CST::CST*> Parser::parse_terminal() {
 			e->m_sign = token;
 			e->m_token = peek();
 			advance_token_cursor();
-			return make_writer<CST::CST*>(e);
+			return make_writer(e);
 		} else if (match(TokenTag::NUMBER)) {
 			auto e = m_cst_allocator.make<CST::NumberLiteral>();
 			e->m_negative = token->m_type == TokenTag::SUB;
 			e->m_sign = token;
 			e->m_token = peek();
 			advance_token_cursor();
-			return make_writer<CST::CST*>(e);
+			return make_writer(e);
 		}
 
 		return token->m_type == TokenTag::SUB
@@ -577,28 +577,28 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		auto e = m_cst_allocator.make<CST::IntegerLiteral>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::NUMBER) {
 		auto e = m_cst_allocator.make<CST::NumberLiteral>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::IDENTIFIER) {
 		auto e = m_cst_allocator.make<CST::Identifier>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::STRING) {
 		auto e = m_cst_allocator.make<CST::StringLiteral>();
 		e->m_token = token;
 		advance_token_cursor();
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
@@ -673,7 +673,7 @@ Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* condition) {
 	e->m_then_expr = then_expr;
 	e->m_else_expr = else_expr;
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
@@ -692,7 +692,7 @@ Writer<CST::Identifier*> Parser::parse_identifier(bool types_allowed) {
 	auto e = m_cst_allocator.make<CST::Identifier>();
 	e->m_token = token;
 
-	return make_writer<CST::Identifier*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_array_literal() {
@@ -707,7 +707,7 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 	auto e = m_cst_allocator.make<CST::ArrayLiteral>();
 	e->m_elements = std::move(elements);
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::FuncParameters> Parser::parse_function_parameters() {
@@ -776,7 +776,7 @@ Writer<CST::CST*> Parser::parse_function() {
 		e->m_body = expression;
 		e->m_args = std::move(func_args);
 
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	} else if (match(TokenTag::BRACE_OPEN)) {
 		auto block = TRY_WITH(result, parse_block());
 
@@ -784,7 +784,7 @@ Writer<CST::CST*> Parser::parse_function() {
 		e->m_body = block;
 		e->m_args = std::move(func_args);
 
-		return make_writer<CST::CST*>(e);
+		return make_writer(e);
 	} else {
 		return make_expected_error("'=>' or '{'", peek());
 	}
@@ -832,7 +832,7 @@ Writer<CST::CST*> Parser::parse_return_statement() {
 	auto e = m_cst_allocator.make<CST::ReturnStatement>();
 	e->m_value = value;
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 	Writer<CST::CST*> result = {{"Failed to parse if-else statement or expression"}};
@@ -863,7 +863,7 @@ Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 		e->m_else_body = TRY_WITH(result, parse_statement());
 	}
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_for_statement() {
@@ -889,7 +889,7 @@ Writer<CST::CST*> Parser::parse_for_statement() {
 	e->m_action = action;
 	e->m_body = body;
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_while_statement() {
@@ -907,7 +907,7 @@ Writer<CST::CST*> Parser::parse_while_statement() {
 	e->m_condition = condition;
 	e->m_body = body;
 
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_match_expression() {
@@ -947,7 +947,7 @@ Writer<CST::CST*> Parser::parse_match_expression() {
 	match->m_type_hint = matchee_and_hint.second;
 	match->m_cases = std::move(cases);
 
-	return make_writer<CST::CST*>(match);
+	return make_writer(match);
 }
 
 Writer<CST::CST*> Parser::parse_sequence_expression() {
@@ -959,7 +959,7 @@ Writer<CST::CST*> Parser::parse_sequence_expression() {
 	auto expr = m_cst_allocator.make<CST::SequenceExpression>();
 	expr->m_body = body;
 
-	return make_writer<CST::CST*>(expr);
+	return make_writer(expr);
 }
 
 Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool required_type) {
@@ -993,7 +993,7 @@ Writer<CST::CST*> Parser::parse_statement() {
 
 			auto declaration = TRY_WITH(result, parse_declaration());
 
-			return make_writer<CST::CST*>(declaration);
+			return make_writer(declaration);
 		} else {
 			auto expression = TRY_WITH(result, parse_expression());
 			REQUIRE(result, TokenTag::SEMICOLON);
@@ -1044,14 +1044,14 @@ Writer<CST::CST*> Parser::parse_type_term() {
 	auto callee = TRY_WITH(result, parse_identifier(true));
 
 	if (!match(TokenTag::POLY_OPEN))
-		return make_writer<CST::CST*>(callee);
+		return make_writer(callee);
 
 	auto args = TRY_WITH(result, parse_type_term_arguments());
 
 	auto e = m_cst_allocator.make<CST::TypeTerm>();
 	e->m_callee = callee;
 	e->m_args = std::move(args);
-	return make_writer<CST::CST*>(e);
+	return make_writer(e);
 }
 
 Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::parse_type_list(
@@ -1093,7 +1093,7 @@ Writer<CST::CST*> Parser::parse_type_var() {
 	auto t = m_cst_allocator.make<CST::TypeVar>();
 	t->m_token = token;
 
-	return make_writer<CST::CST*>(t);
+	return make_writer(t);
 }
 
 Writer<CST::CST*> Parser::parse_type_function() {
@@ -1106,7 +1106,7 @@ Writer<CST::CST*> Parser::parse_type_function() {
 		u->m_constructors = std::move(tl.first);
 		u->m_types = std::move(tl.second);
 
-		return make_writer<CST::CST*>(u);
+		return make_writer(u);
 	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
 		auto tl = TRY_WITH(result, parse_type_list(true));
 
@@ -1114,7 +1114,7 @@ Writer<CST::CST*> Parser::parse_type_function() {
 		s->m_fields = std::move(tl.first);
 		s->m_types = std::move(tl.second);
 
-		return make_writer<CST::CST*>(s);
+		return make_writer(s);
 	}
 
 	return result;
