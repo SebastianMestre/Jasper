@@ -602,13 +602,11 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_FN) {
-		auto function = TRY(parse_function());
-		return make_writer(function);
+		return parse_function();
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_IF) {
-		auto ternary = TRY(parse_ternary_expression());
-		return make_writer(ternary);
+		return parse_ternary_expression();
 	}
 
 	// parse a parenthesized expression.
@@ -620,25 +618,21 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_ARRAY) {
-		auto array = TRY(parse_array_literal());
-		return make_writer(array);
+		return parse_array_literal();
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_UNION ||
 	    token->m_type == TokenTag::KEYWORD_STRUCT) {
 		// TODO: do the other type functions
-		auto type = TRY(parse_type_function());
-		return make_writer(type);
+		return parse_type_function();
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_MATCH) {
-		auto match_expr = TRY(parse_match_expression());
-		return make_writer(match_expr);
+		return parse_match_expression();
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_SEQ) {
-		auto expr = TRY(parse_sequence_expression());
-		return make_writer(expr);
+		return parse_sequence_expression();
 	}
 
 	return make_expected_error("a literal, a conditional expression, or an identifier", token);
