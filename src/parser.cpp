@@ -51,8 +51,8 @@ struct Parser {
 	Writer<CST::CST*> parse_expression(CST::CST* lhs, int bp = 0);
 
 	Writer<CST::CST*> parse_terminal();
-	Writer<CST::CST*> parse_ternary_expression();
-	Writer<CST::CST*> parse_ternary_expression(CST::CST* parsed_condition);
+	Writer<CST::CST*> parse_if_else_expression();
+	Writer<CST::CST*> parse_if_else_expression(CST::CST* parsed_condition);
 	Writer<CST::FuncParameters> parse_function_parameters();
 	Writer<CST::CST*> parse_function();
 	Writer<CST::CST*> parse_array_literal();
@@ -131,6 +131,8 @@ struct Parser {
 	}
 };
 
+// These macros use the non-standard "statement expression" syntax, a GNU
+// extension supported by GCC, Clang, and Intel compilers.
 #define TRY(x)                                                                 \
 	({                                                                         \
 		auto _temporary = x;                                                   \
@@ -571,7 +573,7 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::KEYWORD_IF) {
-		return parse_ternary_expression();
+		return parse_if_else_expression();
 	}
 
 	// parse a parenthesized expression.
@@ -603,7 +605,7 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	return make_expected_error("a literal, a conditional expression, or an identifier", token);
 }
 
-Writer<CST::CST*> Parser::parse_ternary_expression() {
+Writer<CST::CST*> Parser::parse_if_else_expression() {
 	ErrorReport result = {{"Failed to parse if-else expression"}};
 
 	REQUIRE_WITH(result, TokenTag::KEYWORD_IF);
@@ -612,20 +614,19 @@ Writer<CST::CST*> Parser::parse_ternary_expression() {
 	CST::CST* condition = TRY_WITH(result, parse_expression());
 	REQUIRE_WITH(result, TokenTag::PAREN_CLOSE);
 
-	return parse_ternary_expression(condition);
+	return parse_if_else_expression(condition);
 }
 
-Writer<CST::CST*> Parser::parse_ternary_expression(CST::CST* condition) {
+Writer<CST::CST*> Parser::parse_if_else_expression(CST::CST* condition) {
 	assert(condition);
 
 	ErrorReport result = {{"Failed to parse if-else expression"}};
 
 	REQUIRE_WITH(result, TokenTag::KEYWORD_THEN);
+	auto then_expr = TRY(parse_expression());
 
-	auto then_expr = TRY_WITH(result, parse_expression());
 	REQUIRE_WITH(result, TokenTag::KEYWORD_ELSE);
-
-	auto else_expr = TRY_WITH(result, parse_expression());
+	auto else_expr = TRY(parse_expression());
 
 	auto e = m_cst_allocator.make<CST::TernaryExpression>();
 	e->m_condition = condition;
@@ -758,28 +759,26 @@ Writer<CST::CST*> Parser::parse_function() {
 }
 
 Writer<CST::Block*> Parser::parse_block() {
-	ErrorReport result = {{"Failed to parse block statement"}};
+	ErrorReport result = {{"Failed to parse block"}};
 
-	REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
+	auto opening_brace = REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
 
 	std::vector<CST::CST*> statements;
 
 	// loop until we find a matching closing bracket
 	while (1) {
-		auto p0 = peek();
 
-		if (p0->m_type == TokenTag::END) {
-			result.add_sub_error({{"Found EOF while parsing block statement"}});
+		if (match(TokenTag::END)) {
+			result.add_sub_error({{"Found EOF while parsing a block"}});
+			result.add_sub_error(make_located_error("(here is the opening brace)", opening_brace));
 			return result;
 		}
 
-		if (p0->m_type == TokenTag::BRACE_CLOSE) {
-			advance_token_cursor();
+		if (consume(TokenTag::BRACE_CLOSE)) {
 			break;
 		}
 
-		auto statement = TRY_WITH(result, parse_statement());
-		statements.push_back(statement);
+		statements.push_back(TRY(parse_statement()));
 	}
 
 	auto e = m_cst_allocator.make<CST::Block>();
@@ -807,30 +806,27 @@ Writer<CST::CST*> Parser::parse_if_else_stmt_or_expr() {
 	REQUIRE_WITH(result, TokenTag::KEYWORD_IF);
 	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
 
-	auto condition = TRY_WITH(result, parse_expression());
+	auto condition = TRY(parse_expression());
 	REQUIRE_WITH(result, TokenTag::PAREN_CLOSE);
 
 	if (match(TokenTag::KEYWORD_THEN)) {
-		// rollback to whole expression
-		auto ternary = TRY_WITH(result, parse_ternary_expression(condition));
-
-		auto expression = TRY_WITH(result, parse_expression(ternary, 0));
+		auto e = TRY(parse_if_else_expression(condition));
 		REQUIRE_WITH(result, TokenTag::SEMICOLON);
+		return make_writer(e);
+	} else {
 
-		return make_writer(expression);
+		auto body = TRY(parse_statement());
+
+		auto e = m_cst_allocator.make<CST::IfElseStatement>();
+		e->m_condition = condition;
+		e->m_body = body;
+
+		if (consume(TokenTag::KEYWORD_ELSE)) {
+			e->m_else_body = TRY(parse_statement());
+		}
+
+		return make_writer(e);
 	}
-
-	auto body = TRY_WITH(result, parse_statement());
-
-	auto e = m_cst_allocator.make<CST::IfElseStatement>();
-	e->m_condition = condition;
-	e->m_body = body;
-
-	if (consume(TokenTag::KEYWORD_ELSE)) {
-		e->m_else_body = TRY_WITH(result, parse_statement());
-	}
-
-	return make_writer(e);
 }
 
 Writer<CST::CST*> Parser::parse_for_statement() {
@@ -957,31 +953,22 @@ Writer<CST::CST*> Parser::parse_statement() {
 
 		if (p1->m_type == TokenTag::DECLARE ||
 		    p1->m_type == TokenTag::DECLARE_ASSIGN) {
-
-			auto declaration = TRY_WITH(result, parse_declaration());
-
-			return make_writer(declaration);
+			return parse_declaration();
 		} else {
 			auto expression = TRY_WITH(result, parse_expression());
 			REQUIRE_WITH(result, TokenTag::SEMICOLON);
-
 			return make_writer(expression);
 		}
 	} else if (p0->m_type == TokenTag::KEYWORD_RETURN) {
-		auto return_statement = TRY_WITH(result, parse_return_statement());
-		return make_writer(return_statement);
+		return parse_return_statement();
 	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
-		auto if_else_stmt_or_expr = TRY_WITH(result, parse_if_else_stmt_or_expr());
-		return make_writer(if_else_stmt_or_expr);
+		return parse_if_else_stmt_or_expr();
 	} else if (p0->m_type == TokenTag::KEYWORD_FOR) {
-		auto for_statement = TRY_WITH(result, parse_for_statement());
-		return make_writer(for_statement);
+		return parse_for_statement();
 	} else if (p0->m_type == TokenTag::KEYWORD_WHILE) {
-		auto while_statement = TRY_WITH(result, parse_while_statement());
-		return make_writer(while_statement);
+		return parse_while_statement();
 	} else if (p0->m_type == TokenTag::BRACE_OPEN) {
-		auto block_statement = TRY_WITH(result, parse_block());
-		return make_writer(block_statement);
+		return parse_block();
 	} else {
 		auto expression = TRY_WITH(result, parse_expression());
 		REQUIRE_WITH(result, TokenTag::SEMICOLON);
