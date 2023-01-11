@@ -475,12 +475,12 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		}
 
 		advance_token_cursor();
-		auto rhs = parse_expression(rp);
+		auto rhs = TRY(parse_expression(rp));
 
 		auto e = m_cst_allocator.make<CST::BinaryExpression>();
 		e->m_op_token = op;
 		e->m_lhs = lhs;
-		e->m_rhs = rhs.m_result;
+		e->m_rhs = rhs;
 
 		lhs = e;
 	}
@@ -680,9 +680,7 @@ Writer<CST::CST*> Parser::parse_array_literal() {
 
 Writer<CST::FuncParameters> Parser::parse_function_parameters() {
 
-	auto open_paren = require(TokenTag::PAREN_OPEN);
-	if (!open_paren.ok())
-		return std::move(open_paren).error();
+	auto open_paren = REQUIRE(TokenTag::PAREN_OPEN);
 
 	std::vector<CST::DeclarationData> args_data;
 
@@ -955,7 +953,7 @@ Writer<CST::CST*> Parser::parse_statement() {
 		    p1->m_type == TokenTag::DECLARE_ASSIGN) {
 			return parse_declaration();
 		} else {
-			auto expression = TRY_WITH(result, parse_expression());
+			auto expression = TRY_WITH(result, parse_full_expression());
 			REQUIRE_WITH(result, TokenTag::SEMICOLON);
 			return make_writer(expression);
 		}
@@ -970,7 +968,7 @@ Writer<CST::CST*> Parser::parse_statement() {
 	} else if (p0->m_type == TokenTag::BRACE_OPEN) {
 		return parse_block();
 	} else {
-		auto expression = TRY_WITH(result, parse_expression());
+		auto expression = TRY_WITH(result, parse_full_expression());
 		REQUIRE_WITH(result, TokenTag::SEMICOLON);
 		return make_writer(expression);
 	}
