@@ -12,6 +12,8 @@ struct ErrorReport {
 
 	bool ok() const;
 	void print(int d = 1) const;
+
+	void add_sub_error(ErrorReport);
 };
 
 ErrorReport make_located_error(string_view text, SourceLocation location);
