@@ -35,16 +35,16 @@
 	X(COMMA, "COMMA")                                                          \
 	X(PIZZA, "PIZZA")                                                          \
 	X(ARROW, "ARROW")                                                          \
-	X(BRACE_OPEN, "BRACE_OPEN")                                                \
-	X(BRACKET_OPEN, "BRACKET_OPEN")                                            \
-	X(PAREN_OPEN, "PAREN_OPEN")                                                \
-	X(POLY_OPEN, "POLY_OPEN")                                                  \
-	X(BRACE_CLOSE, "BRACE_CLOSE")                                              \
-	X(BRACKET_CLOSE, "BRACKET_CLOSE")                                          \
-	X(PAREN_CLOSE, "PAREN_CLOSE")                                              \
-	X(POLY_CLOSE, "POLY_CLOSE")                                                \
-	X(SEMICOLON, "SEMICOLON")                                                  \
-	X(COLON, "COLON")                                                          \
+	X(BRACE_OPEN, "{")                                                         \
+	X(BRACKET_OPEN, "[")                                                       \
+	X(PAREN_OPEN, "(")                                                         \
+	X(POLY_OPEN, "<:")                                                         \
+	X(BRACE_CLOSE, "}")                                                        \
+	X(BRACKET_CLOSE, "]")                                                      \
+	X(PAREN_CLOSE, ")")                                                        \
+	X(POLY_CLOSE, ":>")                                                        \
+	X(SEMICOLON, ";")                                                          \
+	X(COLON, ":")                                                              \
 	X(NUMBER, "NUMBER")                                                        \
 	X(INTEGER, "INTEGER")                                                      \
 	X(STRING, "STRING")                                                        \
