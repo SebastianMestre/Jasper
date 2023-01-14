@@ -555,10 +555,8 @@ Writer<CST::CST*> Parser::parse_terminal() {
 	}
 
 	if (token->m_type == TokenTag::IDENTIFIER) {
-		auto e = m_cst_allocator.make<CST::Identifier>();
-		e->m_token = token;
 		advance_token_cursor();
-		return make_writer(e);
+		return make_writer(m_cst_allocator.make<CST::Identifier>(token));
 	}
 
 	if (token->m_type == TokenTag::STRING) {
@@ -640,10 +638,8 @@ Writer<CST::Identifier*> Parser::parse_term_identifier() {
 	ErrorReport result = {{"Failed to parse identifier"}};
 
 	Token const* token = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
-	auto e = m_cst_allocator.make<CST::Identifier>();
-	e->m_token = token;
 
-	return make_writer(e);
+	return make_writer(m_cst_allocator.make<CST::Identifier>(token));
 }
 
 Writer<CST::Identifier*> Parser::parse_type_identifier() {
@@ -657,10 +653,7 @@ Writer<CST::Identifier*> Parser::parse_type_identifier() {
 		advance_token_cursor();
 	}
 
-	auto e = m_cst_allocator.make<CST::Identifier>();
-	e->m_token = token;
-
-	return make_writer(e);
+	return make_writer(m_cst_allocator.make<CST::Identifier>(token));
 }
 
 Writer<CST::CST*> Parser::parse_array_literal() {
@@ -900,8 +893,7 @@ Writer<CST::CST*> Parser::parse_match_expression() {
 		     expression});
 	}
 
-	CST::Identifier matchee;
-	matchee.m_token = matchee_and_hint.first;
+	CST::Identifier matchee {matchee_and_hint.first};
 
 	auto match = m_cst_allocator.make<CST::MatchExpression>();
 	match->m_matchee = std::move(matchee);

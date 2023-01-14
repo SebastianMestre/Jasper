@@ -187,8 +187,9 @@ struct Identifier : public CST {
 		return m_token->m_text;
 	}
 
-	Identifier()
-	    : CST {CSTTag::Identifier} {}
+	Identifier(Token const* token)
+	    : CST {CSTTag::Identifier}
+	    , m_token {token} {}
 };
 
 struct BinaryExpression : public CST {
@@ -242,7 +243,7 @@ struct MatchExpression : public CST {
 	};
 
 	// TODO: allow matching on arbitrary expressions
-	Identifier m_matchee;
+	Identifier m_matchee {nullptr};
 	CST* m_type_hint {nullptr};
 	std::vector<CaseData> m_cases;
 
