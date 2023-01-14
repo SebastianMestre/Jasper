@@ -184,8 +184,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 
 		auto p0 = peek();
 
-		if (p0->m_type == delimiter) {
-			advance_token_cursor();
+		if (consume(delimiter)) {
 
 			if (match(terminator)) {
 				if (allow_trailing_delimiter) {
@@ -196,8 +195,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 				return make_located_error(
 				    "Found trailing delimiter in expression list", p0);
 			}
-		} else if (p0->m_type == terminator) {
-			advance_token_cursor();
+		} else if (consume(terminator)) {
 			break;
 		} else {
 			ErrorReport result = {{"Unexpected token"}};
@@ -381,14 +379,14 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 	while (1) {
 		auto op = peek();
 
-		if (op->m_type == TokenTag::SEMICOLON ||
-		    op->m_type == TokenTag::END ||
-		    op->m_type == TokenTag::BRACE_CLOSE ||
-		    op->m_type == TokenTag::BRACKET_CLOSE ||
-		    op->m_type == TokenTag::PAREN_CLOSE ||
-		    op->m_type == TokenTag::COMMA ||
-		    op->m_type == TokenTag::KEYWORD_THEN ||
-		    op->m_type == TokenTag::KEYWORD_ELSE) {
+		if (match(TokenTag::SEMICOLON) ||
+		    match(TokenTag::END) ||
+		    match(TokenTag::BRACE_CLOSE) ||
+		    match(TokenTag::BRACKET_CLOSE) ||
+		    match(TokenTag::PAREN_CLOSE) ||
+		    match(TokenTag::COMMA) ||
+		    match(TokenTag::KEYWORD_THEN) ||
+		    match(TokenTag::KEYWORD_ELSE)) {
 			break;
 		}
 
@@ -402,13 +400,12 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		if (lp < bp)
 			break;
 
-		if (op->m_type == TokenTag::PAREN_OPEN) {
+		if (match(TokenTag::PAREN_OPEN)) {
 			lhs = make<CST::CallExpression>(lhs, TRY(parse_argument_list()));
 			continue;
 		}
 
-		if (op->m_type == TokenTag::BRACKET_OPEN) {
-			advance_token_cursor();
+		if (consume(TokenTag::BRACKET_OPEN)) {
 
 			auto index = TRY(parse_expression());
 
@@ -476,9 +473,9 @@ Writer<CST::CST*> Parser::parse_terminal() {
 			return make_writer(make<CST::NumberLiteral>(is_negative, token, value));
 		}
 
-		return token->m_type == TokenTag::SUB
-		           ? make_located_error("Stray minus sign with no number", token)
-		           : make_located_error("Stray plus sign with no number", token);
+		return is_negative
+			? make_located_error("Stray minus sign with no number", token)
+			: make_located_error("Stray plus sign with no number", token);
 	}
 
 	if (consume(TokenTag::INTEGER)) {
@@ -775,19 +772,20 @@ Writer<CST::CST*> Parser::parse_match_expression() {
 		REQUIRE_WITH(result, TokenTag::BRACE_CLOSE);
 		REQUIRE_WITH(result, TokenTag::ARROW);
 
-		auto expression = TRY_WITH(result, parse_expression());
+		auto expression = TRY(parse_expression());
 		REQUIRE_WITH(result, TokenTag::SEMICOLON);
 
-		cases.push_back(
-		    {case_name,
-		     name_and_type.first,
-		     name_and_type.second,
-		     expression});
+		cases.push_back({
+			case_name,
+			name_and_type.first,
+			name_and_type.second,
+			expression});
 	}
 
-	CST::Identifier matchee {matchee_and_hint.first};
+	auto matchee = std::move(matchee_and_hint.first);
+	auto hint = matchee_and_hint.second;
 
-	return make_writer(make<CST::MatchExpression>(std::move(matchee), matchee_and_hint.second, std::move(cases)));
+	return make_writer(make<CST::MatchExpression>(std::move(matchee), hint, std::move(cases)));
 }
 
 Writer<CST::CST*> Parser::parse_sequence_expression() {
@@ -813,43 +811,28 @@ Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool requ
 	return make_writer<std::pair<Token const*, CST::CST*>>({name, type});
 }
 
-/*
- * Looks ahead a few tokens to predict what syntactic structure we are about to
- * parse. This prevents us from backtracking and ensures the parser runs in
- * linear time.
- */
 Writer<CST::CST*> Parser::parse_statement() {
 	ErrorReport result = {{"Failed to parse statement"}};
 
-	auto* p0 = peek(0);
-	if (p0->m_type == TokenTag::IDENTIFIER) {
-		auto* p1 = peek(1);
-
-		if (p1->m_type == TokenTag::DECLARE ||
-		    p1->m_type == TokenTag::DECLARE_ASSIGN) {
-			return parse_declaration();
-		} else {
-			auto expression = TRY_WITH(result, parse_full_expression());
-			REQUIRE_WITH(result, TokenTag::SEMICOLON);
-			return make_writer(expression);
-		}
-	} else if (p0->m_type == TokenTag::KEYWORD_RETURN) {
+	if (match(TokenTag::IDENTIFIER) &&
+	    (peek(1)->m_type == TokenTag::DECLARE ||
+	     peek(1)->m_type == TokenTag::DECLARE_ASSIGN)) {
+		return parse_declaration();
+	} else if (match(TokenTag::KEYWORD_RETURN)) {
 		return parse_return_statement();
-	} else if (p0->m_type == TokenTag::KEYWORD_IF) {
+	} else if (match(TokenTag::KEYWORD_IF)) {
 		return parse_if_else_stmt_or_expr();
-	} else if (p0->m_type == TokenTag::KEYWORD_FOR) {
+	} else if (match(TokenTag::KEYWORD_FOR)) {
 		return parse_for_statement();
-	} else if (p0->m_type == TokenTag::KEYWORD_WHILE) {
+	} else if (match(TokenTag::KEYWORD_WHILE)) {
 		return parse_while_statement();
-	} else if (p0->m_type == TokenTag::BRACE_OPEN) {
+	} else if (match(TokenTag::BRACE_OPEN)) {
 		return parse_block();
-	} else {
-		auto expression = TRY_WITH(result, parse_full_expression());
-		REQUIRE_WITH(result, TokenTag::SEMICOLON);
-		return make_writer(expression);
 	}
 
-	return result;
+	auto expression = TRY_WITH(result, parse_full_expression());
+	REQUIRE_WITH(result, TokenTag::SEMICOLON);
+	return make_writer(expression);
 }
 
 Writer<std::vector<CST::CST*>> Parser::parse_type_term_arguments() {
