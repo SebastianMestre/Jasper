@@ -16,6 +16,7 @@
 
 #include <cassert>
 
+
 struct SourceLine { int start, end, number; };
 
 SourceLine containing_line(Frontend::Context const& file_context, int position) {
@@ -97,9 +98,19 @@ std::vector<std::string> show_line_with_indicator(Frontend::Context const& file_
 	return {{content.str(), footer.str()}};
 }
 
+ErrorReport make_unexpected_error(
+    Frontend::Context const& file_context, std::string expected, Token const* found) {
+	/*
+	Unexpected token: expected xxx but found 'y' instead
+	120 | ....... y .......
+				  ^ unexpected token is here
+	*/
+	std::stringstream header;
+	header << "Unexpected token: expected " << expected << " but found '" << found->m_text << "' instead";
 
-ErrorReport make_nice_error(Frontend::Context const& file_context, Token const* tok) {
-	return ErrorReport::multi(show_line_with_indicator(file_context, tok->m_start_offset, ""));
+	auto code_display = show_line_with_indicator(file_context, found->m_start_offset, "unexpected token is here");
+
+	return ErrorReport::multi({header.str(), code_display[0], code_display[1]});
 }
 
 ErrorReport make_unexpected_error_with_open_brace(
@@ -112,7 +123,7 @@ ErrorReport make_unexpected_error_with_open_brace(
 	auto matching = matching_token(opening->m_type);
 	if (found->m_type == TokenTag::END) {
 		/*
-		Mismatched braces: Found no '}' to match '{'
+		Mismatched braces: found no '}' to match '{'
 		100 | .... {  ....
 				   ^ opening brace is here
 		*/
@@ -122,45 +133,42 @@ ErrorReport make_unexpected_error_with_open_brace(
 		auto code_display = show_line_with_indicator(file_context, opening->m_start_offset, "opening brace is here");
 
 		return ErrorReport::multi({header.str(), code_display[0], code_display[1]});
-	}
-
-	else if (is_closing_token(found->m_type)) {
+	} else if (is_closing_token(found->m_type)) {
 		/*
-		Mismatched braces: Expected 'x' but found 'y'
+		Mismatched braces: expected 'x' but found 'y'
 		120 | ....... y .......
 					  ^ unexpected token is here
 		100 | LINE .... x ....
 						^ opening brace is here
 		*/
 		std::stringstream header;
-		header << "Mismatched braces: expected " << expected << " but found '" << found->m_text << "' instead";
+		header << "Mismatched braces: expected '" << token_string[(int)matching] << "' but found '" << found->m_text << "' instead";
 
 		auto code_display1 = show_line_with_indicator(file_context, found->m_start_offset, "unexpected token is here");
 		auto code_display2 = show_line_with_indicator(file_context, opening->m_start_offset, "opening brace is here");
 
 		return ErrorReport::multi({header.str(), code_display1[0], code_display1[1], code_display2[0], code_display2[1]});
-	}
-
-	else {
-		/*
-		Unexpected token: Expected xxx but found 'y' instead
-		120 | ....... y .......
-					  ^ unexpected token is here
-		*/
-		std::stringstream header;
-		header << "Unexpected token: expected " << expected << " but found '" << found->m_text << "' instead";
-
-		auto code_display = show_line_with_indicator(file_context, found->m_start_offset, "unexpected token is here");
-
-		return ErrorReport::multi({header.str(), code_display[0], code_display[1]});
+	} else {
+		return make_unexpected_error(file_context, std::move(expected), found);
 	}
 }
+
+ErrorReport make_located_error(Frontend::Context const& file_context, string_view text, Token const* token) {
+	SourceLocation token_location = file_context.char_offset_to_location(token->m_start_offset);
+	auto error = make_located_error(text, token_location);
+	auto code_display = show_line_with_indicator(file_context, token->m_start_offset, "");
+	error.m_lines.push_back(code_display[0]);
+	error.m_lines.push_back(code_display[1]);
+	return error;
+}
+
+
+
 
 template <typename T>
 Writer<T> make_writer(T x) {
 	return {{}, std::move(x)};
 }
-
 
 struct Parser {
 	/* token handler */
@@ -212,30 +220,6 @@ struct Parser {
 	Writer<CST::CST*> parse_type_var();
 	Writer<CST::CST*> parse_type_function();
 
-	ErrorReport make_located_error(string_view text, Token const* token) {
-		SourceLocation token_location = m_file_context.char_offset_to_location(token->m_start_offset);
-		return ::make_located_error(text, token_location);
-	}
-
-	ErrorReport make_expected_error(string_view expected, Token const* found_token) {
-		std::stringstream ss;
-
-		ss << "Expected " << expected << " but";
-
-		if (found_token->m_type == TokenTag::END) {
-			ss << " reached end of file";
-		} else {
-			ss << " got '" << found_token->m_text << "'";
-		}
-
-		ss << " instead";
-
-		return make_located_error(ss.str(), found_token);
-	}
-
-	ErrorReport make_expected_error(TokenTag tag, Token const* found_token) {
-		return make_expected_error(token_string[int(tag)], found_token);
-	}
 
 	void advance_token_cursor() {
 		m_token_cursor += 1;
@@ -250,7 +234,7 @@ struct Parser {
 		Token const* current_token = peek();
 
 		if (current_token->m_type != expected_type) {
-			return {make_expected_error(expected_type, current_token)};
+			return make_unexpected_error(m_file_context, token_string[(int)expected_type], current_token);
 		}
 
 		advance_token_cursor();
@@ -336,8 +320,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 					break;
 				}
 
-				return make_located_error(
-				    "Found trailing delimiter in expression list", p0);
+				return make_located_error(m_file_context, "Found trailing delimiter in expression list", p0);
 			}
 		} else if (consume(terminator)) {
 			break;
@@ -356,7 +339,7 @@ Writer<CST::Declaration*> Parser::parse_declaration() {
 	if (match(TokenTag::IDENTIFIER))
 		return parse_plain_declaration();
 
-	return make_expected_error("an identifier or 'fn'", peek());
+	return make_unexpected_error(m_file_context, "an identifier or 'fn'", peek());
 }
 
 Writer<CST::Declaration*> Parser::parse_func_declaration() {
@@ -384,7 +367,7 @@ Writer<CST::Declaration*> Parser::parse_func_declaration() {
 		return make_writer(make<CST::BlockFuncDeclaration>(identifier, std::move(args), block));
 	}
 
-	result.add_sub_error(make_expected_error("'=>' or '{'", peek()));
+	result.add_sub_error(make_unexpected_error(m_file_context, "'=>' or '{'", peek()));
 	return result;
 }
 
@@ -408,7 +391,7 @@ Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
 		type = TRY(parse_type_term());
 		REQUIRE(TokenTag::ASSIGN);
 	} else {
-		return {make_expected_error("':' or ':='", peek())};
+		return {make_unexpected_error(m_file_context, "':' or ':='", peek())};
 	}
 
 	auto value = TRY(parse_full_expression());
@@ -532,9 +515,7 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 		}
 
 		if (not is_binary_operator(op->m_type)) {
-			auto error = make_expected_error("a binary operator", op);
-			error.m_sub_errors.push_back(make_nice_error(m_file_context, op));
-			return error;
+			return make_unexpected_error(m_file_context, "a binary operator", op);
 		}
 
 		auto op_bp = binding_power_of(op->m_type);
@@ -619,8 +600,8 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		}
 
 		return is_negative
-			? make_located_error("Stray minus sign with no number", token)
-			: make_located_error("Stray plus sign with no number", token);
+			? make_located_error(m_file_context, "Stray minus sign with no number", token)
+			: make_located_error(m_file_context, "Stray plus sign with no number", token);
 	}
 
 	if (consume(TokenTag::INTEGER)) {
@@ -672,7 +653,7 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		return parse_sequence_expression();
 	}
 
-	return make_expected_error("a literal, a conditional expression, or an identifier", token);
+	return make_unexpected_error(m_file_context, "a literal, a conditional expression, or an identifier", token);
 }
 
 Writer<CST::CST*> Parser::parse_if_else_expression() {
@@ -715,7 +696,7 @@ Writer<CST::Identifier*> Parser::parse_type_identifier() {
 	Token const* token = peek();
 
 	if (token->m_type != TokenTag::KEYWORD_ARRAY && token->m_type != TokenTag::IDENTIFIER) {
-		return make_expected_error("an identifier or 'array'", token);
+		return make_unexpected_error(m_file_context, "an identifier or 'array'", token);
 	} else {
 		advance_token_cursor();
 	}
@@ -799,7 +780,7 @@ Writer<CST::CST*> Parser::parse_function() {
 		auto block = TRY_WITH(result, parse_block());
 		return make_writer(make<CST::BlockFunctionLiteral>(block, std::move(func_args)));
 	} else {
-		return make_expected_error("'=>' or '{'", peek());
+		return make_unexpected_error(m_file_context, "'=>' or '{'", peek());
 	}
 }
 
@@ -815,10 +796,6 @@ Writer<CST::Block*> Parser::parse_block() {
 
 		if (match(TokenTag::END)) {
 			return make_unexpected_error_with_open_brace(m_file_context, opening_brace, "'}'", peek());
-
-			result.add_sub_error({{"Found EOF while parsing a block"}});
-			result.add_sub_error(make_located_error("(here is the opening brace)", opening_brace));
-			return result;
 		}
 
 		if (consume(TokenTag::BRACE_CLOSE)) {
