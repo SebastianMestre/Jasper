@@ -415,12 +415,8 @@ Writer<CST::CST*> Parser::parse_expression(CST::CST* lhs, int bp) {
 			break;
 
 		if (op->m_type == TokenTag::PAREN_OPEN) {
-			auto args = TRY(parse_argument_list());
-
-			auto e = m_cst_allocator.make<CST::CallExpression>();
-			e->m_callee = lhs;
-			e->m_args = std::move(args);
-			lhs = e;
+			lhs = m_cst_allocator.make<CST::CallExpression>(
+			    lhs, TRY(parse_argument_list()));
 
 			continue;
 		}

@@ -205,8 +205,10 @@ struct CallExpression : public CST {
 	CST* m_callee;
 	std::vector<CST*> m_args;
 
-	CallExpression()
-	    : CST {CSTTag::CallExpression} {}
+	CallExpression(CST* callee, std::vector<CST*> args)
+	    : CST {CSTTag::CallExpression}
+	    , m_callee {callee}
+	    , m_args {std::move(args)} {}
 };
 
 struct IndexExpression : public CST {
