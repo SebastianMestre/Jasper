@@ -3,6 +3,7 @@
 #include "block_allocator.hpp"
 
 #include <type_traits>
+#include <utility>
 
 #include <cstring>
 
@@ -17,13 +18,13 @@ struct PolymorphicBlockAllocator {
 	PolymorphicBlockAllocator(int bytes_per_slot, int target_bytes_per_block)
 	    : m_allocator {bytes_per_slot, target_bytes_per_block} {}
 
-	template <typename T>
-	T* make() {
+	template <typename T, typename...Args>
+	T* make(Args&& ...args) {
 		static_assert(
 		    std::is_base_of<Base, T>::value, "T must be a subtype of Base");
 
 		auto data = m_allocator.allocate(sizeof(T));
-		return new(data) T();
+		return new(data) T(std::forward<Args>(args)...);
 	}
 
 	~PolymorphicBlockAllocator(){

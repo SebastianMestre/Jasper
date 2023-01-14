@@ -3,6 +3,7 @@
 #include "block_allocator.hpp"
 
 #include <type_traits>
+#include <utility>
 
 #include <cstring>
 
@@ -22,12 +23,12 @@ struct PolymorphicDumbAllocator {
 	PolymorphicDumbAllocator(int target_bytes_per_block)
 	    : m_allocator {8, target_bytes_per_block} {}
 
-	template <typename T>
-	T* make() {
+	template <typename T, typename...Args>
+	T* make(Args&&...args) {
 		static_assert(
 		    std::is_base_of<Base, T>::value, "T must be a subtype of Base");
 		auto storage = m_allocator.allocate(8);
-		auto result = new T;
+		auto result = new T(std::forward<Args>(args)...);
 		memcpy(storage, &result, 8);
 		return result;
 	}
