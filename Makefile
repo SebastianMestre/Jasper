@@ -38,6 +38,7 @@ COMMON_TARGETS := \
 	compute_offsets \
 	convert_ast \
 	cst \
+	error_messages \
 	frontend_context \
 	lexer \
 	parser \
