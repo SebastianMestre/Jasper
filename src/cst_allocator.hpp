@@ -4,6 +4,8 @@
 #include "./utils/polymorphic_dumb_allocator.hpp"
 #include "cst.hpp"
 
+#include <utility>
+
 namespace CST {
 
 struct Allocator {
@@ -16,12 +18,12 @@ struct Allocator {
 	    : m_small(small_size, 4 * 4096)
 	    , m_big {4 * 4096} {}
 
-	template<typename T>
-	T* make() {
+	template<typename T, typename ...Args>
+	T* make(Args&& ...args) {
 		if (small_size < sizeof(T)) {
-			return m_big.make<T>();
+			return m_big.make<T>(std::forward<Args>(args)...);
 		} else {
-			return m_small.make<T>();
+			return m_small.make<T>(std::forward<Args>(args)...);
 		}
 	}
 

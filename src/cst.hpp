@@ -58,8 +58,9 @@ struct PlainDeclaration : public Declaration {
 		return identifier();
 	}
 
-	PlainDeclaration()
-	    : Declaration {CSTTag::PlainDeclaration} {}
+	PlainDeclaration(DeclarationData data)
+	    : Declaration {CSTTag::PlainDeclaration}
+	    , m_data {std::move(data)} {}
 };
 
 struct FuncDeclaration : public Declaration {
@@ -75,8 +76,11 @@ struct FuncDeclaration : public Declaration {
 		return identifier();
 	}
 
-	FuncDeclaration()
-	    : Declaration {CSTTag::FuncDeclaration} {}
+	FuncDeclaration(Token const* identifier, FuncParameters args, CST* body)
+	    : Declaration {CSTTag::FuncDeclaration}
+	    , m_identifier {identifier}
+	    , m_args {std::move(args)}
+	    , m_body {body} {}
 };
 
 struct BlockFuncDeclaration : public Declaration {
@@ -92,15 +96,19 @@ struct BlockFuncDeclaration : public Declaration {
 		return identifier();
 	}
 
-	BlockFuncDeclaration()
-	    : Declaration {CSTTag::BlockFuncDeclaration} {}
+	BlockFuncDeclaration(Token const* identifier, FuncParameters args, Block* body)
+	    : Declaration {CSTTag::BlockFuncDeclaration}
+	    , m_identifier {identifier}
+	    , m_args {std::move(args)}
+	    , m_body {body} {}
 };
 
 struct Program : public CST {
 	std::vector<Declaration*> m_declarations;
 
-	Program()
-	    : CST {CSTTag::Program} {}
+	Program(std::vector<Declaration*> declarations)
+	    : CST {CSTTag::Program}
+	    , m_declarations {std::move(declarations)} {}
 };
 
 struct IntegerLiteral : public CST {
@@ -112,8 +120,11 @@ struct IntegerLiteral : public CST {
 		return m_token->m_text.str();
 	}
 
-	IntegerLiteral()
-	    : CST {CSTTag::IntegerLiteral} {}
+	IntegerLiteral(bool negative, Token const* sign, Token const* token)
+	    : CST {CSTTag::IntegerLiteral}
+	    , m_negative {negative}
+	    , m_sign {sign}
+	    , m_token {token} {}
 };
 
 struct NumberLiteral : public CST {
@@ -125,8 +136,11 @@ struct NumberLiteral : public CST {
 		return m_token->m_text.str();
 	}
 
-	NumberLiteral()
-	    : CST {CSTTag::NumberLiteral} {}
+	NumberLiteral(bool negative, Token const* sign, Token const* token)
+	    : CST {CSTTag::NumberLiteral}
+	    , m_negative {negative}
+	    , m_sign {sign}
+	    , m_token {token} {}
 };
 
 struct StringLiteral : public CST {
@@ -136,8 +150,9 @@ struct StringLiteral : public CST {
 		return m_token->m_text.str();
 	}
 
-	StringLiteral()
-	    : CST {CSTTag::StringLiteral} {}
+	StringLiteral(Token const* token)
+	    : CST {CSTTag::StringLiteral}
+	    , m_token {token} {}
 };
 
 struct BooleanLiteral : public CST {
@@ -147,8 +162,9 @@ struct BooleanLiteral : public CST {
 		return m_token->m_text.str();
 	}
 
-	BooleanLiteral()
-	    : CST {CSTTag::BooleanLiteral} {}
+	BooleanLiteral(Token const* token)
+	    : CST {CSTTag::BooleanLiteral}
+	    , m_token {token} {}
 };
 
 struct NullLiteral : public CST {
@@ -160,24 +176,29 @@ struct NullLiteral : public CST {
 struct ArrayLiteral : public CST {
 	std::vector<CST*> m_elements;
 
-	ArrayLiteral()
-	    : CST {CSTTag::ArrayLiteral} {}
+	ArrayLiteral(std::vector<CST*> elements)
+	    : CST {CSTTag::ArrayLiteral}
+	    , m_elements {std::move(elements)} {}
 };
 
 struct BlockFunctionLiteral : public CST {
 	Block* m_body;
 	FuncParameters m_args;
 
-	BlockFunctionLiteral()
-	    : CST {CSTTag::BlockFunctionLiteral} {}
+	BlockFunctionLiteral(Block* body, FuncParameters args)
+	    : CST {CSTTag::BlockFunctionLiteral}
+	    , m_body {body}
+	    , m_args {std::move(args)} {}
 };
 
 struct FunctionLiteral : public CST {
 	CST* m_body;
 	FuncParameters m_args;
 
-	FunctionLiteral()
-	    : CST {CSTTag::FunctionLiteral} {}
+	FunctionLiteral(CST* body, FuncParameters args)
+	    : CST {CSTTag::FunctionLiteral}
+	    , m_body {body}
+	    , m_args {std::move(args)} {}
 };
 
 struct Identifier : public CST {
@@ -187,8 +208,9 @@ struct Identifier : public CST {
 		return m_token->m_text;
 	}
 
-	Identifier()
-	    : CST {CSTTag::Identifier} {}
+	Identifier(Token const* token)
+	    : CST {CSTTag::Identifier}
+	    , m_token {token} {}
 };
 
 struct BinaryExpression : public CST {
@@ -196,32 +218,41 @@ struct BinaryExpression : public CST {
 	CST* m_lhs;
 	CST* m_rhs;
 
-	BinaryExpression()
-	    : CST {CSTTag::BinaryExpression} {}
+	BinaryExpression(Token const* op_token, CST* lhs, CST* rhs)
+	    : CST {CSTTag::BinaryExpression}
+	    , m_op_token {op_token}
+	    , m_lhs {lhs}
+	    , m_rhs {rhs} {}
 };
 
 struct CallExpression : public CST {
 	CST* m_callee;
 	std::vector<CST*> m_args;
 
-	CallExpression()
-	    : CST {CSTTag::CallExpression} {}
+	CallExpression(CST* callee, std::vector<CST*> args)
+	    : CST {CSTTag::CallExpression}
+	    , m_callee {callee}
+	    , m_args {std::move(args)} {}
 };
 
 struct IndexExpression : public CST {
 	CST* m_callee;
 	CST* m_index;
 
-	IndexExpression()
-	    : CST {CSTTag::IndexExpression} {}
+	IndexExpression(CST* callee, CST* index)
+	    : CST {CSTTag::IndexExpression}
+	    , m_callee {callee}
+	    , m_index {index} {}
 };
 
 struct AccessExpression : public CST {
 	CST* m_record;
 	Token const* m_member;
 
-	AccessExpression()
-	    : CST {CSTTag::AccessExpression} {}
+	AccessExpression(CST* record, Token const* member)
+	    : CST {CSTTag::AccessExpression}
+	    , m_record {record}
+	    , m_member {member} {}
 };
 
 struct TernaryExpression : public CST {
@@ -229,8 +260,11 @@ struct TernaryExpression : public CST {
 	CST* m_then_expr;
 	CST* m_else_expr;
 
-	TernaryExpression()
-	    : CST {CSTTag::TernaryExpression} {}
+	TernaryExpression(CST* condition, CST* then_expr, CST* else_expr)
+	    : CST {CSTTag::TernaryExpression}
+	    , m_condition {condition}
+	    , m_then_expr {then_expr}
+	    , m_else_expr {else_expr} {}
 };
 
 struct MatchExpression : public CST {
@@ -242,42 +276,50 @@ struct MatchExpression : public CST {
 	};
 
 	// TODO: allow matching on arbitrary expressions
-	Identifier m_matchee;
+	Identifier m_matchee {nullptr};
 	CST* m_type_hint {nullptr};
 	std::vector<CaseData> m_cases;
 
-	MatchExpression()
-	    : CST {CSTTag::MatchExpression} {}
+	MatchExpression(Identifier matchee, CST* type_hint, std::vector<CaseData> cases)
+	    : CST {CSTTag::MatchExpression}
+	    , m_matchee {matchee}
+	    , m_type_hint {type_hint}
+	    , m_cases {cases} {}
 };
 
 struct ConstructorExpression : public CST {
 	CST* m_constructor;
 	std::vector<CST*> m_args;
 
-	ConstructorExpression()
-	    : CST {CSTTag::ConstructorExpression} {}
+	ConstructorExpression(CST* constructor, std::vector<CST*> args)
+	    : CST {CSTTag::ConstructorExpression}
+	    , m_constructor {constructor}
+	    , m_args {std::move(args)} {}
 };
 
 
 struct SequenceExpression : public CST {
 	Block* m_body;
 
-	SequenceExpression()
-	    : CST {CSTTag::SequenceExpression} {}
+	SequenceExpression(Block* body)
+	    : CST {CSTTag::SequenceExpression}
+	    , m_body {body} {}
 };
 
 struct Block : public CST {
 	std::vector<CST*> m_body;
 
-	Block()
-	    : CST {CSTTag::Block} {}
+	Block(std::vector<CST*> body)
+	    : CST {CSTTag::Block}
+	    , m_body {body} {}
 };
 
 struct ReturnStatement : public CST {
 	CST* m_value;
 
-	ReturnStatement()
-	    : CST {CSTTag::ReturnStatement} {}
+	ReturnStatement(CST* value)
+	    : CST {CSTTag::ReturnStatement}
+	    , m_value {value} {}
 };
 
 struct IfElseStatement : public CST {
@@ -285,8 +327,11 @@ struct IfElseStatement : public CST {
 	CST* m_body;
 	CST* m_else_body {nullptr}; // can be nullptr
 
-	IfElseStatement()
-	    : CST {CSTTag::IfElseStatement} {}
+	IfElseStatement(CST* condition, CST* body, CST* else_body)
+	    : CST {CSTTag::IfElseStatement}
+	    , m_condition {condition}
+	    , m_body {body}
+	    , m_else_body {else_body} {}
 };
 
 struct ForStatement : public CST {
@@ -295,24 +340,32 @@ struct ForStatement : public CST {
 	CST* m_action;
 	CST* m_body;
 
-	ForStatement()
-	    : CST {CSTTag::ForStatement} {}
+	ForStatement(DeclarationData declaration, CST* condition, CST* action, CST* body)
+	    : CST {CSTTag::ForStatement}
+	    , m_declaration {std::move(declaration)}
+	    , m_condition {condition}
+	    , m_action {action}
+	    , m_body {body} {}
 };
 
 struct WhileStatement : public CST {
 	CST* m_condition;
 	CST* m_body;
 
-	WhileStatement()
-	    : CST {CSTTag::WhileStatement} {}
+	WhileStatement(CST* condition, CST* body)
+	    : CST {CSTTag::WhileStatement}
+	    , m_condition {condition}
+	    , m_body {body} {}
 };
 
 struct TypeTerm : public CST {
 	CST* m_callee;
 	std::vector<CST*> m_args;
 
-	TypeTerm()
-	    : CST {CSTTag::TypeTerm} {}
+	TypeTerm(CST* callee, std::vector<CST*> args)
+	    : CST {CSTTag::TypeTerm}
+	    , m_callee {callee}
+	    , m_args {std::move(args)} {}
 };
 
 // A TypeVar is a name, bound to a type variable of any kind.
@@ -324,8 +377,9 @@ struct TypeVar : public CST {
 		return m_token->m_text.str();
 	}
 
-	TypeVar()
-	    : CST {CSTTag::TypeVar} {}
+	TypeVar(Token const* token)
+	    : CST {CSTTag::TypeVar}
+	    , m_token {token} {}
 };
 
 struct UnionExpression : public CST {
@@ -333,8 +387,10 @@ struct UnionExpression : public CST {
 	std::vector<Identifier> m_constructors;
 	std::vector<CST*> m_types;
 
-	UnionExpression()
-	    : CST {CSTTag::UnionExpression} {}
+	UnionExpression(std::vector<Identifier> constructors, std::vector<CST*> types)
+	    : CST {CSTTag::UnionExpression}
+	    , m_constructors {std::move(constructors)}
+	    , m_types {std::move(types)} {}
 };
 
 struct StructExpression : public CST {
@@ -342,8 +398,10 @@ struct StructExpression : public CST {
 	std::vector<Identifier> m_fields;
 	std::vector<CST*> m_types;
 
-	StructExpression()
-	    : CST {CSTTag::StructExpression} {}
+	StructExpression(std::vector<Identifier> fields, std::vector<CST*> types)
+	    : CST {CSTTag::StructExpression}
+	    , m_fields {std::move(fields)}
+	    , m_types {std::move(types)} {}
 };
 
 void print(CST*, int);
