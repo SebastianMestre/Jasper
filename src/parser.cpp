@@ -5,6 +5,7 @@
 #include "./utils/writer.hpp"
 #include "cst.hpp"
 #include "cst_allocator.hpp"
+#include "error_messages.hpp"
 #include "frontend_context.hpp"
 #include "lexer_result.hpp"
 #include "token_array.hpp"
@@ -15,155 +16,6 @@
 #include <iostream>
 
 #include <cassert>
-
-
-struct SourceLine { int start, end, number; };
-
-SourceLine containing_line(Frontend::Context const& file_context, int position) {
-	int line_start = 0;
-	for (int i = position; i > 0; --i) {
-		if (file_context.source[i-1] == '\n') {
-			line_start = i;
-			break;
-		}
-	}
-
-	int line_end = int(file_context.source.size());
-	for (int i = position; i < int(file_context.source.size()); ++i) {
-		if (file_context.source[i] == '\n') {
-			line_end = i;
-			break;
-		}
-	}
-
-	int line_number = 1;
-	for (int i = 0; i < line_start; ++i) {
-		if (file_context.source[i] == '\n') {
-			line_number += 1;
-		}
-	}
-
-	return {line_start, line_end, line_number};
-}
-
-bool is_closing_token(TokenTag tag) {
-	switch (tag) {
-	case TokenTag::BRACE_CLOSE:
-	case TokenTag::BRACKET_CLOSE:
-	case TokenTag::PAREN_CLOSE:
-	case TokenTag::POLY_CLOSE:
-		return true;
-	default: return false;
-	}
-}
-
-TokenTag matching_token(TokenTag tag) {
-	switch (tag) {
-	case TokenTag::BRACE_OPEN: return TokenTag::BRACE_CLOSE;
-	case TokenTag::BRACKET_OPEN: return TokenTag::BRACKET_CLOSE;
-	case TokenTag::PAREN_OPEN: return TokenTag::PAREN_CLOSE;
-	case TokenTag::POLY_OPEN: return TokenTag::POLY_CLOSE;
-	default: assert(0);
-	}
-}
-
-
-std::vector<std::string> show_line_with_indicator(Frontend::Context const& file_context, int position, std::string message) {
-
-	std::stringstream content;
-	auto line = containing_line(file_context, position);
-	auto line_content = file_context.source.substr(line.start, line.end - line.start);
-	auto normalized_line_content = std::string();
-	for (char c : line_content) {
-		if (c == '\t') {
-			normalized_line_content.push_back(' ');
-			normalized_line_content.push_back(' ');
-			normalized_line_content.push_back(' ');
-			normalized_line_content.push_back(' ');
-		} else {
-			normalized_line_content.push_back(c);
-		}
-	}
-	auto line_number = std::to_string(line.number);
-	content << line_number << " | " << normalized_line_content;
-
-	std::stringstream footer;
-	int byte_position = int(line_number.size()) + 3 + (position - line.start);
-	int column = 0;
-	for (int i = 0; i < byte_position; ++i) {
-		column += line_content[i] == '\t' ? 4 : 1;
-	}
-	footer << std::string(column, ' ') << "^ " << message;
-
-	return {{content.str(), footer.str()}};
-}
-
-ErrorReport make_unexpected_error(
-    Frontend::Context const& file_context, std::string expected, Token const* found) {
-	/*
-	Unexpected token: expected xxx but found 'y' instead
-	120 | ....... y .......
-				  ^ unexpected token is here
-	*/
-	std::stringstream header;
-	header << "Unexpected token: expected " << expected << " but found '" << found->m_text << "' instead";
-
-	auto code_display = show_line_with_indicator(file_context, found->m_start_offset, "unexpected token is here");
-
-	return ErrorReport::multi({header.str(), code_display[0], code_display[1]});
-}
-
-ErrorReport make_unexpected_error_with_open_brace(
-    Frontend::Context const& file_context,
-    Token const* opening,
-    std::string expected,
-    Token const* found
-) {
-
-	auto matching = matching_token(opening->m_type);
-	if (found->m_type == TokenTag::END) {
-		/*
-		Mismatched braces: found no '}' to match '{'
-		100 | .... {  ....
-				   ^ opening brace is here
-		*/
-		std::stringstream header;
-		header << "Mismatched brace: found no '" << token_string[(int)matching] << "' to match '" << opening->m_text << "'";
-
-		auto code_display = show_line_with_indicator(file_context, opening->m_start_offset, "opening brace is here");
-
-		return ErrorReport::multi({header.str(), code_display[0], code_display[1]});
-	} else if (is_closing_token(found->m_type)) {
-		/*
-		Mismatched braces: expected 'x' but found 'y'
-		120 | ....... y .......
-					  ^ unexpected token is here
-		100 | LINE .... x ....
-						^ opening brace is here
-		*/
-		std::stringstream header;
-		header << "Mismatched braces: expected '" << token_string[(int)matching] << "' but found '" << found->m_text << "' instead";
-
-		auto code_display1 = show_line_with_indicator(file_context, found->m_start_offset, "unexpected token is here");
-		auto code_display2 = show_line_with_indicator(file_context, opening->m_start_offset, "opening brace is here");
-
-		return ErrorReport::multi({header.str(), code_display1[0], code_display1[1], code_display2[0], code_display2[1]});
-	} else {
-		return make_unexpected_error(file_context, std::move(expected), found);
-	}
-}
-
-ErrorReport make_located_error(Frontend::Context const& file_context, string_view text, Token const* token) {
-	SourceLocation token_location = file_context.char_offset_to_location(token->m_start_offset);
-	auto error = make_located_error(text, token_location);
-	auto code_display = show_line_with_indicator(file_context, token->m_start_offset, "");
-	error.m_lines.push_back(code_display[0]);
-	error.m_lines.push_back(code_display[1]);
-	return error;
-}
-
-
-
 
 template <typename T>
 Writer<T> make_writer(T x) {
@@ -320,7 +172,7 @@ Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
 					break;
 				}
 
-				return make_located_error(m_file_context, "Found trailing delimiter in expression list", p0);
+				return make_located_error(m_file_context, "Found trailing delimiter in expression list", p0, "trailing delimiter");
 			}
 		} else if (consume(terminator)) {
 			break;
@@ -600,8 +452,8 @@ Writer<CST::CST*> Parser::parse_terminal() {
 		}
 
 		return is_negative
-			? make_located_error(m_file_context, "Stray minus sign with no number", token)
-			: make_located_error(m_file_context, "Stray plus sign with no number", token);
+			? make_located_error(m_file_context, "Stray minus sign with no number", token, "stray sign")
+			: make_located_error(m_file_context, "Stray plus sign with no number", token, "stray sign");
 	}
 
 	if (consume(TokenTag::INTEGER)) {
