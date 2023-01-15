@@ -30,5 +30,3 @@ struct ErrorReport {
 
 	void add_sub_error(ErrorReport);
 };
-
-ErrorReport make_located_error(string_view text, SourceLocation location);

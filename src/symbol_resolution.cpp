@@ -8,6 +8,7 @@
 #include "./utils/error_report.hpp"
 #include "./utils/interned_string.hpp"
 #include "ast.hpp"
+#include "error_messages.hpp"
 #include "frontend_context.hpp"
 #include "symbol_table.hpp"
 #include "token.hpp"
@@ -107,12 +108,11 @@ private:
 		AST::Declaration* declaration = symbol_table.access(ast->text());
 
 		if (!declaration) {
-			// TODO: clean up how we build error reports
-			auto token = ast->token();
-			SourceLocation token_location = file_context.char_offset_to_location(token->m_start_offset);
 			return make_located_error(
-				"accessed undeclared identifier '" + ast->text().str() + "'",
-				token_location);
+			    file_context,
+			    "accessed undeclared identifier '" + ast->text().str() + "'",
+			    ast->token(),
+			    "");
 		}
 
 		ast->m_declaration = declaration;

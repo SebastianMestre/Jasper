@@ -58,10 +58,3 @@ void ErrorReport::print(int d) const {
 void ErrorReport::add_sub_error(ErrorReport other) {
 	m_sub_errors.push_back(std::move(other));
 }
-
-
-ErrorReport make_located_error(string_view text, SourceLocation location) {
-	std::stringstream ss;
-	ss << "At " << location.to_string() << " : " << text;
-	return ErrorReport {ss.str()};
-}
