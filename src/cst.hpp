@@ -37,6 +37,8 @@ struct Stmt : public CST {
 
 struct Block;
 
+struct Declaration;
+
 struct DeclarationData {
 	Token const* m_identifier_token;
 	CST* m_type_hint {nullptr};  // can be nullptr
@@ -49,69 +51,6 @@ struct DeclarationData {
 
 using FuncParameters = std::vector<DeclarationData>;
 
-struct Declaration : public Stmt {
-	// This function is very cold -- it's ok to use virtuals
-	virtual InternedString const& identifier_virtual() const = 0;
-
-	Declaration(CSTTag tag)
-		: Stmt {tag} {}
-};
-
-struct PlainDeclaration : public Declaration {
-	DeclarationData m_data;
-
-	InternedString const& identifier() const {
-		return m_data.identifier();
-	}
-
-	InternedString const& identifier_virtual() const override {
-		return identifier();
-	}
-
-	PlainDeclaration(DeclarationData data)
-	    : Declaration {CSTTag::PlainDeclaration}
-	    , m_data {std::move(data)} {}
-};
-
-struct FuncDeclaration : public Declaration {
-	Token const* m_identifier;
-	FuncParameters m_args;
-	CST* m_body;
-
-	InternedString const& identifier() const {
-		return m_identifier->m_text;
-	}
-
-	InternedString const& identifier_virtual() const override {
-		return identifier();
-	}
-
-	FuncDeclaration(Token const* identifier, FuncParameters args, CST* body)
-	    : Declaration {CSTTag::FuncDeclaration}
-	    , m_identifier {identifier}
-	    , m_args {std::move(args)}
-	    , m_body {body} {}
-};
-
-struct BlockFuncDeclaration : public Declaration {
-	Token const* m_identifier;
-	FuncParameters m_args;
-	Block* m_body;
-
-	InternedString const& identifier() const {
-		return m_identifier->m_text;
-	}
-
-	InternedString const& identifier_virtual() const override {
-		return identifier();
-	}
-
-	BlockFuncDeclaration(Token const* identifier, FuncParameters args, Block* body)
-	    : Declaration {CSTTag::BlockFuncDeclaration}
-	    , m_identifier {identifier}
-	    , m_args {std::move(args)}
-	    , m_body {body} {}
-};
 
 struct Program : public CST {
 	std::vector<Declaration*> m_declarations;
@@ -120,6 +59,8 @@ struct Program : public CST {
 	    : CST {CSTTag::Program}
 	    , m_declarations {std::move(declarations)} {}
 };
+
+// Expression language
 
 struct IntegerLiteral : public CST {
 	bool m_negative {false};
@@ -307,12 +248,77 @@ struct ConstructorExpression : public CST {
 	    , m_args {std::move(args)} {}
 };
 
-
 struct SequenceExpression : public CST {
 	Block* m_body;
 
 	SequenceExpression(Block* body)
 	    : CST {CSTTag::SequenceExpression}
+	    , m_body {body} {}
+};
+
+// Statement language
+
+struct Declaration : public Stmt {
+	// This function is very cold -- it's ok to use virtuals
+	virtual InternedString const& identifier_virtual() const = 0;
+
+	Declaration(CSTTag tag)
+		: Stmt {tag} {}
+};
+
+struct PlainDeclaration : public Declaration {
+	DeclarationData m_data;
+
+	InternedString const& identifier() const {
+		return m_data.identifier();
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	PlainDeclaration(DeclarationData data)
+	    : Declaration {CSTTag::PlainDeclaration}
+	    , m_data {std::move(data)} {}
+};
+
+struct FuncDeclaration : public Declaration {
+	Token const* m_identifier;
+	FuncParameters m_args;
+	CST* m_body;
+
+	InternedString const& identifier() const {
+		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	FuncDeclaration(Token const* identifier, FuncParameters args, CST* body)
+	    : Declaration {CSTTag::FuncDeclaration}
+	    , m_identifier {identifier}
+	    , m_args {std::move(args)}
+	    , m_body {body} {}
+};
+
+struct BlockFuncDeclaration : public Declaration {
+	Token const* m_identifier;
+	FuncParameters m_args;
+	Block* m_body;
+
+	InternedString const& identifier() const {
+		return m_identifier->m_text;
+	}
+
+	InternedString const& identifier_virtual() const override {
+		return identifier();
+	}
+
+	BlockFuncDeclaration(Token const* identifier, FuncParameters args, Block* body)
+	    : Declaration {CSTTag::BlockFuncDeclaration}
+	    , m_identifier {identifier}
+	    , m_args {std::move(args)}
 	    , m_body {body} {}
 };
 
@@ -367,6 +373,8 @@ struct WhileStatement : public Stmt {
 	    , m_condition {condition}
 	    , m_body {body} {}
 };
+
+// Type language
 
 struct TypeTerm : public CST {
 	CST* m_callee;
