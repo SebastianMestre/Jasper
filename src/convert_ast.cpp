@@ -9,13 +9,23 @@ namespace AST {
 
 static AST* convert_stmt(CST::Stmt* cst, Allocator& alloc);
 
-static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
-	auto block = static_cast<Block*>(convert_stmt(cst, alloc));
-	auto seq_expr = alloc.make<SequenceExpression>();
-	seq_expr->m_body = block;
-	return seq_expr;
+static std::vector<Declaration> convert_args(CST::FuncParameters& cst_args, FunctionLiteral* surrounding_function, Allocator& alloc);
+static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc);
+static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc);
+
+
+static Program* convert(CST::Program* cst, Allocator& alloc) {
+	auto ast = alloc.make<Program>();
+
+	for (auto& declaration : cst->m_declarations) {
+		auto decl = static_cast<Declaration*>(convert_stmt(declaration, alloc));
+		ast->m_declarations.push_back(std::move(*decl));
+	}
+
+	return ast;
 }
 
+// Expressions
 
 static IntegerLiteral* convert(CST::IntegerLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<IntegerLiteral>();
@@ -57,32 +67,6 @@ static ArrayLiteral* convert(CST::ArrayLiteral* cst, Allocator& alloc) {
 	}
 
 	return ast;
-}
-
-static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
-	Declaration decl;
-	decl.m_cst = cst;
-	decl.m_identifier = data.identifier();
-	if (data.m_type_hint)
-		decl.m_type_hint = convert_expr(data.m_type_hint, alloc);
-	if (data.m_value)
-		decl.m_value = convert_expr(data.m_value, alloc);
-	return decl;
-}
-
-static std::vector<Declaration> convert_args(
-    CST::FuncParameters& cst_args,
-    FunctionLiteral* surrounding_function,
-    Allocator& alloc) {
-
-	std::vector<Declaration> result;
-	for (auto arg : cst_args) {
-		Declaration decl = convert_declaration(nullptr, arg, alloc);
-		decl.m_surrounding_function = surrounding_function;
-
-		result.push_back(std::move(decl));
-	}
-	return result;
 }
 
 static FunctionLiteral* convert(CST::FunctionLiteral* cst, Allocator& alloc) {
@@ -138,49 +122,6 @@ static CallExpression* convert(CST::BinaryExpression* cst, Allocator& alloc) {
 
 	ast->m_args.push_back(convert_expr(cst->m_lhs, alloc));
 	ast->m_args.push_back(convert_expr(cst->m_rhs, alloc));
-
-	return ast;
-}
-
-static Declaration* convert(CST::PlainDeclaration* cst, Allocator& alloc) {
-	auto ast = alloc.make<Declaration>();
-	*ast = convert_declaration(cst, cst->m_data, alloc);
-	return ast;
-}
-
-static Declaration* convert(CST::FuncDeclaration* cst, Allocator& alloc) {
-	auto func_ast = alloc.make<FunctionLiteral>();
-	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_expr(cst->m_body, alloc);
-
-	auto ast = alloc.make<Declaration>();
-	ast->m_cst = cst;
-	ast->m_identifier = cst->identifier();
-	ast->m_value = func_ast;
-
-	return ast;
-}
-
-static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
-	auto func_ast = alloc.make<FunctionLiteral>();
-	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
-
-	auto ast = alloc.make<Declaration>();
-	ast->m_cst = cst;
-	ast->m_identifier = cst->identifier();
-	ast->m_value = func_ast;
-
-	return ast;
-}
-
-static Program* convert(CST::Program* cst, Allocator& alloc) {
-	auto ast = alloc.make<Program>();
-
-	for (auto& declaration : cst->m_declarations) {
-		auto decl = static_cast<Declaration*>(convert_stmt(declaration, alloc));
-		ast->m_declarations.push_back(std::move(*decl));
-	}
 
 	return ast;
 }
@@ -287,6 +228,38 @@ static SequenceExpression* convert(CST::SequenceExpression* cst, Allocator& allo
 }
 
 // Statements
+
+static Declaration* convert(CST::PlainDeclaration* cst, Allocator& alloc) {
+	auto ast = alloc.make<Declaration>();
+	*ast = convert_declaration(cst, cst->m_data, alloc);
+	return ast;
+}
+
+static Declaration* convert(CST::FuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_expr(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
+	return ast;
+}
+
+static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
+	return ast;
+}
 
 static Block* convert(CST::Block* cst, Allocator& alloc) {
 	auto ast = alloc.make<Block>();
@@ -407,6 +380,43 @@ static TypeTerm* convert(CST::TypeTerm* cst, Allocator& alloc) {
 
 	return ast;
 }
+
+// Misc. helpers
+
+static std::vector<Declaration> convert_args(
+    CST::FuncParameters& cst_args,
+    FunctionLiteral* surrounding_function,
+    Allocator& alloc) {
+
+	std::vector<Declaration> result;
+	for (auto arg : cst_args) {
+		Declaration decl = convert_declaration(nullptr, arg, alloc);
+		decl.m_surrounding_function = surrounding_function;
+
+		result.push_back(std::move(decl));
+	}
+	return result;
+}
+
+static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
+	Declaration decl;
+	decl.m_cst = cst;
+	decl.m_identifier = data.identifier();
+	if (data.m_type_hint)
+		decl.m_type_hint = convert_expr(data.m_type_hint, alloc);
+	if (data.m_value)
+		decl.m_value = convert_expr(data.m_value, alloc);
+	return decl;
+}
+
+static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
+	auto block = static_cast<Block*>(convert_stmt(cst, alloc));
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = block;
+	return seq_expr;
+}
+
+
 
 Expr* convert_expr(CST::Expr* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
