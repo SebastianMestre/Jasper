@@ -922,13 +922,13 @@ Writer<std::pair<Token const*, CST::Expr*>> Parser::parse_name_and_type(bool req
 }
 
 
-ParserResult parse_program(LexerResult lexer_result, CST::Allocator& allocator) {
+ParserResult<CST::Program> parse_program(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::Program*> w = p.parse_top_level();
 	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }
 
-ParserResult parse_expression(LexerResult lexer_result, CST::Allocator& allocator) {
+ParserResult<CST::Expr> parse_expression(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
 	Writer<CST::Expr*> w = p.parse_expression();
 	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};

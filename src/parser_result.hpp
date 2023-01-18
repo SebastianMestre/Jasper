@@ -6,12 +6,11 @@
 
 #include <cassert>
 
-namespace CST {
-struct CST;
-}
-
+template<typename T>
 struct ParserResult {
-	ParserResult(CST::CST* cst, ErrorReport error, TokenArray tokens, Frontend::Context file_context)
+	// TODO: check that T is CST or a subtype of CST
+
+	ParserResult(T* cst, ErrorReport error, TokenArray tokens, Frontend::Context file_context)
 	    : m_cst {cst}
 		, m_file_context {std::move(file_context)}
 	    , m_error {std::move(error)}
@@ -21,7 +20,7 @@ struct ParserResult {
 		return m_error.ok();
 	}
 
-	CST::CST* cst() const {
+	T* cst() const {
 		assert(ok());
 		return m_cst;
 	}
@@ -35,7 +34,7 @@ struct ParserResult {
 	}
 
 private:
-	CST::CST* m_cst;
+	T* m_cst;
 	Frontend::Context m_file_context;
 	ErrorReport m_error;
 	TokenArray m_tokens;

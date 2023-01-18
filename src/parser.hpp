@@ -7,7 +7,9 @@
 
 namespace CST {
 struct Allocator;
+struct Program;
+struct Expr;
 }
 
-ParserResult parse_program(LexerResult, CST::Allocator&);
-ParserResult parse_expression(LexerResult, CST::Allocator&);
+ParserResult<CST::Program> parse_program(LexerResult, CST::Allocator&);
+ParserResult<CST::Expr> parse_expression(LexerResult, CST::Allocator&);
