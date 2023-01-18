@@ -25,6 +25,16 @@ struct CST {
 	virtual ~CST() = default;
 };
 
+struct Expr : public CST {
+	Expr(CSTTag tag)
+	    : CST {tag} {}
+};
+
+struct Stmt : public CST {
+	Stmt(CSTTag tag)
+	    : CST {tag} {}
+};
+
 struct Block;
 
 struct DeclarationData {
