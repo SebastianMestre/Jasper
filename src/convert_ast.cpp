@@ -469,21 +469,6 @@ static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
 #undef DISPATCH
 }
 
-AST* convert_ast(CST::CST* cst, Allocator& alloc) {
-#define DISPATCH(type)                                                         \
-	case CSTTag::type:                                                         \
-		return convert(static_cast<CST::type*>(cst), alloc)
-
-	switch (cst->type()) {
-		DISPATCH(Program);
-	default:
-		return convert_stmt(cst, alloc);
-	}
-
-#undef DISPATCH
-}
-
-
 Program* convert_program(CST::Program* cst, Allocator& alloc) {
 	return convert(static_cast<CST::Program*>(cst), alloc);
 }
