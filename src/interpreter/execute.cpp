@@ -61,7 +61,7 @@ ExitStatus execute(
 		}
 	}
 
-	tc.compute_declaration_order(static_cast<AST::Program*>(ast));
+	tc.compute_declaration_order(ast);
 
 	if (settings.typecheck) {
 		tc.core().m_meta_core.comp = &tc.declaration_order();
