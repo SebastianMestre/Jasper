@@ -49,12 +49,12 @@ struct DeclarationData {
 
 using FuncParameters = std::vector<DeclarationData>;
 
-struct Declaration : public CST {
+struct Declaration : public Stmt {
 	// This function is very cold -- it's ok to use virtuals
 	virtual InternedString const& identifier_virtual() const = 0;
 
 	Declaration(CSTTag tag)
-		: CST {tag} {}
+		: Stmt {tag} {}
 };
 
 struct PlainDeclaration : public Declaration {
@@ -316,54 +316,54 @@ struct SequenceExpression : public CST {
 	    , m_body {body} {}
 };
 
-struct Block : public CST {
+struct Block : public Stmt {
 	std::vector<CST*> m_body;
 
 	Block(std::vector<CST*> body)
-	    : CST {CSTTag::Block}
+	    : Stmt {CSTTag::Block}
 	    , m_body {body} {}
 };
 
-struct ReturnStatement : public CST {
+struct ReturnStatement : public Stmt {
 	CST* m_value;
 
 	ReturnStatement(CST* value)
-	    : CST {CSTTag::ReturnStatement}
+	    : Stmt {CSTTag::ReturnStatement}
 	    , m_value {value} {}
 };
 
-struct IfElseStatement : public CST {
+struct IfElseStatement : public Stmt {
 	CST* m_condition;
 	CST* m_body;
 	CST* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement(CST* condition, CST* body, CST* else_body)
-	    : CST {CSTTag::IfElseStatement}
+	    : Stmt {CSTTag::IfElseStatement}
 	    , m_condition {condition}
 	    , m_body {body}
 	    , m_else_body {else_body} {}
 };
 
-struct ForStatement : public CST {
+struct ForStatement : public Stmt {
 	DeclarationData m_declaration;
 	CST* m_condition;
 	CST* m_action;
 	CST* m_body;
 
 	ForStatement(DeclarationData declaration, CST* condition, CST* action, CST* body)
-	    : CST {CSTTag::ForStatement}
+	    : Stmt {CSTTag::ForStatement}
 	    , m_declaration {std::move(declaration)}
 	    , m_condition {condition}
 	    , m_action {action}
 	    , m_body {body} {}
 };
 
-struct WhileStatement : public CST {
+struct WhileStatement : public Stmt {
 	CST* m_condition;
 	CST* m_body;
 
 	WhileStatement(CST* condition, CST* body)
-	    : CST {CSTTag::WhileStatement}
+	    : Stmt {CSTTag::WhileStatement}
 	    , m_condition {condition}
 	    , m_body {body} {}
 };
