@@ -104,7 +104,7 @@ Value eval_expression(
 		Log::fatal() << "parser error";
 	}
 
-	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
+	auto ast = AST::convert_expr(parse_result.cst(), ast_allocator);
 
 	{
 		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);
