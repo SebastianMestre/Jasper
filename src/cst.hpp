@@ -41,8 +41,8 @@ struct Declaration;
 
 struct DeclarationData {
 	Token const* m_identifier_token;
-	CST* m_type_hint {nullptr};  // can be nullptr
-	CST* m_value {nullptr}; // can be nullptr
+	Expr* m_type_hint {nullptr};  // can be nullptr
+	Expr* m_value {nullptr}; // can be nullptr
 
 	InternedString const& identifier() const {
 		return m_identifier_token->m_text;
@@ -125,9 +125,9 @@ struct NullLiteral : public Expr {
 };
 
 struct ArrayLiteral : public Expr {
-	std::vector<CST*> m_elements;
+	std::vector<Expr*> m_elements;
 
-	ArrayLiteral(std::vector<CST*> elements)
+	ArrayLiteral(std::vector<Expr*> elements)
 	    : Expr {CSTTag::ArrayLiteral}
 	    , m_elements {std::move(elements)} {}
 };
@@ -143,10 +143,10 @@ struct BlockFunctionLiteral : public Expr {
 };
 
 struct FunctionLiteral : public Expr {
-	CST* m_body;
+	Expr* m_body;
 	FuncParameters m_args;
 
-	FunctionLiteral(CST* body, FuncParameters args)
+	FunctionLiteral(Expr* body, FuncParameters args)
 	    : Expr {CSTTag::FunctionLiteral}
 	    , m_body {body}
 	    , m_args {std::move(args)} {}
@@ -166,10 +166,10 @@ struct Identifier : public Expr {
 
 struct BinaryExpression : public Expr {
 	Token const* m_op_token;
-	CST* m_lhs;
-	CST* m_rhs;
+	Expr* m_lhs;
+	Expr* m_rhs;
 
-	BinaryExpression(Token const* op_token, CST* lhs, CST* rhs)
+	BinaryExpression(Token const* op_token, Expr* lhs, Expr* rhs)
 	    : Expr {CSTTag::BinaryExpression}
 	    , m_op_token {op_token}
 	    , m_lhs {lhs}
@@ -177,41 +177,41 @@ struct BinaryExpression : public Expr {
 };
 
 struct CallExpression : public Expr {
-	CST* m_callee;
-	std::vector<CST*> m_args;
+	Expr* m_callee;
+	std::vector<Expr*> m_args;
 
-	CallExpression(CST* callee, std::vector<CST*> args)
+	CallExpression(Expr* callee, std::vector<Expr*> args)
 	    : Expr {CSTTag::CallExpression}
 	    , m_callee {callee}
 	    , m_args {std::move(args)} {}
 };
 
 struct IndexExpression : public Expr {
-	CST* m_callee;
-	CST* m_index;
+	Expr* m_callee;
+	Expr* m_index;
 
-	IndexExpression(CST* callee, CST* index)
+	IndexExpression(Expr* callee, Expr* index)
 	    : Expr {CSTTag::IndexExpression}
 	    , m_callee {callee}
 	    , m_index {index} {}
 };
 
 struct AccessExpression : public Expr {
-	CST* m_record;
+	Expr* m_record;
 	Token const* m_member;
 
-	AccessExpression(CST* record, Token const* member)
+	AccessExpression(Expr* record, Token const* member)
 	    : Expr {CSTTag::AccessExpression}
 	    , m_record {record}
 	    , m_member {member} {}
 };
 
 struct TernaryExpression : public Expr {
-	CST* m_condition;
-	CST* m_then_expr;
-	CST* m_else_expr;
+	Expr* m_condition;
+	Expr* m_then_expr;
+	Expr* m_else_expr;
 
-	TernaryExpression(CST* condition, CST* then_expr, CST* else_expr)
+	TernaryExpression(Expr* condition, Expr* then_expr, Expr* else_expr)
 	    : Expr {CSTTag::TernaryExpression}
 	    , m_condition {condition}
 	    , m_then_expr {then_expr}
@@ -222,16 +222,16 @@ struct MatchExpression : public Expr {
 	struct CaseData {
 		Token const* m_name;
 		Token const* m_identifier;
-		CST* m_type_hint {nullptr};
-		CST* m_expression;
+		Expr* m_type_hint {nullptr};
+		Expr* m_expression;
 	};
 
 	// TODO: allow matching on arbitrary expressions
 	Identifier m_matchee {nullptr};
-	CST* m_type_hint {nullptr};
+	Expr* m_type_hint {nullptr};
 	std::vector<CaseData> m_cases;
 
-	MatchExpression(Identifier matchee, CST* type_hint, std::vector<CaseData> cases)
+	MatchExpression(Identifier matchee, Expr* type_hint, std::vector<CaseData> cases)
 	    : Expr {CSTTag::MatchExpression}
 	    , m_matchee {matchee}
 	    , m_type_hint {type_hint}
@@ -239,10 +239,10 @@ struct MatchExpression : public Expr {
 };
 
 struct ConstructorExpression : public Expr {
-	CST* m_constructor;
-	std::vector<CST*> m_args;
+	Expr* m_constructor;
+	std::vector<Expr*> m_args;
 
-	ConstructorExpression(CST* constructor, std::vector<CST*> args)
+	ConstructorExpression(Expr* constructor, std::vector<Expr*> args)
 	    : Expr {CSTTag::ConstructorExpression}
 	    , m_constructor {constructor}
 	    , m_args {std::move(args)} {}
@@ -285,7 +285,7 @@ struct PlainDeclaration : public Declaration {
 struct FuncDeclaration : public Declaration {
 	Token const* m_identifier;
 	FuncParameters m_args;
-	CST* m_body;
+	Expr* m_body;
 
 	InternedString const& identifier() const {
 		return m_identifier->m_text;
@@ -295,7 +295,7 @@ struct FuncDeclaration : public Declaration {
 		return identifier();
 	}
 
-	FuncDeclaration(Token const* identifier, FuncParameters args, CST* body)
+	FuncDeclaration(Token const* identifier, FuncParameters args, Expr* body)
 	    : Declaration {CSTTag::FuncDeclaration}
 	    , m_identifier {identifier}
 	    , m_args {std::move(args)}
@@ -331,19 +331,19 @@ struct Block : public Stmt {
 };
 
 struct ReturnStatement : public Stmt {
-	CST* m_value;
+	Expr* m_value;
 
-	ReturnStatement(CST* value)
+	ReturnStatement(Expr* value)
 	    : Stmt {CSTTag::ReturnStatement}
 	    , m_value {value} {}
 };
 
 struct IfElseStatement : public Stmt {
-	CST* m_condition;
+	Expr* m_condition;
 	Stmt* m_body;
 	Stmt* m_else_body {nullptr}; // can be nullptr
 
-	IfElseStatement(CST* condition, Stmt* body, Stmt* else_body)
+	IfElseStatement(Expr* condition, Stmt* body, Stmt* else_body)
 	    : Stmt {CSTTag::IfElseStatement}
 	    , m_condition {condition}
 	    , m_body {body}
@@ -352,11 +352,11 @@ struct IfElseStatement : public Stmt {
 
 struct ForStatement : public Stmt {
 	DeclarationData m_declaration;
-	CST* m_condition;
-	CST* m_action;
+	Expr* m_condition;
+	Expr* m_action;
 	Stmt* m_body;
 
-	ForStatement(DeclarationData declaration, CST* condition, CST* action, Stmt* body)
+	ForStatement(DeclarationData declaration, Expr* condition, Expr* action, Stmt* body)
 	    : Stmt {CSTTag::ForStatement}
 	    , m_declaration {std::move(declaration)}
 	    , m_condition {condition}
@@ -365,19 +365,19 @@ struct ForStatement : public Stmt {
 };
 
 struct WhileStatement : public Stmt {
-	CST* m_condition;
+	Expr* m_condition;
 	Stmt* m_body;
 
-	WhileStatement(CST* condition, Stmt* body)
+	WhileStatement(Expr* condition, Stmt* body)
 	    : Stmt {CSTTag::WhileStatement}
 	    , m_condition {condition}
 	    , m_body {body} {}
 };
 
 struct ExpressionStatement : public Stmt {
-	CST* m_expression;
+	Expr* m_expression;
 
-	ExpressionStatement(CST* expression)
+	ExpressionStatement(Expr* expression)
 	    : Stmt {CSTTag::ExpressionStatement}
 	    , m_expression {expression} {}
 };
@@ -385,10 +385,10 @@ struct ExpressionStatement : public Stmt {
 // Type language
 
 struct TypeTerm : public Expr {
-	CST* m_callee;
-	std::vector<CST*> m_args;
+	Expr* m_callee;
+	std::vector<Expr*> m_args;
 
-	TypeTerm(CST* callee, std::vector<CST*> args)
+	TypeTerm(Expr* callee, std::vector<Expr*> args)
 	    : Expr {CSTTag::TypeTerm}
 	    , m_callee {callee}
 	    , m_args {std::move(args)} {}
@@ -411,9 +411,9 @@ struct TypeVar : public Expr {
 struct UnionExpression : public Expr {
 	// TODO: better storage?
 	std::vector<Identifier> m_constructors;
-	std::vector<CST*> m_types;
+	std::vector<Expr*> m_types;
 
-	UnionExpression(std::vector<Identifier> constructors, std::vector<CST*> types)
+	UnionExpression(std::vector<Identifier> constructors, std::vector<Expr*> types)
 	    : Expr {CSTTag::UnionExpression}
 	    , m_constructors {std::move(constructors)}
 	    , m_types {std::move(types)} {}
@@ -422,9 +422,9 @@ struct UnionExpression : public Expr {
 struct StructExpression : public Expr {
 	// TODO: better storage?
 	std::vector<Identifier> m_fields;
-	std::vector<CST*> m_types;
+	std::vector<Expr*> m_types;
 
-	StructExpression(std::vector<Identifier> fields, std::vector<CST*> types)
+	StructExpression(std::vector<Identifier> fields, std::vector<Expr*> types)
 	    : Expr {CSTTag::StructExpression}
 	    , m_fields {std::move(fields)}
 	    , m_types {std::move(types)} {}

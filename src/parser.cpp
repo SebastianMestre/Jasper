@@ -33,14 +33,12 @@ struct Parser {
 		, m_file_context {file_context}
 	    , m_cst_allocator {cst_allocator} {}
 
-	Writer<std::vector<CST::CST*>> parse_expression_list(TokenTag, TokenTag, bool);
-
 	Writer<CST::Program*> parse_top_level();
 
 	Writer<CST::SequenceExpression*> parse_sequence_expression();
 	Writer<CST::MatchExpression*> parse_match_expression();
 	Writer<CST::TernaryExpression*> parse_if_else_expression();
-	Writer<CST::TernaryExpression*> parse_if_else_expression(CST::CST* parsed_condition);
+	Writer<CST::TernaryExpression*> parse_if_else_expression(CST::Expr* parsed_condition);
 	Writer<CST::ArrayLiteral*> parse_array_literal();
 	Writer<CST::Expr*> parse_function();
 	Writer<CST::Identifier*> parse_term_identifier();
@@ -66,10 +64,11 @@ struct Parser {
 	Writer<CST::Expr*> parse_type_function();
 
 	Writer<CST::FuncParameters> parse_function_parameters();
-	Writer<std::vector<CST::CST*>> parse_argument_list();
-	Writer<std::vector<CST::CST*>> parse_type_term_arguments();
-	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> parse_type_list(bool);
-	Writer<std::pair<Token const*, CST::CST*>> parse_name_and_type(bool required_type = false);
+	Writer<std::vector<CST::Expr*>> parse_argument_list();
+	Writer<std::vector<CST::Expr*>> parse_expression_list(TokenTag, TokenTag, bool);
+	Writer<std::vector<CST::Expr*>> parse_type_term_arguments();
+	Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::Expr*>>> parse_type_list(bool);
+	Writer<std::pair<Token const*, CST::Expr*>> parse_name_and_type(bool required_type = false);
 
 	ErrorReport make_located_error(string_view text, Token const* token) {
 		SourceLocation token_location = m_file_context.char_offset_to_location(token->m_start_offset);
@@ -170,10 +169,10 @@ Writer<CST::Program*> Parser::parse_top_level() {
 	return make_writer(make<CST::Program>(std::move(declarations)));
 }
 
-Writer<std::vector<CST::CST*>> Parser::parse_expression_list(
+Writer<std::vector<CST::Expr*>> Parser::parse_expression_list(
     TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
 
-	std::vector<CST::CST*> expressions;
+	std::vector<CST::Expr*> expressions;
 
 	if (consume(terminator))
 		return make_writer(std::move(expressions));
@@ -260,7 +259,7 @@ Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {
 Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
 	auto name = REQUIRE(TokenTag::IDENTIFIER);
 
-	CST::CST* type = nullptr;
+	CST::Expr* type = nullptr;
 
 	if (consume(TokenTag::DECLARE_ASSIGN)) {
 	} else if (consume(TokenTag::DECLARE)) {
@@ -348,7 +347,7 @@ binding_power binding_power_of(TokenTag t) {
 	}
 }
 
-Writer<std::vector<CST::CST*>> Parser::parse_argument_list() {
+Writer<std::vector<CST::Expr*>> Parser::parse_argument_list() {
 	ErrorReport result = {{"Failed to parse argument list"}};
 
 	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
@@ -536,13 +535,13 @@ Writer<CST::TernaryExpression*> Parser::parse_if_else_expression() {
 	REQUIRE_WITH(result, TokenTag::KEYWORD_IF);
 	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
 
-	CST::CST* condition = TRY_WITH(result, parse_expression());
+	CST::Expr* condition = TRY_WITH(result, parse_expression());
 	REQUIRE_WITH(result, TokenTag::PAREN_CLOSE);
 
 	return parse_if_else_expression(condition);
 }
 
-Writer<CST::TernaryExpression*> Parser::parse_if_else_expression(CST::CST* condition) {
+Writer<CST::TernaryExpression*> Parser::parse_if_else_expression(CST::Expr* condition) {
 	assert(condition);
 
 	ErrorReport result = {{"Failed to parse if-else expression"}};
@@ -824,27 +823,27 @@ Writer<CST::SequenceExpression*> Parser::parse_sequence_expression() {
 	return make_writer(make<CST::SequenceExpression>(body));
 }
 
-Writer<std::pair<Token const*, CST::CST*>> Parser::parse_name_and_type(bool required_type) {
+Writer<std::pair<Token const*, CST::Expr*>> Parser::parse_name_and_type(bool required_type) {
 	ErrorReport result = {{"Failed to parse name and type"}};
 
 	auto name = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
 
-	CST::CST* type = nullptr;
+	CST::Expr* type = nullptr;
 	if (required_type or match(TokenTag::DECLARE)) {
 		REQUIRE_WITH(result, TokenTag::DECLARE);
 		type = TRY_WITH(result, parse_type_term());
 	}
 
-	return make_writer<std::pair<Token const*, CST::CST*>>({name, type});
+	return make_writer<std::pair<Token const*, CST::Expr*>>({name, type});
 }
 
 
-Writer<std::vector<CST::CST*>> Parser::parse_type_term_arguments() {
+Writer<std::vector<CST::Expr*>> Parser::parse_type_term_arguments() {
 	ErrorReport result = {{"Failed to parse type arguments"}};
 
 	REQUIRE_WITH(result, TokenTag::POLY_OPEN);
 
-	std::vector<CST::CST*> args;
+	std::vector<CST::Expr*> args;
 
 	while (!consume(TokenTag::POLY_CLOSE)) {
 		args.push_back(TRY_WITH(result, parse_type_term()));
@@ -866,12 +865,12 @@ Writer<CST::Expr*> Parser::parse_type_term() {
 	return make_writer(make<CST::TypeTerm>(callee, std::move(args)));
 }
 
-Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::parse_type_list(
+Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::Expr*>>> Parser::parse_type_list(
     bool with_identifiers = false) {
 	ErrorReport result = {{"Failed to parse type list"}};
 
 	std::vector<CST::Identifier> identifiers;
-	std::vector<CST::CST*> types;
+	std::vector<CST::Expr*> types;
 
 	REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
 
@@ -890,7 +889,7 @@ Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>> Parser::
 	}
 
 	return make_writer<
-	    std::pair<std::vector<CST::Identifier>, std::vector<CST::CST*>>>(
+	    std::pair<std::vector<CST::Identifier>, std::vector<CST::Expr*>>>(
 	    make_pair(std::move(identifiers), std::move(types)));
 }
 
