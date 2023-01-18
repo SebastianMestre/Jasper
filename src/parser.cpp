@@ -51,7 +51,6 @@ struct Parser {
 	Writer<CST::Declaration*> parse_declaration();
 	Writer<CST::Declaration*> parse_func_declaration();
 	Writer<CST::PlainDeclaration*> parse_plain_declaration();
-	Writer<CST::DeclarationData> parse_plain_declaration_data();
 	Writer<CST::Stmt*> parse_statement();
 	Writer<CST::Block*> parse_block();
 	Writer<CST::ReturnStatement*> parse_return_statement();
@@ -63,6 +62,7 @@ struct Parser {
 	Writer<CST::Expr*> parse_type_var();
 	Writer<CST::Expr*> parse_type_function();
 
+	Writer<CST::DeclarationData> parse_plain_declaration_data();
 	Writer<CST::FuncParameters> parse_function_parameters();
 	Writer<std::vector<CST::Expr*>> parse_argument_list();
 	Writer<std::vector<CST::Expr*>> parse_expression_list(TokenTag, TokenTag, bool);
@@ -169,112 +169,8 @@ Writer<CST::Program*> Parser::parse_top_level() {
 	return make_writer(make<CST::Program>(std::move(declarations)));
 }
 
-Writer<std::vector<CST::Expr*>> Parser::parse_expression_list(
-    TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
-
-	std::vector<CST::Expr*> expressions;
-
-	if (consume(terminator))
-		return make_writer(std::move(expressions));
-
-	while (1) {
-
-		expressions.push_back(TRY(parse_expression()));
-
-		auto p0 = peek();
-
-		if (consume(delimiter)) {
-
-			if (match(terminator)) {
-				if (allow_trailing_delimiter) {
-					advance_token_cursor();
-					break;
-				}
-
-				return make_located_error(
-				    "Found trailing delimiter in expression list", p0);
-			}
-		} else if (consume(terminator)) {
-			break;
-		} else {
-			ErrorReport result = {{"Unexpected token"}};
-			result.add_sub_error(make_expected_error(delimiter, p0));
-			result.add_sub_error(make_expected_error(terminator, p0));
-			return result;
-		}
-	}
-
-	return make_writer(std::move(expressions));
-}
-
-Writer<CST::Declaration*> Parser::parse_declaration() {
-	if (match(TokenTag::KEYWORD_FN))
-		return parse_func_declaration();
-
-	if (match(TokenTag::IDENTIFIER))
-		return parse_plain_declaration();
-
-	return make_expected_error("an identifier or 'fn'", peek());
-}
-
-Writer<CST::Declaration*> Parser::parse_func_declaration() {
-	ErrorReport result = {{"Failed to parse function declaration"}};
-
-	REQUIRE_WITH(result, TokenTag::KEYWORD_FN);
-
-	auto identifier = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
-
-	auto args = TRY_WITH(result, parse_function_parameters());
-
-	if (consume(TokenTag::ARROW)) {
-		auto expression = TRY_WITH(result, parse_expression());
-
-		REQUIRE_WITH(result, TokenTag::SEMICOLON);
-
-		return make_writer(make<CST::FuncDeclaration>(identifier, std::move(args), expression));
-	}
-
-	if (match(TokenTag::BRACE_OPEN)) {
-		auto block = TRY_WITH(result, parse_block());
-
-		REQUIRE_WITH(result, TokenTag::SEMICOLON);
-
-		return make_writer(make<CST::BlockFuncDeclaration>(identifier, std::move(args), block));
-	}
-
-	result.add_sub_error(make_expected_error("'=>' or '{'", peek()));
-	return result;
-}
-
-Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {
-	ErrorReport result = {{"Failed to parse declaration"}};
-
-	auto decl_data = TRY_WITH(result, parse_plain_declaration_data());
-
-	return make_writer(make<CST::PlainDeclaration>(std::move(decl_data)));
-}
 
 
-
-Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
-	auto name = REQUIRE(TokenTag::IDENTIFIER);
-
-	CST::Expr* type = nullptr;
-
-	if (consume(TokenTag::DECLARE_ASSIGN)) {
-	} else if (consume(TokenTag::DECLARE)) {
-		type = TRY(parse_type_term());
-		REQUIRE(TokenTag::ASSIGN);
-	} else {
-		return {make_expected_error("':' or ':='", peek())};
-	}
-
-	auto value = TRY(parse_full_expression());
-
-	REQUIRE(TokenTag::SEMICOLON);
-
-	return make_writer<CST::DeclarationData>({name, type, value});
-}
 
 // These are important for infix expression parsing.
 // TODO: clean up
@@ -345,17 +241,6 @@ binding_power binding_power_of(TokenTag t) {
 		exit(1);
 		assert(false);
 	}
-}
-
-Writer<std::vector<CST::Expr*>> Parser::parse_argument_list() {
-	ErrorReport result = {{"Failed to parse argument list"}};
-
-	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
-	auto args = TRY_WITH(
-	    result,
-	    parse_expression_list(TokenTag::COMMA, TokenTag::PAREN_CLOSE, false));
-
-	return make_writer(args);
 }
 
 // This function just wraps the result of parse_expression in an extra layer of error when it fails
@@ -589,50 +474,6 @@ Writer<CST::ArrayLiteral*> Parser::parse_array_literal() {
 	return make_writer(make<CST::ArrayLiteral>(std::move(elements)));
 }
 
-Writer<CST::FuncParameters> Parser::parse_function_parameters() {
-
-	auto open_paren = REQUIRE(TokenTag::PAREN_OPEN);
-
-	std::vector<CST::DeclarationData> args_data;
-
-	if (consume(TokenTag::PAREN_CLOSE))
-		return make_writer(CST::FuncParameters {std::move(args_data)});
-
-	while (1) {
-		if (!match(TokenTag::IDENTIFIER))
-			return make_expected_error("a parameter name", peek());
-
-		CST::DeclarationData arg_data;
-
-		// consume parameter name
-		arg_data.m_identifier_token = peek();
-		advance_token_cursor();
-
-		// optionally consume a type hint
-		if (consume(TokenTag::DECLARE)) {
-			arg_data.m_type_hint = TRY(parse_type_term());
-		}
-
-		args_data.push_back(std::move(arg_data));
-
-		if (consume(TokenTag::COMMA)) {
-			// If we find a comma, we have to parse
-			// another parameter, so we loop again.
-			continue;
-		} else if (consume(TokenTag::PAREN_CLOSE)) {
-			// If we find a closing paren, we are done
-			// parsing parameters, so we stop.
-			break;
-		} else {
-			// Anything else is unexpected input, so we
-			// report an error.
-			return make_expected_error("',' or ')'", peek());
-		}
-	}
-
-	return make_writer(CST::FuncParameters {std::move(args_data)});
-}
-
 /*
  * functions look like this:
  * fn (x : int, y, z : string) {
@@ -657,6 +498,51 @@ Writer<CST::Expr*> Parser::parse_function() {
 	}
 }
 
+Writer<CST::MatchExpression*> Parser::parse_match_expression() {
+	ErrorReport result = {{"Failed to parse match expression"}};
+
+	REQUIRE_WITH(result, TokenTag::KEYWORD_MATCH);
+	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
+
+	auto matchee_and_hint = TRY_WITH(result, parse_name_and_type());
+	REQUIRE_WITH(result, TokenTag::PAREN_CLOSE);
+	REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
+
+	std::vector<CST::MatchExpression::CaseData> cases;
+	while (!consume(TokenTag::BRACE_CLOSE)) {
+		auto case_name = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
+		REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
+
+		auto name_and_type = TRY_WITH(result, parse_name_and_type());
+		REQUIRE_WITH(result, TokenTag::BRACE_CLOSE);
+		REQUIRE_WITH(result, TokenTag::ARROW);
+
+		auto expression = TRY(parse_expression());
+		REQUIRE_WITH(result, TokenTag::SEMICOLON);
+
+		cases.push_back({
+			case_name,
+			name_and_type.first,
+			name_and_type.second,
+			expression});
+	}
+
+	auto matchee = std::move(matchee_and_hint.first);
+	auto hint = matchee_and_hint.second;
+
+	return make_writer(make<CST::MatchExpression>(std::move(matchee), hint, std::move(cases)));
+}
+
+Writer<CST::SequenceExpression*> Parser::parse_sequence_expression() {
+	ErrorReport result = {{"Failed to parse sequence expression"}};
+
+	REQUIRE_WITH(result, TokenTag::KEYWORD_SEQ);
+	auto body = TRY_WITH(result, parse_block());
+
+	return make_writer(make<CST::SequenceExpression>(body));
+}
+
+// Statements
 
 Writer<CST::Stmt*> Parser::parse_statement() {
 	ErrorReport result = {{"Failed to parse statement"}};
@@ -680,6 +566,53 @@ Writer<CST::Stmt*> Parser::parse_statement() {
 	auto expression = TRY_WITH(result, parse_full_expression());
 	REQUIRE_WITH(result, TokenTag::SEMICOLON);
 	return make_writer(make<CST::ExpressionStatement>(expression));
+}
+
+Writer<CST::Declaration*> Parser::parse_declaration() {
+	if (match(TokenTag::KEYWORD_FN))
+		return parse_func_declaration();
+
+	if (match(TokenTag::IDENTIFIER))
+		return parse_plain_declaration();
+
+	return make_expected_error("an identifier or 'fn'", peek());
+}
+
+Writer<CST::Declaration*> Parser::parse_func_declaration() {
+	ErrorReport result = {{"Failed to parse function declaration"}};
+
+	REQUIRE_WITH(result, TokenTag::KEYWORD_FN);
+
+	auto identifier = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
+
+	auto args = TRY_WITH(result, parse_function_parameters());
+
+	if (consume(TokenTag::ARROW)) {
+		auto expression = TRY_WITH(result, parse_expression());
+
+		REQUIRE_WITH(result, TokenTag::SEMICOLON);
+
+		return make_writer(make<CST::FuncDeclaration>(identifier, std::move(args), expression));
+	}
+
+	if (match(TokenTag::BRACE_OPEN)) {
+		auto block = TRY_WITH(result, parse_block());
+
+		REQUIRE_WITH(result, TokenTag::SEMICOLON);
+
+		return make_writer(make<CST::BlockFuncDeclaration>(identifier, std::move(args), block));
+	}
+
+	result.add_sub_error(make_expected_error("'=>' or '{'", peek()));
+	return result;
+}
+
+Writer<CST::PlainDeclaration*> Parser::parse_plain_declaration() {
+	ErrorReport result = {{"Failed to parse declaration"}};
+
+	auto decl_data = TRY_WITH(result, parse_plain_declaration_data());
+
+	return make_writer(make<CST::PlainDeclaration>(std::move(decl_data)));
 }
 
 Writer<CST::Block*> Parser::parse_block() {
@@ -778,65 +711,7 @@ Writer<CST::WhileStatement*> Parser::parse_while_statement() {
 	return make_writer(make<CST::WhileStatement>(condition, body));
 }
 
-
-Writer<CST::MatchExpression*> Parser::parse_match_expression() {
-	ErrorReport result = {{"Failed to parse match expression"}};
-
-	REQUIRE_WITH(result, TokenTag::KEYWORD_MATCH);
-	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
-
-	auto matchee_and_hint = TRY_WITH(result, parse_name_and_type());
-	REQUIRE_WITH(result, TokenTag::PAREN_CLOSE);
-	REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
-
-	std::vector<CST::MatchExpression::CaseData> cases;
-	while (!consume(TokenTag::BRACE_CLOSE)) {
-		auto case_name = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
-		REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
-
-		auto name_and_type = TRY_WITH(result, parse_name_and_type());
-		REQUIRE_WITH(result, TokenTag::BRACE_CLOSE);
-		REQUIRE_WITH(result, TokenTag::ARROW);
-
-		auto expression = TRY(parse_expression());
-		REQUIRE_WITH(result, TokenTag::SEMICOLON);
-
-		cases.push_back({
-			case_name,
-			name_and_type.first,
-			name_and_type.second,
-			expression});
-	}
-
-	auto matchee = std::move(matchee_and_hint.first);
-	auto hint = matchee_and_hint.second;
-
-	return make_writer(make<CST::MatchExpression>(std::move(matchee), hint, std::move(cases)));
-}
-
-Writer<CST::SequenceExpression*> Parser::parse_sequence_expression() {
-	ErrorReport result = {{"Failed to parse sequence expression"}};
-
-	REQUIRE_WITH(result, TokenTag::KEYWORD_SEQ);
-	auto body = TRY_WITH(result, parse_block());
-
-	return make_writer(make<CST::SequenceExpression>(body));
-}
-
-Writer<std::pair<Token const*, CST::Expr*>> Parser::parse_name_and_type(bool required_type) {
-	ErrorReport result = {{"Failed to parse name and type"}};
-
-	auto name = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
-
-	CST::Expr* type = nullptr;
-	if (required_type or match(TokenTag::DECLARE)) {
-		REQUIRE_WITH(result, TokenTag::DECLARE);
-		type = TRY_WITH(result, parse_type_term());
-	}
-
-	return make_writer<std::pair<Token const*, CST::Expr*>>({name, type});
-}
-
+// Types
 
 Writer<std::vector<CST::Expr*>> Parser::parse_type_term_arguments() {
 	ErrorReport result = {{"Failed to parse type arguments"}};
@@ -863,6 +738,145 @@ Writer<CST::Expr*> Parser::parse_type_term() {
 	auto args = TRY_WITH(result, parse_type_term_arguments());
 
 	return make_writer(make<CST::TypeTerm>(callee, std::move(args)));
+}
+
+Writer<CST::Expr*> Parser::parse_type_var() {
+	ErrorReport result = {{"Failed to parse type var"}};
+
+	REQUIRE_WITH(result, TokenTag::AT);
+
+	auto token = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
+
+	return make_writer(make<CST::TypeVar>(token));
+}
+
+Writer<CST::Expr*> Parser::parse_type_function() {
+	ErrorReport result = {{"Failed to parse type function"}};
+
+	if (consume(TokenTag::KEYWORD_UNION)) {
+		auto tl = TRY_WITH(result, parse_type_list(true));
+		return make_writer(make<CST::UnionExpression>(std::move(tl.first), std::move(tl.second)));
+	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
+		auto tl = TRY_WITH(result, parse_type_list(true));
+		return make_writer(make<CST::StructExpression>(std::move(tl.first), std::move(tl.second)));
+	}
+
+	return result;
+}
+
+// Misc. helpers
+
+Writer<CST::DeclarationData> Parser::parse_plain_declaration_data() {
+	auto name = REQUIRE(TokenTag::IDENTIFIER);
+
+	CST::Expr* type = nullptr;
+
+	if (consume(TokenTag::DECLARE_ASSIGN)) {
+	} else if (consume(TokenTag::DECLARE)) {
+		type = TRY(parse_type_term());
+		REQUIRE(TokenTag::ASSIGN);
+	} else {
+		return {make_expected_error("':' or ':='", peek())};
+	}
+
+	auto value = TRY(parse_full_expression());
+
+	REQUIRE(TokenTag::SEMICOLON);
+
+	return make_writer<CST::DeclarationData>({name, type, value});
+}
+
+Writer<CST::FuncParameters> Parser::parse_function_parameters() {
+
+	auto open_paren = REQUIRE(TokenTag::PAREN_OPEN);
+
+	std::vector<CST::DeclarationData> args_data;
+
+	if (consume(TokenTag::PAREN_CLOSE))
+		return make_writer(CST::FuncParameters {std::move(args_data)});
+
+	while (1) {
+		if (!match(TokenTag::IDENTIFIER))
+			return make_expected_error("a parameter name", peek());
+
+		CST::DeclarationData arg_data;
+
+		// consume parameter name
+		arg_data.m_identifier_token = peek();
+		advance_token_cursor();
+
+		// optionally consume a type hint
+		if (consume(TokenTag::DECLARE)) {
+			arg_data.m_type_hint = TRY(parse_type_term());
+		}
+
+		args_data.push_back(std::move(arg_data));
+
+		if (consume(TokenTag::COMMA)) {
+			// If we find a comma, we have to parse
+			// another parameter, so we loop again.
+			continue;
+		} else if (consume(TokenTag::PAREN_CLOSE)) {
+			// If we find a closing paren, we are done
+			// parsing parameters, so we stop.
+			break;
+		} else {
+			// Anything else is unexpected input, so we
+			// report an error.
+			return make_expected_error("',' or ')'", peek());
+		}
+	}
+
+	return make_writer(CST::FuncParameters {std::move(args_data)});
+}
+
+Writer<std::vector<CST::Expr*>> Parser::parse_argument_list() {
+	ErrorReport result = {{"Failed to parse argument list"}};
+
+	REQUIRE_WITH(result, TokenTag::PAREN_OPEN);
+	auto args = TRY_WITH(
+	    result,
+	    parse_expression_list(TokenTag::COMMA, TokenTag::PAREN_CLOSE, false));
+
+	return make_writer(args);
+}
+
+Writer<std::vector<CST::Expr*>> Parser::parse_expression_list(
+    TokenTag delimiter, TokenTag terminator, bool allow_trailing_delimiter) {
+
+	std::vector<CST::Expr*> expressions;
+
+	if (consume(terminator))
+		return make_writer(std::move(expressions));
+
+	while (1) {
+
+		expressions.push_back(TRY(parse_expression()));
+
+		auto p0 = peek();
+
+		if (consume(delimiter)) {
+
+			if (match(terminator)) {
+				if (allow_trailing_delimiter) {
+					advance_token_cursor();
+					break;
+				}
+
+				return make_located_error(
+				    "Found trailing delimiter in expression list", p0);
+			}
+		} else if (consume(terminator)) {
+			break;
+		} else {
+			ErrorReport result = {{"Unexpected token"}};
+			result.add_sub_error(make_expected_error(delimiter, p0));
+			result.add_sub_error(make_expected_error(terminator, p0));
+			return result;
+		}
+	}
+
+	return make_writer(std::move(expressions));
 }
 
 Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::Expr*>>> Parser::parse_type_list(
@@ -893,39 +907,29 @@ Writer<std::pair<std::vector<CST::Identifier>, std::vector<CST::Expr*>>> Parser:
 	    make_pair(std::move(identifiers), std::move(types)));
 }
 
-Writer<CST::Expr*> Parser::parse_type_var() {
-	ErrorReport result = {{"Failed to parse type var"}};
+Writer<std::pair<Token const*, CST::Expr*>> Parser::parse_name_and_type(bool required_type) {
+	ErrorReport result = {{"Failed to parse name and type"}};
 
-	REQUIRE_WITH(result, TokenTag::AT);
+	auto name = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
 
-	auto token = REQUIRE_WITH(result, TokenTag::IDENTIFIER);
-
-	return make_writer(make<CST::TypeVar>(token));
-}
-
-Writer<CST::Expr*> Parser::parse_type_function() {
-	ErrorReport result = {{"Failed to parse type function"}};
-
-	if (consume(TokenTag::KEYWORD_UNION)) {
-		auto tl = TRY_WITH(result, parse_type_list(true));
-		return make_writer(make<CST::UnionExpression>(std::move(tl.first), std::move(tl.second)));
-	} else if (consume(TokenTag::KEYWORD_STRUCT)) {
-		auto tl = TRY_WITH(result, parse_type_list(true));
-		return make_writer(make<CST::StructExpression>(std::move(tl.first), std::move(tl.second)));
+	CST::Expr* type = nullptr;
+	if (required_type or match(TokenTag::DECLARE)) {
+		REQUIRE_WITH(result, TokenTag::DECLARE);
+		type = TRY_WITH(result, parse_type_term());
 	}
 
-	return result;
+	return make_writer<std::pair<Token const*, CST::Expr*>>({name, type});
 }
 
 
 ParserResult parse_program(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
-	Writer<CST::CST*> w = p.parse_top_level();
+	Writer<CST::Program*> w = p.parse_top_level();
 	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }
 
 ParserResult parse_expression(LexerResult lexer_result, CST::Allocator& allocator) {
 	Parser p {lexer_result.tokens, lexer_result.file_context, allocator};
-	Writer<CST::CST*> w = p.parse_expression();
+	Writer<CST::Expr*> w = p.parse_expression();
 	return {w.m_result, std::move(w.m_error), std::move(lexer_result.tokens), std::move(lexer_result.file_context)};
 }
