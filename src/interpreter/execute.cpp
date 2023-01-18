@@ -47,7 +47,7 @@ ExitStatus execute(
 	// TODO: replace runtime check with type safety
 	assert(parse_result.cst()->type() == CSTTag::Program);
 
-	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
+	auto ast = AST::convert_program(static_cast<CST::Program*>(parse_result.cst()), ast_allocator);
 
 	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};

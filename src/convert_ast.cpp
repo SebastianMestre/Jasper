@@ -172,7 +172,7 @@ static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
 	return ast;
 }
 
-static AST* convert(CST::Program* cst, Allocator& alloc) {
+static Program* convert(CST::Program* cst, Allocator& alloc) {
 	auto ast = alloc.make<Program>();
 
 	for (auto& declaration : cst->m_declarations) {
@@ -479,6 +479,11 @@ AST* convert_ast(CST::CST* cst, Allocator& alloc) {
 	}
 
 #undef DISPATCH
+}
+
+
+Program* convert_program(CST::Program* cst, Allocator& alloc) {
+	return convert(static_cast<CST::Program*>(cst), alloc);
 }
 
 } // namespace AST
