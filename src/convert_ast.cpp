@@ -7,8 +7,6 @@
 
 namespace AST {
 
-static Expr* convert_expr(CST::CST* cst, Allocator& alloc);
-
 static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
 	auto block = static_cast<Block*>(convert_ast(cst, alloc));
 	auto seq_expr = alloc.make<SequenceExpression>();
@@ -408,7 +406,7 @@ static TypeTerm* convert(CST::TypeTerm* cst, Allocator& alloc) {
 	return ast;
 }
 
-static Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
+Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case CSTTag::type:                                                         \
 		return convert(static_cast<CST::type*>(cst), alloc)
@@ -438,7 +436,7 @@ static Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(TypeTerm);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in convert_ast: "
+	Log::fatal() << "(internal) CST type not handled in convert_expr: "
 	             << cst_string[(int)cst->type()];
 
 #undef DISPATCH
