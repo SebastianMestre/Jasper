@@ -7,8 +7,10 @@
 
 namespace AST {
 
+static AST* convert_stmt(CST::CST* cst, Allocator& alloc);
+
 static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
-	auto block = static_cast<Block*>(convert_ast(cst, alloc));
+	auto block = static_cast<Block*>(convert_stmt(cst, alloc));
 	auto seq_expr = alloc.make<SequenceExpression>();
 	seq_expr->m_body = block;
 	return seq_expr;
@@ -176,7 +178,7 @@ static Program* convert(CST::Program* cst, Allocator& alloc) {
 	auto ast = alloc.make<Program>();
 
 	for (auto& declaration : cst->m_declarations) {
-		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
+		auto decl = static_cast<Declaration*>(convert_stmt(declaration, alloc));
 		ast->m_declarations.push_back(std::move(*decl));
 	}
 
@@ -280,7 +282,7 @@ static ConstructorExpression* convert(CST::ConstructorExpression* cst, Allocator
 
 static SequenceExpression* convert(CST::SequenceExpression* cst, Allocator& alloc) {
 	auto result = alloc.make<SequenceExpression>();
-	result->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
+	result->m_body = static_cast<Block*>(convert_stmt(cst->m_body, alloc));
 	return result;
 }
 
@@ -290,7 +292,7 @@ static Block* convert(CST::Block* cst, Allocator& alloc) {
 	auto ast = alloc.make<Block>();
 
 	for (auto element : cst->m_body) {
-		ast->m_body.push_back(convert_ast(element, alloc));
+		ast->m_body.push_back(convert_stmt(element, alloc));
 	}
 
 	return ast;
@@ -308,10 +310,10 @@ static IfElseStatement* convert(CST::IfElseStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<IfElseStatement>();
 
 	ast->m_condition = convert_expr(cst->m_condition, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	ast->m_body = convert_stmt(cst->m_body, alloc);
 
 	if (cst->m_else_body)
-		ast->m_else_body = convert_ast(cst->m_else_body, alloc);
+		ast->m_else_body = convert_stmt(cst->m_else_body, alloc);
 
 	return ast;
 }
@@ -324,7 +326,7 @@ to
 */
 static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 
-	auto body = convert_ast(cst->m_body, alloc);
+	auto body = convert_stmt(cst->m_body, alloc);
 	auto block_body = [&] {
 		if (body->type() == ASTTag::Block)
 			return static_cast<Block*>(body);
@@ -354,7 +356,7 @@ static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<WhileStatement>();
 
 	ast->m_condition = convert_expr(cst->m_condition, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	ast->m_body = convert_stmt(cst->m_body, alloc);
 
 	return ast;
 }
@@ -459,10 +461,10 @@ static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(PlainDeclaration);
 		DISPATCH(FuncDeclaration);
 		DISPATCH(BlockFuncDeclaration);
-
-	default:
-		return convert_expr(cst, alloc);
 	}
+
+	Log::fatal() << "(internal) CST type not handled in convert_stmt: "
+	             << cst_string[(int)cst->type()];
 
 #undef DISPATCH
 }
