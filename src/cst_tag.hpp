@@ -10,10 +10,8 @@
 	X(BlockFunctionLiteral)                                                    \
 	X(FunctionLiteral)                                                         \
                                                                                \
-	X(Program)                                                         \
-	X(PlainDeclaration)                                                        \
-	X(FuncDeclaration)                                                         \
-	X(BlockFuncDeclaration)                                                    \
+	X(Program)                                                                 \
+                                                                               \
 	X(Identifier)                                                              \
 	X(BinaryExpression)                                                        \
 	X(CallExpression)                                                          \
@@ -21,14 +19,18 @@
 	X(AccessExpression)                                                        \
 	X(MatchExpression)                                                         \
 	X(ConstructorExpression)                                                   \
+	X(TernaryExpression)                                                       \
 	X(SequenceExpression)                                                      \
                                                                                \
+	X(PlainDeclaration)                                                        \
+	X(FuncDeclaration)                                                         \
+	X(BlockFuncDeclaration)                                                    \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
-	X(TernaryExpression)                                                       \
 	X(ForStatement)                                                            \
 	X(WhileStatement)                                                          \
+	X(ExpressionStatement)                                                     \
                                                                                \
 	X(TypeTerm)                                                                \
 	X(TypeVar)                                                                 \

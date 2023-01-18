@@ -286,6 +286,8 @@ static SequenceExpression* convert(CST::SequenceExpression* cst, Allocator& allo
 	return result;
 }
 
+// Statements
+
 static Block* convert(CST::Block* cst, Allocator& alloc) {
 	auto ast = alloc.make<Block>();
 
@@ -358,6 +360,12 @@ static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 
 	return ast;
 }
+
+static AST* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
+	return convert_expr(cst->m_expression, alloc);
+}
+
+// Types
 
 static UnionExpression* convert(CST::UnionExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<UnionExpression>();
@@ -448,6 +456,7 @@ static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+		DISPATCH(ExpressionStatement);
 
 		DISPATCH(PlainDeclaration);
 		DISPATCH(FuncDeclaration);

@@ -374,6 +374,14 @@ struct WhileStatement : public Stmt {
 	    , m_body {body} {}
 };
 
+struct ExpressionStatement : public Stmt {
+	CST* m_expression;
+
+	ExpressionStatement(CST* expression)
+	    : Stmt {CSTTag::ExpressionStatement}
+	    , m_expression {expression} {}
+};
+
 // Type language
 
 struct TypeTerm : public CST {
