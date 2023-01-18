@@ -323,9 +323,9 @@ struct BlockFuncDeclaration : public Declaration {
 };
 
 struct Block : public Stmt {
-	std::vector<CST*> m_body;
+	std::vector<Stmt*> m_body;
 
-	Block(std::vector<CST*> body)
+	Block(std::vector<Stmt*> body)
 	    : Stmt {CSTTag::Block}
 	    , m_body {body} {}
 };
@@ -340,10 +340,10 @@ struct ReturnStatement : public Stmt {
 
 struct IfElseStatement : public Stmt {
 	CST* m_condition;
-	CST* m_body;
-	CST* m_else_body {nullptr}; // can be nullptr
+	Stmt* m_body;
+	Stmt* m_else_body {nullptr}; // can be nullptr
 
-	IfElseStatement(CST* condition, CST* body, CST* else_body)
+	IfElseStatement(CST* condition, Stmt* body, Stmt* else_body)
 	    : Stmt {CSTTag::IfElseStatement}
 	    , m_condition {condition}
 	    , m_body {body}
@@ -354,9 +354,9 @@ struct ForStatement : public Stmt {
 	DeclarationData m_declaration;
 	CST* m_condition;
 	CST* m_action;
-	CST* m_body;
+	Stmt* m_body;
 
-	ForStatement(DeclarationData declaration, CST* condition, CST* action, CST* body)
+	ForStatement(DeclarationData declaration, CST* condition, CST* action, Stmt* body)
 	    : Stmt {CSTTag::ForStatement}
 	    , m_declaration {std::move(declaration)}
 	    , m_condition {condition}
@@ -366,9 +366,9 @@ struct ForStatement : public Stmt {
 
 struct WhileStatement : public Stmt {
 	CST* m_condition;
-	CST* m_body;
+	Stmt* m_body;
 
-	WhileStatement(CST* condition, CST* body)
+	WhileStatement(CST* condition, Stmt* body)
 	    : Stmt {CSTTag::WhileStatement}
 	    , m_condition {condition}
 	    , m_body {body} {}

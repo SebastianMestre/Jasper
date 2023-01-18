@@ -690,7 +690,7 @@ Writer<CST::Block*> Parser::parse_block() {
 
 	auto opening_brace = REQUIRE_WITH(result, TokenTag::BRACE_OPEN);
 
-	std::vector<CST::CST*> statements;
+	std::vector<CST::Stmt*> statements;
 
 	// loop until we find a matching closing bracket
 	while (1) {
@@ -739,7 +739,7 @@ Writer<CST::Stmt*> Parser::parse_if_else_stmt_or_expr() {
 
 		auto body = TRY(parse_statement());
 
-		CST::CST* else_body = nullptr;
+		CST::Stmt* else_body = nullptr;
 		if (consume(TokenTag::KEYWORD_ELSE))
 			else_body = TRY(parse_statement());
 
