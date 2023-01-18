@@ -62,7 +62,7 @@ struct Program : public CST {
 
 // Expression language
 
-struct IntegerLiteral : public CST {
+struct IntegerLiteral : public Expr {
 	bool m_negative {false};
 	Token const* m_sign {nullptr};
 	Token const* m_token;
@@ -72,13 +72,13 @@ struct IntegerLiteral : public CST {
 	}
 
 	IntegerLiteral(bool negative, Token const* sign, Token const* token)
-	    : CST {CSTTag::IntegerLiteral}
+	    : Expr {CSTTag::IntegerLiteral}
 	    , m_negative {negative}
 	    , m_sign {sign}
 	    , m_token {token} {}
 };
 
-struct NumberLiteral : public CST {
+struct NumberLiteral : public Expr {
 	bool m_negative {false};
 	Token const* m_sign {nullptr};
 	Token const* m_token;
@@ -88,13 +88,13 @@ struct NumberLiteral : public CST {
 	}
 
 	NumberLiteral(bool negative, Token const* sign, Token const* token)
-	    : CST {CSTTag::NumberLiteral}
+	    : Expr {CSTTag::NumberLiteral}
 	    , m_negative {negative}
 	    , m_sign {sign}
 	    , m_token {token} {}
 };
 
-struct StringLiteral : public CST {
+struct StringLiteral : public Expr {
 	Token const* m_token;
 
 	std::string const& text() {
@@ -102,11 +102,11 @@ struct StringLiteral : public CST {
 	}
 
 	StringLiteral(Token const* token)
-	    : CST {CSTTag::StringLiteral}
+	    : Expr {CSTTag::StringLiteral}
 	    , m_token {token} {}
 };
 
-struct BooleanLiteral : public CST {
+struct BooleanLiteral : public Expr {
 	Token const* m_token;
 
 	std::string const& text() {
@@ -114,45 +114,45 @@ struct BooleanLiteral : public CST {
 	}
 
 	BooleanLiteral(Token const* token)
-	    : CST {CSTTag::BooleanLiteral}
+	    : Expr {CSTTag::BooleanLiteral}
 	    , m_token {token} {}
 };
 
-struct NullLiteral : public CST {
+struct NullLiteral : public Expr {
 
 	NullLiteral()
-	    : CST {CSTTag::NullLiteral} {}
+	    : Expr {CSTTag::NullLiteral} {}
 };
 
-struct ArrayLiteral : public CST {
+struct ArrayLiteral : public Expr {
 	std::vector<CST*> m_elements;
 
 	ArrayLiteral(std::vector<CST*> elements)
-	    : CST {CSTTag::ArrayLiteral}
+	    : Expr {CSTTag::ArrayLiteral}
 	    , m_elements {std::move(elements)} {}
 };
 
-struct BlockFunctionLiteral : public CST {
+struct BlockFunctionLiteral : public Expr {
 	Block* m_body;
 	FuncParameters m_args;
 
 	BlockFunctionLiteral(Block* body, FuncParameters args)
-	    : CST {CSTTag::BlockFunctionLiteral}
+	    : Expr {CSTTag::BlockFunctionLiteral}
 	    , m_body {body}
 	    , m_args {std::move(args)} {}
 };
 
-struct FunctionLiteral : public CST {
+struct FunctionLiteral : public Expr {
 	CST* m_body;
 	FuncParameters m_args;
 
 	FunctionLiteral(CST* body, FuncParameters args)
-	    : CST {CSTTag::FunctionLiteral}
+	    : Expr {CSTTag::FunctionLiteral}
 	    , m_body {body}
 	    , m_args {std::move(args)} {}
 };
 
-struct Identifier : public CST {
+struct Identifier : public Expr {
 	Token const* m_token;
 
 	InternedString const& text() {
@@ -160,65 +160,65 @@ struct Identifier : public CST {
 	}
 
 	Identifier(Token const* token)
-	    : CST {CSTTag::Identifier}
+	    : Expr {CSTTag::Identifier}
 	    , m_token {token} {}
 };
 
-struct BinaryExpression : public CST {
+struct BinaryExpression : public Expr {
 	Token const* m_op_token;
 	CST* m_lhs;
 	CST* m_rhs;
 
 	BinaryExpression(Token const* op_token, CST* lhs, CST* rhs)
-	    : CST {CSTTag::BinaryExpression}
+	    : Expr {CSTTag::BinaryExpression}
 	    , m_op_token {op_token}
 	    , m_lhs {lhs}
 	    , m_rhs {rhs} {}
 };
 
-struct CallExpression : public CST {
+struct CallExpression : public Expr {
 	CST* m_callee;
 	std::vector<CST*> m_args;
 
 	CallExpression(CST* callee, std::vector<CST*> args)
-	    : CST {CSTTag::CallExpression}
+	    : Expr {CSTTag::CallExpression}
 	    , m_callee {callee}
 	    , m_args {std::move(args)} {}
 };
 
-struct IndexExpression : public CST {
+struct IndexExpression : public Expr {
 	CST* m_callee;
 	CST* m_index;
 
 	IndexExpression(CST* callee, CST* index)
-	    : CST {CSTTag::IndexExpression}
+	    : Expr {CSTTag::IndexExpression}
 	    , m_callee {callee}
 	    , m_index {index} {}
 };
 
-struct AccessExpression : public CST {
+struct AccessExpression : public Expr {
 	CST* m_record;
 	Token const* m_member;
 
 	AccessExpression(CST* record, Token const* member)
-	    : CST {CSTTag::AccessExpression}
+	    : Expr {CSTTag::AccessExpression}
 	    , m_record {record}
 	    , m_member {member} {}
 };
 
-struct TernaryExpression : public CST {
+struct TernaryExpression : public Expr {
 	CST* m_condition;
 	CST* m_then_expr;
 	CST* m_else_expr;
 
 	TernaryExpression(CST* condition, CST* then_expr, CST* else_expr)
-	    : CST {CSTTag::TernaryExpression}
+	    : Expr {CSTTag::TernaryExpression}
 	    , m_condition {condition}
 	    , m_then_expr {then_expr}
 	    , m_else_expr {else_expr} {}
 };
 
-struct MatchExpression : public CST {
+struct MatchExpression : public Expr {
 	struct CaseData {
 		Token const* m_name;
 		Token const* m_identifier;
@@ -232,27 +232,27 @@ struct MatchExpression : public CST {
 	std::vector<CaseData> m_cases;
 
 	MatchExpression(Identifier matchee, CST* type_hint, std::vector<CaseData> cases)
-	    : CST {CSTTag::MatchExpression}
+	    : Expr {CSTTag::MatchExpression}
 	    , m_matchee {matchee}
 	    , m_type_hint {type_hint}
 	    , m_cases {cases} {}
 };
 
-struct ConstructorExpression : public CST {
+struct ConstructorExpression : public Expr {
 	CST* m_constructor;
 	std::vector<CST*> m_args;
 
 	ConstructorExpression(CST* constructor, std::vector<CST*> args)
-	    : CST {CSTTag::ConstructorExpression}
+	    : Expr {CSTTag::ConstructorExpression}
 	    , m_constructor {constructor}
 	    , m_args {std::move(args)} {}
 };
 
-struct SequenceExpression : public CST {
+struct SequenceExpression : public Expr {
 	Block* m_body;
 
 	SequenceExpression(Block* body)
-	    : CST {CSTTag::SequenceExpression}
+	    : Expr {CSTTag::SequenceExpression}
 	    , m_body {body} {}
 };
 
@@ -384,19 +384,19 @@ struct ExpressionStatement : public Stmt {
 
 // Type language
 
-struct TypeTerm : public CST {
+struct TypeTerm : public Expr {
 	CST* m_callee;
 	std::vector<CST*> m_args;
 
 	TypeTerm(CST* callee, std::vector<CST*> args)
-	    : CST {CSTTag::TypeTerm}
+	    : Expr {CSTTag::TypeTerm}
 	    , m_callee {callee}
 	    , m_args {std::move(args)} {}
 };
 
 // A TypeVar is a name, bound to a type variable of any kind.
 // e.g. a type function, a polytype or a monotype
-struct TypeVar : public CST {
+struct TypeVar : public Expr {
 	Token const* m_token;
 
 	std::string const& text() {
@@ -404,28 +404,28 @@ struct TypeVar : public CST {
 	}
 
 	TypeVar(Token const* token)
-	    : CST {CSTTag::TypeVar}
+	    : Expr {CSTTag::TypeVar}
 	    , m_token {token} {}
 };
 
-struct UnionExpression : public CST {
+struct UnionExpression : public Expr {
 	// TODO: better storage?
 	std::vector<Identifier> m_constructors;
 	std::vector<CST*> m_types;
 
 	UnionExpression(std::vector<Identifier> constructors, std::vector<CST*> types)
-	    : CST {CSTTag::UnionExpression}
+	    : Expr {CSTTag::UnionExpression}
 	    , m_constructors {std::move(constructors)}
 	    , m_types {std::move(types)} {}
 };
 
-struct StructExpression : public CST {
+struct StructExpression : public Expr {
 	// TODO: better storage?
 	std::vector<Identifier> m_fields;
 	std::vector<CST*> m_types;
 
 	StructExpression(std::vector<Identifier> fields, std::vector<CST*> types)
-	    : CST {CSTTag::StructExpression}
+	    : Expr {CSTTag::StructExpression}
 	    , m_fields {std::move(fields)}
 	    , m_types {std::move(types)} {}
 };
