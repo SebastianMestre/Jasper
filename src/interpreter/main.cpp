@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 				auto parser_result = parse_expression(lexer_result, cst_allocator);
 
 				AST::Allocator ast_allocator;
-				auto ast = AST::convert_ast(parser_result.cst(), ast_allocator);
+				auto ast = AST::convert_expr(parser_result.cst(), ast_allocator);
 
 				eval(ast, env);
 				auto result = env.m_stack.pop_unsafe();

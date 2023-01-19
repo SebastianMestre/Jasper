@@ -44,10 +44,7 @@ ExitStatus execute(
 	if (settings.dump_cst)
 		print(parse_result.cst(), 1);
 
-	// TODO: replace runtime check with type safety
-	assert(parse_result.cst()->type() == CSTTag::Program);
-
-	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
+	auto ast = AST::convert_program(parse_result.cst(), ast_allocator);
 
 	// creates and stores a bunch of builtin declarations
 	TypeChecker::TypeChecker tc{ast_allocator};
@@ -64,7 +61,7 @@ ExitStatus execute(
 		}
 	}
 
-	tc.compute_declaration_order(static_cast<AST::Program*>(ast));
+	tc.compute_declaration_order(ast);
 
 	if (settings.typecheck) {
 		tc.core().m_meta_core.comp = &tc.declaration_order();
@@ -104,7 +101,7 @@ Value eval_expression(
 		Log::fatal() << "parser error";
 	}
 
-	auto ast = AST::convert_ast(parse_result.cst(), ast_allocator);
+	auto ast = AST::convert_expr(parse_result.cst(), ast_allocator);
 
 	{
 		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);

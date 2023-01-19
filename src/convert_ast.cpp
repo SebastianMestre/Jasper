@@ -7,15 +7,25 @@
 
 namespace AST {
 
-static Expr* convert_expr(CST::CST* cst, Allocator& alloc);
+static AST* convert_stmt(CST::Stmt* cst, Allocator& alloc);
 
-static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
-	auto block = static_cast<Block*>(convert_ast(cst, alloc));
-	auto seq_expr = alloc.make<SequenceExpression>();
-	seq_expr->m_body = block;
-	return seq_expr;
+static std::vector<Declaration> convert_args(CST::FuncParameters& cst_args, FunctionLiteral* surrounding_function, Allocator& alloc);
+static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc);
+static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc);
+
+
+static Program* convert(CST::Program* cst, Allocator& alloc) {
+	auto ast = alloc.make<Program>();
+
+	for (auto& declaration : cst->m_declarations) {
+		auto decl = static_cast<Declaration*>(convert_stmt(declaration, alloc));
+		ast->m_declarations.push_back(std::move(*decl));
+	}
+
+	return ast;
 }
 
+// Expressions
 
 static IntegerLiteral* convert(CST::IntegerLiteral* cst, Allocator& alloc) {
 	auto ast = alloc.make<IntegerLiteral>();
@@ -57,32 +67,6 @@ static ArrayLiteral* convert(CST::ArrayLiteral* cst, Allocator& alloc) {
 	}
 
 	return ast;
-}
-
-static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
-	Declaration decl;
-	decl.m_cst = cst;
-	decl.m_identifier = data.identifier();
-	if (data.m_type_hint)
-		decl.m_type_hint = convert_expr(data.m_type_hint, alloc);
-	if (data.m_value)
-		decl.m_value = convert_expr(data.m_value, alloc);
-	return decl;
-}
-
-static std::vector<Declaration> convert_args(
-    CST::FuncParameters& cst_args,
-    FunctionLiteral* surrounding_function,
-    Allocator& alloc) {
-
-	std::vector<Declaration> result;
-	for (auto arg : cst_args) {
-		Declaration decl = convert_declaration(nullptr, arg, alloc);
-		decl.m_surrounding_function = surrounding_function;
-
-		result.push_back(std::move(decl));
-	}
-	return result;
 }
 
 static FunctionLiteral* convert(CST::FunctionLiteral* cst, Allocator& alloc) {
@@ -138,49 +122,6 @@ static CallExpression* convert(CST::BinaryExpression* cst, Allocator& alloc) {
 
 	ast->m_args.push_back(convert_expr(cst->m_lhs, alloc));
 	ast->m_args.push_back(convert_expr(cst->m_rhs, alloc));
-
-	return ast;
-}
-
-static Declaration* convert(CST::PlainDeclaration* cst, Allocator& alloc) {
-	auto ast = alloc.make<Declaration>();
-	*ast = convert_declaration(cst, cst->m_data, alloc);
-	return ast;
-}
-
-static Declaration* convert(CST::FuncDeclaration* cst, Allocator& alloc) {
-	auto func_ast = alloc.make<FunctionLiteral>();
-	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_expr(cst->m_body, alloc);
-
-	auto ast = alloc.make<Declaration>();
-	ast->m_cst = cst;
-	ast->m_identifier = cst->identifier();
-	ast->m_value = func_ast;
-
-	return ast;
-}
-
-static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
-	auto func_ast = alloc.make<FunctionLiteral>();
-	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
-	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
-
-	auto ast = alloc.make<Declaration>();
-	ast->m_cst = cst;
-	ast->m_identifier = cst->identifier();
-	ast->m_value = func_ast;
-
-	return ast;
-}
-
-static AST* convert(CST::Program* cst, Allocator& alloc) {
-	auto ast = alloc.make<Program>();
-
-	for (auto& declaration : cst->m_declarations) {
-		auto decl = static_cast<Declaration*>(convert_ast(declaration, alloc));
-		ast->m_declarations.push_back(std::move(*decl));
-	}
 
 	return ast;
 }
@@ -282,15 +223,49 @@ static ConstructorExpression* convert(CST::ConstructorExpression* cst, Allocator
 
 static SequenceExpression* convert(CST::SequenceExpression* cst, Allocator& alloc) {
 	auto result = alloc.make<SequenceExpression>();
-	result->m_body = static_cast<Block*>(convert_ast(cst->m_body, alloc));
+	result->m_body = static_cast<Block*>(convert_stmt(cst->m_body, alloc));
 	return result;
+}
+
+// Statements
+
+static Declaration* convert(CST::PlainDeclaration* cst, Allocator& alloc) {
+	auto ast = alloc.make<Declaration>();
+	*ast = convert_declaration(cst, cst->m_data, alloc);
+	return ast;
+}
+
+static Declaration* convert(CST::FuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_expr(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
+	return ast;
+}
+
+static Declaration* convert(CST::BlockFuncDeclaration* cst, Allocator& alloc) {
+	auto func_ast = alloc.make<FunctionLiteral>();
+	func_ast->m_args = convert_args(cst->m_args, func_ast, alloc);
+	func_ast->m_body = convert_and_wrap_in_seq(cst->m_body, alloc);
+
+	auto ast = alloc.make<Declaration>();
+	ast->m_cst = cst;
+	ast->m_identifier = cst->identifier();
+	ast->m_value = func_ast;
+
+	return ast;
 }
 
 static Block* convert(CST::Block* cst, Allocator& alloc) {
 	auto ast = alloc.make<Block>();
 
 	for (auto element : cst->m_body) {
-		ast->m_body.push_back(convert_ast(element, alloc));
+		ast->m_body.push_back(convert_stmt(element, alloc));
 	}
 
 	return ast;
@@ -308,10 +283,10 @@ static IfElseStatement* convert(CST::IfElseStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<IfElseStatement>();
 
 	ast->m_condition = convert_expr(cst->m_condition, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	ast->m_body = convert_stmt(cst->m_body, alloc);
 
 	if (cst->m_else_body)
-		ast->m_else_body = convert_ast(cst->m_else_body, alloc);
+		ast->m_else_body = convert_stmt(cst->m_else_body, alloc);
 
 	return ast;
 }
@@ -324,7 +299,7 @@ to
 */
 static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 
-	auto body = convert_ast(cst->m_body, alloc);
+	auto body = convert_stmt(cst->m_body, alloc);
 	auto block_body = [&] {
 		if (body->type() == ASTTag::Block)
 			return static_cast<Block*>(body);
@@ -354,10 +329,16 @@ static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 	auto ast = alloc.make<WhileStatement>();
 
 	ast->m_condition = convert_expr(cst->m_condition, alloc);
-	ast->m_body = convert_ast(cst->m_body, alloc);
+	ast->m_body = convert_stmt(cst->m_body, alloc);
 
 	return ast;
 }
+
+static AST* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
+	return convert_expr(cst->m_expression, alloc);
+}
+
+// Types
 
 static UnionExpression* convert(CST::UnionExpression* cst, Allocator& alloc) {
 	auto ast = alloc.make<UnionExpression>();
@@ -400,7 +381,44 @@ static TypeTerm* convert(CST::TypeTerm* cst, Allocator& alloc) {
 	return ast;
 }
 
-static Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
+// Misc. helpers
+
+static std::vector<Declaration> convert_args(
+    CST::FuncParameters& cst_args,
+    FunctionLiteral* surrounding_function,
+    Allocator& alloc) {
+
+	std::vector<Declaration> result;
+	for (auto arg : cst_args) {
+		Declaration decl = convert_declaration(nullptr, arg, alloc);
+		decl.m_surrounding_function = surrounding_function;
+
+		result.push_back(std::move(decl));
+	}
+	return result;
+}
+
+static Declaration convert_declaration(CST::Declaration* cst, CST::DeclarationData& data, Allocator& alloc) {
+	Declaration decl;
+	decl.m_cst = cst;
+	decl.m_identifier = data.identifier();
+	if (data.m_type_hint)
+		decl.m_type_hint = convert_expr(data.m_type_hint, alloc);
+	if (data.m_value)
+		decl.m_value = convert_expr(data.m_value, alloc);
+	return decl;
+}
+
+static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc) {
+	auto block = static_cast<Block*>(convert_stmt(cst, alloc));
+	auto seq_expr = alloc.make<SequenceExpression>();
+	seq_expr->m_body = block;
+	return seq_expr;
+}
+
+
+
+Expr* convert_expr(CST::Expr* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case CSTTag::type:                                                         \
 		return convert(static_cast<CST::type*>(cst), alloc)
@@ -430,13 +448,13 @@ static Expr* convert_expr(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(TypeTerm);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in convert_ast: "
+	Log::fatal() << "(internal) CST type not handled in convert_expr: "
 	             << cst_string[(int)cst->type()];
 
 #undef DISPATCH
 }
 
-static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
+static AST* convert_stmt(CST::Stmt* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case CSTTag::type:                                                         \
 		return convert(static_cast<CST::type*>(cst), alloc)
@@ -448,30 +466,21 @@ static AST* convert_stmt(CST::CST* cst, Allocator& alloc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(ForStatement);
 		DISPATCH(WhileStatement);
+		DISPATCH(ExpressionStatement);
 
 		DISPATCH(PlainDeclaration);
 		DISPATCH(FuncDeclaration);
 		DISPATCH(BlockFuncDeclaration);
-
-	default:
-		return convert_expr(cst, alloc);
 	}
+
+	Log::fatal() << "(internal) CST type not handled in convert_stmt: "
+	             << cst_string[(int)cst->type()];
 
 #undef DISPATCH
 }
 
-AST* convert_ast(CST::CST* cst, Allocator& alloc) {
-#define DISPATCH(type)                                                         \
-	case CSTTag::type:                                                         \
-		return convert(static_cast<CST::type*>(cst), alloc)
-
-	switch (cst->type()) {
-		DISPATCH(Program);
-	default:
-		return convert_stmt(cst, alloc);
-	}
-
-#undef DISPATCH
+Program* convert_program(CST::Program* cst, Allocator& alloc) {
+	return convert(static_cast<CST::Program*>(cst), alloc);
 }
 
 } // namespace AST
