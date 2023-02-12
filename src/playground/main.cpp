@@ -8,7 +8,6 @@
 #include "../cst_allocator.hpp"
 #include "../lexer.hpp"
 #include "../parser.hpp"
-#include "../token_array.hpp"
 
 int main(int argc, char** argv) {
 
@@ -33,7 +32,7 @@ int main(int argc, char** argv) {
 	std::string source = file_content.str();
 
 	{
-		TokenArray const ta = tokenize(source.c_str());
+		std::vector<Token> const ta = tokenize(source.c_str());
 
 		CST::Allocator cst_allocator;
 		auto parse_result = parse_program(ta, cst_allocator);

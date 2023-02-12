@@ -3,7 +3,6 @@
 #include "./algorithms/automaton.hpp"
 #include "./utils/string_view.hpp"
 #include "token.hpp"
-#include "token_array.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -297,7 +296,7 @@ static void print_error(char const* p) {
 	printf("Error -- last two chars are: %c%c\n", *(p-2), *(p-1));
 }
 
-static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, string_view str, int start_offset) {
+static void push_identifier_or_keyword(Automaton const& a, std::vector<Token>& ta, string_view str, int start_offset) {
 
 	int state = state_count - 1;
 	for (int i = 0; i < str.size(); ++i) {
@@ -321,7 +320,7 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 	}
 }
 
-static TokenArray tokenize(char const* p) {
+static std::vector<Token> tokenize(char const* p) {
 	// Implementation detail: We store indices into the source buffer
 	// in the source_locations at first, then resolve them in another pass.
 
@@ -330,7 +329,7 @@ static TokenArray tokenize(char const* p) {
 	constexpr Automaton a = MainLexer::make();
 	constexpr Automaton ka = KeywordLexer::make();
 
-	TokenArray ta;
+	std::vector<Token> ta;
 
 	auto eat_whitespace = [&] {
 		while (*p == ' ' || *p == '\t' || *p == '\n') {

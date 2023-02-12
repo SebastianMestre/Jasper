@@ -1,9 +1,12 @@
 #pragma once
 
-#include "token_array.hpp"
 #include "frontend_context.hpp"
+
+#include <vector>
+
+struct Token;
 
 struct LexerResult {
 	Frontend::Context file_context;
-	TokenArray tokens;
+	std::vector<Token> tokens;
 };
