@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./utils/chunked_array.hpp"
+#include<vector>
 
 struct Token;
 
-using TokenArray = ChunkedArray<Token>;
+using TokenArray = std::vector<Token>;
