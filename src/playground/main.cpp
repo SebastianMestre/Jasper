@@ -32,17 +32,17 @@ int main(int argc, char** argv) {
 	std::string source = file_content.str();
 
 	{
-		std::vector<Token> const ta = tokenize(source.c_str());
+		auto ta = tokenize({source});
 
 		CST::Allocator cst_allocator;
 		auto parse_result = parse_program(ta, cst_allocator);
 
 		if (not parse_result.ok()) {
-			parse_result.m_error.print();
+			parse_result.error().print();
 			return 1;
 		}
 
-		print(parse_result.m_result, 0);
+		// CST::print(parse_result.cst(), 0);
 		std::cout << "\n";
 	}
 

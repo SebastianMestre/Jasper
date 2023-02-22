@@ -308,14 +308,14 @@ static void push_identifier_or_keyword(Automaton const& a, std::vector<Token>& t
 	if (KeywordLexer::EndStates::Count <= state || state == KeywordLexer::EndStates::Error) {
 		ta.push_back({
 			TokenTag::IDENTIFIER,
+			start_offset,
 			InternedString(str.begin(), str.size()),
-			start_offset
 		});
 	} else {
 		ta.push_back({
 			KeywordLexer::token_tags[state - 1],
+			start_offset,
 			KeywordLexer::fixed_strings[state - 1],
-			start_offset
 		});
 	}
 }
@@ -358,8 +358,8 @@ static std::vector<Token> tokenize(char const* p) {
 		if(state <= MainLexer::EndStates::last_fixed_string) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				MainLexer::fixed_strings[state - 1],
 				p0 - code_start,
+				MainLexer::fixed_strings[state - 1],
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p - p0), p0 - code_start);
@@ -368,20 +368,20 @@ static std::vector<Token> tokenize(char const* p) {
 		} else if(state == MainLexer::EndStates::String) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0 + 1, p - p0 - 2),
 				p0 - code_start,
+				InternedString(p0 + 1, p - p0 - 2),
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0, p - p0),
 				p0 - code_start,
+				InternedString(p0, p - p0),
 			});
 		}
 
 		eat_whitespace();
 	}
-	ta.push_back({TokenTag::END, InternedString(), p-code_start});
+	ta.push_back({TokenTag::END, p-code_start, InternedString()});
 
 	return ta;
 }
