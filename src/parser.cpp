@@ -7,7 +7,6 @@
 #include "cst_allocator.hpp"
 #include "frontend_context.hpp"
 #include "lexer_result.hpp"
-#include "token_array.hpp"
 
 #include <sstream>
 #include <utility>
@@ -23,12 +22,12 @@ Writer<T> make_writer(T x) {
 
 struct Parser {
 	/* token handler */
-	TokenArray const& m_tokens;
+	std::vector<Token> const& m_tokens;
 	Frontend::Context const& m_file_context;
 	CST::Allocator& m_cst_allocator;
 	int m_token_cursor { 0 };
 
-	Parser(TokenArray const& tokens, Frontend::Context const& file_context, CST::Allocator& cst_allocator)
+	Parser(std::vector<Token> const& tokens, Frontend::Context const& file_context, CST::Allocator& cst_allocator)
 	    : m_tokens {tokens}
 		, m_file_context {file_context}
 	    , m_cst_allocator {cst_allocator} {}

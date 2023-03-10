@@ -11,7 +11,6 @@
 #include "../parser.hpp"
 #include "../symbol_resolution.hpp"
 #include "../symbol_table.hpp"
-#include "../token_array.hpp"
 #include "../typechecker/ct_eval.hpp"
 #include "../typechecker/metacheck.hpp"
 #include "../typechecker/typecheck.hpp"

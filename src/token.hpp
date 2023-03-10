@@ -7,8 +7,8 @@
 struct Token {
 	/* internal representation of token */
 	TokenTag m_type;
+	int m_start_offset;
+
 	/* source code representation of token */
 	InternedString m_text;
-
-	int m_start_offset;
 };

@@ -11,7 +11,6 @@
 #include "../lexer.hpp"
 #include "../parser.hpp"
 #include "../symbol_table.hpp"
-#include "../token_array.hpp"
 #include "eval.hpp"
 #include "execute.hpp"
 #include "exit_status_tag.hpp"

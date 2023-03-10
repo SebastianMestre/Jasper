@@ -3,7 +3,6 @@
 #include "./algorithms/automaton.hpp"
 #include "./utils/string_view.hpp"
 #include "token.hpp"
-#include "token_array.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -297,7 +296,7 @@ static void print_error(char const* p) {
 	printf("Error -- last two chars are: %c%c\n", *(p-2), *(p-1));
 }
 
-static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, string_view str, int start_offset) {
+static void push_identifier_or_keyword(Automaton const& a, std::vector<Token>& ta, string_view str, int start_offset) {
 
 	int state = state_count - 1;
 	for (int i = 0; i < str.size(); ++i) {
@@ -309,19 +308,19 @@ static void push_identifier_or_keyword(Automaton const& a, TokenArray& ta, strin
 	if (KeywordLexer::EndStates::Count <= state || state == KeywordLexer::EndStates::Error) {
 		ta.push_back({
 			TokenTag::IDENTIFIER,
+			start_offset,
 			InternedString(str.begin(), str.size()),
-			start_offset
 		});
 	} else {
 		ta.push_back({
 			KeywordLexer::token_tags[state - 1],
+			start_offset,
 			KeywordLexer::fixed_strings[state - 1],
-			start_offset
 		});
 	}
 }
 
-static TokenArray tokenize(char const* p) {
+static std::vector<Token> tokenize(char const* p) {
 	// Implementation detail: We store indices into the source buffer
 	// in the source_locations at first, then resolve them in another pass.
 
@@ -330,7 +329,7 @@ static TokenArray tokenize(char const* p) {
 	constexpr Automaton a = MainLexer::make();
 	constexpr Automaton ka = KeywordLexer::make();
 
-	TokenArray ta;
+	std::vector<Token> ta;
 
 	auto eat_whitespace = [&] {
 		while (*p == ' ' || *p == '\t' || *p == '\n') {
@@ -359,8 +358,8 @@ static TokenArray tokenize(char const* p) {
 		if(state <= MainLexer::EndStates::last_fixed_string) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				MainLexer::fixed_strings[state - 1],
 				p0 - code_start,
+				MainLexer::fixed_strings[state - 1],
 			});
 		} else if(state == MainLexer::EndStates::Identifier) {
 			push_identifier_or_keyword(ka, ta, string_view(p0, p - p0), p0 - code_start);
@@ -369,20 +368,20 @@ static TokenArray tokenize(char const* p) {
 		} else if(state == MainLexer::EndStates::String) {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0 + 1, p - p0 - 2),
 				p0 - code_start,
+				InternedString(p0 + 1, p - p0 - 2),
 			});
 		} else {
 			ta.push_back({
 				MainLexer::token_tags[state - 1],
-				InternedString(p0, p - p0),
 				p0 - code_start,
+				InternedString(p0, p - p0),
 			});
 		}
 
 		eat_whitespace();
 	}
-	ta.push_back({TokenTag::END, InternedString(), p-code_start});
+	ta.push_back({TokenTag::END, p-code_start, InternedString()});
 
 	return ta;
 }
