@@ -32,16 +32,6 @@ void run(AST::Program* ast, Interpreter& e) {
 	}
 }
 
-static void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(Value {nullptr});
-	e.m_stack.push(ref.as_value());
-	if (ast->m_value) {
-		eval(ast->m_value, e);
-		auto value = e.m_stack.pop_unsafe();
-		ref->m_value = value_of(value);
-	}
-};
-
 void eval(AST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
 }
@@ -94,23 +84,6 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	} else {
 		e.m_stack.push(Value{e.global_access(ast->text())});
 	}
-};
-
-void exec(AST::Block* ast, Interpreter& e) {
-	e.m_stack.start_stack_region();
-	for (auto stmt : ast->m_body) {
-		exec(stmt, e);
-		if (e.m_returning)
-			break;
-	}
-	e.m_stack.end_stack_region();
-};
-
-void exec(AST::ReturnStatement* ast, Interpreter& e) {
-	// TODO: proper error handling
-	eval(ast->m_value, e);
-	auto value = e.m_stack.pop_unsafe();
-	e.save_return_value(value_of(value));
 };
 
 auto is_callable_type(ValueTag t) -> bool {
@@ -305,6 +278,33 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 		e.save_return_value(Value {});
 	e.m_stack.push(e.fetch_return_value());
 }
+
+static void exec(AST::Declaration* ast, Interpreter& e) {
+	auto ref = e.new_reference(Value {nullptr});
+	e.m_stack.push(ref.as_value());
+	if (ast->m_value) {
+		eval(ast->m_value, e);
+		auto value = e.m_stack.pop_unsafe();
+		ref->m_value = value_of(value);
+	}
+};
+
+void exec(AST::Block* ast, Interpreter& e) {
+	e.m_stack.start_stack_region();
+	for (auto stmt : ast->m_body) {
+		exec(stmt, e);
+		if (e.m_returning)
+			break;
+	}
+	e.m_stack.end_stack_region();
+};
+
+void exec(AST::ReturnStatement* ast, Interpreter& e) {
+	// TODO: proper error handling
+	eval(ast->m_value, e);
+	auto value = e.m_stack.pop_unsafe();
+	e.save_return_value(value_of(value));
+};
 
 void exec(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
