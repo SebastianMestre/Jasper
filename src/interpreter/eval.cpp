@@ -289,7 +289,7 @@ static void exec(AST::Declaration* ast, Interpreter& e) {
 	}
 };
 
-void exec(AST::Block* ast, Interpreter& e) {
+static void exec(AST::Block* ast, Interpreter& e) {
 	e.m_stack.start_stack_region();
 	for (auto stmt : ast->m_body) {
 		exec(stmt, e);
@@ -299,14 +299,14 @@ void exec(AST::Block* ast, Interpreter& e) {
 	e.m_stack.end_stack_region();
 };
 
-void exec(AST::ReturnStatement* ast, Interpreter& e) {
+static void exec(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_stack.pop_unsafe();
 	e.save_return_value(value_of(value));
 };
 
-void exec(AST::IfElseStatement* ast, Interpreter& e) {
+static void exec(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
@@ -318,7 +318,7 @@ void exec(AST::IfElseStatement* ast, Interpreter& e) {
 		exec(ast->m_else_body, e);
 };
 
-void exec(AST::WhileStatement* ast, Interpreter& e) {
+static void exec(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
@@ -333,10 +333,11 @@ void exec(AST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
-void exec(AST::ExpressionStatement* ast, Interpreter& e) {
+static void exec(AST::ExpressionStatement* ast, Interpreter& e) {
 	eval(ast->m_expression, e);
 	e.m_stack.pop_unsafe();
 }
+
 
 void eval(AST::StructExpression* ast, Interpreter& e) {
 	e.push_record_constructor(ast->m_fields);
