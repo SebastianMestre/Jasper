@@ -75,7 +75,7 @@ ExitStatus execute(
 	GC gc;
 	Interpreter env = {&gc, &tc.declaration_order()};
 	declare_native_functions(env);
-	eval(ast, env);
+	run(ast, env);
 
 	return runner(env, context);
 }

@@ -17,18 +17,9 @@
 namespace Interpreter {
 
 static void exec(AST::Stmt* ast, Interpreter& e);
+static void exec(AST::Declaration* ast, Interpreter& e);
 
-void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(Value {nullptr});
-	e.m_stack.push(ref.as_value());
-	if (ast->m_value) {
-		eval(ast->m_value, e);
-		auto value = e.m_stack.pop_unsafe();
-		ref->m_value = value_of(value);
-	}
-};
-
-void eval(AST::Program* ast, Interpreter& e) {
+void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
@@ -40,6 +31,16 @@ void eval(AST::Program* ast, Interpreter& e) {
 		}
 	}
 }
+
+static void exec(AST::Declaration* ast, Interpreter& e) {
+	auto ref = e.new_reference(Value {nullptr});
+	e.m_stack.push(ref.as_value());
+	if (ast->m_value) {
+		eval(ast->m_value, e);
+		auto value = e.m_stack.pop_unsafe();
+		ref->m_value = value_of(value);
+	}
+};
 
 void eval(AST::NumberLiteral* ast, Interpreter& e) {
 	e.push_float(ast->value());
@@ -408,8 +409,6 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(MatchExpression);
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
-
-		DISPATCH(Program);
 
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
