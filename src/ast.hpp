@@ -33,12 +33,6 @@ struct AST {
 	virtual ~AST() = default;
 };
 
-inline bool is_expression (AST* ast) {
-	auto tag = ast->type();
-	auto tag_idx = static_cast<int>(tag);
-	return tag_idx < static_cast<int>(ASTTag::Block);
-}
-
 struct Expr : public AST {
 	Expr(ASTTag type)
 	    : AST {type} {}
