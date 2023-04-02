@@ -18,8 +18,6 @@ namespace Interpreter {
 
 static void eval_stmt(AST::AST* ast, Interpreter& e) {
 	eval(ast, e);
-	if (is_expression(ast))
-		e.m_stack.pop_unsafe();
 }
 
 void eval(AST::Declaration* ast, Interpreter& e) {
@@ -336,6 +334,11 @@ void eval(AST::WhileStatement* ast, Interpreter& e) {
 	}
 };
 
+void eval(AST::ExpressionStatement* ast, Interpreter& e) {
+	eval(ast->m_expression, e);
+	e.m_stack.pop_unsafe();
+}
+
 void eval(AST::StructExpression* ast, Interpreter& e) {
 	e.push_record_constructor(ast->m_fields);
 }
@@ -397,6 +400,7 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(ReturnStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(WhileStatement);
+		DISPATCH(ExpressionStatement);
 
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);

@@ -334,8 +334,10 @@ static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 	return ast;
 }
 
-static AST* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
-	return convert_expr(cst->m_expression, alloc);
+static ExpressionStatement* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
+	auto expr = convert_expr(cst->m_expression, alloc);
+	return alloc.make<ExpressionStatement>(expr);
+	
 }
 
 // Types

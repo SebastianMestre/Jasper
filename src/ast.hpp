@@ -47,10 +47,15 @@ struct Expr : public AST {
 	MonoId m_value_type {-1};
 };
 
+struct Stmt : public AST {
+	Stmt(ASTTag tag)
+		: AST {tag} {}
+};
+
 struct FunctionLiteral;
 struct SequenceExpression;
 
-struct Declaration : public AST {
+struct Declaration : public Stmt {
 	InternedString m_identifier;
 
 	Expr* m_type_hint {nullptr};  // can be nullptr
@@ -75,7 +80,7 @@ struct Declaration : public AST {
 	InternedString const& identifier_text() const;
 
 	Declaration()
-	    : AST {ASTTag::Declaration} {}
+	    : Stmt {ASTTag::Declaration} {}
 };
 
 struct Program : public AST {
@@ -237,36 +242,45 @@ struct SequenceExpression : public Expr {
 	    : Expr {ASTTag::SequenceExpression} {}
 };
 
-struct Block : public AST {
+
+struct Block : public Stmt {
 	std::vector<AST*> m_body;
 
 	Block()
-	    : AST {ASTTag::Block} {}
+	    : Stmt {ASTTag::Block} {}
 };
 
-struct ReturnStatement : public AST {
+struct ReturnStatement : public Stmt {
 	Expr* m_value;
 	SequenceExpression* m_surrounding_seq_expr;
 
 	ReturnStatement()
-	    : AST {ASTTag::ReturnStatement} {}
+	    : Stmt {ASTTag::ReturnStatement} {}
 };
 
-struct IfElseStatement : public AST {
+struct IfElseStatement : public Stmt {
 	Expr* m_condition;
 	AST* m_body;
 	AST* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
-	    : AST {ASTTag::IfElseStatement} {}
+	    : Stmt {ASTTag::IfElseStatement} {}
 };
 
-struct WhileStatement : public AST {
+struct WhileStatement : public Stmt {
 	Expr* m_condition;
 	AST* m_body;
 
 	WhileStatement()
-	    : AST {ASTTag::WhileStatement} {}
+	    : Stmt {ASTTag::WhileStatement} {}
+};
+
+struct ExpressionStatement : public Stmt {
+	Expr* m_expression;
+
+	ExpressionStatement(Expr* expression)
+		: Stmt {ASTTag::ExpressionStatement}
+		, m_expression {expression} {}
 };
 
 struct UnionExpression : public Expr {

@@ -227,6 +227,10 @@ static void ct_visit(AST::ReturnStatement* ast, TypeChecker& tc, AST::Allocator&
 	ast->m_value = ct_eval(ast->m_value, tc, alloc);
 }
 
+static void ct_visit(AST::ExpressionStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	ast->m_expression = ct_eval(ast->m_expression, tc, alloc);
+}
+
 static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	if (ast->m_type_hint)
 		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
@@ -377,6 +381,7 @@ static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 		DISPATCH(IfElseStatement);
 		DISPATCH(WhileStatement);
 		DISPATCH(ReturnStatement);
+		DISPATCH(ExpressionStatement);
 
 		DISPATCH(Declaration);
 		DISPATCH(Program);
@@ -424,6 +429,7 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		REJECT(IfElseStatement);
 		REJECT(WhileStatement);
 		REJECT(ReturnStatement);
+		REJECT(ExpressionStatement);
 
 		DISPATCH(Declaration);
 		DISPATCH(Program);

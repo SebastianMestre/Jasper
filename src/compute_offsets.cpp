@@ -90,6 +90,10 @@ void compute_offsets(AST::ReturnStatement* ast, int frame_offset) {
 	compute_offsets(ast->m_value, frame_offset);
 }
 
+void compute_offsets(AST::ExpressionStatement* ast, int frame_offset) {
+	compute_offsets(ast->m_expression, frame_offset);
+}
+
 void compute_offsets(AST::IndexExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_callee, frame_offset);
 	compute_offsets(ast->m_index, frame_offset);
@@ -186,6 +190,7 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
+		DISPATCH(ExpressionStatement);
 
 		DISPATCH(Declaration);
 		DISPATCH(Program);

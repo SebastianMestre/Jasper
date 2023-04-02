@@ -411,6 +411,11 @@ static void typecheck_stmt(AST::ReturnStatement* ast, TypecheckHelper& tc) {
 	tc.unify(seq_expr->m_value_type, mono);
 }
 
+static void typecheck_stmt(AST::ExpressionStatement* ast, TypecheckHelper& tc) {
+	typecheck(ast->m_expression, tc);
+}
+
+
 static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
@@ -431,6 +436,7 @@ static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
+		DISPATCH(ExpressionStatement);
 
 		default: return typecheck(ast, tc);
 	}

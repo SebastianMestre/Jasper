@@ -170,6 +170,11 @@ static void metacheck(MetaUnifier& uf, AST::ReturnStatement* ast) {
 	uf.turn_into(ast->m_value->m_meta_type, Tag::Term);
 }
 
+static void metacheck(MetaUnifier& uf, AST::ExpressionStatement* ast) {
+	metacheck(uf, ast->m_expression);
+	uf.turn_into(ast->m_expression->m_meta_type, Tag::Term);
+}
+
 // Declarations
 
 static void metacheck(MetaUnifier& uf, AST::Declaration* ast) {
@@ -264,6 +269,7 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(IfElseStatement)
 		DISPATCH(WhileStatement)
 		DISPATCH(ReturnStatement)
+		DISPATCH(ExpressionStatement)
 
 		DISPATCH(Declaration)
 		DISPATCH(Program)
@@ -272,6 +278,7 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(StructExpression)
 		DISPATCH(TypeTerm)
 	}
+	Log::fatal() << "metacheck: UNHANDLED"; // TODO: better error message
 }
 
 } // namespace TypeChecker

@@ -211,6 +211,11 @@ private:
 		return resolve(ast->m_value);
 	}
 
+	[[nodiscard]] ErrorReport resolve(AST::ExpressionStatement* ast) {
+		CHECK_AND_RETURN(resolve(ast->m_expression));
+		return {};
+	}
+
 	[[nodiscard]] ErrorReport resolve(AST::IndexExpression* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_callee));
 		CHECK_AND_RETURN(resolve(ast->m_index));
@@ -343,6 +348,7 @@ private:
 			DISPATCH(WhileStatement);
 			DISPATCH(IfElseStatement);
 			DISPATCH(ReturnStatement);
+			DISPATCH(ExpressionStatement);
 
 			DISPATCH(Declaration);
 			DISPATCH(Program);

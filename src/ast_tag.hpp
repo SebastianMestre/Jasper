@@ -21,13 +21,14 @@
 	X(UnionExpression)                                                         \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
-	X(BuiltinTypeFunction)                                                      \
+	X(BuiltinTypeFunction)                                                     \
 	X(Constructor)                                                             \
 	/* All before this point are expressions */                                \
 	X(Block)                                                                   \
 	X(ReturnStatement)                                                         \
 	X(IfElseStatement)                                                         \
 	X(WhileStatement)                                                          \
+	X(ExpressionStatement)                                                     \
                                                                                \
 	X(Program)                                                                 \
 	X(Declaration)
