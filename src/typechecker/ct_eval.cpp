@@ -12,10 +12,12 @@
 
 namespace TypeChecker {
 
-static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc);
+static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc);
 
-void reify_types(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_visit(ast, tc, alloc);
+static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc);
+
+void reify_types(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
+	do_the_thing(ast, tc, alloc);
 }
 
 static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -314,7 +316,7 @@ static MonoId get_monotype_id(AST::Expr* ast) {
 	}
 }
 
-static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	auto& uf = tc.core().m_meta_core;
 
@@ -371,7 +373,7 @@ static void ct_visit(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) 
 	}
 }
 
-static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
 		return ct_visit(static_cast<AST::type*>(ast), tc, alloc)
@@ -384,12 +386,9 @@ static void ct_visit(AST::AST*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 		DISPATCH(ExpressionStatement);
 
 		DISPATCH(Declaration);
-		DISPATCH(Program);
 
-	default:
-		ast = ct_eval(ast, tc, alloc);
-		return;
 	}
+	assert(false);
 
 #undef DISPATCH
 }

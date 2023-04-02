@@ -244,7 +244,7 @@ struct SequenceExpression : public Expr {
 
 
 struct Block : public Stmt {
-	std::vector<AST*> m_body;
+	std::vector<Stmt*> m_body;
 
 	Block()
 	    : Stmt {ASTTag::Block} {}
@@ -260,8 +260,8 @@ struct ReturnStatement : public Stmt {
 
 struct IfElseStatement : public Stmt {
 	Expr* m_condition;
-	AST* m_body;
-	AST* m_else_body {nullptr}; // can be nullptr
+	Stmt* m_body;
+	Stmt* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
 	    : Stmt {ASTTag::IfElseStatement} {}
@@ -269,7 +269,7 @@ struct IfElseStatement : public Stmt {
 
 struct WhileStatement : public Stmt {
 	Expr* m_condition;
-	AST* m_body;
+	Stmt* m_body;
 
 	WhileStatement()
 	    : Stmt {ASTTag::WhileStatement} {}
