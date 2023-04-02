@@ -382,7 +382,7 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 #undef DISPATCH
 }
 
-void eval(AST::AST* ast, Interpreter& e) {
+void eval(AST::Expr* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
