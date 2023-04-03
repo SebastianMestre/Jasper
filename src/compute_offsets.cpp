@@ -7,10 +7,7 @@
 
 namespace TypeChecker {
 
-void compute_offsets(AST::Declaration* ast, int frame_offset) {
-	if (ast->m_value)
-		compute_offsets(ast->m_value, frame_offset);
-}
+static void process_stmt(AST::Stmt* ast, int frame_offset);
 
 void compute_offsets(AST::Identifier* ast, int frame_offset) {
 	AST::Declaration* decl = ast->m_declaration;
@@ -24,23 +21,6 @@ void compute_offsets(AST::Identifier* ast, int frame_offset) {
 	}
 }
 
-//TODO
-void compute_offsets(AST::Block* ast, int frame_offset) {
-	for (auto& child : ast->m_body) {
-		if (child->type() == ASTTag::Declaration) {
-			auto decl = static_cast<AST::Declaration*>(child);
-			decl->m_frame_offset = frame_offset++;
-		}
-		compute_offsets(child, frame_offset);
-	}
-}
-
-void compute_offsets(AST::IfElseStatement* ast, int frame_offset) {
-	compute_offsets(ast->m_condition, frame_offset);
-	compute_offsets(ast->m_body, frame_offset);
-	if (ast->m_else_body)
-		compute_offsets(ast->m_else_body, frame_offset);
-}
 
 void compute_offsets(AST::CallExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_callee, frame_offset++);
@@ -81,18 +61,66 @@ void compute_offsets(AST::ArrayLiteral* ast, int frame_offset) {
 		compute_offsets(element, frame_offset);
 }
 
-void compute_offsets(AST::WhileStatement* ast, int frame_offset) {
-	compute_offsets(ast->m_condition, frame_offset);
-	compute_offsets(ast->m_body, frame_offset);
+
+static void process_stmt(AST::Declaration* ast, int frame_offset) {
+	if (ast->m_value)
+		compute_offsets(ast->m_value, frame_offset);
 }
 
-void compute_offsets(AST::ReturnStatement* ast, int frame_offset) {
+static void process_stmt(AST::Block* ast, int frame_offset) {
+	for (auto& child : ast->m_body) {
+		if (child->type() == ASTTag::Declaration) {
+			auto decl = static_cast<AST::Declaration*>(child);
+			decl->m_frame_offset = frame_offset++;
+		}
+		process_stmt(child, frame_offset);
+	}
+}
+
+static void process_stmt(AST::IfElseStatement* ast, int frame_offset) {
+	compute_offsets(ast->m_condition, frame_offset);
+	process_stmt(ast->m_body, frame_offset);
+	if (ast->m_else_body)
+		process_stmt(ast->m_else_body, frame_offset);
+}
+
+static void process_stmt(AST::WhileStatement* ast, int frame_offset) {
+	compute_offsets(ast->m_condition, frame_offset);
+	process_stmt(ast->m_body, frame_offset);
+}
+
+static void process_stmt(AST::ReturnStatement* ast, int frame_offset) {
 	compute_offsets(ast->m_value, frame_offset);
 }
 
-void compute_offsets(AST::ExpressionStatement* ast, int frame_offset) {
+static void process_stmt(AST::ExpressionStatement* ast, int frame_offset) {
 	compute_offsets(ast->m_expression, frame_offset);
 }
+
+static void process_stmt(AST::Stmt* ast, int frame_offset) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                         \
+		return process_stmt(static_cast<AST::type*>(ast), frame_offset);
+
+#define DO_NOTHING(type)                                                       \
+	case ASTTag::type:                                                         \
+		return;
+
+	switch (ast->type()) {
+		DISPATCH(Block);
+		DISPATCH(WhileStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(ReturnStatement);
+		DISPATCH(ExpressionStatement);
+		DISPATCH(Declaration);
+	}
+
+#undef DO_NOTHING
+#undef DISPATCH
+	Log::fatal() << "(internal) Unhandled case in compute_offsets/process_stmt ("
+	             << ast_string[(int)ast->type()] << ")";
+}
+
 
 void compute_offsets(AST::IndexExpression* ast, int frame_offset) {
 	compute_offsets(ast->m_callee, frame_offset);
@@ -133,7 +161,7 @@ void compute_offsets(AST::ConstructorExpression* ast, int frame_offset) {
 }
 
 void compute_offsets(AST::SequenceExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_body, frame_offset);
+	process_stmt(ast->m_body, frame_offset);
 }
 
 void compute_offsets(AST::Program* ast, int frame_offset) {
@@ -186,13 +214,6 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(Block);
-		DISPATCH(WhileStatement);
-		DISPATCH(IfElseStatement);
-		DISPATCH(ReturnStatement);
-		DISPATCH(ExpressionStatement);
-
-		DISPATCH(Declaration);
 		DISPATCH(Program);
 
 		DISPATCH(StructExpression);
