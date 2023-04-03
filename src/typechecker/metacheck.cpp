@@ -242,10 +242,10 @@ static void metacheck(MetaUnifier& uf, AST::TypeTerm* ast) {
 
 static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return metacheck_stmt(uf, static_cast<AST::type*>(ast));
 
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Block)
 		DISPATCH(IfElseStatement)
 		DISPATCH(WhileStatement)

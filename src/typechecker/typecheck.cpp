@@ -425,11 +425,11 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 
 static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
 
 	// TODO: Compound literals
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Declaration);
 
 		DISPATCH(Block);

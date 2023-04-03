@@ -69,7 +69,7 @@ static void process_stmt(AST::Declaration* ast, int frame_offset) {
 
 static void process_stmt(AST::Block* ast, int frame_offset) {
 	for (auto& child : ast->m_body) {
-		if (child->type() == ASTTag::Declaration) {
+		if (child->tag() == ASTStmtTag::Declaration) {
 			auto decl = static_cast<AST::Declaration*>(child);
 			decl->m_frame_offset = frame_offset++;
 		}
@@ -99,14 +99,10 @@ static void process_stmt(AST::ExpressionStatement* ast, int frame_offset) {
 
 static void process_stmt(AST::Stmt* ast, int frame_offset) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return process_stmt(static_cast<AST::type*>(ast), frame_offset);
 
-#define DO_NOTHING(type)                                                       \
-	case ASTTag::type:                                                         \
-		return;
-
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Block);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
@@ -115,7 +111,6 @@ static void process_stmt(AST::Stmt* ast, int frame_offset) {
 		DISPATCH(Declaration);
 	}
 
-#undef DO_NOTHING
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in compute_offsets/process_stmt ("
 	             << ast_string[(int)ast->type()] << ")";

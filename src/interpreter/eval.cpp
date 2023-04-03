@@ -367,10 +367,10 @@ void eval(AST::TypeTerm* ast, Interpreter& e) {
 
 static void exec(AST::Stmt* ast, Interpreter& e) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return exec(static_cast<AST::type*>(ast), e)
 
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Declaration);
 		DISPATCH(Block);
 		DISPATCH(ReturnStatement);

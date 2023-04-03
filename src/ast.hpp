@@ -42,8 +42,14 @@ struct Expr : public AST {
 };
 
 struct Stmt : public AST {
-	Stmt(ASTTag tag)
-		: AST {tag} {}
+	Stmt(ASTStmtTag tag)
+		: AST {ASTTag::Stmt}
+		, m_tag{tag} {}
+
+	ASTStmtTag tag() const { return m_tag; }
+
+protected:
+	ASTStmtTag m_tag;
 };
 
 struct FunctionLiteral;
@@ -74,7 +80,7 @@ struct Declaration : public Stmt {
 	InternedString const& identifier_text() const;
 
 	Declaration()
-	    : Stmt {ASTTag::Declaration} {}
+	    : Stmt {ASTStmtTag::Declaration} {}
 };
 
 struct Program : public AST {
@@ -241,7 +247,7 @@ struct Block : public Stmt {
 	std::vector<Stmt*> m_body;
 
 	Block()
-	    : Stmt {ASTTag::Block} {}
+	    : Stmt {ASTStmtTag::Block} {}
 };
 
 struct ReturnStatement : public Stmt {
@@ -249,7 +255,7 @@ struct ReturnStatement : public Stmt {
 	SequenceExpression* m_surrounding_seq_expr;
 
 	ReturnStatement()
-	    : Stmt {ASTTag::ReturnStatement} {}
+	    : Stmt {ASTStmtTag::ReturnStatement} {}
 };
 
 struct IfElseStatement : public Stmt {
@@ -258,7 +264,7 @@ struct IfElseStatement : public Stmt {
 	Stmt* m_else_body {nullptr}; // can be nullptr
 
 	IfElseStatement()
-	    : Stmt {ASTTag::IfElseStatement} {}
+	    : Stmt {ASTStmtTag::IfElseStatement} {}
 };
 
 struct WhileStatement : public Stmt {
@@ -266,14 +272,14 @@ struct WhileStatement : public Stmt {
 	Stmt* m_body;
 
 	WhileStatement()
-	    : Stmt {ASTTag::WhileStatement} {}
+	    : Stmt {ASTStmtTag::WhileStatement} {}
 };
 
 struct ExpressionStatement : public Stmt {
 	Expr* m_expression;
 
 	ExpressionStatement(Expr* expression)
-		: Stmt {ASTTag::ExpressionStatement}
+		: Stmt {ASTStmtTag::ExpressionStatement}
 		, m_expression {expression} {}
 };
 

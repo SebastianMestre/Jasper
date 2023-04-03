@@ -375,10 +375,10 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 
 static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return ct_visit(static_cast<AST::type*>(ast), tc, alloc)
 
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Block);
 		DISPATCH(IfElseStatement);
 		DISPATCH(WhileStatement);
@@ -424,13 +424,6 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		REJECT(Block);
-		REJECT(IfElseStatement);
-		REJECT(WhileStatement);
-		REJECT(ReturnStatement);
-		REJECT(ExpressionStatement);
-
-		DISPATCH(Declaration);
 		DISPATCH(Program);
 
 		DISPATCH(TypeTerm);

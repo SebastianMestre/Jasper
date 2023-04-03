@@ -321,14 +321,14 @@ private:
 
 	[[nodiscard]] ErrorReport resolve_stmt(AST::Stmt* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return resolve_stmt(static_cast<AST::type*>(ast));
 
 #define DO_NOTHING(type)                                                       \
-	case ASTTag::type:                                                         \
+	case ASTStmtTag::type:                                                     \
 		return {};
 
-		switch (ast->type()) {
+		switch (ast->tag()) {
 			DISPATCH(Block);
 			DISPATCH(WhileStatement);
 			DISPATCH(IfElseStatement);
