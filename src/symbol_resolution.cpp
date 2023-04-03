@@ -84,24 +84,6 @@ private:
 	PtrStack<AST::FunctionLiteral> functions;
 	PtrStack<AST::SequenceExpression> seq_exprs;
 
-	[[nodiscard]] ErrorReport resolve(AST::Declaration* ast) {
-
-		ast->m_surrounding_function = functions.current();
-		ast->m_surrounding_seq_expr = seq_exprs.current();
-		symbol_table.declare(ast);
-
-		if (ast->m_type_hint)
-			CHECK_AND_RETURN(resolve(ast->m_type_hint));
-
-		if (ast->m_value) {
-			CHECK_AND_WRAP(
-			    resolve(ast->m_value),
-			    "While scanning declaration '" + ast->identifier_text().str() + "'");
-		}
-
-		return {};
-	}
-
 	[[nodiscard]] ErrorReport resolve(AST::Identifier* ast) {
 
 		AST::Declaration* declaration = symbol_table.access(ast->text());
@@ -143,23 +125,6 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::Block* ast) {
-		symbol_table.new_nested_scope();
-		for (auto& child : ast->m_body)
-			CHECK_AND_RETURN(resolve(child));
-		symbol_table.end_scope();
-		return {};
-	}
-
-	[[nodiscard]] ErrorReport resolve(AST::IfElseStatement* ast) {
-		CHECK_AND_RETURN(resolve(ast->m_condition));
-		CHECK_AND_RETURN(resolve(ast->m_body));
-
-		if (ast->m_else_body)
-			CHECK_AND_RETURN(resolve(ast->m_else_body));
-		return {};
-	}
-
 	[[nodiscard]] ErrorReport resolve(AST::CallExpression* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_callee));
 		for (auto& arg : ast->m_args)
@@ -196,25 +161,62 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::WhileStatement* ast) {
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Declaration* ast) {
+
+		ast->m_surrounding_function = functions.current();
+		ast->m_surrounding_seq_expr = seq_exprs.current();
+		symbol_table.declare(ast);
+
+		if (ast->m_type_hint)
+			CHECK_AND_RETURN(resolve(ast->m_type_hint));
+
+		if (ast->m_value) {
+			CHECK_AND_WRAP(
+			    resolve(ast->m_value),
+			    "While scanning declaration '" + ast->identifier_text().str() + "'");
+		}
+
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Block* ast) {
+		symbol_table.new_nested_scope();
+		for (auto& child : ast->m_body)
+			CHECK_AND_RETURN(resolve_stmt(child));
+		symbol_table.end_scope();
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::IfElseStatement* ast) {
+		CHECK_AND_RETURN(resolve(ast->m_condition));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
+
+		if (ast->m_else_body)
+			CHECK_AND_RETURN(resolve_stmt(ast->m_else_body));
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::WhileStatement* ast) {
 		symbol_table.new_nested_scope();
 
 		CHECK_AND_RETURN(resolve(ast->m_condition));
-		CHECK_AND_RETURN(resolve(ast->m_body));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
 
 		symbol_table.end_scope();
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::ReturnStatement* ast) {
+	[[nodiscard]] ErrorReport resolve_stmt(AST::ReturnStatement* ast) {
 		ast->m_surrounding_seq_expr = seq_exprs.current();
 		return resolve(ast->m_value);
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::ExpressionStatement* ast) {
+	[[nodiscard]] ErrorReport resolve_stmt(AST::ExpressionStatement* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_expression));
 		return {};
 	}
+
 
 	[[nodiscard]] ErrorReport resolve(AST::IndexExpression* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_callee));
@@ -245,7 +247,7 @@ private:
 
 			symbol_table.new_nested_scope();
 
-			CHECK_AND_RETURN(resolve(&case_data.m_declaration));
+			CHECK_AND_RETURN(resolve_stmt(&case_data.m_declaration));
 			CHECK_AND_RETURN(resolve(case_data.m_expression));
 
 			symbol_table.end_scope();
@@ -265,7 +267,7 @@ private:
 
 	[[nodiscard]] ErrorReport resolve(AST::SequenceExpression* ast) {
 		seq_exprs.enter(ast);
-		CHECK_AND_RETURN(resolve(ast->m_body));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
 		seq_exprs.exit();
 		return {};
 	}
@@ -317,6 +319,29 @@ private:
 		return {};
 	}
 
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Stmt* ast) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                         \
+		return resolve_stmt(static_cast<AST::type*>(ast));
+
+#define DO_NOTHING(type)                                                       \
+	case ASTTag::type:                                                         \
+		return {};
+
+		switch (ast->type()) {
+			DISPATCH(Block);
+			DISPATCH(WhileStatement);
+			DISPATCH(IfElseStatement);
+			DISPATCH(ReturnStatement);
+			DISPATCH(ExpressionStatement);
+			DISPATCH(Declaration);
+		}
+
+#undef DO_NOTHING
+#undef DISPATCH
+		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << ast_string[int(ast->type())] << "'";
+	}
+
 	[[nodiscard]] ErrorReport resolve(AST::AST* ast) {
 #define DISPATCH(type)                                                         \
 		case ASTTag::type:                                                    \
@@ -344,13 +369,6 @@ private:
 			DISPATCH(ConstructorExpression);
 			DISPATCH(SequenceExpression);
 
-			DISPATCH(Block);
-			DISPATCH(WhileStatement);
-			DISPATCH(IfElseStatement);
-			DISPATCH(ReturnStatement);
-			DISPATCH(ExpressionStatement);
-
-			DISPATCH(Declaration);
 			DISPATCH(Program);
 
 			DISPATCH(UnionExpression);
