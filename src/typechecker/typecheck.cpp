@@ -127,7 +127,7 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc);
 
 void typecheck_program(AST::AST* ast, TypecheckHelper& tc);
 
-static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc);
+static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc);
 
 void typecheck(AST::AST* ast, TypeChecker& tc) {
 	TypecheckHelper f = {tc};
@@ -423,9 +423,9 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	generalize(ast, tc);
 }
 
-static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                    \
+	case ASTTag::type:                                                         \
 		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
 
 	// TODO: Compound literals
@@ -438,10 +438,9 @@ static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
 		DISPATCH(ReturnStatement);
 		DISPATCH(ExpressionStatement);
 
-		default: return typecheck(ast, tc);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in typecheck: "
+	Log::fatal() << "(internal) CST type not handled in typecheck_stmt: "
 	             << ast_string[(int)ast->type()];
 
 #undef DISPATCH
