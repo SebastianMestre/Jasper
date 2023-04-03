@@ -6,6 +6,8 @@
 
 namespace TypeChecker {
 
+static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast);
+
 static void process_type_hint(MetaUnifier& uf, AST::Declaration* ast) {
 	auto typehint = ast->m_type_hint;
 	if (!typehint) return;
@@ -139,45 +141,45 @@ static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
 
 static void metacheck(MetaUnifier& uf, AST::SequenceExpression* ast) {
 	ast->m_meta_type = uf.make_const_node(Tag::Term);
-	metacheck(uf, ast->m_body);
+	metacheck_stmt(uf, ast->m_body);
 }
 
 // Statements
 
-static void metacheck(MetaUnifier& uf, AST::Block* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::Block* ast) {
 	for (auto& child : ast->m_body)
-		metacheck(uf, child);
+		metacheck_stmt(uf, child);
 }
 
-static void metacheck(MetaUnifier& uf, AST::IfElseStatement* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::IfElseStatement* ast) {
 	metacheck(uf, ast->m_condition);
 	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
 
-	metacheck(uf, ast->m_body);
+	metacheck_stmt(uf, ast->m_body);
 
 	if (ast->m_else_body)
-		metacheck(uf, ast->m_else_body);
+		metacheck_stmt(uf, ast->m_else_body);
 }
 
-static void metacheck(MetaUnifier& uf, AST::WhileStatement* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::WhileStatement* ast) {
 	metacheck(uf, ast->m_condition);
 	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
-	metacheck(uf, ast->m_body);
+	metacheck_stmt(uf, ast->m_body);
 }
 
-static void metacheck(MetaUnifier& uf, AST::ReturnStatement* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::ReturnStatement* ast) {
 	metacheck(uf, ast->m_value);
 	uf.turn_into(ast->m_value->m_meta_type, Tag::Term);
 }
 
-static void metacheck(MetaUnifier& uf, AST::ExpressionStatement* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::ExpressionStatement* ast) {
 	metacheck(uf, ast->m_expression);
 	uf.turn_into(ast->m_expression->m_meta_type, Tag::Term);
 }
 
 // Declarations
 
-static void metacheck(MetaUnifier& uf, AST::Declaration* ast) {
+static void metacheck_stmt(MetaUnifier& uf, AST::Declaration* ast) {
 	ast->m_meta_type = uf.make_var_node();
 	process_declaration(uf, ast);
 }
@@ -238,6 +240,25 @@ static void metacheck(MetaUnifier& uf, AST::TypeTerm* ast) {
 
 // Dispatch
 
+static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
+#define DISPATCH(type)                                                         \
+	case ASTTag::type:                                                         \
+		return metacheck_stmt(uf, static_cast<AST::type*>(ast));
+
+	switch (ast->type()) {
+		DISPATCH(Block)
+		DISPATCH(IfElseStatement)
+		DISPATCH(WhileStatement)
+		DISPATCH(ReturnStatement)
+		DISPATCH(ExpressionStatement)
+		DISPATCH(Declaration)
+	}
+
+	Log::fatal() << "metacheck_stmt: UNHANDLED"; // TODO: better error message
+
+#undef DISPATCH
+}
+
 void metacheck(MetaUnifier& uf, AST::AST* ast) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
@@ -265,13 +286,6 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(ConstructorExpression)
 		DISPATCH(SequenceExpression)
 
-		DISPATCH(Block)
-		DISPATCH(IfElseStatement)
-		DISPATCH(WhileStatement)
-		DISPATCH(ReturnStatement)
-		DISPATCH(ExpressionStatement)
-
-		DISPATCH(Declaration)
 		DISPATCH(Program)
 
 		DISPATCH(UnionExpression)
@@ -279,6 +293,9 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(TypeTerm)
 	}
 	Log::fatal() << "metacheck: UNHANDLED"; // TODO: better error message
+
+#undef DISPATCH
+#undef SCALAR
 }
 
 } // namespace TypeChecker
