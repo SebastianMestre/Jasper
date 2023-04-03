@@ -16,6 +16,9 @@
 
 namespace Frontend {
 
+using AST::ExprTag;
+using AST::StmtTag;
+
 struct TopLevelDeclTracker {
 	AST::Declaration* current() {
 		return m_current_decl;
@@ -301,11 +304,11 @@ private:
 
 	[[nodiscard]] ErrorReport resolve_stmt(AST::Stmt* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTStmtTag::type:                                                     \
+	case StmtTag::type:                                                        \
 		return resolve_stmt(static_cast<AST::type*>(ast));
 
 #define DO_NOTHING(type)                                                       \
-	case ASTStmtTag::type:                                                     \
+	case StmtTag::type:                                                        \
 		return {};
 
 		switch (ast->tag()) {
@@ -319,16 +322,16 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << ast_stmt_string[int(ast->tag())] << "'";
+		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << AST::stmt_string[int(ast->tag())] << "'";
 	}
 
 	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTExprTag::type:                                                     \
+	case ExprTag::type:                                                        \
 		return resolve(static_cast<AST::type*>(ast));
 
 #define DO_NOTHING(type)                                                       \
-	case ASTExprTag::type:                                                     \
+	case ExprTag::type:                                                        \
 		return {};
 
 		switch (ast->type()) {
@@ -356,7 +359,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::fatal() << "(internal) Unhandled case in resolve '" << ast_expr_string[int(ast->type())] << "'";
+		Log::fatal() << "(internal) Unhandled case in resolve '" << AST::expr_string[int(ast->type())] << "'";
 	}
 
 	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {

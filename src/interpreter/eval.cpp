@@ -16,6 +16,9 @@
 
 namespace Interpreter {
 
+using AST::StmtTag;
+using AST::ExprTag;
+ 
 static void exec(AST::Stmt* ast, Interpreter& e);
 static void exec(AST::Declaration* ast, Interpreter& e);
 
@@ -367,7 +370,7 @@ void eval(AST::TypeTerm* ast, Interpreter& e) {
 
 static void exec(AST::Stmt* ast, Interpreter& e) {
 #define DISPATCH(type)                                                         \
-	case ASTStmtTag::type:                                                     \
+	case StmtTag::type:                                                        \
 		return exec(static_cast<AST::type*>(ast), e)
 
 	switch (ast->tag()) {
@@ -386,7 +389,7 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 void eval(AST::Expr* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
-	case ASTExprTag::type:                                                         \
+	case ExprTag::type:                                                        \
 		return eval(static_cast<AST::type*>(ast), e)
 
 #ifdef DEBUG
@@ -419,7 +422,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "
-	             << ast_expr_string[(int)ast->type()];
+	             << AST::expr_string[(int)ast->type()];
 
 #undef DISPATCH
 }

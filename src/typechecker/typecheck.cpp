@@ -11,6 +11,9 @@
 
 namespace TypeChecker {
 
+using AST::ExprTag;
+using AST::StmtTag;
+
 struct TypecheckHelper {
 	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
@@ -131,7 +134,7 @@ static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
 static MonoId get_monotype_id(AST::Expr* ast) {
 	switch(ast->type()) {
-	case ASTExprTag::TypeTerm:
+	case ExprTag::TypeTerm:
 		return static_cast<AST::TypeTerm*>(ast)->m_value;
 	default: assert(0);
 	}
@@ -292,7 +295,7 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_constructor, tc);
 
 	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == ASTExprTag::Constructor);
+	assert(constructor->type() == ExprTag::Constructor);
 
 	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
 
@@ -322,8 +325,8 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 // that enables type inference on mutable datatypes
 static bool is_value_expression(AST::Expr* ast) {
 	switch (ast->type()) {
-	case ASTExprTag::FunctionLiteral:
-	case ASTExprTag::Identifier:
+	case ExprTag::FunctionLiteral:
+	case ExprTag::Identifier:
 		return true;
 	default:
 		return false;
@@ -418,7 +421,7 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 
 static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTStmtTag::type:                                                     \
+	case StmtTag::type:                                                        \
 		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
 
 	// TODO: Compound literals
@@ -434,18 +437,18 @@ static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 	}
 
 	Log::fatal() << "(internal) CST type not handled in typecheck_stmt: "
-	             << ast_stmt_string[(int)ast->tag()];
+	             << AST::stmt_string[(int)ast->tag()];
 
 #undef DISPATCH
 }
 
 void typecheck(AST::Expr* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTExprTag::type:                                                    \
+	case ExprTag::type:                                                        \
 		return typecheck(static_cast<AST::type*>(ast), tc);
 
 #define IGNORE(type)                                                           \
-	case ASTExprTag::type:                                                    \
+	case ExprTag::type:                                                        \
 		return;
 
 	// TODO: Compound literals
@@ -472,7 +475,7 @@ void typecheck(AST::Expr* ast, TypecheckHelper& tc) {
 	}
 
 	Log::fatal() << "(internal) CST type not handled in typecheck: "
-	             << ast_expr_string[(int)ast->type()];
+	             << AST::expr_string[(int)ast->type()];
 
 #undef DISPATCH
 #undef IGNORE

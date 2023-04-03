@@ -32,15 +32,19 @@
 	X(ExpressionStatement)                                                     \
 	X(Declaration)
 
+namespace AST {
+
 #define X(name) #name,
-constexpr const char* ast_expr_string[] = {AST_EXPR_TAGS};
-constexpr const char* ast_stmt_string[] = {AST_STMT_TAGS};
+constexpr const char* expr_string[] = { AST_EXPR_TAGS };
+constexpr const char* stmt_string[] = { AST_STMT_TAGS };
 #undef X
 
 #define X(name) name,
-enum class ASTExprTag { AST_EXPR_TAGS };
-enum class ASTStmtTag { AST_STMT_TAGS };
+enum class ExprTag { AST_EXPR_TAGS };
+enum class StmtTag { AST_STMT_TAGS };
 #undef X
+
+} // namespace AST
 
 #undef AST_TAGS
 #undef AST_STMT_TAGS

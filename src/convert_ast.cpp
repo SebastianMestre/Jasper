@@ -301,7 +301,7 @@ static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 
 	auto body = convert_stmt(cst->m_body, alloc);
 	auto block_body = [&] {
-		if (body->tag() == ASTStmtTag::Block)
+		if (body->tag() == StmtTag::Block)
 			return static_cast<Block*>(body);
 		auto inner_block = alloc.make<Block>();
 		inner_block->m_body.push_back(body);

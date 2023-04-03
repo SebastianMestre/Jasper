@@ -6,6 +6,9 @@
 
 namespace TypeChecker {
 
+using AST::ExprTag;
+using AST::StmtTag;
+
 static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast);
 
 static void process_type_hint(MetaUnifier& uf, AST::Declaration* ast) {
@@ -220,7 +223,7 @@ static void metacheck(MetaUnifier& uf, AST::TypeTerm* ast) {
 
 static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTStmtTag::type:                                                     \
+	case StmtTag::type:                                                        \
 		return metacheck_stmt(uf, static_cast<AST::type*>(ast));
 
 	switch (ast->tag()) {
@@ -239,11 +242,11 @@ static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
 
 void metacheck(MetaUnifier& uf, AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTExprTag::type:                                                         \
+	case ExprTag::type:                                                        \
 		return metacheck(uf, static_cast<AST::type*>(ast));
 
 #define SCALAR(type)                                                           \
-	case ASTExprTag::type:                                                         \
+	case ExprTag::type:                                                        \
 		return metacheck_scalar(uf, static_cast<AST::type*>(ast));
 
 	switch (ast->type()) {
