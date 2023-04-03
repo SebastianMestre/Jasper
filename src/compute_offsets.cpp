@@ -175,7 +175,7 @@ void compute_offsets(AST::TypeTerm* ast, int frame_offset) {
 		compute_offsets(arg, frame_offset);
 }
 
-void compute_offsets(AST::AST* ast, int frame_offset) {
+void compute_offsets(AST::Expr* ast, int frame_offset) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
 		return compute_offsets(static_cast<AST::type*>(ast), frame_offset);

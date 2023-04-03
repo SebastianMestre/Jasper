@@ -67,7 +67,7 @@ ExitStatus execute(
 		TypeChecker::metacheck_program(tc.core().m_meta_core, ast);
 		tc.core().m_meta_core.solve();
 		TypeChecker::reify_types(ast, tc, ast_allocator);
-		TypeChecker::typecheck(ast, tc);
+		TypeChecker::typecheck_program(ast, tc);
 	}
 
 	TypeChecker::compute_offsets_program(ast, 0);

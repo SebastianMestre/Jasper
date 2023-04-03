@@ -72,7 +72,7 @@ struct SymbolResolutionCommand {
 		: file_context {file_context}
 		, symbol_table {symbol_table} {}
 
-	ErrorReport handle(AST::AST* ast) {
+	ErrorReport handle(AST::Expr* ast) {
 		return resolve(ast);
 	}
 
@@ -322,7 +322,7 @@ private:
 		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << ast_string[int(ast->type())] << "'";
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::AST* ast) {
+	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
 		case ASTTag::type:                                                    \
 			return resolve(static_cast<AST::type*>(ast));
@@ -387,7 +387,7 @@ private:
 
 #undef CHECK_AND_RETURN
 
-[[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, Context const& file_context, SymbolTable& env) {
+[[nodiscard]] ErrorReport resolve_symbols(AST::Expr* ast, Context const& file_context, SymbolTable& env) {
 	auto command = SymbolResolutionCommand {file_context, env};
 	return command.handle(ast);
 }

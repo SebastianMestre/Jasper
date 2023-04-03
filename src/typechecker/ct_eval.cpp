@@ -20,7 +20,7 @@ void reify_types(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	do_the_thing(ast, tc, alloc);
 }
 
-static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc);
+static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -393,7 +393,7 @@ static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 #undef DISPATCH
 }
 
-static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
 		return ct_eval(static_cast<AST::type*>(ast), tc, alloc)

@@ -237,7 +237,7 @@ static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
 #undef DISPATCH
 }
 
-void metacheck(MetaUnifier& uf, AST::AST* ast) {
+void metacheck(MetaUnifier& uf, AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                         \
 		return metacheck(uf, static_cast<AST::type*>(ast));

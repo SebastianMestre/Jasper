@@ -123,16 +123,9 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	return core().new_poly(base, std::move(new_vars));
 }
 
-void typecheck(AST::AST* ast, TypecheckHelper& tc);
-
-void typecheck_program(AST::AST* ast, TypecheckHelper& tc);
+void typecheck(AST::Expr* ast, TypecheckHelper& tc);
 
 static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc);
-
-void typecheck(AST::AST* ast, TypeChecker& tc) {
-	TypecheckHelper f = {tc};
-	typecheck_program(ast, f);
-}
 
 static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
@@ -327,7 +320,7 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
 // this function implements 'the value restriction', a technique
 // that enables type inference on mutable datatypes
-static bool is_value_expression(AST::AST* ast) {
+static bool is_value_expression(AST::Expr* ast) {
 	switch (ast->type()) {
 	case ASTTag::FunctionLiteral:
 	case ASTTag::Identifier:
@@ -446,7 +439,7 @@ static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 #undef DISPATCH
 }
 
-void typecheck(AST::AST* ast, TypecheckHelper& tc) {
+void typecheck(AST::Expr* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
 	case ASTTag::type:                                                    \
 		return typecheck(static_cast<AST::type*>(ast), tc);
@@ -485,7 +478,9 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 #undef IGNORE
 }
 
-void typecheck_program(AST::AST* ast, TypecheckHelper& tc) {
+void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
+	TypecheckHelper tc = {tc_};
+
 	// NOTE: we don't actually do anything with `ast`: what we really care about
 	// has already been precomputed and stored in `tc`. This is not the most
 	// friendliest API, so maybe we could look into changing it?
