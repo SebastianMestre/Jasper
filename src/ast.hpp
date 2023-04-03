@@ -20,31 +20,31 @@ struct CST;
 namespace AST {
 
 struct AST {
-  protected:
-	ASTTag m_type;
 
   public:
-	AST(ASTTag type)
-	    : m_type {type} {}
+	AST() = default;
 
 	CST::CST* m_cst {nullptr};
 
-	ASTTag type() const { return m_type; }
 	virtual ~AST() = default;
 };
 
 struct Expr : public AST {
-	Expr(ASTTag type)
-	    : AST {type} {}
+	Expr(ASTExprTag type)
+	    : m_type {type} {}
 
 	MetaTypeId m_meta_type {-1};
 	MonoId m_value_type {-1};
+
+	ASTExprTag type() const { return m_type; }
+
+protected:
+	ASTExprTag m_type;
 };
 
 struct Stmt : public AST {
 	Stmt(ASTStmtTag tag)
-		: AST {ASTTag::Stmt}
-		, m_tag{tag} {}
+		: m_tag{tag} {}
 
 	ASTStmtTag tag() const { return m_tag; }
 
@@ -86,8 +86,7 @@ struct Declaration : public Stmt {
 struct Program : public AST {
 	std::vector<Declaration> m_declarations;
 
-	Program()
-	    : AST {ASTTag::Program} {}
+	Program() {}
 };
 
 struct NumberLiteral : public Expr {
@@ -98,7 +97,7 @@ struct NumberLiteral : public Expr {
 	}
 
 	NumberLiteral()
-	    : Expr {ASTTag::NumberLiteral} {}
+	    : Expr {ASTExprTag::NumberLiteral} {}
 };
 
 struct IntegerLiteral : public Expr {
@@ -109,7 +108,7 @@ struct IntegerLiteral : public Expr {
 	}
 
 	IntegerLiteral()
-	    : Expr {ASTTag::IntegerLiteral} {}
+	    : Expr {ASTExprTag::IntegerLiteral} {}
 };
 
 struct StringLiteral : public Expr {
@@ -120,27 +119,27 @@ struct StringLiteral : public Expr {
 	}
 
 	StringLiteral()
-	    : Expr {ASTTag::StringLiteral} {}
+	    : Expr {ASTExprTag::StringLiteral} {}
 };
 
 struct BooleanLiteral : public Expr {
 	bool m_value;
 
 	BooleanLiteral()
-	    : Expr {ASTTag::BooleanLiteral} {}
+	    : Expr {ASTExprTag::BooleanLiteral} {}
 };
 
 struct NullLiteral : public Expr {
 
 	NullLiteral()
-	    : Expr {ASTTag::NullLiteral} {}
+	    : Expr {ASTExprTag::NullLiteral} {}
 };
 
 struct ArrayLiteral : public Expr {
 	std::vector<Expr*> m_elements;
 
 	ArrayLiteral()
-	    : Expr {ASTTag::ArrayLiteral} {}
+	    : Expr {ASTExprTag::ArrayLiteral} {}
 };
 
 struct FunctionLiteral : public Expr {
@@ -156,7 +155,7 @@ struct FunctionLiteral : public Expr {
 	FunctionLiteral* m_surrounding_function {nullptr};
 
 	FunctionLiteral()
-	    : Expr {ASTTag::FunctionLiteral} {}
+	    : Expr {ASTExprTag::FunctionLiteral} {}
 };
 
 struct Identifier : public Expr {
@@ -175,7 +174,7 @@ struct Identifier : public Expr {
 	}
 
 	Identifier()
-	    : Expr {ASTTag::Identifier} {}
+	    : Expr {ASTExprTag::Identifier} {}
 };
 
 struct CallExpression : public Expr {
@@ -183,7 +182,7 @@ struct CallExpression : public Expr {
 	std::vector<Expr*> m_args;
 
 	CallExpression()
-	    : Expr {ASTTag::CallExpression} {}
+	    : Expr {ASTExprTag::CallExpression} {}
 };
 
 struct IndexExpression : public Expr {
@@ -191,7 +190,7 @@ struct IndexExpression : public Expr {
 	Expr* m_index;
 
 	IndexExpression()
-	    : Expr {ASTTag::IndexExpression} {}
+	    : Expr {ASTExprTag::IndexExpression} {}
 };
 
 struct AccessExpression : public Expr {
@@ -199,7 +198,7 @@ struct AccessExpression : public Expr {
 	InternedString m_member;
 
 	AccessExpression()
-	    : Expr {ASTTag::AccessExpression} {}
+	    : Expr {ASTExprTag::AccessExpression} {}
 };
 
 struct TernaryExpression : public Expr {
@@ -208,7 +207,7 @@ struct TernaryExpression : public Expr {
 	Expr* m_else_expr;
 
 	TernaryExpression()
-	    : Expr {ASTTag::TernaryExpression} {}
+	    : Expr {ASTExprTag::TernaryExpression} {}
 };
 
 struct MatchExpression : public Expr {
@@ -222,7 +221,7 @@ struct MatchExpression : public Expr {
 	std::unordered_map<InternedString, CaseData> m_cases;
 
 	MatchExpression()
-	    : Expr {ASTTag::MatchExpression} {}
+	    : Expr {ASTExprTag::MatchExpression} {}
 };
 
 struct ConstructorExpression : public Expr {
@@ -230,7 +229,7 @@ struct ConstructorExpression : public Expr {
 	std::vector<Expr*> m_args;
 
 	ConstructorExpression()
-	    : Expr {ASTTag::ConstructorExpression} {}
+	    : Expr {ASTExprTag::ConstructorExpression} {}
 };
 
 struct Block;
@@ -239,7 +238,7 @@ struct SequenceExpression : public Expr {
 	Block* m_body;
 
 	SequenceExpression()
-	    : Expr {ASTTag::SequenceExpression} {}
+	    : Expr {ASTExprTag::SequenceExpression} {}
 };
 
 
@@ -289,7 +288,7 @@ struct UnionExpression : public Expr {
 	TypeFunctionId m_value;
 
 	UnionExpression()
-	    : Expr {ASTTag::UnionExpression} {}
+	    : Expr {ASTExprTag::UnionExpression} {}
 };
 
 struct StructExpression : public Expr {
@@ -298,7 +297,7 @@ struct StructExpression : public Expr {
 	TypeFunctionId m_value;
 
 	StructExpression()
-	    : Expr {ASTTag::StructExpression} {}
+	    : Expr {ASTExprTag::StructExpression} {}
 };
 
 struct TypeTerm : public Expr {
@@ -307,7 +306,7 @@ struct TypeTerm : public Expr {
 	MonoId m_value {-1};
 
 	TypeTerm()
-	    : Expr {ASTTag::TypeTerm} {}
+	    : Expr {ASTExprTag::TypeTerm} {}
 };
 
 struct BuiltinTypeFunction : public Expr {
@@ -316,7 +315,7 @@ struct BuiltinTypeFunction : public Expr {
 	Expr* m_syntax;
 
 	BuiltinTypeFunction()
-	    : Expr {ASTTag::BuiltinTypeFunction} {}
+	    : Expr {ASTExprTag::BuiltinTypeFunction} {}
 };
 
 struct Constructor : public Expr {
@@ -326,7 +325,7 @@ struct Constructor : public Expr {
 	Expr* m_syntax;
 
 	Constructor()
-	    : Expr {ASTTag::Constructor} {}
+	    : Expr {ASTExprTag::Constructor} {}
 };
 
 } // namespace AST

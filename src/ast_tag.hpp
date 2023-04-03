@@ -1,6 +1,6 @@
 #pragma once
 
-#define AST_TAGS                                                               \
+#define AST_EXPR_TAGS                                                          \
 	X(NumberLiteral)                                                           \
 	X(IntegerLiteral)                                                          \
 	X(StringLiteral)                                                           \
@@ -22,11 +22,7 @@
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
 	X(BuiltinTypeFunction)                                                     \
-	X(Constructor)                                                             \
-	/* All before this point are expressions */                                \
-                                                                               \
-	X(Stmt)                                                                    \
-	X(Program)
+	X(Constructor)
 
 #define AST_STMT_TAGS                                                          \
 	X(Block)                                                                   \
@@ -37,12 +33,12 @@
 	X(Declaration)
 
 #define X(name) #name,
-constexpr const char* ast_string[] = {AST_TAGS};
+constexpr const char* ast_expr_string[] = {AST_EXPR_TAGS};
 constexpr const char* ast_stmt_string[] = {AST_STMT_TAGS};
 #undef X
 
 #define X(name) name,
-enum class ASTTag { AST_TAGS };
+enum class ASTExprTag { AST_EXPR_TAGS };
 enum class ASTStmtTag { AST_STMT_TAGS };
 #undef X
 

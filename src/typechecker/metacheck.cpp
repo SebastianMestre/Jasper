@@ -239,11 +239,11 @@ static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
 
 void metacheck(MetaUnifier& uf, AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                         \
 		return metacheck(uf, static_cast<AST::type*>(ast));
 
 #define SCALAR(type)                                                           \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                         \
 		return metacheck_scalar(uf, static_cast<AST::type*>(ast));
 
 	switch (ast->type()) {

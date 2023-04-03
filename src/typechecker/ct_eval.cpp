@@ -180,7 +180,7 @@ static AST::Constructor* constructor_from_ast(
 	if (uf.is(meta, Tag::Mono)) {
 		constructor->m_mono = compute_mono(ast, tc);
 	} else if (uf.is_ctor(meta)) {
-		assert(ast->type() == ASTTag::AccessExpression);
+		assert(ast->type() == ASTExprTag::AccessExpression);
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
@@ -243,22 +243,22 @@ static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& all
 static TypeFunctionId get_type_function_id(AST::Expr* ast) {
 	switch (ast->type()) {
 
-	case ASTTag::StructExpression: {
+	case ASTExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
 		return struct_expression->m_value;
 	}
 
-	case ASTTag::UnionExpression: {
+	case ASTExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
 		return union_expression->m_value;
 	}
 
-	case ASTTag::Identifier: {
+	case ASTExprTag::Identifier: {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		return get_type_function_id(identifier->m_declaration->m_value);
 	}
 	
-	case ASTTag::BuiltinTypeFunction: {
+	case ASTExprTag::BuiltinTypeFunction: {
 		auto handle = static_cast<AST::BuiltinTypeFunction*>(ast);
 		return handle->m_value;
 	}
@@ -272,19 +272,19 @@ static TypeFunctionId get_type_function_id(AST::Expr* ast) {
 static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
-	case ASTTag::StructExpression: {
+	case ASTExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
 		struct_expression->m_value = tc.core().new_type_function_var();
 		break;
 	}
 
-	case ASTTag::UnionExpression: {
+	case ASTExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
 		union_expression->m_value = tc.core().new_type_function_var();
 		break;
 	}
 
-	case ASTTag::Identifier: {
+	case ASTExprTag::Identifier: {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		stub_type_function_id(identifier->m_declaration->m_value, tc);
 		break;
@@ -298,9 +298,9 @@ static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 
 static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
-	case ASTTag::TypeTerm:
+	case ASTExprTag::TypeTerm:
 		return void(static_cast<AST::TypeTerm*>(ast)->m_value = tc.new_var());
-	case ASTTag::Identifier:
+	case ASTExprTag::Identifier:
 		return void(stub_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value, tc));
 	default: assert(0);
 	}
@@ -308,9 +308,9 @@ static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 
 static MonoId get_monotype_id(AST::Expr* ast) {
 	switch (ast->type()) {
-	case ASTTag::TypeTerm:
+	case ASTExprTag::TypeTerm:
 		return static_cast<AST::TypeTerm*>(ast)->m_value;
-	case ASTTag::Identifier:
+	case ASTExprTag::Identifier:
 		return get_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value);
 	default: assert(0);
 	}
@@ -395,15 +395,15 @@ static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                     \
 		return ct_eval(static_cast<AST::type*>(ast), tc, alloc)
 
 #define RETURN(type)                                                           \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                     \
 		return static_cast<AST::type*>(ast);
 
 #define REJECT(type)                                                           \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                         \
 		assert(0);
 
 	switch (ast->type()) {
@@ -432,7 +432,7 @@ static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc
 	}
 
 	Log::fatal() << "(internal) Unhandled case in ct_eval : "
-	             << ast_string[int(ast->type())];
+	             << ast_expr_string[int(ast->type())];
 
 #undef DISPATCH
 #undef RETURN
@@ -464,13 +464,13 @@ static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& 
 
 static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 	assert(
-	    ast->type() == ASTTag::Identifier ||
-	    ast->type() == ASTTag::UnionExpression ||
-	    ast->type() == ASTTag::StructExpression);
+	    ast->type() == ASTExprTag::Identifier ||
+	    ast->type() == ASTExprTag::UnionExpression ||
+	    ast->type() == ASTExprTag::StructExpression);
 
-	if (ast->type() == ASTTag::UnionExpression) {
+	if (ast->type() == ASTExprTag::UnionExpression) {
 		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
-	} else if (ast->type() == ASTTag::StructExpression) {
+	} else if (ast->type() == ASTExprTag::StructExpression) {
 		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
 	} else {
 		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
@@ -500,8 +500,8 @@ static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
 	assert(ast);
-	assert(ast->type() == ASTTag::Identifier || ast->type() == ASTTag::TypeTerm);
-	if (ast->type() == ASTTag::Identifier) {
+	assert(ast->type() == ASTExprTag::Identifier || ast->type() == ASTExprTag::TypeTerm);
+	if (ast->type() == ASTExprTag::Identifier) {
 		return compute_mono(static_cast<AST::Identifier*>(ast), tc);
 	} else {
 		return compute_mono(static_cast<AST::TypeTerm*>(ast), tc);

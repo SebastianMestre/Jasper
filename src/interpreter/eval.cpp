@@ -386,11 +386,11 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 void eval(AST::Expr* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                         \
+	case ASTExprTag::type:                                                         \
 		return eval(static_cast<AST::type*>(ast), e)
 
 #ifdef DEBUG
-	Log::info() << "case in eval: " << typed_ast_string[(int)ast->type()];
+	Log::info() << "case in eval: " << ast_expr_string[(int)ast->type()];
 #endif
 
 	switch (ast->type()) {
@@ -419,7 +419,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "
-	             << ast_string[(int)ast->type()];
+	             << ast_expr_string[(int)ast->type()];
 
 #undef DISPATCH
 }

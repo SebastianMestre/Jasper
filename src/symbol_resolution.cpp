@@ -319,17 +319,17 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << ast_string[int(ast->type())] << "'";
+		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << ast_stmt_string[int(ast->tag())] << "'";
 	}
 
 	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
-		case ASTTag::type:                                                    \
-			return resolve(static_cast<AST::type*>(ast));
+	case ASTExprTag::type:                                                     \
+		return resolve(static_cast<AST::type*>(ast));
 
 #define DO_NOTHING(type)                                                       \
-		case ASTTag::type:                                                    \
-			return {};
+	case ASTExprTag::type:                                                     \
+		return {};
 
 		switch (ast->type()) {
 			DO_NOTHING(NumberLiteral);
@@ -356,7 +356,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::fatal() << "(internal) Unhandled case in resolve '" << ast_string[int(ast->type())] << "'";
+		Log::fatal() << "(internal) Unhandled case in resolve '" << ast_expr_string[int(ast->type())] << "'";
 	}
 
 	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {

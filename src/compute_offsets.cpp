@@ -113,7 +113,7 @@ static void process_stmt(AST::Stmt* ast, int frame_offset) {
 
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in compute_offsets/process_stmt ("
-	             << ast_string[(int)ast->type()] << ")";
+	             << ast_stmt_string[(int)ast->tag()] << ")";
 }
 
 
@@ -177,11 +177,11 @@ void compute_offsets(AST::TypeTerm* ast, int frame_offset) {
 
 void compute_offsets(AST::Expr* ast, int frame_offset) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                    \
+	case ASTExprTag::type:                                                    \
 		return compute_offsets(static_cast<AST::type*>(ast), frame_offset);
 
 #define DO_NOTHING(type)                                                       \
-	case ASTTag::type:                                                    \
+	case ASTExprTag::type:                                                    \
 		return;
 
 	switch (ast->type()) {
@@ -213,7 +213,7 @@ void compute_offsets(AST::Expr* ast, int frame_offset) {
 #undef DO_NOTHING
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in compute_offsets ("
-	             << ast_string[(int)ast->type()] << ")";
+	             << ast_expr_string[(int)ast->type()] << ")";
 }
 
 void compute_offsets_program(AST::Program* ast, int frame_offset) {
