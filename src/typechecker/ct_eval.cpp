@@ -424,8 +424,6 @@ static AST::Expr* ct_eval(AST::AST* ast, TypeChecker& tc, AST::Allocator& alloc)
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(Program);
-
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);

@@ -184,28 +184,6 @@ static void metacheck_stmt(MetaUnifier& uf, AST::Declaration* ast) {
 	process_declaration(uf, ast);
 }
 
-static void metacheck(MetaUnifier& uf, AST::Program* ast) {
-	for (auto& decl : ast->m_declarations)
-		decl.m_meta_type = uf.make_var_node();
-
-	// TODO: get the declaration components
-	auto const& comps = *uf.comp;
-	for (auto const& comp : comps) {
-
-		for (auto decl : comp)
-			process_declaration(uf, decl);
-
-		/*
-		TODO: put this code in ct_eval? maybe it's OK here?
-		for (auto decl : comp)
-			if (uf.find(decl->m_meta_type).tag == Tag::Func)
-				for (auto other : decl->m_references)
-					if (uf.find(other->m_meta_type) == Tag::Term)
-						Log::fatal("Value referenced in a type definition");
-		*/
-	}
-}
-
 // Type expressions
 
 static void metacheck(MetaUnifier& uf, AST::UnionExpression* ast) {
@@ -286,8 +264,6 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 		DISPATCH(ConstructorExpression)
 		DISPATCH(SequenceExpression)
 
-		DISPATCH(Program)
-
 		DISPATCH(UnionExpression)
 		DISPATCH(StructExpression)
 		DISPATCH(TypeTerm)
@@ -296,6 +272,28 @@ void metacheck(MetaUnifier& uf, AST::AST* ast) {
 
 #undef DISPATCH
 #undef SCALAR
+}
+
+void metacheck_program(MetaUnifier& uf, AST::Program* ast) {
+	for (auto& decl : ast->m_declarations)
+		decl.m_meta_type = uf.make_var_node();
+
+	// TODO: get the declaration components
+	auto const& comps = *uf.comp;
+	for (auto const& comp : comps) {
+
+		for (auto decl : comp)
+			process_declaration(uf, decl);
+
+		/*
+		TODO: put this code in ct_eval? maybe it's OK here?
+		for (auto decl : comp)
+			if (uf.find(decl->m_meta_type).tag == Tag::Func)
+				for (auto other : decl->m_references)
+					if (uf.find(other->m_meta_type) == Tag::Term)
+						Log::fatal("Value referenced in a type definition");
+		*/
+	}
 }
 
 } // namespace TypeChecker

@@ -5,6 +5,7 @@
 namespace AST {
 struct AST;
 struct Declaration;
+struct Program;
 }
 
 namespace Frontend {
@@ -17,5 +18,6 @@ struct Context;
  * This also includes captures in a closure.
  */
 [[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, Context const& file_context, SymbolTable&);
+[[nodiscard]] ErrorReport resolve_symbols_program(AST::Program* ast, Context const& file_context, SymbolTable&);
 
 } // namespace Frontend

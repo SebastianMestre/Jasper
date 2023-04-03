@@ -159,13 +159,6 @@ void compute_offsets(AST::SequenceExpression* ast, int frame_offset) {
 	process_stmt(ast->m_body, frame_offset);
 }
 
-void compute_offsets(AST::Program* ast, int frame_offset) {
-	for (auto& decl : ast->m_declarations) {
-		if (decl.m_value)
-			compute_offsets(decl.m_value, frame_offset);
-	}
-}
-
 void compute_offsets(AST::StructExpression* ast, int frame_offset) {
 	for (auto& type : ast->m_types)
 		compute_offsets(type, frame_offset);
@@ -209,8 +202,6 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(Program);
-
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
 		DISPATCH(TypeTerm);
@@ -223,6 +214,13 @@ void compute_offsets(AST::AST* ast, int frame_offset) {
 #undef DISPATCH
 	Log::fatal() << "(internal) Unhandled case in compute_offsets ("
 	             << ast_string[(int)ast->type()] << ")";
+}
+
+void compute_offsets_program(AST::Program* ast, int frame_offset) {
+	for (auto& decl : ast->m_declarations) {
+		if (decl.m_value)
+			compute_offsets(decl.m_value, frame_offset);
+	}
 }
 
 } // namespace TypeChecker

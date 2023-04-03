@@ -76,6 +76,10 @@ struct SymbolResolutionCommand {
 		return resolve(ast);
 	}
 
+	ErrorReport handle_program(AST::Program* ast) {
+		return resolve_program(ast);
+	}
+
 private:
 
 	Context const& file_context;
@@ -272,30 +276,6 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::Program* ast) {
-		for (auto& decl : ast->m_declarations) {
-			symbol_table.declare(&decl);
-			decl.m_surrounding_function = functions.current();
-		}
-
-		for (auto& decl : ast->m_declarations) {
-			top_level.enter(&decl);
-
-			if (decl.m_type_hint)
-				CHECK_AND_RETURN(resolve(decl.m_type_hint));
-
-			if (decl.m_value)
-				CHECK_AND_WRAP(
-					resolve(decl.m_value),
-					"While scanning top level declaration '" +
-						decl.identifier_text().str() + "'");
-
-			top_level.exit();
-		}
-
-		return {};
-	}
-
 	[[nodiscard]] ErrorReport resolve(AST::UnionExpression* ast) {
 
 		for (auto& type : ast->m_types)
@@ -369,8 +349,6 @@ private:
 			DISPATCH(ConstructorExpression);
 			DISPATCH(SequenceExpression);
 
-			DISPATCH(Program);
-
 			DISPATCH(UnionExpression);
 			DISPATCH(StructExpression);
 			DISPATCH(TypeTerm);
@@ -380,6 +358,30 @@ private:
 #undef DISPATCH
 		Log::fatal() << "(internal) Unhandled case in resolve '" << ast_string[int(ast->type())] << "'";
 	}
+
+	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {
+		for (auto& decl : ast->m_declarations) {
+			symbol_table.declare(&decl);
+			decl.m_surrounding_function = functions.current();
+		}
+
+		for (auto& decl : ast->m_declarations) {
+			top_level.enter(&decl);
+
+			if (decl.m_type_hint)
+				CHECK_AND_RETURN(resolve(decl.m_type_hint));
+
+			if (decl.m_value)
+				CHECK_AND_WRAP(
+					resolve(decl.m_value),
+					"While scanning top level declaration '" +
+						decl.identifier_text().str() + "'");
+
+			top_level.exit();
+		}
+
+		return {};
+	}
 };
 
 
@@ -388,6 +390,11 @@ private:
 [[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, Context const& file_context, SymbolTable& env) {
 	auto command = SymbolResolutionCommand {file_context, env};
 	return command.handle(ast);
+}
+
+[[nodiscard]] ErrorReport resolve_symbols_program(AST::Program* ast, Context const& file_context, SymbolTable& env) {
+	auto command = SymbolResolutionCommand {file_context, env};
+	return command.handle_program(ast);
 }
 
 } // namespace Frontend
