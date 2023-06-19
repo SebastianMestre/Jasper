@@ -1,7 +1,8 @@
 #pragma once
 
 namespace AST {
-struct AST;
+struct Expr;
+struct Program;
 }
 
 namespace TypeChecker {
@@ -17,5 +18,6 @@ struct TypeChecker;
  * PRECONDITION: match_identifiers has already been called
  * the given ast.
  */
-void typecheck(AST::AST* ast, TypeChecker&);
+// void typecheck(AST::Expr* ast, TypeChecker&);
+void typecheck_program(AST::Program* ast, TypeChecker&);
 } // namespace TypeChecker

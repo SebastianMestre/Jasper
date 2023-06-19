@@ -16,23 +16,13 @@
 
 namespace Interpreter {
 
-static void eval_stmt(AST::AST* ast, Interpreter& e) {
-	eval(ast, e);
-	if (is_expression(ast))
-		e.m_stack.pop_unsafe();
-}
+using AST::StmtTag;
+using AST::ExprTag;
+ 
+static void exec(AST::Stmt* ast, Interpreter& e);
+static void exec(AST::Declaration* ast, Interpreter& e);
 
-void eval(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(Value {nullptr});
-	e.m_stack.push(ref.as_value());
-	if (ast->m_value) {
-		eval(ast->m_value, e);
-		auto value = e.m_stack.pop_unsafe();
-		ref->m_value = value_of(value);
-	}
-};
-
-void eval(AST::Program* ast, Interpreter& e) {
+void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
@@ -97,23 +87,6 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	} else {
 		e.m_stack.push(Value{e.global_access(ast->text())});
 	}
-};
-
-void eval(AST::Block* ast, Interpreter& e) {
-	e.m_stack.start_stack_region();
-	for (auto stmt : ast->m_body) {
-		eval_stmt(stmt, e);
-		if (e.m_returning)
-			break;
-	}
-	e.m_stack.end_stack_region();
-};
-
-void eval(AST::ReturnStatement* ast, Interpreter& e) {
-	// TODO: proper error handling
-	eval(ast->m_value, e);
-	auto value = e.m_stack.pop_unsafe();
-	e.save_return_value(value_of(value));
 };
 
 auto is_callable_type(ValueTag t) -> bool {
@@ -303,25 +276,52 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::SequenceExpression* ast, Interpreter& e) {
-	eval(ast->m_body, e);
+	exec(ast->m_body, e);
 	if (!e.m_returning)
 		e.save_return_value(Value {});
 	e.m_stack.push(e.fetch_return_value());
 }
 
-void eval(AST::IfElseStatement* ast, Interpreter& e) {
+static void exec(AST::Declaration* ast, Interpreter& e) {
+	auto ref = e.new_reference(Value {nullptr});
+	e.m_stack.push(ref.as_value());
+	if (ast->m_value) {
+		eval(ast->m_value, e);
+		auto value = e.m_stack.pop_unsafe();
+		ref->m_value = value_of(value);
+	}
+};
+
+static void exec(AST::Block* ast, Interpreter& e) {
+	e.m_stack.start_stack_region();
+	for (auto stmt : ast->m_body) {
+		exec(stmt, e);
+		if (e.m_returning)
+			break;
+	}
+	e.m_stack.end_stack_region();
+};
+
+static void exec(AST::ReturnStatement* ast, Interpreter& e) {
+	// TODO: proper error handling
+	eval(ast->m_value, e);
+	auto value = e.m_stack.pop_unsafe();
+	e.save_return_value(value_of(value));
+};
+
+static void exec(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
 	bool condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
 
 	if (condition)
-		eval_stmt(ast->m_body, e);
+		exec(ast->m_body, e);
 	else if (ast->m_else_body)
-		eval_stmt(ast->m_else_body, e);
+		exec(ast->m_else_body, e);
 };
 
-void eval(AST::WhileStatement* ast, Interpreter& e) {
+static void exec(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
 		auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
@@ -329,12 +329,18 @@ void eval(AST::WhileStatement* ast, Interpreter& e) {
 		if (!condition)
 			break;
 
-		eval_stmt(ast->m_body, e);
+		exec(ast->m_body, e);
 
 		if (e.m_returning)
 			break;
 	}
 };
+
+static void exec(AST::ExpressionStatement* ast, Interpreter& e) {
+	eval(ast->m_expression, e);
+	e.m_stack.pop_unsafe();
+}
+
 
 void eval(AST::StructExpression* ast, Interpreter& e) {
 	e.push_record_constructor(ast->m_fields);
@@ -362,14 +368,32 @@ void eval(AST::TypeTerm* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 }
 
-void eval(AST::AST* ast, Interpreter& e) {
+static void exec(AST::Stmt* ast, Interpreter& e) {
+#define DISPATCH(type)                                                         \
+	case StmtTag::type:                                                        \
+		return exec(static_cast<AST::type*>(ast), e)
+
+	switch (ast->tag()) {
+		DISPATCH(Declaration);
+		DISPATCH(Block);
+		DISPATCH(ReturnStatement);
+		DISPATCH(IfElseStatement);
+		DISPATCH(WhileStatement);
+		DISPATCH(ExpressionStatement);
+	}
+
+	assert(false);
+#undef DISPATCH
+}
+
+void eval(AST::Expr* ast, Interpreter& e) {
 
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                    \
+	case ExprTag::type:                                                        \
 		return eval(static_cast<AST::type*>(ast), e)
 
 #ifdef DEBUG
-	Log::info() << "case in eval: " << typed_ast_string[(int)ast->type()];
+	Log::info() << "case in eval: " << ast_expr_string[(int)ast->type()];
 #endif
 
 	switch (ast->type()) {
@@ -390,14 +414,6 @@ void eval(AST::AST* ast, Interpreter& e) {
 		DISPATCH(ConstructorExpression);
 		DISPATCH(SequenceExpression);
 
-		DISPATCH(Program);
-		DISPATCH(Declaration);
-
-		DISPATCH(Block);
-		DISPATCH(ReturnStatement);
-		DISPATCH(IfElseStatement);
-		DISPATCH(WhileStatement);
-
 		DISPATCH(TypeTerm);
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
@@ -406,7 +422,9 @@ void eval(AST::AST* ast, Interpreter& e) {
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "
-	             << ast_string[(int)ast->type()];
+	             << AST::expr_string[(int)ast->type()];
+
+#undef DISPATCH
 }
 
 } // namespace Interpreter

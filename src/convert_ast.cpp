@@ -7,7 +7,7 @@
 
 namespace AST {
 
-static AST* convert_stmt(CST::Stmt* cst, Allocator& alloc);
+static Stmt* convert_stmt(CST::Stmt* cst, Allocator& alloc);
 
 static std::vector<Declaration> convert_args(CST::FuncParameters& cst_args, FunctionLiteral* surrounding_function, Allocator& alloc);
 static SequenceExpression* convert_and_wrap_in_seq(CST::Block* cst, Allocator& alloc);
@@ -301,7 +301,7 @@ static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 
 	auto body = convert_stmt(cst->m_body, alloc);
 	auto block_body = [&] {
-		if (body->type() == ASTTag::Block)
+		if (body->tag() == StmtTag::Block)
 			return static_cast<Block*>(body);
 		auto inner_block = alloc.make<Block>();
 		inner_block->m_body.push_back(body);
@@ -309,7 +309,7 @@ static Block* convert(CST::ForStatement* cst, Allocator& alloc) {
 	}();
 
 	auto action = convert_expr(cst->m_action, alloc);
-	block_body->m_body.push_back(action);
+	block_body->m_body.push_back(alloc.make<ExpressionStatement>(action));
 
 	auto while_ast = alloc.make<WhileStatement>();
 	while_ast->m_body = block_body;
@@ -334,8 +334,10 @@ static WhileStatement* convert(CST::WhileStatement* cst, Allocator& alloc) {
 	return ast;
 }
 
-static AST* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
-	return convert_expr(cst->m_expression, alloc);
+static ExpressionStatement* convert(CST::ExpressionStatement* cst, Allocator& alloc) {
+	auto expr = convert_expr(cst->m_expression, alloc);
+	return alloc.make<ExpressionStatement>(expr);
+	
 }
 
 // Types
@@ -454,7 +456,7 @@ Expr* convert_expr(CST::Expr* cst, Allocator& alloc) {
 #undef DISPATCH
 }
 
-static AST* convert_stmt(CST::Stmt* cst, Allocator& alloc) {
+static Stmt* convert_stmt(CST::Stmt* cst, Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case CSTTag::type:                                                         \
 		return convert(static_cast<CST::type*>(cst), alloc)

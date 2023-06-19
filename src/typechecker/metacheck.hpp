@@ -1,14 +1,15 @@
 #pragma once
 
 namespace AST {
-struct AST;
+struct Expr;
+struct Program;
 }
 
 struct MetaUnifier;
 
 namespace TypeChecker {
 
-
-void metacheck(MetaUnifier&, AST::AST*);
+void metacheck(MetaUnifier&, AST::Expr*);
+void metacheck_program(MetaUnifier& uf, AST::Program* ast);
 
 }

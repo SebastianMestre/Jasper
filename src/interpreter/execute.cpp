@@ -53,7 +53,7 @@ ExitStatus execute(
 		for (auto& bucket : tc.m_builtin_declarations.m_buckets)
 			for (auto& decl : bucket)
 				context.declare(&decl);
-		auto err = Frontend::resolve_symbols(ast, parse_result.file_context(), context);
+		auto err = Frontend::resolve_symbols_program(ast, parse_result.file_context(), context);
 		if (!err.ok()) {
 			err.print();
 			return ExitStatus::StaticError;
@@ -64,18 +64,18 @@ ExitStatus execute(
 
 	if (settings.typecheck) {
 		tc.core().m_meta_core.comp = &tc.declaration_order();
-		TypeChecker::metacheck(tc.core().m_meta_core, ast);
+		TypeChecker::metacheck_program(tc.core().m_meta_core, ast);
 		tc.core().m_meta_core.solve();
 		TypeChecker::reify_types(ast, tc, ast_allocator);
-		TypeChecker::typecheck(ast, tc);
+		TypeChecker::typecheck_program(ast, tc);
 	}
 
-	TypeChecker::compute_offsets(ast, 0);
+	TypeChecker::compute_offsets_program(ast, 0);
 
 	GC gc;
 	Interpreter env = {&gc, &tc.declaration_order()};
 	declare_native_functions(env);
-	eval(ast, env);
+	run(ast, env);
 
 	return runner(env, context);
 }

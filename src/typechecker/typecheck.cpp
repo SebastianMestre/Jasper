@@ -11,6 +11,9 @@
 
 namespace TypeChecker {
 
+using AST::ExprTag;
+using AST::StmtTag;
+
 struct TypecheckHelper {
 	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
@@ -123,22 +126,15 @@ PolyId TypecheckHelper::generalize(MonoId mono) {
 	return core().new_poly(base, std::move(new_vars));
 }
 
-void typecheck(AST::AST* ast, TypecheckHelper& tc);
+void typecheck(AST::Expr* ast, TypecheckHelper& tc);
 
-void typecheck_program(AST::AST* ast, TypecheckHelper& tc);
-
-static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc);
-
-void typecheck(AST::AST* ast, TypeChecker& tc) {
-	TypecheckHelper f = {tc};
-	typecheck_program(ast, f);
-}
+static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc);
 
 static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
 static MonoId get_monotype_id(AST::Expr* ast) {
 	switch(ast->type()) {
-	case ASTTag::TypeTerm:
+	case ExprTag::TypeTerm:
 		return static_cast<AST::TypeTerm*>(ast)->m_value;
 	default: assert(0);
 	}
@@ -299,7 +295,7 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_constructor, tc);
 
 	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == ASTTag::Constructor);
+	assert(constructor->type() == ExprTag::Constructor);
 
 	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
 
@@ -327,10 +323,10 @@ void typecheck(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
 // this function implements 'the value restriction', a technique
 // that enables type inference on mutable datatypes
-static bool is_value_expression(AST::AST* ast) {
+static bool is_value_expression(AST::Expr* ast) {
 	switch (ast->type()) {
-	case ASTTag::FunctionLiteral:
-	case ASTTag::Identifier:
+	case ExprTag::FunctionLiteral:
+	case ExprTag::Identifier:
 		return true;
 	default:
 		return false;
@@ -411,6 +407,11 @@ static void typecheck_stmt(AST::ReturnStatement* ast, TypecheckHelper& tc) {
 	tc.unify(seq_expr->m_value_type, mono);
 }
 
+static void typecheck_stmt(AST::ExpressionStatement* ast, TypecheckHelper& tc) {
+	typecheck(ast->m_expression, tc);
+}
+
+
 static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	// put a dummy type in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
@@ -418,36 +419,36 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	generalize(ast, tc);
 }
 
-static void typecheck_stmt(AST::AST* ast, TypecheckHelper& tc) {
+static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                    \
+	case StmtTag::type:                                                        \
 		return typecheck_stmt(static_cast<AST::type*>(ast), tc);
 
 	// TODO: Compound literals
-	switch (ast->type()) {
+	switch (ast->tag()) {
 		DISPATCH(Declaration);
 
 		DISPATCH(Block);
 		DISPATCH(WhileStatement);
 		DISPATCH(IfElseStatement);
 		DISPATCH(ReturnStatement);
+		DISPATCH(ExpressionStatement);
 
-		default: return typecheck(ast, tc);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in typecheck: "
-	             << ast_string[(int)ast->type()];
+	Log::fatal() << "(internal) CST type not handled in typecheck_stmt: "
+	             << AST::stmt_string[(int)ast->tag()];
 
 #undef DISPATCH
 }
 
-void typecheck(AST::AST* ast, TypecheckHelper& tc) {
+void typecheck(AST::Expr* ast, TypecheckHelper& tc) {
 #define DISPATCH(type)                                                         \
-	case ASTTag::type:                                                    \
+	case ExprTag::type:                                                        \
 		return typecheck(static_cast<AST::type*>(ast), tc);
 
 #define IGNORE(type)                                                           \
-	case ASTTag::type:                                                    \
+	case ExprTag::type:                                                        \
 		return;
 
 	// TODO: Compound literals
@@ -474,18 +475,18 @@ void typecheck(AST::AST* ast, TypecheckHelper& tc) {
 	}
 
 	Log::fatal() << "(internal) CST type not handled in typecheck: "
-	             << ast_string[(int)ast->type()];
+	             << AST::expr_string[(int)ast->type()];
 
 #undef DISPATCH
 #undef IGNORE
 }
 
-void typecheck_program(AST::AST* ast, TypecheckHelper& tc) {
+void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
+	TypecheckHelper tc = {tc_};
+
 	// NOTE: we don't actually do anything with `ast`: what we really care about
 	// has already been precomputed and stored in `tc`. This is not the most
 	// friendliest API, so maybe we could look into changing it?
-
-	assert(ast->type() == ASTTag::Program);
 
 	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {

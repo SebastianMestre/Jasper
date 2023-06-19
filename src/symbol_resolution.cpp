@@ -16,6 +16,9 @@
 
 namespace Frontend {
 
+using AST::ExprTag;
+using AST::StmtTag;
+
 struct TopLevelDeclTracker {
 	AST::Declaration* current() {
 		return m_current_decl;
@@ -72,8 +75,12 @@ struct SymbolResolutionCommand {
 		: file_context {file_context}
 		, symbol_table {symbol_table} {}
 
-	ErrorReport handle(AST::AST* ast) {
+	ErrorReport handle(AST::Expr* ast) {
 		return resolve(ast);
+	}
+
+	ErrorReport handle_program(AST::Program* ast) {
+		return resolve_program(ast);
 	}
 
 private:
@@ -83,24 +90,6 @@ private:
 	TopLevelDeclTracker top_level;
 	PtrStack<AST::FunctionLiteral> functions;
 	PtrStack<AST::SequenceExpression> seq_exprs;
-
-	[[nodiscard]] ErrorReport resolve(AST::Declaration* ast) {
-
-		ast->m_surrounding_function = functions.current();
-		ast->m_surrounding_seq_expr = seq_exprs.current();
-		symbol_table.declare(ast);
-
-		if (ast->m_type_hint)
-			CHECK_AND_RETURN(resolve(ast->m_type_hint));
-
-		if (ast->m_value) {
-			CHECK_AND_WRAP(
-			    resolve(ast->m_value),
-			    "While scanning declaration '" + ast->identifier_text().str() + "'");
-		}
-
-		return {};
-	}
 
 	[[nodiscard]] ErrorReport resolve(AST::Identifier* ast) {
 
@@ -143,23 +132,6 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::Block* ast) {
-		symbol_table.new_nested_scope();
-		for (auto& child : ast->m_body)
-			CHECK_AND_RETURN(resolve(child));
-		symbol_table.end_scope();
-		return {};
-	}
-
-	[[nodiscard]] ErrorReport resolve(AST::IfElseStatement* ast) {
-		CHECK_AND_RETURN(resolve(ast->m_condition));
-		CHECK_AND_RETURN(resolve(ast->m_body));
-
-		if (ast->m_else_body)
-			CHECK_AND_RETURN(resolve(ast->m_else_body));
-		return {};
-	}
-
 	[[nodiscard]] ErrorReport resolve(AST::CallExpression* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_callee));
 		for (auto& arg : ast->m_args)
@@ -196,20 +168,62 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::WhileStatement* ast) {
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Declaration* ast) {
+
+		ast->m_surrounding_function = functions.current();
+		ast->m_surrounding_seq_expr = seq_exprs.current();
+		symbol_table.declare(ast);
+
+		if (ast->m_type_hint)
+			CHECK_AND_RETURN(resolve(ast->m_type_hint));
+
+		if (ast->m_value) {
+			CHECK_AND_WRAP(
+			    resolve(ast->m_value),
+			    "While scanning declaration '" + ast->identifier_text().str() + "'");
+		}
+
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Block* ast) {
+		symbol_table.new_nested_scope();
+		for (auto& child : ast->m_body)
+			CHECK_AND_RETURN(resolve_stmt(child));
+		symbol_table.end_scope();
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::IfElseStatement* ast) {
+		CHECK_AND_RETURN(resolve(ast->m_condition));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
+
+		if (ast->m_else_body)
+			CHECK_AND_RETURN(resolve_stmt(ast->m_else_body));
+		return {};
+	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::WhileStatement* ast) {
 		symbol_table.new_nested_scope();
 
 		CHECK_AND_RETURN(resolve(ast->m_condition));
-		CHECK_AND_RETURN(resolve(ast->m_body));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
 
 		symbol_table.end_scope();
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::ReturnStatement* ast) {
+	[[nodiscard]] ErrorReport resolve_stmt(AST::ReturnStatement* ast) {
 		ast->m_surrounding_seq_expr = seq_exprs.current();
 		return resolve(ast->m_value);
 	}
+
+	[[nodiscard]] ErrorReport resolve_stmt(AST::ExpressionStatement* ast) {
+		CHECK_AND_RETURN(resolve(ast->m_expression));
+		return {};
+	}
+
 
 	[[nodiscard]] ErrorReport resolve(AST::IndexExpression* ast) {
 		CHECK_AND_RETURN(resolve(ast->m_callee));
@@ -240,7 +254,7 @@ private:
 
 			symbol_table.new_nested_scope();
 
-			CHECK_AND_RETURN(resolve(&case_data.m_declaration));
+			CHECK_AND_RETURN(resolve_stmt(&case_data.m_declaration));
 			CHECK_AND_RETURN(resolve(case_data.m_expression));
 
 			symbol_table.end_scope();
@@ -260,32 +274,8 @@ private:
 
 	[[nodiscard]] ErrorReport resolve(AST::SequenceExpression* ast) {
 		seq_exprs.enter(ast);
-		CHECK_AND_RETURN(resolve(ast->m_body));
+		CHECK_AND_RETURN(resolve_stmt(ast->m_body));
 		seq_exprs.exit();
-		return {};
-	}
-
-	[[nodiscard]] ErrorReport resolve(AST::Program* ast) {
-		for (auto& decl : ast->m_declarations) {
-			symbol_table.declare(&decl);
-			decl.m_surrounding_function = functions.current();
-		}
-
-		for (auto& decl : ast->m_declarations) {
-			top_level.enter(&decl);
-
-			if (decl.m_type_hint)
-				CHECK_AND_RETURN(resolve(decl.m_type_hint));
-
-			if (decl.m_value)
-				CHECK_AND_WRAP(
-					resolve(decl.m_value),
-					"While scanning top level declaration '" +
-						decl.identifier_text().str() + "'");
-
-			top_level.exit();
-		}
-
 		return {};
 	}
 
@@ -312,14 +302,37 @@ private:
 		return {};
 	}
 
-	[[nodiscard]] ErrorReport resolve(AST::AST* ast) {
+	[[nodiscard]] ErrorReport resolve_stmt(AST::Stmt* ast) {
 #define DISPATCH(type)                                                         \
-		case ASTTag::type:                                                    \
-			return resolve(static_cast<AST::type*>(ast));
+	case StmtTag::type:                                                        \
+		return resolve_stmt(static_cast<AST::type*>(ast));
 
 #define DO_NOTHING(type)                                                       \
-		case ASTTag::type:                                                    \
-			return {};
+	case StmtTag::type:                                                        \
+		return {};
+
+		switch (ast->tag()) {
+			DISPATCH(Block);
+			DISPATCH(WhileStatement);
+			DISPATCH(IfElseStatement);
+			DISPATCH(ReturnStatement);
+			DISPATCH(ExpressionStatement);
+			DISPATCH(Declaration);
+		}
+
+#undef DO_NOTHING
+#undef DISPATCH
+		Log::fatal() << "(internal) Unhandled case in resolve_stmt '" << AST::stmt_string[int(ast->tag())] << "'";
+	}
+
+	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
+#define DISPATCH(type)                                                         \
+	case ExprTag::type:                                                        \
+		return resolve(static_cast<AST::type*>(ast));
+
+#define DO_NOTHING(type)                                                       \
+	case ExprTag::type:                                                        \
+		return {};
 
 		switch (ast->type()) {
 			DO_NOTHING(NumberLiteral);
@@ -339,14 +352,6 @@ private:
 			DISPATCH(ConstructorExpression);
 			DISPATCH(SequenceExpression);
 
-			DISPATCH(Block);
-			DISPATCH(WhileStatement);
-			DISPATCH(IfElseStatement);
-			DISPATCH(ReturnStatement);
-
-			DISPATCH(Declaration);
-			DISPATCH(Program);
-
 			DISPATCH(UnionExpression);
 			DISPATCH(StructExpression);
 			DISPATCH(TypeTerm);
@@ -354,16 +359,45 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::fatal() << "(internal) Unhandled case in resolve '" << ast_string[int(ast->type())] << "'";
+		Log::fatal() << "(internal) Unhandled case in resolve '" << AST::expr_string[int(ast->type())] << "'";
+	}
+
+	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {
+		for (auto& decl : ast->m_declarations) {
+			symbol_table.declare(&decl);
+			decl.m_surrounding_function = functions.current();
+		}
+
+		for (auto& decl : ast->m_declarations) {
+			top_level.enter(&decl);
+
+			if (decl.m_type_hint)
+				CHECK_AND_RETURN(resolve(decl.m_type_hint));
+
+			if (decl.m_value)
+				CHECK_AND_WRAP(
+					resolve(decl.m_value),
+					"While scanning top level declaration '" +
+						decl.identifier_text().str() + "'");
+
+			top_level.exit();
+		}
+
+		return {};
 	}
 };
 
 
 #undef CHECK_AND_RETURN
 
-[[nodiscard]] ErrorReport resolve_symbols(AST::AST* ast, Context const& file_context, SymbolTable& env) {
+[[nodiscard]] ErrorReport resolve_symbols(AST::Expr* ast, Context const& file_context, SymbolTable& env) {
 	auto command = SymbolResolutionCommand {file_context, env};
 	return command.handle(ast);
+}
+
+[[nodiscard]] ErrorReport resolve_symbols_program(AST::Program* ast, Context const& file_context, SymbolTable& env) {
+	auto command = SymbolResolutionCommand {file_context, env};
+	return command.handle_program(ast);
 }
 
 } // namespace Frontend
