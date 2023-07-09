@@ -208,6 +208,7 @@ void typecheck(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 		arg.m_value_type = tc.new_var();
 		process_type_hint(&arg, tc);
 		arg_types.push_back(arg.m_value_type);
+		tc.declare(&arg);
 	}
 
 	typecheck(ast->m_body, tc);
