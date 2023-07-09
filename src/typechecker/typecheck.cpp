@@ -2,7 +2,7 @@
 
 #include "../ast.hpp"
 #include "../log/log.hpp"
-#include "compile_time_environment.hpp"
+#include "../symbol_table.hpp"
 #include "typechecker.hpp"
 #include "typechecker_types.hpp"
 
@@ -18,7 +18,6 @@ struct TypecheckHelper {
 	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
 
-	void bind_free_vars(MonoId mono);
 	PolyId generalize(MonoId mono);
 
 	MonoId mono_int() { return tc.mono_int(); }
@@ -30,11 +29,11 @@ struct TypecheckHelper {
 	TypeSystemCore& core() { return tc.core(); }
 	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return tc.declaration_order(); }
 
-	MonoId new_hidden_var() { return tc.new_hidden_var(); }
 	MonoId new_var() { return tc.new_var(); }
 
-	void new_nested_scope() { tc.m_env.new_nested_scope(); }
-	void end_scope() { tc.m_env.end_scope(); }
+	void declare(AST::Declaration* decl) { symbol_table.declare(decl); }
+	void new_nested_scope() { symbol_table.new_nested_scope(); }
+	void end_scope() { symbol_table.end_scope(); }
 
 	void unify(MonoId i, MonoId j) { core().ll_unify(i, j); }
 
@@ -75,22 +74,24 @@ private:
 		return core().m_meta_core.eval(i);
 	}
 
-	Frontend::CompileTimeEnvironment& env() { return tc.env(); }
-
+	Frontend::SymbolTable symbol_table;
 	TypeChecker& tc;
 
 	bool is_bound_to_env(MonoId var) {
 
-		for (auto& scope : env().scopes())
-			for (auto bound_type : scope.m_type_vars)
-				if (free_vars_of(bound_type).count(var) != 0)
-					return true;
+		for (auto& kv : symbol_table.bindings()) {
+			auto decl = kv.second;
+
+			// TODO: it's probably not ok to skip polymorphic declarations
+			// but that's how it worked before, so not changing it right now.
+			if (decl->m_is_polymorphic) continue;
+
+			auto bound_type = decl->m_value_type;
+			if (free_vars_of(bound_type).count(var) != 0)
+				return true;
+		}
 
 		return false;
-	}
-
-	void bind_to_env(MonoId var) {
-		env().bind_to_current_scope(var);
 	}
 
 	std::unordered_set<MonoId> free_vars_of(MonoId mono) {
@@ -101,21 +102,14 @@ private:
 };
 
 
-void TypecheckHelper::bind_free_vars(MonoId mono) {
-	for (MonoId var : free_vars_of(mono)) {
-		if (!is_bound_to_env(var))
-			bind_to_env(var);
-	}
-}
-
-// qualifies all free variables in the given monotype
+// quantifies all free variables in the given monotype
 PolyId TypecheckHelper::generalize(MonoId mono) {
 
 	std::vector<MonoId> new_vars;
 	std::unordered_map<MonoId, MonoId> mapping;
 	for (MonoId var : free_vars_of(mono)) {
 		if (!is_bound_to_env(var)) {
-			auto fresh_var = new_hidden_var();
+			auto fresh_var = new_var();
 			new_vars.push_back(fresh_var);
 			mapping[var] = fresh_var;
 		}
@@ -162,7 +156,7 @@ void typecheck(AST::NullLiteral* ast, TypecheckHelper& tc) {
 }
 
 void typecheck(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
-	auto element_type = tc.new_hidden_var();
+	auto element_type = tc.new_var();
 	for (auto& element : ast->m_elements) {
 		typecheck(element, tc);
 		tc.unify(element_type, element->m_value_type);
@@ -194,7 +188,7 @@ void typecheck(AST::CallExpression* ast, TypecheckHelper& tc) {
 		arg_types.push_back(arg->m_value_type);
 	}
 
-	MonoId result_type = tc.new_hidden_var();
+	MonoId result_type = tc.new_var();
 	MonoId expected_callee_type = tc.make_function_type(std::move(arg_types), result_type);
 	MonoId callee_type = ast->m_callee->m_value_type;
 	tc.unify(callee_type, expected_callee_type);
@@ -227,7 +221,7 @@ void typecheck(AST::IndexExpression* ast, TypecheckHelper& tc) {
 	typecheck(ast->m_callee, tc);
 	typecheck(ast->m_index, tc);
 
-	auto var = tc.new_hidden_var();
+	auto var = tc.new_var();
 	auto arr = tc.new_term(BuiltinType::Array, {var});
 	tc.unify(arr, ast->m_callee->m_value_type);
 
@@ -343,8 +337,10 @@ void generalize(AST::Declaration* ast, TypecheckHelper& tc) {
 		ast->m_decl_type = tc.generalize(ast->m_value_type);
 	} else {
 		// if it's not a value expression, its free vars get bound
-		// to the environment instead of being generalized
-		tc.bind_free_vars(ast->m_value_type);
+		// to the environment instead of being generalized.
+		//
+		// The way variables get bound to the environment is implicitly, simply by the
+		// fact that the declaration is bound to the symbol table.
 	}
 }
 
@@ -368,7 +364,7 @@ void process_contents(AST::Declaration* ast, TypecheckHelper& tc) {
 }
 
 static void typecheck(AST::SequenceExpression* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.new_hidden_var();
+	ast->m_value_type = tc.new_var();
 	typecheck_stmt(ast->m_body, tc);
 }
 
@@ -417,6 +413,7 @@ static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
 	generalize(ast, tc);
+	tc.declare(ast);
 }
 
 static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc) {
@@ -489,6 +486,7 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 	// friendliest API, so maybe we could look into changing it?
 
 	auto const& comps = tc.declaration_order();
+
 	for (auto const& decls : comps) {
 
 		bool type_in_component = false;
@@ -513,6 +511,7 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 		// set up some dummy types on every decl
 		for (auto decl : decls) {
 			decl->m_value_type = tc.new_var();
+			tc.declare(decl);
 		}
 
 		for (auto decl : decls) {
