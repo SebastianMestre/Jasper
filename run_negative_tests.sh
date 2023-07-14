@@ -1,6 +1,7 @@
 
 for t in tests/should_fail/*.jp
 do
+	echo "Running $t"
 	./bin/jasperi $t 2> /dev/null > /dev/null
 	if [ $? -eq 0 ]
 	then
