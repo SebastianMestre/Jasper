@@ -1,0 +1,13 @@
+
+a := array {};
+
+fn f() {
+	return a;
+};
+
+fn __invoke() {
+
+	array_append(f(), 10);
+	array_append(f(), "a");
+	print(f());
+};

@@ -518,7 +518,8 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 
 		tc.new_nested_scope();
 
-		// extend the environment with fresh type variables
+		// temporarily extend the environment with fresh type
+		// variables
 		for (auto decl : component) {
 			decl->m_value_type = tc.new_var();
 			tc.declare(decl);
@@ -535,6 +536,11 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 		// identified as polymorphic in the next rec-block
 		for (auto decl : component) {
 			generalize(decl, tc);
+		}
+
+		// add generalized declarations to the global scope
+		for (auto decl : component) {
+			tc.declare(decl);
 		}
 
 	}
