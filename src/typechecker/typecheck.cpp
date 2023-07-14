@@ -105,19 +105,14 @@ private:
 // quantifies all free variables in the given monotype
 PolyId TypecheckHelper::generalize(MonoId mono) {
 
-	std::vector<MonoId> new_vars;
-	std::unordered_map<MonoId, MonoId> mapping;
+	std::vector<MonoId> vars;
 	for (MonoId var : free_vars_of(mono)) {
 		if (!is_bound_to_env(var)) {
-			auto fresh_var = new_var();
-			new_vars.push_back(fresh_var);
-			mapping[var] = fresh_var;
+			vars.push_back(var);
 		}
 	}
 
-	MonoId base = core().inst_impl(mono, mapping);
-
-	return core().new_poly(base, std::move(new_vars));
+	return core().new_poly(mono, std::move(vars));
 }
 
 static void infer(AST::Expr* ast, TypecheckHelper& tc);
