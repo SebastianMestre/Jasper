@@ -483,44 +483,60 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 
 	auto const& comps = tc.declaration_order();
 
-	for (auto const& decls : comps) {
+	std::vector<std::vector<AST::Declaration*>> value_components;
+
+	for (auto const& component : comps) {
 
 		bool type_in_component = false;
 		bool non_type_in_component = false;
-		for (auto decl : decls) {
+		for (auto decl : component) {
 
-			if (tc.is_type(decl->m_meta_type))
+			if (tc.is_type(decl->m_meta_type)) {
 				type_in_component = true;
-			if (tc.is_term(decl->m_meta_type))
+			}
+
+			if (tc.is_term(decl->m_meta_type)) {
 				non_type_in_component = true;
+			}
 		}
 
-		// we don't deal with types and non-types in the same component.
-		if (type_in_component && non_type_in_component)
+		// We don't deal with types and non-types in the same component.
+		//
+		// TODO: maybe we should be even more strict and reject
+		//       non-values in components of size > 1.
+		if (type_in_component && non_type_in_component) {
 			Log::fatal() << "found reference cycle with types and values";
+		}
 
-		if (type_in_component)
-			continue;
+		if (!type_in_component) {
+			value_components.push_back(component);
+		}
+	}
+
+	// This loop implements the [Rec] rule
+	for (auto const& component : value_components) {
 
 		tc.new_nested_scope();
 
-		// set up some dummy types on every decl
-		for (auto decl : decls) {
+		// extend the environment with fresh type variables
+		for (auto decl : component) {
 			decl->m_value_type = tc.new_var();
 			tc.declare(decl);
 		}
 
-		for (auto decl : decls) {
+		// infer types for each declaration
+		for (auto decl : component) {
 			process_contents(decl, tc);
 		}
 
 		tc.end_scope();
 
-		// generalize all the decl types, so that they are
+		// generalize all the declarations, so that they can be
 		// identified as polymorphic in the next rec-block
-		for (auto decl : decls) {
+		for (auto decl : component) {
 			generalize(decl, tc);
 		}
+
 	}
 }
 
