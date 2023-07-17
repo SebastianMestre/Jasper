@@ -30,7 +30,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	// HACK: this is an ugly hack. bear with me...
 
 	{
-		auto var_id = new_hidden_var();
+		auto var_id = new_var();
 
 		{
 			auto poly = core().new_poly(var_id, {var_id});
@@ -165,14 +165,8 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	declare_builtin_typefunc("array", BuiltinType::Array);
 }
 
-MonoId TypeChecker::new_hidden_var() {
-	return core().ll_new_var();
-}
-
 MonoId TypeChecker::new_var() {
-	MonoId result = core().ll_new_var();
-	env().current_scope().m_type_vars.insert(result);
-	return result;
+	return core().ll_new_var();
 }
 
 MetaTypeId TypeChecker::new_meta_var() {

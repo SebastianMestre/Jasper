@@ -12,7 +12,7 @@ struct TypeChecker;
 /*
  * Runs type deduction and checking on the given ast.
  *
- * Implements a variant of the Hindley-Milbner type
+ * Implements a variant of the Hindley-Milner type
  * inference algorithm.
  *
  * PRECONDITION: match_identifiers has already been called

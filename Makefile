@@ -18,7 +18,6 @@ COMMON_TARGETS := \
 	log/basic_stream \
 	log/log \
 	log/stream \
-	typechecker/compile_time_environment \
 	typechecker/ct_eval \
 	typechecker/metacheck \
 	typechecker/meta_unifier \

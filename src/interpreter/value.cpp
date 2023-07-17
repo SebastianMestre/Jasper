@@ -80,6 +80,10 @@ RecordConstructor::RecordConstructor(std::vector<InternedString> keys)
 
 // = === === print === === = //
 
+
+void print(Value h, int d);
+static void print(GcCell* v, int d);
+
 void print_spaces(int n) {
 	for (int i = 0; i < n; ++i)
 		std::cout << ' ';

@@ -19,8 +19,12 @@ struct SymbolTable {
 
 	void new_nested_scope();
 	void end_scope();
-private:
+
 	using SymbolMap = std::unordered_map<InternedString, AST::Declaration*>;
+
+	SymbolMap const& bindings() const { return m_bindings; }
+
+private:
 
 	SymbolMap& latest_shadowed_scope();
 	SymbolMap m_bindings;
