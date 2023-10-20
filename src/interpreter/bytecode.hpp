@@ -1,6 +1,9 @@
 #pragma once
 
 #include <vector>
+#include "../ast.hpp"
+#include "../utils/writer.hpp"
+#include "interpreter.hpp"
 
 namespace Bytecode {
 
@@ -30,5 +33,9 @@ struct BasicBlock {
 struct Executable {
 	std::vector<BasicBlock> blocks;
 };
+
+Writer<Executable> compile(AST::Expr*);
+
+void execute(Executable const&, Interpreter::Interpreter&);
 
 } // namespace Bytecode
