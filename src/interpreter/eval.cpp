@@ -9,6 +9,7 @@
 #include "../log/log.hpp"
 #include "../typechecker/typechecker.hpp"
 #include "../utils/span.hpp"
+#include "bytecode.hpp"
 #include "garbage_collector.hpp"
 #include "interpreter.hpp"
 #include "utils.hpp"
@@ -104,10 +105,25 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
+	if (!callee->m_def->tried_compilation) {
+		callee->m_def->tried_compilation = true;
+
+		Writer<Bytecode::Executable> bytecode = Bytecode::compile(callee->m_def->m_body);
+		if (bytecode.ok()) {
+			callee->m_def->bytecode =
+			    new Bytecode::Executable {std::move(bytecode.m_result)};
+		}
+	}
+
 	for (auto capture : callee->m_captures)
 		e.m_stack.push(Value{capture});
 
-	eval(callee->m_def->m_body, e);
+	if (callee->m_def->bytecode) {
+		Bytecode::execute(*callee->m_def->bytecode, e);
+	} else {
+		eval(callee->m_def->m_body, e);
+	}
+
 }
 
 void eval_call_native_function(NativeFunction* callee, int arg_count, Interpreter& e) {
