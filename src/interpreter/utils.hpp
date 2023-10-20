@@ -14,4 +14,6 @@ T* value_as(Value h) {
 	return value_of(h).get_cast<T>();
 }
 
+void eval_call_callable(Value callee, int arg_count, Interpreter&);
+
 } // namespace Interpreter
