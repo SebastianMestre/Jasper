@@ -163,6 +163,8 @@ struct FunctionLiteral : public Expr {
 
 	FunctionLiteral()
 	    : Expr {ExprTag::FunctionLiteral} {}
+
+	~FunctionLiteral();
 };
 
 struct Identifier : public Expr {
