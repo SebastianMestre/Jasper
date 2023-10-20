@@ -95,6 +95,12 @@ auto is_callable_type(ValueTag t) -> bool {
 
 void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
+	for (int i = 0; i < arg_count; ++i) {
+		auto ref = e.new_reference(Value {nullptr});
+		ref->m_value = value_of(e.m_stack.access(i));
+		e.m_stack.access(i) = ref.as_value();
+	}
+
 	// TODO: error handling ?
 	assert(callee->m_def->m_args.size() == arg_count);
 
@@ -102,7 +108,21 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 		e.m_stack.push(Value{capture});
 
 	eval(callee->m_def->m_body, e);
+}
 
+void eval_call_native_function(NativeFunction* callee, int arg_count, Interpreter& e) {
+	auto args = e.m_stack.frame_range(0, arg_count);
+	e.m_stack.push(callee(args, e));
+}
+
+void eval_call_callable(Value callee, int arg_count, Interpreter& e) {
+	if (callee.type() == ValueTag::Function) {
+		eval_call_function(callee.get_cast<Function>(), arg_count, e);
+	} else if (callee.type() == ValueTag::NativeFunction) {
+		eval_call_native_function(callee.get_native_func(), arg_count, e);
+	} else {
+		Log::fatal("Attempted to call a non function at runtime");
+	}
 }
 
 void eval(AST::CallExpression* ast, Interpreter& e) {
@@ -116,35 +136,15 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
 
-	int frame_start = e.m_stack.m_stack_ptr;
-	if (callee.type() == ValueTag::Function) {
-		for (auto expr : arglist) {
-			// put arg on stack
-			eval(expr, e);
+	for (auto expr : arglist)
+		eval(expr, e);
 
-			// wrap arg in reference
-			auto ref = e.new_reference(Value {nullptr});
-			ref->m_value = value_of(e.m_stack.access(0));
-			e.m_stack.access(0) = ref.as_value();
-		}
-		e.m_stack.start_stack_frame(frame_start);
+	e.m_stack.start_stack_frame(e.m_stack.m_stack_ptr - arg_count);
 
-		eval_call_function(callee.get_cast<Function>(), arg_count, e);
+	eval_call_callable(callee, arg_count, e);
 
-		// pop the result of the function, and clobber the callee
-		e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
-	} else if (callee.type() == ValueTag::NativeFunction) {
-		for (auto expr : arglist)
-			eval(expr, e);
-		e.m_stack.start_stack_frame(frame_start);
-		auto args = e.m_stack.frame_range(0, arg_count);
-
-		// compute the result of the function, and clobber the callee
-		e.m_stack.frame_at(-1) = callee.get_native_func()(args, e);
-	} else {
-		Log::fatal("Attempted to call a non function at runtime");
-	}
-
+	// pop the result of the function, and clobber the callee
+	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 
 	e.m_stack.end_stack_frame();
 }
