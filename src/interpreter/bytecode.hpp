@@ -8,7 +8,7 @@
 namespace Bytecode {
 
 struct Instruction {
-	enum class Tag { GetGlobal, NewInteger };
+	enum class Tag { GetGlobal, NewInteger, Call };
 
 	Instruction(Tag tag)
 	    : m_tag {tag} {}
@@ -24,6 +24,14 @@ struct GetGlobal : Instruction {
 	    , m_name {name} {}
 
 	InternedString m_name;
+};
+
+struct Call : Instruction {
+	Call(int argument_count)
+	    : Instruction {Tag::Call}
+	    , m_argument_count {argument_count} {}
+
+	int m_argument_count;
 };
 
 struct NewInteger : Instruction {
