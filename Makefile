@@ -47,6 +47,7 @@ COMMON_TARGETS := \
 INTERPRETER_DIR := interpreter
 INTERPRETER_ENTRY := main
 INTERPRETER_TARGETS := \
+	bytecode \
 	error \
 	eval \
 	execute \
