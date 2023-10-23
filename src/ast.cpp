@@ -4,6 +4,7 @@
 #include "./log/log.hpp"
 #include "cst.hpp"
 #include "ast.hpp"
+#include "interpreter/bytecode.hpp"
 
 namespace AST {
 
@@ -26,6 +27,10 @@ InternedString const& Declaration::identifier_text() const {
 
 Token const* Identifier::token() const {
 	return static_cast<CST::Identifier*>(m_cst)->m_token;
+}
+
+FunctionLiteral::~FunctionLiteral() {
+	delete bytecode;
 }
 
 } // namespace AST

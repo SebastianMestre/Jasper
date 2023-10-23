@@ -17,6 +17,10 @@ namespace CST {
 struct CST;
 }
 
+namespace Bytecode {
+struct Executable;
+};
+
 namespace AST {
 
 struct AST {
@@ -154,8 +158,13 @@ struct FunctionLiteral : public Expr {
 	std::unordered_map<InternedString, CaptureData> m_captures;
 	FunctionLiteral* m_surrounding_function {nullptr};
 
+	bool tried_compilation {false};
+	Bytecode::Executable* bytecode {nullptr};
+
 	FunctionLiteral()
 	    : Expr {ExprTag::FunctionLiteral} {}
+
+	~FunctionLiteral();
 };
 
 struct Identifier : public Expr {
