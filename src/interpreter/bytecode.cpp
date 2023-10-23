@@ -11,10 +11,10 @@ Writer<T> make_writer(T x) {
 
 namespace Bytecode {
 
-ErrorReport visit(BasicBlock&, AST::Expr*);
+static ErrorReport visit(BasicBlock&, AST::Expr*);
 
-ErrorReport success() { return {}; }
-ErrorReport failure() { return {"Failed to generate bytecode"}; }
+static ErrorReport success() { return {}; }
+static ErrorReport failure() { return {"Failed to generate bytecode"}; }
 
 Writer<Executable> compile(AST::Expr* expr) {
 	Executable result;
@@ -38,7 +38,7 @@ void emit_instruction(BasicBlock& b, InstructionType instruction) {
 		b.bytecode.push_back(buffer[i]);
 }
 
-ErrorReport compile_identifier(BasicBlock& b, AST::Identifier* expr) {
+static ErrorReport compile_identifier(BasicBlock& b, AST::Identifier* expr) {
 	if (expr->m_origin != AST::Identifier::Origin::Global)
 		return failure();
 
@@ -46,7 +46,7 @@ ErrorReport compile_identifier(BasicBlock& b, AST::Identifier* expr) {
 	return success();
 }
 
-ErrorReport compile_call_expression(BasicBlock& b, AST::CallExpression* expr) {
+static ErrorReport compile_call_expression(BasicBlock& b, AST::CallExpression* expr) {
 	auto status1 = visit(b, expr->m_callee);
 	if (!status1.ok()) return status1;
 
@@ -59,7 +59,7 @@ ErrorReport compile_call_expression(BasicBlock& b, AST::CallExpression* expr) {
 	return success();
 }
 
-ErrorReport compile_integer_literal(BasicBlock& b, AST::IntegerLiteral* expr) {
+static ErrorReport compile_integer_literal(BasicBlock& b, AST::IntegerLiteral* expr) {
 	emit_instruction(b, NewInteger {expr->m_value});
 	return success();
 }
@@ -76,7 +76,7 @@ ErrorReport visit(BasicBlock& b, AST::Expr* expr) {
 	return failure();
 }
 
-int decode(char const* stream, Interpreter::Interpreter& e) {
+static int decode(char const* stream, Interpreter::Interpreter& e) {
 	Instruction const* punned = reinterpret_cast<Instruction const*>(stream);
 	switch (punned->tag()) {
 	case Instruction::Tag::NewInteger: {
