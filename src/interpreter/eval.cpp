@@ -108,14 +108,14 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	for (auto expr : arglist)
 		eval(expr, e);
 
-	e.m_stack.start_stack_frame(e.m_stack.m_stack_ptr - arg_count);
+	e.m_stack.start_frame(arg_count);
 
 	eval_call_callable(callee, arg_count, e);
 
 	// pop the result of the function, and clobber the callee
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 
-	e.m_stack.end_stack_frame();
+	e.m_stack.end_frame();
 }
 
 void eval(AST::IndexExpression* ast, Interpreter& e) {
