@@ -18,6 +18,9 @@ struct Stack {
 	void start_stack_frame();
 	void end_stack_frame();
 
+	void start_frame(int size = 0);
+	void end_frame();
+
 	void start_stack_region(int start);
 	void start_stack_region();
 	void end_stack_region();

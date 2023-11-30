@@ -22,6 +22,20 @@ void Stack::end_stack_frame(){
 	end_stack_region();
 }
 
+void Stack::start_frame(int size) {
+	start_region(size);
+
+	m_fp_stack.push_back(m_frame_ptr);
+	m_frame_ptr = m_stack_ptr - size;
+}
+
+void Stack::end_frame(){
+	m_frame_ptr = m_fp_stack.back();
+	m_fp_stack.pop_back();
+
+	end_region();
+}
+
 void Stack::start_stack_region(int region_start) {
 	m_sp_stack.push_back(region_start);
 }
