@@ -262,13 +262,13 @@ static void exec(AST::Declaration* ast, Interpreter& e) {
 };
 
 static void exec(AST::Block* ast, Interpreter& e) {
-	e.m_stack.start_stack_region();
+	e.m_stack.start_region();
 	for (auto stmt : ast->m_body) {
 		exec(stmt, e);
 		if (e.m_returning)
 			break;
 	}
-	e.m_stack.end_stack_region();
+	e.m_stack.end_region();
 };
 
 static void exec(AST::ReturnStatement* ast, Interpreter& e) {
