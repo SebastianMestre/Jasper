@@ -22,10 +22,17 @@ struct Stack {
 	Value& frame_at(int offset);
 	Span<Value> frame_range(int offset, int length);
 
-	std::vector<Value> m_stack;
+	template<typename Function>
+	void for_each(Function&& f) {
+		for (auto const& v : m_stack) {
+			f(v);
+		}
+	}
+
 private:
 	int m_frame_ptr {0};
 	int m_stack_ptr {0};
+	std::vector<Value> m_stack;
 	std::vector<int> m_fp_stack;
 	std::vector<int> m_sp_stack;
 };
