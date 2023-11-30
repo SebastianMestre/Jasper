@@ -206,26 +206,27 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
+		int const arg_count = ast->m_args.size();
 
-		// eval arguments
-		// arguments start at storage_point
-		int storage_point = e.m_stack.m_stack_ptr;
-		for (int i = 0; i < ast->m_args.size(); ++i)
+		// push arguments
+		for (int i = 0; i < arg_count; ++i) {
 			eval(ast->m_args[i], e);
+		}
 
 		// store all arguments in record object
 		RecordType record;
-		for (int i = 0; i < ast->m_args.size(); ++i) {
+		for (int i = 0; i < arg_count; ++i) {
 			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i]);
+			    value_of(e.m_stack.access(arg_count - 1 - i));
 		}
-		
+
 		// promote record object to heap
 		auto result = e.m_gc->new_record(std::move(record));
 
 		// pop arguments
-		while (e.m_stack.m_stack_ptr > storage_point)
+		for (int i = 0; i < arg_count; ++i) {
 			e.m_stack.pop_unsafe();
+		}
 
 		// replace ctor with record
 		e.m_stack.access(0) = Value{result.get()};
