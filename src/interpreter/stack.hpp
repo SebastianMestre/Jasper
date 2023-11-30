@@ -17,9 +17,13 @@ struct Stack {
 	void start_stack_frame(int start);
 	void start_stack_frame();
 	void end_stack_frame();
+
 	void start_stack_region(int start);
 	void start_stack_region();
 	void end_stack_region();
+
+	void start_region(int size = 0);
+	void end_region();
 
 	void push(Value ref);
 

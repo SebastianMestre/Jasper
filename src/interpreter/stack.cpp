@@ -37,6 +37,17 @@ void Stack::end_stack_region() {
 	m_stack.resize(m_stack_ptr);
 }
 
+void Stack::start_region(int size) {
+	m_sp_stack.push_back(m_stack_ptr - size);
+}
+
+void Stack::end_region() {
+	m_stack_ptr = m_sp_stack.back();
+	m_sp_stack.pop_back();
+
+	m_stack.resize(m_stack_ptr);
+}
+
 void Stack::push(Value ref){
 	m_stack.push_back(ref);
 	m_stack_ptr += 1;
