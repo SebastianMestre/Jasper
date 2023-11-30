@@ -4,24 +4,6 @@
 
 namespace Interpreter {
 
-void Stack::start_stack_frame(int frame_start) {
-	start_stack_region(frame_start);
-
-	m_fp_stack.push_back(m_frame_ptr);
-	m_frame_ptr = frame_start;
-}
-
-void Stack::start_stack_frame() {
-	start_stack_frame(m_stack_ptr);
-}
-
-void Stack::end_stack_frame(){
-	m_frame_ptr = m_fp_stack.back();
-	m_fp_stack.pop_back();
-
-	end_stack_region();
-}
-
 void Stack::start_frame(int size) {
 	start_region(size);
 
@@ -34,21 +16,6 @@ void Stack::end_frame(){
 	m_fp_stack.pop_back();
 
 	end_region();
-}
-
-void Stack::start_stack_region(int region_start) {
-	m_sp_stack.push_back(region_start);
-}
-
-void Stack::start_stack_region() {
-	start_stack_region(m_stack_ptr);
-}
-
-void Stack::end_stack_region() {
-	m_stack_ptr = m_sp_stack.back();
-	m_sp_stack.pop_back();
-
-	m_stack.resize(m_stack_ptr);
 }
 
 void Stack::start_region(int size) {
