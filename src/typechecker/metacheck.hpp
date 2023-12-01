@@ -9,7 +9,7 @@ struct MetaUnifier;
 
 namespace TypeChecker {
 
-void metacheck(MetaUnifier&, AST::Expr*);
-void metacheck_program(MetaUnifier& uf, AST::Program* ast);
+// void metacheck(MetaUnifier&, AST::Expr*);
+void metacheck_program(AST::Program* ast);
 
 }

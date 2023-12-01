@@ -16,8 +16,8 @@
 	X(MatchExpression)                                                         \
 	X(TernaryExpression)                                                       \
 	X(ConstructorExpression)                                                   \
-                                                                               \
 	X(SequenceExpression)                                                      \
+                                                                               \
 	X(UnionExpression)                                                         \
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
