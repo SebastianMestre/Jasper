@@ -54,6 +54,9 @@ static bool can_infer_shallow(AST::Expr* ast) {
 	return infer_shallow(ast) != MetaType::Undefined;
 }
 
+static void check(AST::Expr* ast, MetaType meta_type) {
+	if (infer(ast) != meta_type) Log::fatal() << "failed metacheck";
+}
 
 
 static MetaType infer(AST::NumberLiteral* ast) {
@@ -78,7 +81,7 @@ static MetaType infer(AST::NullLiteral* ast) {
 
 static MetaType infer(AST::ArrayLiteral* ast) {
 	for (auto element : ast->m_elements) {
-		if (infer(element) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(element, MetaType::Term);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
@@ -87,10 +90,10 @@ static MetaType infer(AST::FunctionLiteral* ast) {
 	for (auto& decl : ast->m_args) {
 		decl.m_meta_type = MetaType::Term;
 		if (decl.m_type_hint) {
-			if (infer(decl.m_type_hint) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+			check(decl.m_type_hint, MetaType::Type);
 		}
 	}
-	if (infer(ast->m_body) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_body, MetaType::Term);
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
@@ -101,16 +104,16 @@ static MetaType infer(AST::Identifier* ast) {
 }
 
 static MetaType infer(AST::CallExpression* ast) {
-	if (infer(ast->m_callee) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_callee, MetaType::Term);
 	for (auto arg : ast->m_args) {
-		if (infer(arg) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(arg, MetaType::Term);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
 static MetaType infer(AST::IndexExpression* ast) {
-	if (infer(ast->m_callee) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
-	if (infer(ast->m_index) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_callee, MetaType::Term);
+	check(ast->m_index, MetaType::Term);
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
@@ -123,22 +126,22 @@ static MetaType infer(AST::AccessExpression* ast) {
 
 static MetaType infer(AST::MatchExpression* ast) {
 	if (ast->m_type_hint) {
-		if (infer(ast->m_type_hint) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(ast->m_type_hint, MetaType::Type);
 	}
 	for (auto& kv : ast->m_cases) {
 		kv.second.m_declaration.m_meta_type = MetaType::Term;
 		if (kv.second.m_declaration.m_type_hint) {
-			if (infer(kv.second.m_declaration.m_type_hint) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+			check(kv.second.m_declaration.m_type_hint, MetaType::Type);
 		}
-		if (infer(kv.second.m_expression) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(kv.second.m_expression, MetaType::Term);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
 static MetaType infer(AST::TernaryExpression* ast) {
-	if (infer(ast->m_condition) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
-	if (infer(ast->m_then_expr) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
-	if (infer(ast->m_else_expr) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_condition, MetaType::Term);
+	check(ast->m_then_expr, MetaType::Term);
+	check(ast->m_else_expr, MetaType::Term);
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
@@ -147,7 +150,7 @@ static MetaType infer(AST::ConstructorExpression* ast) {
 	if (constructor_meta_type != MetaType::Constructor && constructor_meta_type != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
 
 	for (auto arg : ast->m_args) {
-		if (infer(arg) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(arg, MetaType::Term);
 	}
 
 	return ast->m_meta_type = infer_shallow(ast);
@@ -160,22 +163,22 @@ static void infer_stmt(AST::Block* ast) {
 }
 
 static void infer_stmt(AST::ReturnStatement* ast) {
-	if (infer(ast->m_value) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_value, MetaType::Term);
 }
 
 static void infer_stmt(AST::IfElseStatement* ast) {
-	if (infer(ast->m_condition) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_condition, MetaType::Term);
 	infer_stmt(ast->m_body);
 	if (ast->m_else_body) infer_stmt(ast->m_else_body);
 }
 
 static void infer_stmt(AST::WhileStatement* ast) {
-	if (infer(ast->m_condition) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_condition, MetaType::Term);
 	infer_stmt(ast->m_body);
 }
 
 static void infer_stmt(AST::ExpressionStatement* ast) {
-	if (infer(ast->m_expression) != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_expression, MetaType::Term);
 }
 
 static void infer_stmt(AST::Declaration* ast) {
@@ -183,7 +186,7 @@ static void infer_stmt(AST::Declaration* ast) {
 	MetaType value_meta_type = infer(ast->m_value);
 	if (value_meta_type == MetaType::Term) {
 		if (ast->m_type_hint) {
-			if (infer(ast->m_type_hint) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+			check(ast->m_type_hint, MetaType::Type);
 		}
 	} else {
 		if (ast->m_type_hint) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
@@ -209,22 +212,22 @@ static MetaType infer(AST::SequenceExpression* ast) {
 
 static MetaType infer(AST::UnionExpression* ast) {
 	for (auto type : ast->m_types) {
-		if (infer(type) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(type, MetaType::Type);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
 static MetaType infer(AST::StructExpression* ast) {
 	for (auto type : ast->m_types) {
-		if (infer(type) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(type, MetaType::Type);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
 static MetaType infer(AST::TypeTerm* ast) {
-	if (infer(ast->m_callee) != MetaType::TypeFunction) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	check(ast->m_callee, MetaType::TypeFunction);
 	for (auto arg : ast->m_args) {
-		if (infer(arg) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+		check(arg, MetaType::Type);
 	}
 	return ast->m_meta_type = infer_shallow(ast);
 }
@@ -309,16 +312,18 @@ void metacheck_program(AST::Program* ast) {
 		}
 	}
 
-	// we haven't looked inside the declarations whose top-level metatype could be
-	// determined shallowly. Do that now.
 	for (auto& decl : ast->m_declarations) {
+
+		// we haven't looked inside the declarations whose top-level metatype
+		// could be determined shallowly. Do that now.
 		if (can_infer_shallow(decl.m_value)) {
 			infer(decl.m_value);
 		}
 
+		// check typehints on global variables
 		if (decl.m_type_hint) {
 			if (decl.m_meta_type != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
-			if (infer(decl.m_type_hint) != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+			check(decl.m_type_hint, MetaType::Type);
 		}
 	}
 }
