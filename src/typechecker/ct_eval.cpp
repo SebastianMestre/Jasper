@@ -64,8 +64,7 @@ static AST::Expr* ct_eval(
 
 	MetaType meta_type = ast->m_declaration->m_meta_type;
 
-	if (meta_type == MetaType::Undefined)
-		Log::fatal() << "Incomplete type inference on identifier '" << ast->text() << "'";
+	assert(meta_type != MetaType::Undefined);
 
 	if (meta_type == MetaType::Term) {
 		return ast;
@@ -110,7 +109,6 @@ static AST::Expr* ct_eval(
 
 	MetaType meta_type = ast->m_meta_type;
 
-	// TODO: support vars
 	if (meta_type == MetaType::Constructor)
 		return constructor_from_ast(ast, tc, alloc);
 
@@ -327,8 +325,7 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 		std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
 #endif
 
-		if (meta_type == MetaType::Undefined)
-			Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl.m_identifier << "\"";
+		assert(meta_type != MetaType::Undefined);
 
 		// put a dummy var where required.
 		if (meta_type == MetaType::TypeFunction) {
@@ -348,8 +345,7 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 			std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
 #endif
 
-			if (meta_type == MetaType::Undefined)
-				Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl->m_identifier << "\"";
+			assert(meta_type != MetaType::Undefined);
 
 			if (meta_type == MetaType::TypeFunction) {
 				if (decl->m_type_hint)
