@@ -3,7 +3,6 @@
 #include "../algorithms/tarjan_solver.hpp"
 #include "../ast.hpp"
 #include "../log/log.hpp"
-#include "meta_unifier.hpp"
 
 #include <cassert>
 

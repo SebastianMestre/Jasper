@@ -20,7 +20,6 @@ COMMON_TARGETS := \
 	log/stream \
 	typechecker/ct_eval \
 	typechecker/metacheck \
-	typechecker/meta_unifier \
 	typechecker/typecheck \
 	typechecker/typechecker \
 	typechecker/typesystem \

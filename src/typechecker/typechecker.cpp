@@ -169,10 +169,6 @@ MonoId TypeChecker::new_var() {
 	return core().ll_new_var();
 }
 
-MetaTypeId TypeChecker::new_meta_var() {
-	return core().m_meta_core.make_var_node();
-}
-
 AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& name) {
 	m_builtin_declarations.push_back({});
 	auto result = &m_builtin_declarations.back();
