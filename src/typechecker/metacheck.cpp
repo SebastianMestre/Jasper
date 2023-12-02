@@ -7,6 +7,67 @@
 
 #include <cassert>
 
+/*
+
+Jasper does not make a syntactic distinction between type-level declarations and
+value-level declarations, but the the typechecker needs this distinction to do
+its thing.
+
+Metacheck infers, for each expression and declaration in a program, whether it
+corresponds to a value, a variant constructor, a monomorphic type, or a
+polymorphic type. We refer to this categorization as "meta types".
+
+Most expressions are trivial to infer a meta type for, but it's a bit trickier
+for identifiers (as they inherit the meta type from their declaration) and for
+field access expressions (as their meta type must be computed from the meta type
+of their subexpression).
+
+We can (mostly) do meta type inference in a fully top-down manner if we first do
+a shallow inference pass and order the declarations carefully after that for a
+deep pass.
+
+== How it works ================================================================
+
+The main idea is that the meta type of most expressions can be inferred just
+from the syntactic category (i.e. the ASTTag of the node). The only expressions
+that can't be inferred this way are Identifiers and access expressions.
+
+To ensure identifiers can be inferred, we must visit them after we infer a
+meta type for their declaration, so we visit declarations that have "difficult"
+expressions in dependency order.
+
+If there ever is a cycle of declarations that can't be inferred shallowly, it's
+either either broken or really weird code that we don't care about supporting at
+the moment. In those cases we just error out.
+
+During metatype inference, we sometimes assign MetaType::Undefined to some terms
+and declarations, but these are always resolved by the end of the process. The
+following passes may assume that no expression or declaration has
+MetaType::Undefined.
+
+Example 1 - wrong
+
+    a := b;
+    b := c;
+    c := a;
+
+Example 2 - wrong
+
+    a := b.x;
+    b := a.y;
+
+Example 3 - wrong
+
+    a := c(b).x
+    b := d(a).y
+
+Example 4 - ok but really weird, and probably wrong
+
+    a := c(fn() => b).x
+    b := d(fn() => a).y
+
+*/
+
 namespace TypeChecker {
 
 using AST::ExprTag;
@@ -314,7 +375,7 @@ void metacheck_program(AST::Program* ast) {
 
 	for (auto& decl : ast->m_declarations) {
 
-		// we haven't looked inside the declarations whose top-level metatype
+		// we haven't looked inside the declarations whose top-level meta type
 		// could be determined shallowly. Do that now.
 		if (can_infer_shallow(decl.m_value)) {
 			infer(decl.m_value);
