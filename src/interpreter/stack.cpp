@@ -4,33 +4,25 @@
 
 namespace Interpreter {
 
-void Stack::start_stack_frame(int frame_start) {
-	start_stack_region(frame_start);
+void Stack::start_frame(int size) {
+	start_region(size);
 
 	m_fp_stack.push_back(m_frame_ptr);
-	m_frame_ptr = frame_start;
+	m_frame_ptr = m_stack_ptr - size;
 }
 
-void Stack::start_stack_frame() {
-	start_stack_frame(m_stack_ptr);
-}
-
-void Stack::end_stack_frame(){
+void Stack::end_frame(){
 	m_frame_ptr = m_fp_stack.back();
 	m_fp_stack.pop_back();
 
-	end_stack_region();
+	end_region();
 }
 
-void Stack::start_stack_region(int region_start) {
-	m_sp_stack.push_back(region_start);
+void Stack::start_region(int size) {
+	m_sp_stack.push_back(m_stack_ptr - size);
 }
 
-void Stack::start_stack_region() {
-	start_stack_region(m_stack_ptr);
-}
-
-void Stack::end_stack_region() {
+void Stack::end_region() {
 	m_stack_ptr = m_sp_stack.back();
 	m_sp_stack.pop_back();
 
@@ -50,19 +42,19 @@ Value Stack::pop_unsafe() {
 }
 
 Value& Stack::access(int offset) {
-	return m_stack[m_stack.size() - 1 - offset];
+	return m_stack[m_stack_ptr - 1 - offset];
 }
 
 Value& Stack::frame_at(int offset) {
 	assert(m_frame_ptr + offset >= 0);
-	assert(m_frame_ptr + offset < m_stack.size());
+	assert(m_frame_ptr + offset < m_stack_ptr);
 	return m_stack[m_frame_ptr + offset];
 }
 
 Span<Value> Stack::frame_range(int offset, int length) {
 	if (length > 0) {
 		assert(m_frame_ptr + offset >= 0);
-		assert(m_frame_ptr + offset + length <= m_stack.size());
+		assert(m_frame_ptr + offset + length <= m_stack_ptr);
 	}
 	auto start_address = &m_stack[m_frame_ptr + offset];
 	return {start_address, length};

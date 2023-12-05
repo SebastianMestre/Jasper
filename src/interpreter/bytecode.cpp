@@ -95,12 +95,12 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 
 		auto callee = value_of(e.m_stack.access(argument_count));
 
-		e.m_stack.start_stack_frame(e.m_stack.m_stack_ptr - argument_count);
+		e.m_stack.start_frame(argument_count);
 
 		eval_call_callable(callee, argument_count, e);
 
 		e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
-		e.m_stack.end_stack_frame();
+		e.m_stack.end_frame();
 
 		return sizeof(*op);
 	}

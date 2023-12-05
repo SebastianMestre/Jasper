@@ -108,14 +108,14 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	for (auto expr : arglist)
 		eval(expr, e);
 
-	e.m_stack.start_stack_frame(e.m_stack.m_stack_ptr - arg_count);
+	e.m_stack.start_frame(arg_count);
 
 	eval_call_callable(callee, arg_count, e);
 
 	// pop the result of the function, and clobber the callee
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 
-	e.m_stack.end_stack_frame();
+	e.m_stack.end_frame();
 }
 
 void eval(AST::IndexExpression* ast, Interpreter& e) {
@@ -206,26 +206,27 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		assert(ast->m_args.size() == record_constructor->m_keys.size());
 
+		int const arg_count = ast->m_args.size();
 
-		// eval arguments
-		// arguments start at storage_point
-		int storage_point = e.m_stack.m_stack_ptr;
-		for (int i = 0; i < ast->m_args.size(); ++i)
+		// push arguments
+		for (int i = 0; i < arg_count; ++i) {
 			eval(ast->m_args[i], e);
+		}
 
 		// store all arguments in record object
 		RecordType record;
-		for (int i = 0; i < ast->m_args.size(); ++i) {
+		for (int i = 0; i < arg_count; ++i) {
 			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.m_stack[storage_point + i]);
+			    value_of(e.m_stack.access(arg_count - 1 - i));
 		}
-		
+
 		// promote record object to heap
 		auto result = e.m_gc->new_record(std::move(record));
 
 		// pop arguments
-		while (e.m_stack.m_stack_ptr > storage_point)
+		for (int i = 0; i < arg_count; ++i) {
 			e.m_stack.pop_unsafe();
+		}
 
 		// replace ctor with record
 		e.m_stack.access(0) = Value{result.get()};
@@ -262,13 +263,13 @@ static void exec(AST::Declaration* ast, Interpreter& e) {
 };
 
 static void exec(AST::Block* ast, Interpreter& e) {
-	e.m_stack.start_stack_region();
+	e.m_stack.start_region();
 	for (auto stmt : ast->m_body) {
 		exec(stmt, e);
 		if (e.m_returning)
 			break;
 	}
-	e.m_stack.end_stack_region();
+	e.m_stack.end_region();
 };
 
 static void exec(AST::ReturnStatement* ast, Interpreter& e) {
