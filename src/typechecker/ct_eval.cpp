@@ -62,17 +62,15 @@ static AST::Expr* ct_eval(
 	assert(ast);
 	assert(ast->m_declaration);
 
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
+	MetaType meta_type = ast->m_declaration->m_meta_type;
 
-	if (!uf.is_constant(meta_type))
-		Log::fatal() << "Incomplete type inference on identifier" << ast->text();
+	assert(meta_type != MetaType::Undefined);
 
-	if (uf.is(meta_type, Tag::Term)) {
+	if (meta_type == MetaType::Term) {
 		return ast;
-	} else if (uf.is(meta_type, Tag::Mono)) {
+	} else if (meta_type == MetaType::Type) {
 		return ast->m_declaration->m_value;
-	} else if (uf.is(meta_type, Tag::Func)) {
+	} else if (meta_type == MetaType::TypeFunction) {
 		return ast->m_declaration->m_value;
 	}
 
@@ -108,11 +106,10 @@ static AST::TernaryExpression* ct_eval(
 
 static AST::Expr* ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
 
-	// TODO: support vars
-	if (uf.is_ctor(meta_type))
+	MetaType meta_type = ast->m_meta_type;
+
+	if (meta_type == MetaType::Constructor)
 		return constructor_from_ast(ast, tc, alloc);
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
@@ -175,14 +172,13 @@ static AST::UnionExpression* ct_eval(
 
 static AST::Constructor* constructor_from_ast(
     AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta = uf.eval(ast->m_meta_type);
+	MetaType meta = ast->m_meta_type;
 	auto constructor = alloc.make<AST::Constructor>();
 	constructor->m_syntax = ast;
 
-	if (uf.is(meta, Tag::Mono)) {
+	if (meta == MetaType::Type) {
 		constructor->m_mono = compute_mono(ast, tc);
-	} else if (uf.is_ctor(meta)) {
+	} else if (meta == MetaType::Constructor) {
 		assert(ast->type() == ExprTag::AccessExpression);
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
@@ -196,7 +192,7 @@ static AST::Constructor* constructor_from_ast(
 		constructor->m_mono = monotype;
 		constructor->m_id = access->m_member;
 	} else {
-		Log::fatal("Using something whose metatype is neither 'monotype' nor 'constructor' as a constructor");
+		Log::fatal() << "Constructor invokation on a non-constructor -- MetaType(" << int(meta) << ")";
 	}
 
 	return constructor;
@@ -321,23 +317,20 @@ static MonoId get_monotype_id(AST::Expr* ast) {
 
 static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	auto& uf = tc.core().m_meta_core;
-
 	for (auto& decl : ast->m_declarations) {
-		int meta_type = uf.eval(decl.m_meta_type);
+		MetaType meta_type = decl.m_meta_type;
 
 #if 0
 		std::cerr << "[ Pass 1 ] top level \"" << decl.m_identifier << "\"\n";
-		std::cerr << "           metatype tag is: Tag(" << int(uf.tag(meta_type)) << ")\n";
+		std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
 #endif
 
-		if (!uf.is_constant(meta_type))
-			Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl.m_identifier << "\"";
+		assert(meta_type != MetaType::Undefined);
 
 		// put a dummy var where required.
-		if (uf.is(meta_type, Tag::Func)) {
+		if (meta_type == MetaType::TypeFunction) {
 			stub_type_function_id(decl.m_value, tc);
-		} else if (uf.is(meta_type, Tag::Mono)) {
+		} else if (meta_type == MetaType::Type) {
 			stub_monotype_id(decl.m_value, tc);
 		}
 	}
@@ -345,23 +338,22 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 	auto const& comps = tc.declaration_order();
 	for (auto const& decls : comps) {
 		for (auto decl : decls) {
-			int meta_type = uf.eval(decl->m_meta_type);
+			MetaType meta_type = decl->m_meta_type;
 
 #if 0
 			std::cerr << "[ Pass 2 ] top level \"" << decl->m_identifier << "\"\n";
-			std::cerr << "           metatype tag is: Tag(" << int(uf.tag(meta_type)) << ")\n";
+			std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
 #endif
 
-			if (uf.is(meta_type, Tag::Var))
-				Log::fatal() << "Incomplete metatype inference on top level variable \"" << decl->m_identifier << "\"";
+			assert(meta_type != MetaType::Undefined);
 
-			if (uf.is(meta_type, Tag::Func)) {
+			if (meta_type == MetaType::TypeFunction) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
 				TypeFunctionId tf = compute_type_func(decl->m_value, tc);
 				tc.core().unify_type_function(tf, get_type_function_id(decl->m_value));
-			} else if (uf.is(meta_type, Tag::Mono)) {
+			} else if (meta_type == MetaType::Type) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
 
@@ -446,11 +438,7 @@ static std::unordered_map<InternedString, MonoId> build_map(
 
 static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
-
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
-	assert(uf.is(meta_type, Tag::Func));
-
+	assert(ast->m_meta_type == MetaType::TypeFunction);
 	auto decl = ast->m_declaration;
 	return get_type_function_id(decl->m_value);
 }
@@ -482,11 +470,7 @@ static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 
 static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
-
-	auto& uf = tc.core().m_meta_core;
-	MetaTypeId meta_type = uf.eval(ast->m_meta_type);
-	assert(uf.is(meta_type, Tag::Mono));
-
+	assert(ast->m_meta_type == MetaType::Type);
 	return get_monotype_id(ast->m_declaration->m_value);
 }
 

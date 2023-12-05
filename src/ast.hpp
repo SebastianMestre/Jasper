@@ -37,7 +37,7 @@ struct Expr : public AST {
 	Expr(ExprTag type)
 	    : m_type {type} {}
 
-	MetaTypeId m_meta_type {-1};
+	MetaType m_meta_type {MetaType::Undefined};
 	MonoId m_value_type {-1};
 
 	ExprTag type() const { return m_type; }
@@ -67,7 +67,7 @@ struct Declaration : public Stmt {
 
 	std::unordered_set<Declaration*> m_references;
 
-	MetaTypeId m_meta_type {-1};
+	MetaType m_meta_type {MetaType::Undefined};
 	bool m_is_polymorphic {false};
 	MonoId m_value_type {-1}; // used for non-polymorphic decls, and during unification
 	PolyId m_decl_type;

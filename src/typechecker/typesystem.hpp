@@ -6,7 +6,6 @@
 
 #include "../algorithms/union_find.hpp"
 #include "../utils/interned_string.hpp"
-#include "meta_unifier.hpp"
 #include "typechecker_types.hpp"
 
 // Type function strength is an ad-hoc concept, specific to our implementation
@@ -164,8 +163,6 @@ private:
 	bool satisfies(MonoId t, Constraint const& c);
 	VarId get_var_id(MonoId i);
 
-public:
-	MetaUnifier m_meta_core;
 private:
 	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;

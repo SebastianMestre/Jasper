@@ -27,8 +27,6 @@ struct TypeChecker {
 
 	MonoId new_var();
 
-	MetaTypeId new_meta_var();
-
 	MonoId mono_int();
 	MonoId mono_float();
 	MonoId mono_string();

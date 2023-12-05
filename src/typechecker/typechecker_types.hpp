@@ -9,6 +9,8 @@ using TypeVarId = int;
 
 using MetaTypeId = int;
 
+enum class MetaType { Term, Type, TypeFunction, Constructor, Undefined };
+
 namespace TypeChecker {
 
 struct BuiltinType {

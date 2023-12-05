@@ -1,301 +1,390 @@
 #include "metacheck.hpp"
 
+#include "../algorithms/tarjan_solver.hpp"
 #include "../ast.hpp"
 #include "../log/log.hpp"
-#include "meta_unifier.hpp"
+
+#include <cassert>
+
+/*
+
+Jasper does not make a syntactic distinction between type-level declarations and
+value-level declarations, but the the typechecker needs this distinction to do
+its thing.
+
+Metacheck infers, for each expression and declaration in a program, whether it
+corresponds to a value, a variant constructor, a monomorphic type, or a
+polymorphic type. We refer to this categorization as "meta types".
+
+Most expressions are trivial to infer a meta type for, but it's a bit trickier
+for identifiers (as they inherit the meta type from their declaration) and for
+field access expressions (as their meta type must be computed from the meta type
+of their subexpression).
+
+We can (mostly) do meta type inference in a fully top-down manner if we first do
+a shallow inference pass and order the declarations carefully after that for a
+deep pass.
+
+== How it works ================================================================
+
+The main idea is that the meta type of most expressions can be inferred just
+from the syntactic category (i.e. the ASTTag of the node). The only expressions
+that can't be inferred this way are Identifiers and access expressions.
+
+To ensure identifiers can be inferred, we must visit them after we infer a
+meta type for their declaration, so we visit declarations that have "difficult"
+expressions in dependency order.
+
+If there ever is a cycle of declarations that can't be inferred shallowly, it's
+either either broken or really weird code that we don't care about supporting at
+the moment. In those cases we just error out.
+
+During metatype inference, we sometimes assign MetaType::Undefined to some terms
+and declarations, but these are always resolved by the end of the process. The
+following passes may assume that no expression or declaration has
+MetaType::Undefined.
+
+Example 1 - wrong
+
+    a := b;
+    b := c;
+    c := a;
+
+Example 2 - wrong
+
+    a := b.x;
+    b := a.y;
+
+Example 3 - wrong
+
+    a := c(b).x
+    b := d(a).y
+
+Example 4 - ok but really weird, and probably wrong
+
+    a := c(fn() => b).x
+    b := d(fn() => a).y
+
+*/
 
 namespace TypeChecker {
 
 using AST::ExprTag;
 using AST::StmtTag;
 
-static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast);
+static MetaType infer(AST::Expr*);
+static void infer_stmt(AST::Stmt*);
 
-static void process_type_hint(MetaUnifier& uf, AST::Declaration* ast) {
-	auto typehint = ast->m_type_hint;
-	if (!typehint) return;
-	uf.turn_into(ast->m_meta_type, Tag::Term);
-	metacheck(uf, typehint);
-	uf.turn_into(typehint->m_meta_type, Tag::Mono);
-}
-
-static void process_declaration(MetaUnifier& uf, AST::Declaration* ast) {
-	process_type_hint(uf, ast);
-	metacheck(uf, ast->m_value);
-	uf.unify(ast->m_meta_type, ast->m_value->m_meta_type);
-}
-
-// Literals
-
-static void metacheck_scalar(MetaUnifier& uf, AST::Expr* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-}
-
-static void metacheck(MetaUnifier& uf, AST::ArrayLiteral* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	for (auto& element : ast->m_elements) {
-		metacheck(uf, element);
-		uf.turn_into(element->m_meta_type, Tag::Term);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::FunctionLiteral* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	for (auto& arg : ast->m_args) {
-		if (arg.m_type_hint) {
-			metacheck(uf, arg.m_type_hint);
-			uf.turn_into(arg.m_type_hint->m_meta_type, Tag::Mono);
-		}
-		arg.m_meta_type = uf.make_const_node(Tag::Term);
-	}
-
-	metacheck(uf, ast->m_body);
-}
-
-// Expressions
-
-static void metacheck(MetaUnifier& uf, AST::Identifier* ast) {
-	ast->m_meta_type = ast->m_declaration->m_meta_type;
-}
-
-static void metacheck(MetaUnifier& uf, AST::CallExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	metacheck(uf, ast->m_callee);
-	uf.turn_into(ast->m_callee->m_meta_type, Tag::Term);
-
-	for (auto& arg : ast->m_args) {
-		metacheck(uf, arg);
-		uf.turn_into(arg->m_meta_type, Tag::Term);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::IndexExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	metacheck(uf, ast->m_callee);
-	uf.turn_into(ast->m_callee->m_meta_type, Tag::Term);
-
-	metacheck(uf, ast->m_index);
-	uf.turn_into(ast->m_index->m_meta_type, Tag::Term);
-}
-
-static void metacheck(MetaUnifier& uf, AST::AccessExpression* ast) {
-	metacheck(uf, ast->m_target);
-
-	auto result_node = uf.make_var_node();
-	auto target_node = ast->m_target->m_meta_type;
-
-	uf.make_access_fact(result_node, target_node);
-	ast->m_meta_type = result_node;
-}
-
-static void metacheck(MetaUnifier& uf, AST::MatchExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	metacheck(uf, &ast->m_target);
-	uf.turn_into(ast->m_target.m_meta_type, Tag::Term);
-
-	if (ast->m_type_hint) {
-		metacheck(uf, ast->m_type_hint);
-		uf.turn_into(ast->m_type_hint->m_meta_type, Tag::Mono);
-	}
-
-	for (auto& kv : ast->m_cases) {
-		auto& case_data = kv.second;
-
-		case_data.m_declaration.m_meta_type = uf.make_const_node(Tag::Term);
-		process_type_hint(uf, &case_data.m_declaration);
-
-		metacheck(uf, case_data.m_expression);
-		uf.turn_into(case_data.m_expression->m_meta_type, Tag::Term);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::TernaryExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	metacheck(uf, ast->m_condition);
-	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
-
-	metacheck(uf, ast->m_then_expr);
-	uf.turn_into(ast->m_then_expr->m_meta_type, Tag::Term);
-
-	metacheck(uf, ast->m_else_expr);
-	uf.turn_into(ast->m_else_expr->m_meta_type, Tag::Term);
-}
-
-static void metacheck(MetaUnifier& uf, AST::ConstructorExpression* ast) {
-	// TODO: maybe we should tag ast->m_constructor->m_meta_type
-	// as being target of a constructor invokation?
-
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-
-	metacheck(uf, ast->m_constructor);
-	uf.make_ctor_fact(ast->m_constructor->m_meta_type);
-
-	for (auto& arg : ast->m_args) {
-		metacheck(uf, arg);
-		uf.turn_into(arg->m_meta_type, Tag::Term);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::SequenceExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Term);
-	metacheck_stmt(uf, ast->m_body);
-}
-
-// Statements
-
-static void metacheck_stmt(MetaUnifier& uf, AST::Block* ast) {
-	for (auto& child : ast->m_body)
-		metacheck_stmt(uf, child);
-}
-
-static void metacheck_stmt(MetaUnifier& uf, AST::IfElseStatement* ast) {
-	metacheck(uf, ast->m_condition);
-	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
-
-	metacheck_stmt(uf, ast->m_body);
-
-	if (ast->m_else_body)
-		metacheck_stmt(uf, ast->m_else_body);
-}
-
-static void metacheck_stmt(MetaUnifier& uf, AST::WhileStatement* ast) {
-	metacheck(uf, ast->m_condition);
-	uf.turn_into(ast->m_condition->m_meta_type, Tag::Term);
-	metacheck_stmt(uf, ast->m_body);
-}
-
-static void metacheck_stmt(MetaUnifier& uf, AST::ReturnStatement* ast) {
-	metacheck(uf, ast->m_value);
-	uf.turn_into(ast->m_value->m_meta_type, Tag::Term);
-}
-
-static void metacheck_stmt(MetaUnifier& uf, AST::ExpressionStatement* ast) {
-	metacheck(uf, ast->m_expression);
-	uf.turn_into(ast->m_expression->m_meta_type, Tag::Term);
-}
-
-// Declarations
-
-static void metacheck_stmt(MetaUnifier& uf, AST::Declaration* ast) {
-	ast->m_meta_type = uf.make_var_node();
-	process_declaration(uf, ast);
-}
-
-// Type expressions
-
-static void metacheck(MetaUnifier& uf, AST::UnionExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Func);
-
-	for (auto& type : ast->m_types) {
-		metacheck(uf, type);
-		uf.turn_into(type->m_meta_type, Tag::Mono);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::StructExpression* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Func);
-
-	for (auto& type : ast->m_types) {
-		metacheck(uf, type);
-		uf.turn_into(type->m_meta_type, Tag::Mono);
-	}
-}
-
-static void metacheck(MetaUnifier& uf, AST::TypeTerm* ast) {
-	ast->m_meta_type = uf.make_const_node(Tag::Mono);
-
-	metacheck(uf, ast->m_callee);
-	uf.turn_into(ast->m_callee->m_meta_type, Tag::Func);
-
-	for (auto& arg : ast->m_args) {
-		metacheck(uf, arg);
-		uf.turn_into(arg->m_meta_type, Tag::Mono);
-	}
-}
-
-// Dispatch
-
-static void metacheck_stmt(MetaUnifier& uf, AST::Stmt* ast) {
-#define DISPATCH(type)                                                         \
-	case StmtTag::type:                                                        \
-		return metacheck_stmt(uf, static_cast<AST::type*>(ast));
-
-	switch (ast->tag()) {
-		DISPATCH(Block)
-		DISPATCH(IfElseStatement)
-		DISPATCH(WhileStatement)
-		DISPATCH(ReturnStatement)
-		DISPATCH(ExpressionStatement)
-		DISPATCH(Declaration)
-	}
-
-	Log::fatal() << "metacheck_stmt: UNHANDLED"; // TODO: better error message
-
-#undef DISPATCH
-}
-
-void metacheck(MetaUnifier& uf, AST::Expr* ast) {
-#define DISPATCH(type)                                                         \
-	case ExprTag::type:                                                        \
-		return metacheck(uf, static_cast<AST::type*>(ast));
-
-#define SCALAR(type)                                                           \
-	case ExprTag::type:                                                        \
-		return metacheck_scalar(uf, static_cast<AST::type*>(ast));
-
+static MetaType infer_shallow(AST::Expr* ast) {
 	switch (ast->type()) {
-		SCALAR(IntegerLiteral)
-		SCALAR(NumberLiteral)
-		SCALAR(BooleanLiteral)
-		SCALAR(StringLiteral)
-		SCALAR(NullLiteral)
-		DISPATCH(ArrayLiteral)
-		DISPATCH(FunctionLiteral)
+	case ExprTag::NumberLiteral:
+	case ExprTag::IntegerLiteral:
+	case ExprTag::StringLiteral:
+	case ExprTag::BooleanLiteral:
+	case ExprTag::ArrayLiteral:
+	case ExprTag::NullLiteral:
+	case ExprTag::FunctionLiteral:
+	case ExprTag::CallExpression:
+	case ExprTag::IndexExpression:
+	case ExprTag::MatchExpression:
+	case ExprTag::TernaryExpression:
+	case ExprTag::ConstructorExpression:
+	case ExprTag::SequenceExpression:
+		return MetaType::Term;
 
-		DISPATCH(Identifier)
-		DISPATCH(CallExpression)
-		DISPATCH(IndexExpression)
-		DISPATCH(AccessExpression)
-		DISPATCH(MatchExpression)
-		DISPATCH(TernaryExpression)
-		DISPATCH(ConstructorExpression)
-		DISPATCH(SequenceExpression)
+	case ExprTag::UnionExpression:
+	case ExprTag::StructExpression:
+		return MetaType::TypeFunction;
 
-		DISPATCH(UnionExpression)
-		DISPATCH(StructExpression)
-		DISPATCH(TypeTerm)
+	case ExprTag::TypeTerm:
+		return MetaType::Type;
+
+	case ExprTag::AccessExpression:
+	case ExprTag::Identifier:
+		return MetaType::Undefined;
+
+	case ExprTag::BuiltinTypeFunction:
+	case ExprTag::Constructor:
+		Log::fatal() << "unexpected AST type in infer_shallow ("
+		             << AST::expr_string[int(ast->type())] << ") during infer";
 	}
-	Log::fatal() << "metacheck: UNHANDLED"; // TODO: better error message
-
-#undef DISPATCH
-#undef SCALAR
 }
 
-void metacheck_program(MetaUnifier& uf, AST::Program* ast) {
-	for (auto& decl : ast->m_declarations)
-		decl.m_meta_type = uf.make_var_node();
+static bool can_infer_shallow(AST::Expr* ast) {
+	return infer_shallow(ast) != MetaType::Undefined;
+}
 
-	// TODO: get the declaration components
-	auto const& comps = *uf.comp;
-	for (auto const& comp : comps) {
+static void check(AST::Expr* ast, MetaType meta_type) {
+	if (infer(ast) != meta_type) Log::fatal() << "failed metacheck";
+}
 
-		for (auto decl : comp)
-			process_declaration(uf, decl);
 
-		/*
-		TODO: put this code in ct_eval? maybe it's OK here?
-		for (auto decl : comp)
-			if (uf.find(decl->m_meta_type).tag == Tag::Func)
-				for (auto other : decl->m_references)
-					if (uf.find(other->m_meta_type) == Tag::Term)
-						Log::fatal("Value referenced in a type definition");
-		*/
+static MetaType infer(AST::NumberLiteral* ast) {
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::IntegerLiteral* ast) {
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::StringLiteral* ast) {
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::BooleanLiteral* ast) {
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::NullLiteral* ast) {
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::ArrayLiteral* ast) {
+	for (auto element : ast->m_elements) {
+		check(element, MetaType::Term);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::FunctionLiteral* ast) {
+	for (auto& decl : ast->m_args) {
+		decl.m_meta_type = MetaType::Term;
+		if (decl.m_type_hint) {
+			check(decl.m_type_hint, MetaType::Type);
+		}
+	}
+	check(ast->m_body, MetaType::Term);
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::Identifier* ast) {
+	MetaType meta_type = ast->m_declaration->m_meta_type;
+	if (meta_type == MetaType::Undefined) Log::fatal() << "Unresolved meta type on variable '" << ast->m_text << "'";
+	return ast->m_meta_type = meta_type;
+}
+
+static MetaType infer(AST::CallExpression* ast) {
+	check(ast->m_callee, MetaType::Term);
+	for (auto arg : ast->m_args) {
+		check(arg, MetaType::Term);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::IndexExpression* ast) {
+	check(ast->m_callee, MetaType::Term);
+	check(ast->m_index, MetaType::Term);
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::AccessExpression* ast) {
+	MetaType target_meta_type = infer(ast->m_target);
+	if (target_meta_type == MetaType::Term) return ast->m_meta_type = MetaType::Term;
+	if (target_meta_type == MetaType::Type) return ast->m_meta_type = MetaType::Constructor;
+	Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+}
+
+static MetaType infer(AST::MatchExpression* ast) {
+	if (ast->m_type_hint) {
+		check(ast->m_type_hint, MetaType::Type);
+	}
+	for (auto& kv : ast->m_cases) {
+		kv.second.m_declaration.m_meta_type = MetaType::Term;
+		if (kv.second.m_declaration.m_type_hint) {
+			check(kv.second.m_declaration.m_type_hint, MetaType::Type);
+		}
+		check(kv.second.m_expression, MetaType::Term);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::TernaryExpression* ast) {
+	check(ast->m_condition, MetaType::Term);
+	check(ast->m_then_expr, MetaType::Term);
+	check(ast->m_else_expr, MetaType::Term);
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::ConstructorExpression* ast) {
+	MetaType constructor_meta_type = infer(ast->m_constructor);
+	if (constructor_meta_type != MetaType::Constructor && constructor_meta_type != MetaType::Type) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+
+	for (auto arg : ast->m_args) {
+		check(arg, MetaType::Term);
+	}
+
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static void infer_stmt(AST::Block* ast) {
+	for (auto stmt : ast->m_body) {
+		infer_stmt(stmt);
+	}
+}
+
+static void infer_stmt(AST::ReturnStatement* ast) {
+	check(ast->m_value, MetaType::Term);
+}
+
+static void infer_stmt(AST::IfElseStatement* ast) {
+	check(ast->m_condition, MetaType::Term);
+	infer_stmt(ast->m_body);
+	if (ast->m_else_body) infer_stmt(ast->m_else_body);
+}
+
+static void infer_stmt(AST::WhileStatement* ast) {
+	check(ast->m_condition, MetaType::Term);
+	infer_stmt(ast->m_body);
+}
+
+static void infer_stmt(AST::ExpressionStatement* ast) {
+	check(ast->m_expression, MetaType::Term);
+}
+
+static void infer_stmt(AST::Declaration* ast) {
+	ast->m_meta_type = infer_shallow(ast->m_value);
+	MetaType value_meta_type = infer(ast->m_value);
+	if (value_meta_type == MetaType::Term) {
+		if (ast->m_type_hint) {
+			check(ast->m_type_hint, MetaType::Type);
+		}
+	} else {
+		if (ast->m_type_hint) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+	}
+	ast->m_meta_type = value_meta_type;
+}
+
+static void infer_stmt(AST::Stmt* ast) {
+	switch (ast->tag()) {
+	case StmtTag::Block: return infer_stmt(static_cast<AST::Block*>(ast));
+	case StmtTag::ReturnStatement: return infer_stmt(static_cast<AST::ReturnStatement*>(ast));
+	case StmtTag::IfElseStatement: return infer_stmt(static_cast<AST::IfElseStatement*>(ast));
+	case StmtTag::WhileStatement: return infer_stmt(static_cast<AST::WhileStatement*>(ast));
+	case StmtTag::ExpressionStatement: return infer_stmt(static_cast<AST::ExpressionStatement*>(ast));
+	case StmtTag::Declaration: return infer_stmt(static_cast<AST::Declaration*>(ast));
+	}
+}
+
+static MetaType infer(AST::SequenceExpression* ast) {
+	infer_stmt(ast->m_body);
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::UnionExpression* ast) {
+	for (auto type : ast->m_types) {
+		check(type, MetaType::Type);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::StructExpression* ast) {
+	for (auto type : ast->m_types) {
+		check(type, MetaType::Type);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::TypeTerm* ast) {
+	check(ast->m_callee, MetaType::TypeFunction);
+	for (auto arg : ast->m_args) {
+		check(arg, MetaType::Type);
+	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::Expr* ast) {
+	switch (ast->type()) {
+	case ExprTag::NumberLiteral: return infer(static_cast<AST::NumberLiteral*>(ast));
+	case ExprTag::IntegerLiteral: return infer(static_cast<AST::IntegerLiteral*>(ast));
+	case ExprTag::StringLiteral: return infer(static_cast<AST::StringLiteral*>(ast));
+	case ExprTag::BooleanLiteral: return infer(static_cast<AST::BooleanLiteral*>(ast));
+	case ExprTag::ArrayLiteral: return infer(static_cast<AST::ArrayLiteral*>(ast));
+	case ExprTag::NullLiteral: return infer(static_cast<AST::NullLiteral*>(ast));
+	case ExprTag::FunctionLiteral: return infer(static_cast<AST::FunctionLiteral*>(ast));
+	case ExprTag::CallExpression: return infer(static_cast<AST::CallExpression*>(ast));
+	case ExprTag::IndexExpression: return infer(static_cast<AST::IndexExpression*>(ast));
+	case ExprTag::MatchExpression: return infer(static_cast<AST::MatchExpression*>(ast));
+	case ExprTag::TernaryExpression: return infer(static_cast<AST::TernaryExpression*>(ast));
+	case ExprTag::ConstructorExpression: return infer(static_cast<AST::ConstructorExpression*>(ast));
+	case ExprTag::SequenceExpression: return infer(static_cast<AST::SequenceExpression*>(ast));
+	case ExprTag::UnionExpression: return infer(static_cast<AST::UnionExpression*>(ast));
+	case ExprTag::StructExpression: return infer(static_cast<AST::StructExpression*>(ast));
+	case ExprTag::TypeTerm: return infer(static_cast<AST::TypeTerm*>(ast));
+	case ExprTag::AccessExpression: return infer(static_cast<AST::AccessExpression*>(ast));
+	case ExprTag::Identifier: return infer(static_cast<AST::Identifier*>(ast));
+	case ExprTag::BuiltinTypeFunction:
+	case ExprTag::Constructor:
+		Log::fatal() << "unexpected AST type in infer_shallow ("
+		             << AST::expr_string[int(ast->type())] << ") during infer";
+	}
+}
+
+void metacheck_program(AST::Program* ast) {
+
+	int counter = 0;
+	std::unordered_map<AST::Declaration*, int> decl_to_index;
+	std::vector<AST::Declaration*> index_to_decl;
+
+	for (auto& decl : ast->m_declarations) {
+		decl.m_meta_type = infer_shallow(decl.m_value);
+
+		index_to_decl.push_back(&decl);
+		decl_to_index.insert({&decl, counter});
+		counter += 1;
+	}
+
+	TarjanSolver solver(counter);
+
+	for (auto kv : decl_to_index) {
+		auto decl = kv.first;
+		auto u = kv.second;
+		if (decl->m_meta_type == MetaType::Undefined) {
+			for (auto other : decl->m_references) {
+				auto it = decl_to_index.find(other);
+				assert(it != decl_to_index.end());
+				int v = it->second;
+				solver.add_edge(u, v);
+			}
+		}
+	}
+
+	solver.solve();
+	auto const& dependency_components = solver.vertices_of_components();
+
+	for (auto const& comp : dependency_components) {
+
+		assert(comp.size() != 0);
+
+		if (comp.size() > 1) {
+			Log::error() << "Unresolved dependency cycle involving the global variables:";
+			for (int index : comp) {
+				Log::info() << index_to_decl[index]->m_identifier;
+			}
+			Log::fatal() << "Terminating.";
+		}
+
+		assert(comp.size() == 1);
+
+		auto* decl = index_to_decl[comp[0]];
+
+		if (decl->m_meta_type == MetaType::Undefined) {
+			decl->m_meta_type = infer(decl->m_value);
+		}
+	}
+
+	for (auto& decl : ast->m_declarations) {
+
+		// we haven't looked inside the declarations whose top-level meta type
+		// could be determined shallowly. Do that now.
+		if (can_infer_shallow(decl.m_value)) {
+			infer(decl.m_value);
+		}
+
+		// check typehints on global variables
+		if (decl.m_type_hint) {
+			if (decl.m_meta_type != MetaType::Term) Log::fatal() << "failed metacheck (" << __LINE__ << ")";
+			check(decl.m_type_hint, MetaType::Type);
+		}
 	}
 }
 

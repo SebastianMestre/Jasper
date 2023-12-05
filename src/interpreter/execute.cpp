@@ -63,9 +63,7 @@ ExitStatus execute(
 	tc.compute_declaration_order(ast);
 
 	if (settings.typecheck) {
-		tc.core().m_meta_core.comp = &tc.declaration_order();
-		TypeChecker::metacheck_program(tc.core().m_meta_core, ast);
-		tc.core().m_meta_core.solve();
+		TypeChecker::metacheck_program(ast);
 		TypeChecker::reify_types(ast, tc, ast_allocator);
 		TypeChecker::typecheck_program(ast, tc);
 	}
