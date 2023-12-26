@@ -5,7 +5,6 @@ using TypeFunctionId = int;
 using TermId = int;
 using MonoId = int;
 using PolyId = int;
-using TypeVarId = int;
 
 using MetaTypeId = int;
 
