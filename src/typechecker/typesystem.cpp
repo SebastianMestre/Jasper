@@ -33,14 +33,14 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
 }
 
 MonoId TypeSystemCore::inst_impl(
-    MonoId mono, std::unordered_map<int, MonoId> const& mapping) {
+    MonoId mono, std::map<VarId, MonoId> const& mapping) {
 
 	mono = ll_find(mono);
 	NodeHeader header = ll_node_header[mono];
 
 	if (header.tag == Tag::Var) {
 		VarId var = get_var_id(mono);
-		auto it = mapping.find(static_cast<int>(var));
+		auto it = mapping.find(var);
 		return it == mapping.end() ? mono : it->second;
 	} else {
 		TermId term = header.data_idx;
@@ -56,9 +56,9 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 	assert(data.vars.size() == vals.size());
 
-	std::unordered_map<int, MonoId> old_to_new;
+	std::map<VarId, MonoId> old_to_new;
 	for (int i {0}; i != data.vars.size(); ++i) {
-		old_to_new[static_cast<int>(data.vars[i])] = vals[i];
+		old_to_new[data.vars[i]] = vals[i];
 	}
 
 	return inst_impl(data.base, old_to_new);
@@ -71,12 +71,12 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	return inst_with(poly, vals);
 }
 
-void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
+void TypeSystemCore::gather_free_vars(MonoId mono, std::set<VarId>& free_vars) {
 	mono = ll_find(mono);
 	const NodeHeader& header = ll_node_header[mono];
 
 	if (header.tag == Tag::Var) {
-		free_vars.insert(mono);
+		free_vars.insert(get_var_id(mono));
 	} else {
 		TermId term = header.data_idx;
 		for (MonoId arg : ll_term_data[term].argument_idx)

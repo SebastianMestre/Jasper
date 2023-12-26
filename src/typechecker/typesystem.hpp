@@ -1,7 +1,8 @@
 #pragma once
 
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
+#include <map>
 #include <vector>
 
 #include "../algorithms/union_find.hpp"
@@ -19,6 +20,14 @@
 enum class TypeFunctionStrength { None, Full };
 
 enum class VarId {};
+
+inline bool operator<(VarId a, VarId b) {
+	return static_cast<int>(a) < static_cast<int>(b);
+}
+
+inline bool operator==(VarId a, VarId b) {
+	return static_cast<int>(a) == static_cast<int>(b);
+}
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
@@ -107,9 +116,9 @@ struct TypeSystemCore {
 	}
 
 	// qualifies all unbound variables in the given monotype
-	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
+	void gather_free_vars(MonoId mono, std::set<VarId>& free_vars);
 
-	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
+	MonoId inst_impl(MonoId mono, std::map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 	MonoId inst_fresh(PolyId poly);
 
