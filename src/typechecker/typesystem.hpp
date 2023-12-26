@@ -43,7 +43,7 @@ struct TypeFunctionData {
 // any value, and still give a valid typing.
 struct PolyData {
 	MonoId base;
-	std::vector<MonoId> vars;
+	std::vector<VarId> vars;
 };
 
 struct Constraint {
@@ -67,7 +67,7 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 
-	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
+	PolyId new_poly(MonoId mono, std::vector<VarId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function(
@@ -161,6 +161,8 @@ private:
 	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(MonoId t, Constraint const& c);
+
+public:
 	VarId get_var_id(MonoId i);
 
 private:

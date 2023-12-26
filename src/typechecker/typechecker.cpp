@@ -29,7 +29,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	// TODO: refactor, figure out a nice way to build types
 	// HACK: this is an ugly hack. bear with me...
 
-	auto forall = [&](std::vector<MonoId> quantified_vars, MonoId inner_ty) -> PolyId {
+	auto forall = [&](std::vector<VarId> quantified_vars, MonoId inner_ty) -> PolyId {
 		return core().new_poly(inner_ty, std::move(quantified_vars));
 	};
 
@@ -44,7 +44,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 
 	{
 		MonoId a_ty = new_var();
-		MonoId a_var = a_ty;
+		VarId a_var = core().get_var_id(a_ty);
 
 		MonoId array_a_ty = array_ty(a_ty, "array");
 

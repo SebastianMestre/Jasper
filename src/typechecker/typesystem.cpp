@@ -22,7 +22,7 @@ MonoId TypeSystemCore::new_term(
 	return ll_new_term(tf, std::move(args), tag);
 }
 
-PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
+PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
 	// TODO: check that the given vars are actually vars
 	PolyData data;
 	data.base = mono;
@@ -33,13 +33,14 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 }
 
 MonoId TypeSystemCore::inst_impl(
-    MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping) {
+    MonoId mono, std::unordered_map<int, MonoId> const& mapping) {
 
 	mono = ll_find(mono);
 	NodeHeader header = ll_node_header[mono];
 
 	if (header.tag == Tag::Var) {
-		auto it = mapping.find(mono);
+		VarId var = get_var_id(mono);
+		auto it = mapping.find(static_cast<int>(var));
 		return it == mapping.end() ? mono : it->second;
 	} else {
 		TermId term = header.data_idx;
@@ -55,9 +56,9 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 
 	assert(data.vars.size() == vals.size());
 
-	std::unordered_map<MonoId, MonoId> old_to_new;
+	std::unordered_map<int, MonoId> old_to_new;
 	for (int i {0}; i != data.vars.size(); ++i) {
-		old_to_new[data.vars[i]] = vals[i];
+		old_to_new[static_cast<int>(data.vars[i])] = vals[i];
 	}
 
 	return inst_impl(data.base, old_to_new);
