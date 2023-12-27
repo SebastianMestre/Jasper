@@ -183,14 +183,20 @@ static AST::Constructor* constructor_from_ast(
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
-		MonoId dummy_monotype = tc.core().new_dummy_for_ct_eval(access->m_member);
+		auto case_name = access->m_member;
 
-		MonoId monotype = compute_mono(access->m_target, tc);
+		MonoId expected_ty = tc.core().ll_new_var();
+		VarId v = tc.core().get_var_id(expected_ty);
 
-		tc.core().ll_unify(dummy_monotype, monotype);
+		tc.core().add_variant_constraint(v);
+		tc.core().add_field_constraint(v, case_name, tc.core().ll_new_var());
 
-		constructor->m_mono = monotype;
-		constructor->m_id = access->m_member;
+		MonoId actual_ty = compute_mono(access->m_target, tc);
+
+		tc.core().ll_unify(expected_ty, actual_ty);
+
+		constructor->m_mono = actual_ty;
+		constructor->m_id = case_name;
 	} else {
 		Log::fatal() << "Constructor invokation on a non-constructor -- MetaType(" << int(meta) << ")";
 	}

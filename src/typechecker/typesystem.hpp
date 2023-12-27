@@ -95,13 +95,6 @@ struct TypeSystemCore {
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 
-	// dummy with one constructor, the one used
-	MonoId new_dummy_for_ct_eval(InternedString member) {
-		return new_constrained_var(
-		    {{{member, ll_new_var()}}, Constraint::Shape::Variant},
-		    "Union Constructor Access");
-	}
-
 	MonoId new_dummy_for_typecheck1(
 		std::unordered_map<InternedString, MonoId> structure) {
 		return new_constrained_var(
