@@ -49,15 +49,6 @@ struct TypecheckHelper {
 		return core().new_term(type_function, std::move(arguments), debug_data);
 	}
 
-
-	MonoId make_dummy_variant_type(std::unordered_map<InternedString, MonoId> structure) {
-		return core().new_dummy_for_typecheck1(std::move(structure));
-	}
-
-	MonoId make_dummy_record_type(std::unordered_map<InternedString, MonoId> structure) {
-		return core().new_dummy_for_typecheck2(std::move(structure));
-	}
-
 	MonoId make_function_type(std::vector<MonoId> args_types, int return_type) {
 		// return type goes last in a function type
 		args_types.push_back(return_type);
@@ -233,13 +224,18 @@ static void infer(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 static void infer(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_target, tc);
 
-	// should this be a hidden type var?
-	MonoId member_type = tc.new_var();
-	ast->m_value_type = member_type;
+	MonoId expected_ty = tc.new_var();
+	MonoId field_ty = tc.new_var();
+	VarId v = tc.core().get_var_id(expected_ty);
 
-	MonoId term_type = tc.make_dummy_record_type({{ast->m_member, member_type}});
+	tc.core().add_record_constraint(v);
+	tc.core().add_field_constraint(v, ast->m_member, field_ty);
 
-	tc.unify(ast->m_target->m_value_type, term_type);
+	MonoId actual_ty = ast->m_target->m_value_type;
+
+	tc.unify(actual_ty, expected_ty);
+
+	ast->m_value_type = field_ty;
 }
 
 static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
@@ -269,8 +265,19 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
 	}
 
-	MonoId term_type = tc.make_dummy_variant_type(std::move(dummy_structure));
-	tc.unify(ast->m_target.m_value_type, term_type);
+	MonoId expected_ty = tc.new_var();
+	VarId v = tc.core().get_var_id(expected_ty);
+
+	tc.core().add_variant_constraint(v);
+	for (auto& kv : dummy_structure) {
+		auto case_name = kv.first;
+		auto case_ty = kv.second;
+		tc.core().add_field_constraint(v, case_name, case_ty);
+	}
+
+	MonoId actual_ty = ast->m_target.m_value_type;
+
+	tc.unify(actual_ty, expected_ty);
 }
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {

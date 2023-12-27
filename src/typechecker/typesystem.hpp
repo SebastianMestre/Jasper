@@ -95,18 +95,6 @@ struct TypeSystemCore {
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 
-	MonoId new_dummy_for_typecheck1(
-		std::unordered_map<InternedString, MonoId> structure) {
-		return new_constrained_var(
-		    {std::move(structure), Constraint::Shape::Variant});
-	}
-
-	MonoId new_dummy_for_typecheck2(
-		std::unordered_map<InternedString, MonoId> structure) {
-		return new_constrained_var(
-		    {std::move(structure), Constraint::Shape::Record});
-	}
-
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::set<VarId>& free_vars);
 
