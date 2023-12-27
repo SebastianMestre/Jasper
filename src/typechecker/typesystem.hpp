@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../algorithms/union_find.hpp"
+#include "../log/log.hpp"
 #include "../utils/interned_string.hpp"
 #include "typechecker_types.hpp"
 
@@ -123,6 +124,39 @@ struct TypeSystemCore {
 	TypeFunctionData& type_function_data_of(MonoId);
 	TypeFunctionId new_type_function_var();
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
+
+	void add_record_constraint(VarId v) {
+		int i = static_cast<int>(v);
+		auto& current_shape = m_constraints[i].shape;
+		if (current_shape == Constraint::Shape::Unknown) {
+			current_shape = Constraint::Shape::Record;
+		} else if (current_shape == Constraint::Shape::Record) {
+			// OK!
+		} else {
+			Log::fatal() << "Some typevar is both union and struct";
+		}
+	}
+
+	void add_variant_constraint(VarId v) {
+		int i = static_cast<int>(v);
+		auto& current_shape = m_constraints[i].shape;
+		if (current_shape == Constraint::Shape::Unknown) {
+			current_shape = Constraint::Shape::Variant;
+		} else if (current_shape == Constraint::Shape::Variant) {
+			// OK!
+		} else {
+			Log::fatal() << "Some typevar is both variant and struct";
+		}
+	}
+
+	void add_field_constraint(VarId v, InternedString x, MonoId t) {
+		int i = static_cast<int>(v);
+		if (m_constraints[i].structure.count(x)) {
+			ll_unify(m_constraints[i].structure[x], t);
+		} else {
+			m_constraints[i].structure[x] = t;
+		}
+	}
 private:
 
 	int new_constrained_var(Constraint c, char const* debug = nullptr);
