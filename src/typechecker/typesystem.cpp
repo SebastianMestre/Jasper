@@ -10,15 +10,7 @@ TypeSystemCore::TypeSystemCore() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = find_type_function(tf);
-
-	{
-		// This block of code ensures that tf has the right arity
-		TypeFunctionId dummy_tf = new_type_function_var();
-		get_type_function_data(dummy_tf).argument_count = args.size();
-		unify_type_function(tf, dummy_tf);
-	}
-
+	assert(get_type_function_data(tf).argument_count == args.size() || get_type_function_data(tf).argument_count == -1);
 	return ll_new_term(tf, std::move(args), tag);
 }
 
@@ -135,27 +127,7 @@ static InternedString print_a_thing(int x) {
 }
 
 void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
-	i = find_type_function(i);
-	j = find_type_function(j);
-
-	if (i == j)
-		return;
-
-	if (get_type_function_data(i).strength == TypeFunctionStrength::Full &&
-		get_type_function_data(j).strength == TypeFunctionStrength::Full) {
-		Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
-		// Log::fatal() << "unified different type functions";
-	}
-
-	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
-		std::swap(i, j);
-
-	if (get_type_function_data(i).strength == TypeFunctionStrength::None) {
-		point_type_function_at_another(i, j);
-		return;
-	}
-
-	assert(false);
+	assert(i == j);
 }
 
 bool TypeSystemCore::occurs(VarId v, MonoId i) {
@@ -304,11 +276,7 @@ void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFuncti
 }
 
 TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
-	return m_type_functions[find_type_function(tf)];
-}
-
-TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
-	return m_type_function_uf.find(tf);
+	return m_type_functions[tf];
 }
 
 bool TypeSystemCore::equals_var(MonoId t, VarId v) {
