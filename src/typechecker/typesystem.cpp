@@ -174,22 +174,19 @@ bool TypeSystemCore::occurs(VarId v, MonoId i) {
 }
 
 void TypeSystemCore::unify_vars_left_to_right(VarId vi, VarId vj) {
-	combine_constraints_left_to_right(vi, vj);
+	add_left_constraints_to_right(vi, vj);
 	m_type_var_uf.join_left_to_right(static_cast<int>(vi), static_cast<int>(vj));
 }
 
-void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
-	// TODO
-	auto& i_constraints = m_constraints[static_cast<int>(vi)];
-	auto& j_constraints = m_constraints[static_cast<int>(vj)];
-	for (auto const& kv : i_constraints.structure) {
-		auto it = j_constraints.structure.find(kv.first);
-		if (it == j_constraints.structure.end()) {
-			j_constraints.structure.insert(kv);
-		} else {
-			ll_unify(kv.second, it->second);
-		}
-	}
+void TypeSystemCore::add_left_constraints_to_right(VarId vi, VarId vj) {
+	if (vi == vj) return;
+	auto& i_data = m_constraints[static_cast<int>(vi)];
+	if (i_data.shape == Constraint::Shape::Record)
+		add_record_constraint(vj);
+	if (i_data.shape == Constraint::Shape::Variant)
+		add_variant_constraint(vj);
+	for (auto const& kv : i_data.structure)
+		add_field_constraint(vj, kv.first, kv.second);
 	return;
 }
 

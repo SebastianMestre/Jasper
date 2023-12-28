@@ -32,11 +32,6 @@ enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
 // to tell how many arguments it takes. Else, for variant, and record,
 // we store their structure as a hash from names to monotypes.
-//
-// Dummy type functions are for unification purposes only, but do not count
-// as 'deduced', because they were not created by the user/
-//
-// TODO: change for polymorphic approach
 struct TypeFunctionData {
 	TypeFunctionTag tag;
 	int argument_count; // -1 means variadic
@@ -95,7 +90,7 @@ struct TypeSystemCore {
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 
-	// qualifies all unbound variables in the given monotype
+	// finds all free variables in the given monotype
 	void gather_free_vars(MonoId mono, std::set<VarId>& free_vars);
 
 	MonoId inst_impl(MonoId mono, std::map<VarId, MonoId> const& mapping);
@@ -179,7 +174,7 @@ private:
 	bool occurs(VarId v, MonoId i);
 	bool equals_var(MonoId t, VarId v);
 	void unify_vars_left_to_right(VarId vi, VarId vj);
-	void combine_constraints_left_to_right(VarId vi, VarId vj);
+	void add_left_constraints_to_right(VarId vi, VarId vj);
 	bool satisfies(MonoId t, Constraint const& c);
 
 public:
