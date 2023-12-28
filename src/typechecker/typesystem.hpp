@@ -140,8 +140,6 @@ struct TypeSystemCore {
 	}
 private:
 
-	int new_constrained_var(Constraint c, char const* debug = nullptr);
-
 	enum class Tag { Var, Term, };
 
 	struct NodeHeader {

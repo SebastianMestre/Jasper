@@ -236,10 +236,6 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var(char const* debug) {
-	return new_constrained_var({}, debug);
-}
-
-int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
 	int var_id = m_var_counter++;
 	int uf_node = m_type_var_uf.new_node();
 
@@ -247,7 +243,7 @@ int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
 	assert(m_substitution.size() == var_id);
 	assert(m_constraints.size() == var_id);
 	m_substitution.push_back(-1);
-	m_constraints.push_back(std::move(c));
+	m_constraints.push_back({});
 
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
