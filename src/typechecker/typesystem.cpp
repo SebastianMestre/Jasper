@@ -23,7 +23,6 @@ MonoId TypeSystemCore::new_term(
 }
 
 PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
-	// TODO: check that the given vars are actually vars
 	PolyData data;
 	data.base = mono;
 	data.vars = std::move(vars);
@@ -47,7 +46,7 @@ MonoId TypeSystemCore::inst_impl(
 		std::vector<MonoId> new_args;
 		for (MonoId arg : ll_term_data[term].argument_idx)
 			new_args.push_back(inst_impl(arg, mapping));
-		return new_term(ll_term_data[term].function_id, std::move(new_args));
+		return ll_new_term(ll_term_data[term].function_id, std::move(new_args));
 	}
 }
 
@@ -191,6 +190,24 @@ void TypeSystemCore::add_left_constraints_to_right(VarId vi, VarId vj) {
 }
 
 bool TypeSystemCore::satisfies(MonoId t, Constraint const& c) {
+#if 0
+	assert(ll_node_header[t].tag == Tag::Term);
+
+	int tid = ll_node_header[t].data_idx;
+
+	TermData& t_data = ll_term_data[tid];
+	int tf = t_data.function_id;
+	auto& tf_data = get_type_function_data(tf);
+
+	if (c.shape == Constraint::Shape::Record  && tf_data.tag != TypeFunctionTag::Record ) return false;
+	if (c.shape == Constraint::Shape::Variant && tf_data.tag != TypeFunctionTag::Variant) return false;
+	if (!c.structure.empty() && tf_data.tag == TypeFunctionTag::Builtin) return false;
+
+	for (auto& kv : c.structure) {
+		if (!tf_data.structure.count(kv.first)) return false;
+		// ll_unify(kv.second, t_tf_data.structure[kv.first]);
+	}
+#endif
 	return true;
 }
 
