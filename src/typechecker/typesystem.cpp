@@ -149,7 +149,6 @@ void TypeSystemCore::add_left_constraints_to_right(VarId vi, VarId vj) {
 }
 
 bool TypeSystemCore::satisfies(MonoId t, Constraint const& c) {
-#if 0
 	assert(ll_node_header[t].tag == Tag::Term);
 
 	int tid = ll_node_header[t].data_idx;
@@ -164,9 +163,9 @@ bool TypeSystemCore::satisfies(MonoId t, Constraint const& c) {
 
 	for (auto& kv : c.structure) {
 		if (!tf_data.structure.count(kv.first)) return false;
-		// ll_unify(kv.second, t_tf_data.structure[kv.first]);
+		ll_unify(kv.second, tf_data.structure[kv.first]);
 	}
-#endif
+
 	return true;
 }
 
