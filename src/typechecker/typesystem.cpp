@@ -12,13 +12,6 @@ MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
 	tf = find_type_function(tf);
 
-	{
-		// This block of code ensures that tf has the right arity
-		TypeFunctionId dummy_tf = new_type_function_var();
-		get_type_function_data(dummy_tf).argument_count = args.size();
-		unify_type_function(tf, dummy_tf);
-	}
-
 	return ll_new_term(tf, std::move(args), tag);
 }
 
