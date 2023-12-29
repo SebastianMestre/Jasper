@@ -185,12 +185,11 @@ static AST::Constructor* constructor_from_ast(
 
 		auto case_name = access->m_member;
 
-		MonoId expected_ty = tc.core().ll_new_var();
-		VarId v = tc.core().get_var_id(expected_ty);
-
+		VarId v = tc.core().fresh_var();
 		tc.core().add_variant_constraint(v);
 		tc.core().add_field_constraint(v, case_name, tc.core().ll_new_var());
 
+		MonoId expected_ty = tc.core().var(v);
 		MonoId actual_ty = compute_mono(access->m_target, tc);
 
 		tc.core().ll_unify(expected_ty, actual_ty);

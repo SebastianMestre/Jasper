@@ -43,8 +43,8 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	};
 
 	{
-		MonoId a_ty = new_var();
-		VarId a_var = core().get_var_id(a_ty);
+		VarId a_var = core().fresh_var();
+		MonoId a_ty = core().var(a_var);
 
 		MonoId array_a_ty = array_ty(a_ty, "array");
 

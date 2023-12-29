@@ -224,13 +224,12 @@ static void infer(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 static void infer(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_target, tc);
 
-	MonoId expected_ty = tc.new_var();
+	VarId v = tc.core().fresh_var();
 	MonoId field_ty = tc.new_var();
-	VarId v = tc.core().get_var_id(expected_ty);
-
 	tc.core().add_record_constraint(v);
 	tc.core().add_field_constraint(v, ast->m_member, field_ty);
 
+	MonoId expected_ty = tc.core().var(v);
 	MonoId actual_ty = ast->m_target->m_value_type;
 
 	tc.unify(actual_ty, expected_ty);
@@ -265,8 +264,7 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
 	}
 
-	MonoId expected_ty = tc.new_var();
-	VarId v = tc.core().get_var_id(expected_ty);
+	VarId v = tc.core().fresh_var();
 
 	tc.core().add_variant_constraint(v);
 	for (auto& kv : dummy_structure) {
@@ -275,6 +273,7 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		tc.core().add_field_constraint(v, case_name, case_ty);
 	}
 
+	MonoId expected_ty = tc.core().var(v);
 	MonoId actual_ty = ast->m_target.m_value_type;
 
 	tc.unify(actual_ty, expected_ty);
