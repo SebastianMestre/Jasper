@@ -270,10 +270,6 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
-	m_type_function_uf.join_left_to_right(a, b);
-}
-
 TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
 	return m_type_functions[find_type_function(tf)];
 }
