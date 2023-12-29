@@ -117,13 +117,6 @@ static InternedString print_a_thing(int x) {
 	return "a user defined type";
 }
 
-void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
-	if (i == j)
-		return;
-
-	Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
-}
-
 bool TypeSystemCore::occurs(VarId v, MonoId i) {
 	i = ll_find(i);
 
@@ -206,7 +199,12 @@ void TypeSystemCore::ll_unify(int i, int j) {
 			TermData& i_data = ll_term_data[vi];
 			TermData& j_data = ll_term_data[vj];
 
-			unify_type_function(i_data.function_id, j_data.function_id);
+			TypeFunctionId i_tf = i_data.function_id;
+			TypeFunctionId j_tf = j_data.function_id;
+
+			if (i_tf != j_tf) {
+				Log::fatal() << "unified " << print_a_thing(i_tf) << " with " << print_a_thing(j_tf);
+			}
 		}
 
 		assert(ll_term_data[vi].argument_idx.size() == ll_term_data[vj].argument_idx.size());

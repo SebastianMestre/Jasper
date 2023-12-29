@@ -89,7 +89,6 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
-	void unify_type_function(TypeFunctionId, TypeFunctionId);
 
 	void add_record_constraint(VarId v) {
 		int i = static_cast<int>(v);
