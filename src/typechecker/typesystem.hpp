@@ -12,11 +12,9 @@
 
 // Type function strength is an ad-hoc concept, specific to our implementation
 // of unification.
-// If a typefunc has 'None' strength, its data is not even considered for
-// unification.
 // If it has 'Full' strength, we only accept exact matches during unification.
 // We don't allow unifying two different full-strength type functions
-enum class TypeFunctionStrength { None, Full };
+enum class TypeFunctionStrength { Full };
 
 enum class VarId {};
 

@@ -135,14 +135,6 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 		// Log::fatal() << "unified different type functions";
 	}
 
-	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
-		std::swap(i, j);
-
-	if (get_type_function_data(i).strength == TypeFunctionStrength::None) {
-		point_type_function_at_another(i, j);
-		return;
-	}
-
 	assert(false);
 }
 
