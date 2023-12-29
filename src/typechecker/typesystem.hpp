@@ -159,7 +159,9 @@ private:
 	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
 	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
 	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
+public:
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
+private:
 	TypeFunctionId find_type_function(TypeFunctionId);
 
 	TypeFunctionId create_type_function(

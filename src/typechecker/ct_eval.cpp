@@ -262,12 +262,71 @@ static TypeFunctionId get_type_function_id(AST::Expr* ast) {
 		auto identifier = static_cast<AST::Identifier*>(ast);
 		return get_type_function_id(identifier->m_declaration->m_value);
 	}
-	
+
 	case ExprTag::BuiltinTypeFunction: {
 		auto handle = static_cast<AST::BuiltinTypeFunction*>(ast);
 		return handle->m_value;
 	}
-	
+
+	default:
+		assert(0);
+		break;
+	}
+}
+
+static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
+	switch (ast->type()) {
+	case ExprTag::StructExpression: {
+		auto struct_expression = static_cast<AST::StructExpression*>(ast);
+
+		auto const& names = struct_expression->m_fields;
+		auto const& types = struct_expression->m_types;
+		int const n = names.size();
+
+		int tf = struct_expression->m_value;
+		auto& structure = tc.core().get_type_function_data(tf).structure;
+
+		std::vector<MonoId> to_unify(n);
+
+		for (int i = 0; i < n; ++i) {
+			auto name = names[i];
+			to_unify[i] = structure[name];
+		}
+
+		for (int i = 0; i < n; ++i) {
+			auto ty = compute_mono(types[i], tc);
+			tc.core().ll_unify(to_unify[i], ty);
+		}
+
+	} break;
+
+	case ExprTag::UnionExpression: {
+		auto union_expression = static_cast<AST::UnionExpression*>(ast);
+
+		auto const& names = union_expression->m_constructors;
+		auto const& types = union_expression->m_types;
+		int const n = names.size();
+
+		int tf = union_expression->m_value;
+		auto& structure = tc.core().get_type_function_data(tf).structure;
+
+		std::vector<MonoId> to_unify(n);
+
+		for (int i = 0; i < n; ++i) {
+			auto name = names[i];
+			to_unify[i] = structure[name];
+		}
+
+		for (int i = 0; i < n; ++i) {
+			auto ty = compute_mono(types[i], tc);
+			tc.core().ll_unify(to_unify[i], ty);
+		}
+
+	} break;
+
+	case ExprTag::Identifier: {
+	} break;
+
 	default:
 		assert(0);
 		break;
@@ -279,22 +338,35 @@ static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 
 	case ExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		struct_expression->m_value = tc.core().new_type_function_var();
-		break;
-	}
+
+		auto const& names = struct_expression->m_fields;
+
+		std::unordered_map<InternedString, MonoId> structure;
+		for (auto const& name : names) {
+			structure[name] = tc.core().ll_new_var();
+		}
+
+		struct_expression->m_value =
+		    tc.core().new_type_function_for_ct_eval1(names, std::move(structure));
+	} break;
 
 	case ExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		union_expression->m_value = tc.core().new_type_function_var();
-		break;
-	}
+
+		auto const& names = union_expression->m_constructors;
+
+		std::unordered_map<InternedString, MonoId> structure;
+		for (auto const& name : names) {
+			structure[name] = tc.core().ll_new_var();
+		}
+
+		union_expression->m_value =
+		    tc.core().new_type_function_for_ct_eval2(std::move(structure));
+	} break;
 
 	case ExprTag::Identifier: {
-		auto identifier = static_cast<AST::Identifier*>(ast);
-		stub_type_function_id(identifier->m_declaration->m_value, tc);
-		break;
-	}
-	
+	} break;
+
 	default:
 		assert(0);
 		break;
@@ -357,8 +429,7 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
-				TypeFunctionId tf = compute_type_func(decl->m_value, tc);
-				tc.core().unify_type_function(tf, get_type_function_id(decl->m_value));
+				complete_type_function(decl->m_value, tc);
 			} else if (meta_type == MetaType::Type) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
