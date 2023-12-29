@@ -151,7 +151,6 @@ private:
 public:
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
 private:
-	TypeFunctionId find_type_function(TypeFunctionId);
 
 	TypeFunctionId create_type_function(
 	    TypeFunctionTag tag,
@@ -173,7 +172,6 @@ public:
 private:
 	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;
-	UnionFind m_type_function_uf;
 
 	// per-poly data
 	std::vector<PolyData> poly_data;
