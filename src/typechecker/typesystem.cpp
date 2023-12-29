@@ -9,8 +9,11 @@ TypeSystemCore::TypeSystemCore() {
 }
 
 MonoId TypeSystemCore::new_term(
-    TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	return ll_new_term(tf, std::move(args), tag);
+    TypeFunctionId tf, std::vector<int> args, char const* debug) {
+	int type_id = m_type_counter++;
+	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size()), debug});
+	ll_term_data.push_back({tf, std::move(args)});
+	return type_id;
 }
 
 PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<VarId> vars) {
@@ -37,7 +40,7 @@ MonoId TypeSystemCore::inst_impl(
 		std::vector<MonoId> new_args;
 		for (MonoId arg : ll_term_data[term].argument_idx)
 			new_args.push_back(inst_impl(arg, mapping));
-		return ll_new_term(ll_term_data[term].function_id, std::move(new_args));
+		return new_term(ll_term_data[term].function_id, std::move(new_args));
 	}
 }
 
@@ -230,14 +233,6 @@ MonoId TypeSystemCore::var(VarId v, char const* debug) {
 
 int TypeSystemCore::ll_new_var(char const* debug) {
 	return var(fresh_var(), debug);
-}
-
-int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug) {
-	int type_id = m_type_counter++;
-	assert(ll_node_header.size() == type_id);
-	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size()), debug});
-	ll_term_data.push_back({f, std::move(args)});
-	return type_id;
 }
 
 int TypeSystemCore::ll_find(int i) {
