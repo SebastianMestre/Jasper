@@ -53,6 +53,9 @@ struct TypeSystemCore {
 
 	TypeSystemCore();
 
+	VarId fresh_var();
+	MonoId var(VarId, const char* debug = nullptr);
+
 	int ll_new_var(const char* debug = nullptr);
 	void ll_unify(int i, int j);
 

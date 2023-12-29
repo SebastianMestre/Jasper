@@ -212,21 +212,24 @@ void TypeSystemCore::ll_unify(int i, int j) {
 	}
 }
 
-int TypeSystemCore::ll_new_var(char const* debug) {
-	int var_id = m_var_counter++;
-	int uf_node = m_type_var_uf.new_node();
-
-	assert(uf_node == var_id);
-	assert(m_substitution.size() == var_id);
-	assert(m_constraints.size() == var_id);
+VarId TypeSystemCore::fresh_var() {
+	VarId v = static_cast<VarId>(m_var_counter++);
+	m_type_var_uf.new_node();
 	m_substitution.push_back(-1);
 	m_constraints.push_back({});
+	return v;
+}
 
+MonoId TypeSystemCore::var(VarId v, char const* debug) {
+	int var_id = static_cast<int>(v);
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Var, var_id, debug});
-
 	return type_id;
+}
+
+int TypeSystemCore::ll_new_var(char const* debug) {
+	return var(fresh_var(), debug);
 }
 
 int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug) {
