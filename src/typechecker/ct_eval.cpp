@@ -269,27 +269,77 @@ static TypeFunctionId get_type_function_id(AST::Expr* ast) {
 	}
 }
 
+static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
+	switch (ast->type()) {
+	case ExprTag::StructExpression: {
+		auto struct_expression = static_cast<AST::StructExpression*>(ast);
+		TypeFunctionId tf = struct_expression->m_value;
+
+		auto const& names = struct_expression->m_fields;
+		auto types = compute_monos(struct_expression->m_types, tc);
+
+		int n = names.size();
+		for (int i = 0; i < n; ++i) {
+			tc.core().ll_unify(types[i], tc.core().get_type_function_data(tf).structure[names[i]]);
+		}
+
+	} break;
+
+	case ExprTag::UnionExpression: {
+		auto union_expression = static_cast<AST::UnionExpression*>(ast);
+		TypeFunctionId tf = union_expression->m_value;
+
+		auto const& names = union_expression->m_constructors;
+		auto types = compute_monos(union_expression->m_types, tc);
+
+		int n = names.size();
+		for (int i = 0; i < n; ++i) {
+			tc.core().ll_unify(types[i], tc.core().get_type_function_data(tf).structure[names[i]]);
+		}
+	} break;
+
+	case ExprTag::Identifier: {
+	} break;
+
+	default:
+		assert(0);
+		break;
+	}
+}
+
 static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
 	case ExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		struct_expression->m_value = tc.core().new_type_function_var();
-		break;
-	}
+
+		int n = struct_expression->m_fields.size();
+		std::vector<MonoId> ty_stubs(n);
+		for (int i = 0; i < n; ++i) {
+			ty_stubs[i] = tc.core().ll_new_var();
+		}
+
+		struct_expression->m_value =
+		    tc.core().new_record(struct_expression->m_fields, ty_stubs);
+	} break;
 
 	case ExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		union_expression->m_value = tc.core().new_type_function_var();
+
+		int n = union_expression->m_constructors.size();
+		std::vector<MonoId> ty_stubs(n);
+		for (int i = 0; i < n; ++i) {
+			ty_stubs[i] = tc.core().ll_new_var();
+		}
+
+		union_expression->m_value =
+		    tc.core().new_variant(union_expression->m_constructors, ty_stubs);
 		break;
 	}
 
 	case ExprTag::Identifier: {
-		auto identifier = static_cast<AST::Identifier*>(ast);
-		stub_type_function_id(identifier->m_declaration->m_value, tc);
-		break;
-	}
-	
+	} break;
+
 	default:
 		assert(0);
 		break;
@@ -352,8 +402,7 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
 
-				TypeFunctionId tf = compute_type_func(decl->m_value, tc);
-				tc.core().unify_type_function(tf, get_type_function_id(decl->m_value));
+				complete_type_function(decl->m_value, tc);
 			} else if (meta_type == MetaType::Type) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
