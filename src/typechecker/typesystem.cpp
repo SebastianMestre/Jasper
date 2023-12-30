@@ -79,27 +79,24 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
-	return create_type_function(
-	    TypeFunctionTag::Builtin, arity, {}, {}, TypeFunctionStrength::Full);
+	return create_type_function(TypeFunctionTag::Builtin, arity, {}, {});
 }
 
 TypeFunctionId TypeSystemCore::new_type_function(
     TypeFunctionTag type,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure) {
-	return create_type_function(
-	    type, 0, std::move(fields), std::move(structure), TypeFunctionStrength::Full);
+	return create_type_function(type, 0, std::move(fields), std::move(structure));
 }
 
 TypeFunctionId TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
     std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure,
-    TypeFunctionStrength strength) {
+    std::unordered_map<InternedString, MonoId> structure) {
 	TypeFunctionId result = m_type_function_uf.new_node();
 	m_type_functions.push_back(
-	    {tag, arity, std::move(fields), std::move(structure), strength});
+	    {tag, arity, std::move(fields), std::move(structure)});
 	return result;
 }
 
@@ -129,21 +126,7 @@ void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
 	if (i == j)
 		return;
 
-	if (get_type_function_data(i).strength == TypeFunctionStrength::Full &&
-		get_type_function_data(j).strength == TypeFunctionStrength::Full) {
-		Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
-		// Log::fatal() << "unified different type functions";
-	}
-
-	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
-		std::swap(i, j);
-
-	if (get_type_function_data(i).strength == TypeFunctionStrength::None) {
-		point_type_function_at_another(i, j);
-		return;
-	}
-
-	assert(false);
+	Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
 }
 
 bool TypeSystemCore::occurs(VarId v, MonoId i) {

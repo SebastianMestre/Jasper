@@ -8,16 +8,6 @@
 #include "../utils/interned_string.hpp"
 #include "typechecker_types.hpp"
 
-// Type function strength is an ad-hoc concept, specific to our implementation
-// of unification.
-// If a typefunc has 'None' strength, its data is not even considered for
-// unification.
-// If it has 'Half' strength, its data is considered to be incomplete, so we
-// allow adding to it, but not removing.
-// If it has 'Full' strength, we only accept exact matches during unification.
-// We don't allow unifying two different full-strength type functions
-enum class TypeFunctionStrength { None, Full };
-
 enum class VarId {};
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
@@ -35,8 +25,6 @@ struct TypeFunctionData {
 
 	std::vector<InternedString> fields;
 	std::unordered_map<InternedString, MonoId> structure;
-
-	TypeFunctionStrength strength;
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -155,8 +143,7 @@ private:
 	    TypeFunctionTag tag,
 	    int arity,
 	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure,
-	    TypeFunctionStrength);
+	    std::unordered_map<InternedString, MonoId> structure);
 
 	void establish_substitution(VarId var_id, int type_id);
 
