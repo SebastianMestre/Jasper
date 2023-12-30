@@ -117,7 +117,6 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
-	TypeFunctionId new_type_function_var();
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
 private:
 

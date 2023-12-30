@@ -91,11 +91,6 @@ TypeFunctionId TypeSystemCore::new_type_function(
 	    type, 0, std::move(fields), std::move(structure), TypeFunctionStrength::Full);
 }
 
-TypeFunctionId TypeSystemCore::new_type_function_var() {
-	return create_type_function(
-	    TypeFunctionTag::Builtin, -1, {}, {}, TypeFunctionStrength::None);
-}
-
 TypeFunctionId TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
