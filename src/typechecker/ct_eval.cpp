@@ -307,7 +307,7 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-static void stub_type_function_id(AST::Expr* ast, TypeChecker& tc) {
+static void stub_type_function(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
 	case ExprTag::StructExpression: {
@@ -380,7 +380,7 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 
 		// put a dummy var where required.
 		if (meta_type == MetaType::TypeFunction) {
-			stub_type_function_id(decl.m_value, tc);
+			stub_type_function(decl.m_value, tc);
 		} else if (meta_type == MetaType::Type) {
 			stub_monotype_id(decl.m_value, tc);
 		}
