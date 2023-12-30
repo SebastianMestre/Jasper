@@ -75,15 +75,18 @@ struct TypeSystemCore {
 	    std::vector<InternedString> fields,
 	    std::unordered_map<InternedString, MonoId> structure);
 
-	TypeFunctionId new_type_function_for_ct_eval1(
-	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure) {
+	TypeFunctionId new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
+		std::unordered_map<InternedString, MonoId> structure;
+		for (int i = 0; i < fields.size(); ++i)
+			structure[fields[i]] = types[i];
 		return new_type_function(
 		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 	}
 
-	TypeFunctionId new_type_function_for_ct_eval2(
-	    std::unordered_map<InternedString, MonoId> structure) {
+	TypeFunctionId new_variant(std::vector<InternedString> const& fields, std::vector<MonoId> const& types) {
+		std::unordered_map<InternedString, MonoId> structure;
+		for (int i = 0; i < fields.size(); ++i)
+			structure[fields[i]] = types[i];
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 

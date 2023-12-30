@@ -31,6 +31,7 @@ static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, A
 static MonoId compute_mono(AST::Expr*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::Expr*, TypeChecker&);
 
+static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChecker&);
 
 // literals
 
@@ -433,9 +434,6 @@ static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc
 #undef RETURN
 }
 
-static std::unordered_map<InternedString, MonoId> build_map(
-    std::vector<InternedString> const&, std::vector<AST::Expr*> const&, TypeChecker&);
-
 static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
 	assert(ast->m_meta_type == MetaType::TypeFunction);
@@ -444,13 +442,11 @@ static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function_for_ct_eval1(
-	    ast->m_fields, build_map(ast->m_fields, ast->m_types, tc));
+	return tc.core().new_record(ast->m_fields, compute_monos(ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	return tc.core().new_type_function_for_ct_eval2(
-	    build_map(ast->m_constructors, ast->m_types, tc));
+	return tc.core().new_variant(ast->m_constructors, compute_monos(ast->m_types, tc));
 }
 
 static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
@@ -495,23 +491,15 @@ static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-static std::unordered_map<InternedString, MonoId> build_map(
-    std::vector<InternedString> const& names,
-    std::vector<AST::Expr*> const& types,
-    TypeChecker& tc) {
+static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const& types, TypeChecker& tc) {
 
-	assert(names.size() == types.size());
-
-	std::unordered_map<InternedString, MonoId> structure;
-	int n = names.size();
-	for (int i = 0; i < n; ++i){
-		MonoId mono = compute_mono(types[i], tc);
-		InternedString name = names[i];
-		assert(!structure.count(name));
-		structure[name] = mono;
+	int n = types.size();
+	std::vector<MonoId> result(n);
+	for (int i = 0; i < n; ++i) {
+		result[i] = compute_mono(types[i], tc);
 	}
 
-	return structure;
+	return result;
 }
 
 } // namespace TypeChecker
