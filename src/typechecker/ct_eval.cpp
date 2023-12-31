@@ -280,7 +280,9 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 
 		int n = names.size();
 		for (int i = 0; i < n; ++i) {
-			tc.core().ll_unify(types[i], tc.core().get_type_function_data(tf).structure[names[i]]);
+			MonoId stub_ty = tc.core().get_type_function_data(tf).structure[names[i]];
+			MonoId actual_ty = types[i];
+			tc.core().ll_unify(stub_ty, actual_ty);
 		}
 
 	} break;
