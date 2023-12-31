@@ -57,12 +57,12 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	return inst_with(poly, vals);
 }
 
-void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars) {
+void TypeSystemCore::gather_free_vars(MonoId mono, std::set<VarId>& free_vars) {
 	mono = ll_find(mono);
 	const NodeHeader& header = ll_node_header[mono];
 
 	if (header.tag == Tag::Var) {
-		free_vars.insert(mono);
+		free_vars.insert(get_var_id(mono));
 	} else {
 		TermId term = header.data_idx;
 		for (MonoId arg : ll_term_data[term].argument_idx)

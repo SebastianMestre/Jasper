@@ -69,7 +69,7 @@ private:
 	Frontend::SymbolTable symbol_table;
 	TypeChecker& tc;
 
-	bool is_bound_to_env(MonoId var) {
+	bool is_bound_to_env(VarId var) {
 
 		for (auto& kv : symbol_table.bindings()) {
 			auto decl = kv.second;
@@ -86,8 +86,8 @@ private:
 		return false;
 	}
 
-	std::unordered_set<MonoId> free_vars_of(MonoId mono) {
-		std::unordered_set<MonoId> free_vars;
+	std::set<VarId> free_vars_of(MonoId mono) {
+		std::set<VarId> free_vars;
 		core().gather_free_vars(mono, free_vars);
 		return free_vars;
 	}
@@ -98,9 +98,9 @@ private:
 PolyId TypecheckHelper::generalize(MonoId mono) {
 
 	std::vector<VarId> vars;
-	for (MonoId var : free_vars_of(mono)) {
+	for (VarId var : free_vars_of(mono)) {
 		if (!is_bound_to_env(var)) {
-			vars.push_back(core().get_var_id(var));
+			vars.push_back(var);
 		}
 	}
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "../algorithms/union_find.hpp"
@@ -107,7 +107,7 @@ struct TypeSystemCore {
 	}
 
 	// qualifies all unbound variables in the given monotype
-	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
+	void gather_free_vars(MonoId mono, std::set<VarId>& free_vars);
 
 private:
 	MonoId inst_impl(MonoId mono, std::map<VarId, MonoId> const& mapping);
