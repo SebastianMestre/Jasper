@@ -160,6 +160,7 @@ private:
 	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(MonoId t, Constraint const& c);
+public:
 	VarId get_var_id(MonoId i);
 
 private:
