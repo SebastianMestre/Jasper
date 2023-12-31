@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -9,6 +10,14 @@
 #include "typechecker_types.hpp"
 
 enum class VarId {};
+
+inline bool operator<(VarId a, VarId b) {
+	return static_cast<int>(a) < static_cast<int>(b);
+}
+
+inline bool operator==(VarId a, VarId b) {
+	return static_cast<int>(a) == static_cast<int>(b);
+}
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
@@ -31,7 +40,7 @@ struct TypeFunctionData {
 // any value, and still give a valid typing.
 struct PolyData {
 	MonoId base;
-	std::vector<MonoId> vars;
+	std::vector<VarId> vars;
 };
 
 struct Constraint {
@@ -100,8 +109,10 @@ struct TypeSystemCore {
 	// qualifies all unbound variables in the given monotype
 	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
 
-	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
+private:
+	MonoId inst_impl(MonoId mono, std::map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
+public:
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
