@@ -21,11 +21,11 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	return forall(std::move(actual_vars), mono);
 }
 
-PolyId TypeSystemCore::forall(std::vector<VarId> actual_vars, MonoId mono) {
-	PolyData data;
-	data.base = mono;
-	data.vars = std::move(actual_vars);
+PolyId TypeSystemCore::forall(std::vector<VarId> vars, MonoId ty) {
 	PolyId poly = poly_data.size();
+	PolyData data;
+	data.base = ty;
+	data.vars = std::move(vars);
 	poly_data.push_back(std::move(data));
 	return poly;
 }
