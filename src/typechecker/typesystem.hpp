@@ -65,7 +65,6 @@ struct TypeSystemCore {
 	    char const* tag = nullptr);
 
 	PolyId forall(std::vector<VarId>, MonoId);
-	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function(

@@ -13,14 +13,6 @@ MonoId TypeSystemCore::new_term(
 	return ll_new_term(tf, std::move(args), tag);
 }
 
-
-PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
-	// TODO: check that the given vars are actually vars
-	std::vector<VarId> actual_vars;
-	for (MonoId ty : vars) actual_vars.push_back(get_var_id(ty));
-	return forall(std::move(actual_vars), mono);
-}
-
 PolyId TypeSystemCore::forall(std::vector<VarId> vars, MonoId ty) {
 	PolyId poly = poly_data.size();
 	poly_data.push_back({ty, std::move(vars)});
