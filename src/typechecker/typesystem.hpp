@@ -8,16 +8,6 @@
 #include "../utils/interned_string.hpp"
 #include "typechecker_types.hpp"
 
-// Type function strength is an ad-hoc concept, specific to our implementation
-// of unification.
-// If a typefunc has 'None' strength, its data is not even considered for
-// unification.
-// If it has 'Half' strength, its data is considered to be incomplete, so we
-// allow adding to it, but not removing.
-// If it has 'Full' strength, we only accept exact matches during unification.
-// We don't allow unifying two different full-strength type functions
-enum class TypeFunctionStrength { None, Full };
-
 enum class VarId {};
 
 enum class TypeFunctionTag { Builtin, Variant, Record };
@@ -35,8 +25,6 @@ struct TypeFunctionData {
 
 	std::vector<InternedString> fields;
 	std::unordered_map<InternedString, MonoId> structure;
-
-	TypeFunctionStrength strength;
 };
 
 // A polytype is a type where some amount of type variables can take
@@ -75,15 +63,18 @@ struct TypeSystemCore {
 	    std::vector<InternedString> fields,
 	    std::unordered_map<InternedString, MonoId> structure);
 
-	TypeFunctionId new_type_function_for_ct_eval1(
-	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure) {
+	TypeFunctionId new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
+		std::unordered_map<InternedString, MonoId> structure;
+		for (int i = 0; i < fields.size(); ++i)
+			structure[fields[i]] = types[i];
 		return new_type_function(
 		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 	}
 
-	TypeFunctionId new_type_function_for_ct_eval2(
-	    std::unordered_map<InternedString, MonoId> structure) {
+	TypeFunctionId new_variant(std::vector<InternedString> const& fields, std::vector<MonoId> const& types) {
+		std::unordered_map<InternedString, MonoId> structure;
+		for (int i = 0; i < fields.size(); ++i)
+			structure[fields[i]] = types[i];
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 
@@ -114,7 +105,6 @@ struct TypeSystemCore {
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
-	TypeFunctionId new_type_function_var();
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
 private:
 
@@ -141,18 +131,15 @@ private:
 	bool ll_is_term(int i);
 
 	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
-	void point_type_function_at_another(TypeFunctionId, TypeFunctionId);
-	void unify_type_function_data(TypeFunctionData&, TypeFunctionData&);
-	int compute_new_argument_count(TypeFunctionData const&, TypeFunctionData const&) const;
+public:
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
-	TypeFunctionId find_type_function(TypeFunctionId);
+private:
 
 	TypeFunctionId create_type_function(
 	    TypeFunctionTag tag,
 	    int arity,
 	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure,
-	    TypeFunctionStrength);
+	    std::unordered_map<InternedString, MonoId> structure);
 
 	void establish_substitution(VarId var_id, int type_id);
 
@@ -166,7 +153,6 @@ private:
 private:
 	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;
-	UnionFind m_type_function_uf;
 
 	// per-poly data
 	std::vector<PolyData> poly_data;

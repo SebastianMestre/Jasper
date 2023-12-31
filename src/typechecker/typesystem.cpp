@@ -10,15 +10,6 @@ TypeSystemCore::TypeSystemCore() {
 
 MonoId TypeSystemCore::new_term(
     TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	tf = find_type_function(tf);
-
-	{
-		// This block of code ensures that tf has the right arity
-		TypeFunctionId dummy_tf = new_type_function_var();
-		get_type_function_data(dummy_tf).argument_count = args.size();
-		unify_type_function(tf, dummy_tf);
-	}
-
 	return ll_new_term(tf, std::move(args), tag);
 }
 
@@ -86,32 +77,24 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<MonoId>& f
 
 
 TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
-	return create_type_function(
-	    TypeFunctionTag::Builtin, arity, {}, {}, TypeFunctionStrength::Full);
+	return create_type_function(TypeFunctionTag::Builtin, arity, {}, {});
 }
 
 TypeFunctionId TypeSystemCore::new_type_function(
     TypeFunctionTag type,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure) {
-	return create_type_function(
-	    type, 0, std::move(fields), std::move(structure), TypeFunctionStrength::Full);
-}
-
-TypeFunctionId TypeSystemCore::new_type_function_var() {
-	return create_type_function(
-	    TypeFunctionTag::Builtin, -1, {}, {}, TypeFunctionStrength::None);
+	return create_type_function(type, 0, std::move(fields), std::move(structure));
 }
 
 TypeFunctionId TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
     std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure,
-    TypeFunctionStrength strength) {
-	TypeFunctionId result = m_type_function_uf.new_node();
+    std::unordered_map<InternedString, MonoId> structure) {
+	TypeFunctionId result = m_type_functions.size();
 	m_type_functions.push_back(
-	    {tag, arity, std::move(fields), std::move(structure), strength});
+	    {tag, arity, std::move(fields), std::move(structure)});
 	return result;
 }
 
@@ -135,27 +118,10 @@ static InternedString print_a_thing(int x) {
 }
 
 void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
-	i = find_type_function(i);
-	j = find_type_function(j);
-
 	if (i == j)
 		return;
 
-	if (get_type_function_data(i).strength == TypeFunctionStrength::Full &&
-		get_type_function_data(j).strength == TypeFunctionStrength::Full) {
-		Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
-		// Log::fatal() << "unified different type functions";
-	}
-
-	if (get_type_function_data(j).strength == TypeFunctionStrength::None)
-		std::swap(i, j);
-
-	if (get_type_function_data(i).strength == TypeFunctionStrength::None) {
-		point_type_function_at_another(i, j);
-		return;
-	}
-
-	assert(false);
+	Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
 }
 
 bool TypeSystemCore::occurs(VarId v, MonoId i) {
@@ -288,16 +254,8 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-void TypeSystemCore::point_type_function_at_another(TypeFunctionId a, TypeFunctionId b) {
-	m_type_function_uf.join_left_to_right(a, b);
-}
-
 TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
-	return m_type_functions[find_type_function(tf)];
-}
-
-TypeFunctionId TypeSystemCore::find_type_function(TypeFunctionId tf) {
-	return m_type_function_uf.find(tf);
+	return m_type_functions[tf];
 }
 
 bool TypeSystemCore::equals_var(MonoId t, VarId v) {
