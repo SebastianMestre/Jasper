@@ -18,9 +18,7 @@ PolyId TypeSystemCore::new_poly(MonoId mono, std::vector<MonoId> vars) {
 	// TODO: check that the given vars are actually vars
 	std::vector<VarId> actual_vars;
 	for (MonoId ty : vars) actual_vars.push_back(get_var_id(ty));
-
-	PolyId poly = forall(std::move(actual_vars), mono);
-	return poly;
+	return forall(std::move(actual_vars), mono);
 }
 
 PolyId TypeSystemCore::forall(std::vector<VarId> actual_vars, MonoId mono) {
