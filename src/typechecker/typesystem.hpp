@@ -65,6 +65,16 @@ struct TypeSystemCore {
 
 	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args);
 
+	MonoId fun(std::vector<MonoId> arg_tys, MonoId res_ty) {
+		arg_tys.push_back(res_ty);
+		return new_term(TypeChecker::BuiltinType::Function, {arg_tys});
+	}
+
+	MonoId array(MonoId elem_ty) {
+		return new_term(TypeChecker::BuiltinType::Array, {elem_ty});
+	}
+
+
 	PolyId forall(std::vector<VarId>, MonoId);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
