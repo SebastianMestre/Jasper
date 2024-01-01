@@ -86,8 +86,8 @@ private:
 		return false;
 	}
 
-	std::set<VarId> free_vars_of(MonoId mono) {
-		std::set<VarId> free_vars;
+	std::unordered_set<VarId> free_vars_of(MonoId mono) {
+		std::unordered_set<VarId> free_vars;
 		core().gather_free_vars(mono, free_vars);
 		return free_vars;
 	}
