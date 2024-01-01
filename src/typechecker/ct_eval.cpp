@@ -529,7 +529,7 @@ static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 		args.push_back(compute_mono(arg, tc));
 	}
 
-	return tc.core().new_term(type_function, std::move(args), "from ast");
+	return tc.core().new_term(type_function, std::move(args));
 }
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {

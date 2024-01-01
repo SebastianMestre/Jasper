@@ -42,13 +42,9 @@ struct TypecheckHelper {
 
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
-	MonoId new_term(
-	    TypeFunctionId type_function,
-	    std::vector<MonoId> arguments,
-	    char const* debug_data = nullptr) {
-		return core().new_term(type_function, std::move(arguments), debug_data);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> arguments) {
+		return core().new_term(type_function, std::move(arguments));
 	}
-
 
 	MonoId make_dummy_variant_type(std::unordered_map<InternedString, MonoId> structure) {
 		return core().new_dummy_for_typecheck1(std::move(structure));
@@ -144,8 +140,7 @@ static void infer(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
 		tc.unify(element_type, element->m_value_type);
 	}
 
-	ast->m_value_type =
-	    tc.new_term(BuiltinType::Array, {element_type}, "Array Literal");
+	ast->m_value_type = tc.new_term(BuiltinType::Array, {element_type});
 }
 
 // Implements [Var] rule

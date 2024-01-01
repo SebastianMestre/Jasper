@@ -60,13 +60,10 @@ struct TypeSystemCore {
 
 	TypeSystemCore();
 
-	int ll_new_var(const char* debug = nullptr);
+	int ll_new_var();
 	void ll_unify(int i, int j);
 
-	MonoId new_term(
-	    TypeFunctionId type_function,
-	    std::vector<MonoId> args,
-	    char const* tag = nullptr);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args);
 
 	PolyId forall(std::vector<VarId>, MonoId);
 
@@ -94,8 +91,7 @@ struct TypeSystemCore {
 	// dummy with one constructor, the one used
 	MonoId new_dummy_for_ct_eval(InternedString member) {
 		return new_constrained_var(
-		    {{{member, ll_new_var()}}, Constraint::Shape::Variant},
-		    "Union Constructor Access");
+		    {{{member, ll_new_var()}}, Constraint::Shape::Variant});
 	}
 
 	MonoId new_dummy_for_typecheck1(
@@ -124,14 +120,13 @@ public:
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
 private:
 
-	int new_constrained_var(Constraint c, char const* debug = nullptr);
+	int new_constrained_var(Constraint c);
 
 	enum class Tag { Var, Term, };
 
 	struct NodeHeader {
 		Tag tag;
 		int data_idx;
-		const char* debug {nullptr};
 	};
 
 	struct TermData {
@@ -146,7 +141,7 @@ private:
 	bool ll_is_var(int i);
 	bool ll_is_term(int i);
 
-	int ll_new_term(int f, std::vector<int> args = {}, const char* debug = nullptr);
+	int ll_new_term(int f, std::vector<int> args = {});
 public:
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
 private:

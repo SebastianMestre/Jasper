@@ -8,9 +8,8 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
-MonoId TypeSystemCore::new_term(
-    TypeFunctionId tf, std::vector<int> args, char const* tag) {
-	return ll_new_term(tf, std::move(args), tag);
+MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
+	return ll_new_term(tf, std::move(args));
 }
 
 PolyId TypeSystemCore::forall(std::vector<VarId> vars, MonoId ty) {
@@ -202,11 +201,11 @@ void TypeSystemCore::ll_unify(int i, int j) {
 	}
 }
 
-int TypeSystemCore::ll_new_var(char const* debug) {
-	return new_constrained_var({}, debug);
+int TypeSystemCore::ll_new_var() {
+	return new_constrained_var({});
 }
 
-int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
+int TypeSystemCore::new_constrained_var(Constraint c) {
 	int var_id = m_var_counter++;
 	int uf_node = m_type_var_uf.new_node();
 
@@ -218,15 +217,15 @@ int TypeSystemCore::new_constrained_var(Constraint c, char const* debug) {
 
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
-	ll_node_header.push_back({Tag::Var, var_id, debug});
+	ll_node_header.push_back({Tag::Var, var_id});
 
 	return type_id;
 }
 
-int TypeSystemCore::ll_new_term(int f, std::vector<int> args, char const* debug) {
+int TypeSystemCore::ll_new_term(int f, std::vector<int> args) {
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
-	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size()), debug});
+	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size())});
 	ll_term_data.push_back({f, std::move(args)});
 	return type_id;
 }
