@@ -10,6 +10,19 @@
 
 enum class VarId {};
 
+inline bool operator==(VarId a, VarId b) {
+	return static_cast<int>(a) == static_cast<int>(b);
+}
+
+template<>
+struct std::hash<VarId> {
+	size_t operator()(VarId v) const {
+		return std::hash<int>{}(static_cast<int>(v));
+	}
+};
+
+
+
 enum class TypeFunctionTag { Builtin, Variant, Record };
 // Concrete type function. If it's a built-in, we use argument_count
 // to tell how many arguments it takes. Else, for variant, and record,
@@ -31,7 +44,7 @@ struct TypeFunctionData {
 // any value, and still give a valid typing.
 struct PolyData {
 	MonoId base;
-	std::vector<MonoId> vars;
+	std::vector<VarId> vars;
 };
 
 struct Constraint {
@@ -55,7 +68,7 @@ struct TypeSystemCore {
 	    std::vector<MonoId> args,
 	    char const* tag = nullptr);
 
-	PolyId new_poly(MonoId mono, std::vector<MonoId> vars);
+	PolyId forall(std::vector<VarId>, MonoId);
 
 	TypeFunctionId new_builtin_type_function(int arguments);
 	TypeFunctionId new_type_function(
@@ -97,11 +110,14 @@ struct TypeSystemCore {
 		    {std::move(structure), Constraint::Shape::Record});
 	}
 
-	// qualifies all unbound variables in the given monotype
-	void gather_free_vars(MonoId mono, std::unordered_set<MonoId>& free_vars);
+	std::unordered_set<VarId> free_vars(MonoId);
 
-	MonoId inst_impl(MonoId mono, std::unordered_map<MonoId, MonoId> const& mapping);
+private:
+	void gather_free_vars(MonoId, std::unordered_set<VarId>&);
+
+	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
+public:
 	MonoId inst_fresh(PolyId poly);
 
 	TypeFunctionData& type_function_data_of(MonoId);
@@ -148,6 +164,7 @@ private:
 	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(MonoId t, Constraint const& c);
+public:
 	VarId get_var_id(MonoId i);
 
 private:
