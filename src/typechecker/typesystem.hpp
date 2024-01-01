@@ -110,10 +110,11 @@ struct TypeSystemCore {
 		    {std::move(structure), Constraint::Shape::Record});
 	}
 
-	// qualifies all unbound variables in the given monotype
-	void gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars);
+	std::unordered_set<VarId> free_vars(MonoId);
 
 private:
+	void gather_free_vars(MonoId, std::unordered_set<VarId>&);
+
 	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
 public:

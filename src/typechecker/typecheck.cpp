@@ -79,18 +79,13 @@ private:
 			if (decl->m_is_polymorphic) continue;
 
 			auto bound_type = decl->m_value_type;
-			if (free_vars_of(bound_type).count(var) != 0)
+			if (core().free_vars(bound_type).count(var) != 0)
 				return true;
 		}
 
 		return false;
 	}
 
-	std::unordered_set<VarId> free_vars_of(MonoId mono) {
-		std::unordered_set<VarId> free_vars;
-		core().gather_free_vars(mono, free_vars);
-		return free_vars;
-	}
 };
 
 
@@ -98,7 +93,7 @@ private:
 PolyId TypecheckHelper::generalize(MonoId mono) {
 
 	std::vector<VarId> vars;
-	for (VarId var : free_vars_of(mono)) {
+	for (VarId var : core().free_vars(mono)) {
 		if (!is_bound_to_env(var)) {
 			vars.push_back(var);
 		}

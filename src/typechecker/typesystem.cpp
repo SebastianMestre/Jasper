@@ -57,6 +57,12 @@ MonoId TypeSystemCore::inst_fresh(PolyId poly) {
 	return inst_with(poly, vals);
 }
 
+std::unordered_set<VarId> TypeSystemCore::free_vars(MonoId mono) {
+	std::unordered_set<VarId> result;
+	gather_free_vars(mono, result);
+	return result;
+}
+
 void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
 	mono = ll_find(mono);
 	const NodeHeader& header = ll_node_header[mono];
