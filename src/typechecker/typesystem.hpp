@@ -98,6 +98,12 @@ struct TypeSystemCore {
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
 	}
 
+	void add_record_constraint(VarId);
+
+	void add_variant_constraint(VarId);
+
+	void add_field_constraint(VarId, InternedString name, MonoId ty);
+
 	// dummy with one constructor, the one used
 	MonoId new_dummy_for_ct_eval(InternedString member) {
 		return new_constrained_var(
