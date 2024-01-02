@@ -210,14 +210,15 @@ static void infer(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_target, tc);
 
 	MonoId member_type = tc.new_var();
-	ast->m_value_type = member_type;
 
+	// constraint the target object
 	MonoId term_type = tc.core().ll_new_var();
 	auto v = tc.core().get_var_id(term_type);
 	tc.core().add_record_constraint(v);
 	tc.core().add_field_constraint(v, ast->m_member, member_type);
-
 	tc.unify(ast->m_target->m_value_type, term_type);
+
+	ast->m_value_type = member_type;
 }
 
 static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
@@ -226,35 +227,30 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		tc.unify(ast->m_target.m_value_type, get_monotype_id(ast->m_type_hint));
 	}
 
-	ast->m_value_type = tc.new_var();
+	MonoId expr_ty = tc.new_var();
 
-	std::unordered_map<InternedString, MonoId> dummy_structure;
+	// typecheck each case of the match expression
 	for (auto& kv : ast->m_cases) {
 		auto& case_data = kv.second;
 
-		// deduce type of each declaration
-		// NOTE(SMestre): this tc.new_var() worries me. Since we are putting it
-		// a typefunc, it should not ever get generalized. But we don't really
-		// do anything to prevent it.
 		case_data.m_declaration.m_value_type = tc.new_var();
 		process_type_hint(&case_data.m_declaration, tc);
 
-		// unify type of match with type of cases
 		infer(case_data.m_expression, tc);
-		tc.unify(ast->m_value_type, case_data.m_expression->m_value_type);
-
-		// get the structure of the match expression for a dummy
-		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
+		tc.unify(expr_ty, case_data.m_expression->m_value_type);
 	}
 
-	MonoId term_type = tc.core().ll_new_var();
-	auto v = tc.core().get_var_id(term_type);
+	// constraint the matched-on object
+	MonoId expected_target_ty = tc.core().ll_new_var();
+	auto v = tc.core().get_var_id(expected_target_ty);
 	tc.core().add_variant_constraint(v);
-	for (auto& kv : dummy_structure) {
-		tc.core().add_field_constraint(v, kv.first, kv.second);
+	for (auto& kv : ast->m_cases) {
+		auto& case_data = kv.second;
+		tc.core().add_field_constraint(v, kv.first, case_data.m_declaration.m_value_type);
 	}
+	tc.unify(ast->m_target.m_value_type, expected_target_ty);
 
-	tc.unify(ast->m_target.m_value_type, term_type);
+	ast->m_value_type = expr_ty;
 }
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
@@ -381,7 +377,7 @@ static void typecheck_stmt(AST::ExpressionStatement* ast, TypecheckHelper& tc) {
 
 
 static void typecheck_stmt(AST::Declaration* ast, TypecheckHelper& tc) {
-	// put a dummy type in the decl to allow recursive definitions
+	// put a typevar in the decl to allow recursive definitions
 	ast->m_value_type = tc.new_var();
 	process_contents(ast, tc);
 	generalize(ast, tc);
