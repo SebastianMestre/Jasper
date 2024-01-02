@@ -35,16 +35,14 @@ static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChe
 
 // literals
 
-static void ct_eval(
-    AST::ArrayLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::ArrayLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	for (auto& element : ast->m_elements)
 		ct_eval(element, tc, alloc);
 }
 
 // expressions
 
-static void ct_eval(
-    AST::FunctionLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::FunctionLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	for (auto& arg : ast->m_args)
 		if (arg.m_type_hint)
 			ct_eval(arg.m_type_hint, tc, alloc);
@@ -52,12 +50,10 @@ static void ct_eval(
 	ct_eval(ast->m_body, tc, alloc);
 }
 
-static void ct_eval(
-    AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
 }
 
-static void ct_eval(
-    AST::CallExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::CallExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	ct_eval(ast->m_callee, tc, alloc);
 
@@ -65,21 +61,18 @@ static void ct_eval(
 		ct_eval(arg, tc, alloc);
 }
 
-static void ct_eval(
-    AST::IndexExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::IndexExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ct_eval(ast->m_callee, tc, alloc);
 	ct_eval(ast->m_index, tc, alloc);
 }
 
-static void ct_eval(
-    AST::TernaryExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::TernaryExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ct_eval(ast->m_condition, tc, alloc);
 	ct_eval(ast->m_then_expr, tc, alloc);
 	ct_eval(ast->m_else_expr, tc, alloc);
 }
 
-static void ct_eval(
-    AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	MetaType meta_type = ast->m_meta_type;
 
@@ -89,11 +82,7 @@ static void ct_eval(
 	ct_eval(ast->m_target, tc, alloc);
 }
 
-static void ct_eval(
-    AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	// NOTE: no need to ct_eval the identifier, because it is guaranteed
-	// to be of metatype value, thus nothing needs to be done
+static void ct_eval(AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	if (ast->m_type_hint) {
 		ct_eval(ast->m_type_hint, tc, alloc);
@@ -120,19 +109,16 @@ static void ct_eval(
 		ct_eval(arg, tc, alloc);
 }
 
-static void ct_eval(
-    AST::SequenceExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::SequenceExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ct_visit(ast->m_body, tc, alloc);
 }
 // types
 
-static void ct_eval(
-    AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_value = compute_type_func(ast, tc);
 }
 
-static void ct_eval(
-    AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_value = compute_type_func(ast, tc);
 }
 
