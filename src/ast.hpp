@@ -331,14 +331,13 @@ struct BuiltinTypeFunction : public Expr {
 	    : Expr {ExprTag::BuiltinTypeFunction} {}
 };
 
-struct Constructor : public Expr {
+struct Constructor : public AST {
 	MonoId m_mono;
 	InternedString m_id;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 
-	Constructor()
-	    : Expr {ExprTag::Constructor} {}
+	Constructor() {}
 };
 
 } // namespace AST

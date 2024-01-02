@@ -388,7 +388,6 @@ void eval(AST::Expr* ast, Interpreter& e) {
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
 		DISPATCH(BuiltinTypeFunction);
-		DISPATCH(Constructor);
 	}
 
 	Log::fatal() << "(internal) unhandled case in eval: "

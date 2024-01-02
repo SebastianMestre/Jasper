@@ -210,7 +210,6 @@ void compute_offsets(AST::Expr* ast, int frame_offset) {
 		DISPATCH(TypeTerm);
 
 		DO_NOTHING(BuiltinTypeFunction);
-		DO_NOTHING(Constructor);
 	}
 
 #undef DO_NOTHING

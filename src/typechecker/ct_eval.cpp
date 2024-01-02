@@ -442,7 +442,6 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 		DISPATCH(StructExpression);
 		DISPATCH(UnionExpression);
 		REJECT(BuiltinTypeFunction);
-		REJECT(Constructor);
 	}
 
 	Log::fatal() << "(internal) Unhandled case in ct_eval : "

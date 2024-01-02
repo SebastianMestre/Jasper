@@ -435,7 +435,6 @@ static void infer(AST::Expr* ast, TypecheckHelper& tc) {
 		DISPATCH(SequenceExpression);
 
 		IGNORE(BuiltinTypeFunction);
-		IGNORE(Constructor);
 	}
 
 	Log::fatal() << "(internal) CST type not handled in infer: "
