@@ -254,10 +254,9 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 }
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
-	infer(ast->m_constructor, tc);
 
-	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == ExprTag::Constructor);
+	auto constructor = ast->m_evaluated_constructor;
+	assert(constructor);
 
 	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
 

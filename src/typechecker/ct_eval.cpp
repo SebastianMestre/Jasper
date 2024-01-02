@@ -111,7 +111,7 @@ static AST::Expr* ct_eval(
 	MetaType meta_type = ast->m_meta_type;
 
 	if (meta_type == MetaType::Constructor)
-		return constructor_from_ast(ast, tc, alloc);
+		return ast;
 
 	ast->m_target = ct_eval(ast->m_target, tc, alloc);
 	return ast;
@@ -144,7 +144,8 @@ static AST::Expr* ct_eval(
 
 static AST::ConstructorExpression* ct_eval(
     AST::ConstructorExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
+
+	ast->m_evaluated_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
 
 	for (auto& arg : ast->m_args)
 		arg = ct_eval(arg, tc, alloc);
