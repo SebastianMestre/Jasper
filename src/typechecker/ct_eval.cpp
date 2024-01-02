@@ -23,7 +23,7 @@ void reify_types(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	do_the_thing(ast, tc, alloc);
 }
 
-static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
+static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
@@ -35,77 +35,68 @@ static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChe
 
 // literals
 
-static AST::ArrayLiteral* ct_eval(
+static void ct_eval(
     AST::ArrayLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	for (auto& element : ast->m_elements)
-		element = ct_eval(element, tc, alloc);
-	return ast;
+		ct_eval(element, tc, alloc);
 }
 
 // expressions
 
-static AST::FunctionLiteral* ct_eval(
+static void ct_eval(
     AST::FunctionLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	for (auto& arg : ast->m_args)
 		if (arg.m_type_hint)
-			arg.m_type_hint = ct_eval(arg.m_type_hint, tc, alloc);
+			ct_eval(arg.m_type_hint, tc, alloc);
 
-	ast->m_body = ct_eval(ast->m_body, tc, alloc);
-
-	return ast;
+	ct_eval(ast->m_body, tc, alloc);
 }
 
-static AST::Expr* ct_eval(
+static void ct_eval(
     AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
 }
 
-static AST::CallExpression* ct_eval(
+static void ct_eval(
     AST::CallExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
-	ast->m_callee = ct_eval(ast->m_callee, tc, alloc);
+	ct_eval(ast->m_callee, tc, alloc);
 
 	for (auto& arg : ast->m_args)
-		arg = ct_eval(arg, tc, alloc);
-
-	return ast;
+		ct_eval(arg, tc, alloc);
 }
 
-static AST::IndexExpression* ct_eval(
+static void ct_eval(
     AST::IndexExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_callee = ct_eval(ast->m_callee, tc, alloc);
-	ast->m_index = ct_eval(ast->m_index, tc, alloc);
-
-	return ast;
+	ct_eval(ast->m_callee, tc, alloc);
+	ct_eval(ast->m_index, tc, alloc);
 }
 
-static AST::TernaryExpression* ct_eval(
+static void ct_eval(
     AST::TernaryExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
-	ast->m_then_expr = ct_eval(ast->m_then_expr, tc, alloc);
-	ast->m_else_expr = ct_eval(ast->m_else_expr, tc, alloc);
-	return ast;
+	ct_eval(ast->m_condition, tc, alloc);
+	ct_eval(ast->m_then_expr, tc, alloc);
+	ct_eval(ast->m_else_expr, tc, alloc);
 }
 
-static AST::Expr* ct_eval(
+static void ct_eval(
     AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	MetaType meta_type = ast->m_meta_type;
 
 	if (meta_type == MetaType::Constructor)
-		return ast;
+		return;
 
-	ast->m_target = ct_eval(ast->m_target, tc, alloc);
-	return ast;
+	ct_eval(ast->m_target, tc, alloc);
 }
 
-static AST::Expr* ct_eval(
+static void ct_eval(
     AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	// NOTE: no need to ct_eval the identifier, because it is guaranteed
 	// to be of metatype value, thus nothing needs to be done
 
 	if (ast->m_type_hint) {
-		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
+		ct_eval(ast->m_type_hint, tc, alloc);
 	}
 
 	for (auto& kv : ast->m_cases) {
@@ -113,44 +104,36 @@ static AST::Expr* ct_eval(
 
 		// TODO(SMestre): factor this out (it's repeated in a bunch of other places)
 		if (case_data.m_declaration.m_type_hint) {
-			case_data.m_declaration.m_type_hint =
-			    ct_eval(case_data.m_declaration.m_type_hint, tc, alloc);
+			ct_eval(case_data.m_declaration.m_type_hint, tc, alloc);
 		}
 
-		case_data.m_expression = ct_eval(case_data.m_expression, tc, alloc);
+		ct_eval(case_data.m_expression, tc, alloc);
 	}
-
-	return ast;
 }
 
-static AST::ConstructorExpression* ct_eval(
+static void ct_eval(
     AST::ConstructorExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 
 	ast->m_evaluated_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
 
 	for (auto& arg : ast->m_args)
-		arg = ct_eval(arg, tc, alloc);
-
-	return ast;
+		ct_eval(arg, tc, alloc);
 }
 
-static AST::Expr* ct_eval(
+static void ct_eval(
     AST::SequenceExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ct_visit(ast->m_body, tc, alloc);
-	return ast;
 }
 // types
 
-static AST::StructExpression* ct_eval(
+static void ct_eval(
     AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_value = compute_type_func(ast, tc);
-	return ast;
 }
 
-static AST::UnionExpression* ct_eval(
+static void ct_eval(
     AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_value = compute_type_func(ast, tc);
-	return ast;
 }
 
 static AST::Constructor* constructor_from_ast(
@@ -184,9 +167,8 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static AST::TypeTerm* ct_eval(AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	ast->m_value = compute_mono(ast, tc);
-	return ast;
 }
 
 // statements
@@ -198,7 +180,7 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc) {
 }
 
 static void ct_visit(AST::IfElseStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ct_eval(ast->m_condition, tc, alloc);
 	ct_visit(ast->m_body, tc, alloc);
 	if (ast->m_else_body) {
 		ct_visit(ast->m_else_body, tc, alloc);
@@ -206,23 +188,23 @@ static void ct_visit(AST::IfElseStatement* ast, TypeChecker& tc, AST::Allocator&
 }
 
 static void ct_visit(AST::WhileStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_condition = ct_eval(ast->m_condition, tc, alloc);
+	ct_eval(ast->m_condition, tc, alloc);
 	ct_visit(ast->m_body, tc, alloc);
 }
 
 static void ct_visit(AST::ReturnStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_value = ct_eval(ast->m_value, tc, alloc);
+	ct_eval(ast->m_value, tc, alloc);
 }
 
 static void ct_visit(AST::ExpressionStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ast->m_expression = ct_eval(ast->m_expression, tc, alloc);
+	ct_eval(ast->m_expression, tc, alloc);
 }
 
 static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	if (ast->m_type_hint)
-		ast->m_type_hint = ct_eval(ast->m_type_hint, tc, alloc);
+		ct_eval(ast->m_type_hint, tc, alloc);
 
-	ast->m_value = ct_eval(ast->m_value, tc, alloc);
+	ct_eval(ast->m_value, tc, alloc);
 }
 
 static TypeFunctionId get_type_function_id(AST::Expr* ast) {
@@ -398,8 +380,8 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 				tc.core().ll_unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
-					decl->m_type_hint = ct_eval(decl->m_type_hint, tc, alloc);
-				decl->m_value = ct_eval(decl->m_value, tc, alloc);
+					ct_eval(decl->m_type_hint, tc, alloc);
+				ct_eval(decl->m_value, tc, alloc);
 			}
 		}
 	}
@@ -425,14 +407,14 @@ static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 #undef DISPATCH
 }
 
-static AST::Expr* ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 #define DISPATCH(type)                                                         \
 	case ExprTag::type:                                                        \
 		return ct_eval(static_cast<AST::type*>(ast), tc, alloc)
 
 #define RETURN(type)                                                           \
 	case ExprTag::type:                                                        \
-		return static_cast<AST::type*>(ast);
+		return;
 
 #define REJECT(type)                                                           \
 	case ExprTag::type:                                                        \
