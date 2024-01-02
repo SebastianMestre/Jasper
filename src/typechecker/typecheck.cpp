@@ -92,8 +92,8 @@ static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
 static MonoId get_monotype_id(AST::Expr* ast) {
 	switch(ast->type()) {
-	case ExprTag::TypeTerm:
-		return static_cast<AST::TypeTerm*>(ast)->m_value;
+	case ExprTag::TypeTerm: return static_cast<AST::TypeTerm*>(ast)->m_value;
+	case ExprTag::Identifier: return get_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value);
 	default: assert(0);
 	}
 }

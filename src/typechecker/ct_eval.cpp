@@ -57,25 +57,6 @@ static AST::FunctionLiteral* ct_eval(
 
 static AST::Expr* ct_eval(
     AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	// This does something very similar to what ct_eval(Program) does.
-	// Maybe it can be de-duplicated?
-
-	assert(ast);
-	assert(ast->m_declaration);
-
-	MetaType meta_type = ast->m_declaration->m_meta_type;
-
-	assert(meta_type != MetaType::Undefined);
-
-	if (meta_type == MetaType::Term) {
-		return ast;
-	} else if (meta_type == MetaType::Type) {
-		return ast->m_declaration->m_value;
-	} else if (meta_type == MetaType::TypeFunction) {
-		return ast->m_declaration->m_value;
-	}
-
-	assert(0 && "UNREACHABLE");
 }
 
 static AST::CallExpression* ct_eval(
