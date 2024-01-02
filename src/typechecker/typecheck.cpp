@@ -46,14 +46,6 @@ struct TypecheckHelper {
 		return core().new_term(type_function, std::move(arguments));
 	}
 
-	MonoId make_dummy_variant_type(std::unordered_map<InternedString, MonoId> structure) {
-		return core().new_dummy_for_typecheck1(std::move(structure));
-	}
-
-	MonoId make_dummy_record_type(std::unordered_map<InternedString, MonoId> structure) {
-		return core().new_dummy_for_typecheck2(std::move(structure));
-	}
-
 private:
 
 	Frontend::SymbolTable symbol_table;
@@ -217,11 +209,13 @@ static void infer(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 static void infer(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_target, tc);
 
-	// should this be a hidden type var?
 	MonoId member_type = tc.new_var();
 	ast->m_value_type = member_type;
 
-	MonoId term_type = tc.make_dummy_record_type({{ast->m_member, member_type}});
+	MonoId term_type = tc.core().ll_new_var();
+	auto v = tc.core().get_var_id(term_type);
+	tc.core().add_record_constraint(v);
+	tc.core().add_field_constraint(v, ast->m_member, member_type);
 
 	tc.unify(ast->m_target->m_value_type, term_type);
 }
@@ -253,7 +247,13 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		dummy_structure[kv.first] = case_data.m_declaration.m_value_type;
 	}
 
-	MonoId term_type = tc.make_dummy_variant_type(std::move(dummy_structure));
+	MonoId term_type = tc.core().ll_new_var();
+	auto v = tc.core().get_var_id(term_type);
+	tc.core().add_variant_constraint(v);
+	for (auto& kv : dummy_structure) {
+		tc.core().add_field_constraint(v, kv.first, kv.second);
+	}
+
 	tc.unify(ast->m_target.m_value_type, term_type);
 }
 

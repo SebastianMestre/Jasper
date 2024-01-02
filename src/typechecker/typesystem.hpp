@@ -104,37 +104,6 @@ struct TypeSystemCore {
 
 	void add_field_constraint(VarId, InternedString name, MonoId ty);
 
-	// dummy with one constructor, the one used
-	MonoId new_dummy_for_ct_eval(InternedString member) {
-		auto result = ll_new_var();
-		auto v = get_var_id(result);
-		add_variant_constraint(v);
-		add_field_constraint(v, member, ll_new_var());
-		return result;
-	}
-
-	MonoId new_dummy_for_typecheck1(
-		std::unordered_map<InternedString, MonoId> structure) {
-		auto result = ll_new_var();
-		auto v = get_var_id(result);
-		add_variant_constraint(v);
-		for (auto& kv : structure) {
-			add_field_constraint(v, kv.first, kv.second);
-		}
-		return result;
-	}
-
-	MonoId new_dummy_for_typecheck2(
-		std::unordered_map<InternedString, MonoId> structure) {
-		auto result = ll_new_var();
-		auto v = get_var_id(result);
-		add_record_constraint(v);
-		for (auto& kv : structure) {
-			add_field_constraint(v, kv.first, kv.second);
-		}
-		return result;
-	}
-
 	std::unordered_set<VarId> free_vars(MonoId);
 
 private:

@@ -184,7 +184,10 @@ static AST::Constructor* constructor_from_ast(
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
-		MonoId dummy_monotype = tc.core().new_dummy_for_ct_eval(access->m_member);
+		MonoId dummy_monotype = tc.core().ll_new_var();
+		auto v = tc.core().get_var_id(dummy_monotype);
+		tc.core().add_variant_constraint(v);
+		tc.core().add_field_constraint(v, access->m_member, tc.core().ll_new_var());
 
 		MonoId monotype = compute_mono(access->m_target, tc);
 
