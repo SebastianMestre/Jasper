@@ -42,13 +42,9 @@ struct TypecheckHelper {
 
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
-	MonoId new_term(
-	    TypeFunctionId type_function,
-	    std::vector<MonoId> arguments,
-	    char const* debug_data = nullptr) {
-		return core().new_term(type_function, std::move(arguments), debug_data);
+	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> arguments) {
+		return core().new_term(type_function, std::move(arguments));
 	}
-
 
 	MonoId make_dummy_variant_type(std::unordered_map<InternedString, MonoId> structure) {
 		return core().new_dummy_for_typecheck1(std::move(structure));
@@ -56,12 +52,6 @@ struct TypecheckHelper {
 
 	MonoId make_dummy_record_type(std::unordered_map<InternedString, MonoId> structure) {
 		return core().new_dummy_for_typecheck2(std::move(structure));
-	}
-
-	MonoId make_function_type(std::vector<MonoId> args_types, int return_type) {
-		// return type goes last in a function type
-		args_types.push_back(return_type);
-		return new_term(BuiltinType::Function, std::move(args_types));
 	}
 
 private:
@@ -144,8 +134,7 @@ static void infer(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
 		tc.unify(element_type, element->m_value_type);
 	}
 
-	ast->m_value_type =
-	    tc.new_term(BuiltinType::Array, {element_type}, "Array Literal");
+	ast->m_value_type = tc.core().array(element_type);
 }
 
 // Implements [Var] rule
@@ -171,7 +160,7 @@ static void infer(AST::CallExpression* ast, TypecheckHelper& tc) {
 	}
 
 	MonoId result_type = tc.new_var();
-	MonoId expected_callee_type = tc.make_function_type(std::move(arg_types), result_type);
+	MonoId expected_callee_type = tc.core().fun(std::move(arg_types), result_type);
 	MonoId callee_type = ast->m_callee->m_value_type;
 	tc.unify(callee_type, expected_callee_type);
 
@@ -195,7 +184,7 @@ static void infer(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 
 	infer(ast->m_body, tc);
 
-	ast->m_value_type = tc.make_function_type(std::move(arg_types), ast->m_body->m_value_type);
+	ast->m_value_type = tc.core().fun(std::move(arg_types), ast->m_body->m_value_type);
 
 	tc.end_scope();
 }
@@ -205,7 +194,7 @@ static void infer(AST::IndexExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_index, tc);
 
 	auto var = tc.new_var();
-	auto arr = tc.new_term(BuiltinType::Array, {var});
+	auto arr = tc.core().array(var);
 	tc.unify(arr, ast->m_callee->m_value_type);
 
 	tc.unify(tc.mono_int(), ast->m_index->m_value_type);

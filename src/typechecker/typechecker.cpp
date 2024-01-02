@@ -19,11 +19,11 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	core().new_builtin_type_function(0);  // 5  | boolean
 	core().new_builtin_type_function(0);  // 6  | unit
 
-	core().new_term(BuiltinType::Int, {}, "builtin int");       // 0 | int<::>
-	core().new_term(BuiltinType::Float, {}, "builtin float");   // 1 | float<::>
-	core().new_term(BuiltinType::String, {}, "builtin string"); // 2 | string<::>
-	core().new_term(BuiltinType::Boolean, {}, "builtin bool");  // 3 | boolean<::>
-	core().new_term(BuiltinType::Unit, {}, "builtin unit");     // 4 | unit<::>
+	core().new_term(BuiltinType::Int, {});      // 0 | int<::>
+	core().new_term(BuiltinType::Float, {});    // 1 | float<::>
+	core().new_term(BuiltinType::String, {});   // 2 | string<::>
+	core().new_term(BuiltinType::Boolean, {});  // 3 | boolean<::>
+	core().new_term(BuiltinType::Unit, {});     // 4 | unit<::>
 
 	// TODO: put this in a better place
 	// TODO: refactor, figure out a nice way to build types
@@ -39,124 +39,96 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 		}
 
 		{
-			auto array_mono_id =
-			    core().new_term(BuiltinType::Array, {var_ty}, "array");
+			auto array_ty = core().array(var_ty);
 
 			{
-				auto term_mono_id = core().new_term(
-				    BuiltinType::Function,
-				    {array_mono_id, var_ty, mono_unit()},
-				    "[builtin] (array(<a>), a) -> unit");
-
-				auto poly_id = core().forall({var_id}, term_mono_id);
-				declare_builtin_value("array_append", poly_id);
+				auto ty = core().fun({array_ty, var_ty}, mono_unit());
+				auto poly = core().forall({var_id}, ty);
+				declare_builtin_value("array_append", poly);
 			}
-			{
-				auto term_mono_id = core().new_term(
-				    BuiltinType::Function,
-				    {array_mono_id, mono_int()},
-				    "[builtin] (array(<a>)) -> int");
 
-				auto poly_id = core().forall({var_id}, term_mono_id);
-				declare_builtin_value("size", poly_id);
+			{
+				auto ty = core().fun({array_ty}, mono_int());
+				auto poly = core().forall({var_id}, ty);
+				declare_builtin_value("size", poly);
 			}
-			{
-				auto term_mono_id = core().new_term(
-				    BuiltinType::Function,
-				    {array_mono_id, array_mono_id, array_mono_id},
-				    "[builtin] (array(<a>), array(<a>)) -> array(<a>)");
 
-				auto poly_id = core().forall({var_id}, term_mono_id);
-				declare_builtin_value("array_extend", poly_id);
+			{
+				auto ty = core().fun({array_ty, array_ty}, array_ty);
+				auto poly = core().forall({var_id}, ty);
+				declare_builtin_value("array_extend", poly);
 			}
+
 			{
-				auto array_mono_id = core().new_term(
-				    BuiltinType::Array, {mono_int()}, "array(<int>)");
+				auto array_ty = core().array(mono_int());
+				auto ty = core().fun({array_ty, mono_string()}, mono_string());
+				auto poly = core().forall({}, ty);
 
-				auto term_mono_id = core().new_term(
-				    BuiltinType::Function,
-				    {array_mono_id, mono_string(), mono_string()},
-				    "[builtin] (array(<int>), string)) -> string");
-
-				auto poly_id = core().forall({}, term_mono_id);
-				declare_builtin_value("array_join", poly_id);
+				declare_builtin_value("array_join", poly);
 			}
-			{
-				auto term_mono_id = core().new_term(
-				    BuiltinType::Function,
-				    {array_mono_id, mono_int(), var_ty},
-				    "[builtin] (array(<a>), int) -> a");
 
-				auto poly_id = core().forall({var_id}, term_mono_id);
-				declare_builtin_value("array_at", poly_id);
+			{
+				auto ty = core().fun({array_ty, mono_int()}, var_ty);
+				auto poly = core().forall({var_id}, ty);
+
+				declare_builtin_value("array_at", poly);
 			}
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function,
-			    {var_ty, var_ty, var_ty},
-			    "[builtin] (a, a) -> a");
+			auto ty = core().fun({var_ty, var_ty}, var_ty);
+			auto poly = core().forall({var_id}, ty);
 
-			auto poly_id = core().forall({var_id}, term_mono_id);
-
-			declare_builtin_value("+", poly_id);
-			declare_builtin_value("-", poly_id);
-			declare_builtin_value("*", poly_id);
-			declare_builtin_value("/", poly_id);
-			declare_builtin_value(".", poly_id);
-			declare_builtin_value("=", poly_id);
+			declare_builtin_value("+", poly);
+			declare_builtin_value("-", poly);
+			declare_builtin_value("*", poly);
+			declare_builtin_value("/", poly);
+			declare_builtin_value(".", poly);
+			declare_builtin_value("=", poly);
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function,
-			    {var_ty, var_ty, mono_boolean()},
-			    "[builtin] (a, a) -> Bool");
+			auto ty = core().fun({var_ty, var_ty}, mono_boolean());
+			auto poly = core().forall({var_id}, ty);
 
-			auto poly_id = core().forall({var_id}, term_mono_id);
-
-			declare_builtin_value( "<", poly_id);
-			declare_builtin_value(">=", poly_id);
-			declare_builtin_value( ">", poly_id);
-			declare_builtin_value("<=", poly_id);
-			declare_builtin_value("==", poly_id);
-			declare_builtin_value("!=", poly_id);
+			declare_builtin_value( "<", poly);
+			declare_builtin_value(">=", poly);
+			declare_builtin_value( ">", poly);
+			declare_builtin_value("<=", poly);
+			declare_builtin_value("==", poly);
+			declare_builtin_value("!=", poly);
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function,
-			    {mono_boolean(), mono_boolean(), mono_boolean()},
-			    "[builtin] (Bool, Bool) -> Bool");
+			auto ty = core().fun({mono_boolean(), mono_boolean()}, mono_boolean());
+			auto poly = core().forall({}, ty);
 
-			auto poly_id = core().forall({}, term_mono_id);
-
-			declare_builtin_value("&&", poly_id);
-			declare_builtin_value("||", poly_id);
+			declare_builtin_value("&&", poly);
+			declare_builtin_value("||", poly);
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function, {mono_int()}, "[builtin] () -> Integer");
-			auto poly_id = core().forall({}, term_mono_id);
-			declare_builtin_value("read_integer", poly_id);
+			auto ty = core().fun({}, mono_int());
+			auto poly = core().forall({}, ty);
+
+			declare_builtin_value("read_integer", poly);
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function, {mono_float()}, "[builtin] () -> Number");
-			auto poly_id = core().forall({}, term_mono_id);
-			declare_builtin_value("read_number", poly_id);
+			auto ty = core().fun({}, mono_float());
+			auto poly = core().forall({}, ty);
+
+			declare_builtin_value("read_number", poly);
 		}
 
 		{
-			auto term_mono_id = core().new_term(
-			    BuiltinType::Function, {mono_string()}, "[builtin] () -> String");
-			auto poly_id = core().forall({}, term_mono_id);
-			declare_builtin_value("read_string", poly_id);
-			declare_builtin_value("read_line", poly_id);
+			auto ty = core().fun({}, mono_string());
+			auto poly = core().forall({}, ty);
+
+			declare_builtin_value("read_string", poly);
+			declare_builtin_value("read_line", poly);
 		}
+
 	}
 
 	declare_builtin_typefunc("int", BuiltinType::Int);
