@@ -202,23 +202,12 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var() {
-	return new_constrained_var({});
-}
-
-int TypeSystemCore::new_constrained_var(Constraint c) {
 	int var_id = m_var_counter++;
-	int uf_node = m_type_var_uf.new_node();
-
-	assert(uf_node == var_id);
-	assert(m_substitution.size() == var_id);
-	assert(m_constraints.size() == var_id);
+	m_type_var_uf.new_node();
 	m_substitution.push_back(-1);
-	m_constraints.push_back(std::move(c));
-
+	m_constraints.push_back({});
 	int type_id = m_type_counter++;
-	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Var, var_id});
-
 	return type_id;
 }
 

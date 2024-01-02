@@ -118,8 +118,6 @@ public:
 	void unify_type_function(TypeFunctionId, TypeFunctionId);
 private:
 
-	int new_constrained_var(Constraint c);
-
 	enum class Tag { Var, Term, };
 
 	struct NodeHeader {
