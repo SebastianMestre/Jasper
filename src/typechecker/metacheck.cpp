@@ -331,27 +331,28 @@ void metacheck_program(AST::Program* ast) {
 		counter += 1;
 	}
 
-	TarjanSolver solver(counter);
+	TarjanSolver metacheck_dependency_solver(counter);
+	TarjanSolver full_dependency_solver(counter);
 
 	for (auto kv : decl_to_index) {
 		auto decl = kv.first;
 		auto u = kv.second;
-		if (decl->m_meta_type == MetaType::Undefined) {
-			for (auto other : decl->m_references) {
-				auto it = decl_to_index.find(other);
-				assert(it != decl_to_index.end());
+		for (auto other : decl->m_references) {
+			auto it = decl_to_index.find(other);
+			if (it != decl_to_index.end()) {
 				int v = it->second;
-				solver.add_edge(u, v);
+				if (decl->m_meta_type == MetaType::Undefined) {
+					metacheck_dependency_solver.add_edge(u, v);
+				}
+				full_dependency_solver.add_edge(u, v);
 			}
 		}
 	}
 
-	solver.solve();
-	auto const& dependency_components = solver.vertices_of_components();
+	full_dependency_solver.solve();
+	metacheck_dependency_solver.solve();
 
-	for (auto const& comp : dependency_components) {
-
-		assert(comp.size() != 0);
+	for (auto const& comp : metacheck_dependency_solver.vertices_of_components()) {
 
 		if (comp.size() > 1) {
 			Log::error() << "Unresolved dependency cycle involving the global variables:";
@@ -361,10 +362,7 @@ void metacheck_program(AST::Program* ast) {
 			Log::fatal() << "Terminating.";
 		}
 
-		assert(comp.size() == 1);
-
 		auto* decl = index_to_decl[comp[0]];
-
 		if (decl->m_meta_type == MetaType::Undefined) {
 			decl->m_meta_type = infer(decl->m_value);
 		}
@@ -384,6 +382,39 @@ void metacheck_program(AST::Program* ast) {
 			check(decl.m_type_hint, MetaType::Type);
 		}
 	}
+
+	for (auto const& comp : full_dependency_solver.vertices_of_components()) {
+
+		bool type_in_component = false;
+		bool term_in_component = false;
+		bool ctor_in_component = false;
+
+		for (auto index : comp) {
+			auto decl = index_to_decl[index];
+			switch (decl->m_meta_type) {
+			case MetaType::Type:
+			case MetaType::TypeFunction:
+				type_in_component = true;
+				break;
+			case MetaType::Term:
+				term_in_component = true;
+				break;
+			case MetaType::Constructor:
+				ctor_in_component = true;
+				break;
+			}
+		}
+
+		if (ctor_in_component) {
+			Log::fatal() << "found a constructor stored as a global variable";
+		}
+
+		// We don't deal with types and terms in the same component.
+		if (type_in_component && term_in_component) {
+			Log::fatal() << "found reference cycle with types and values";
+		}
+	}
+
 }
 
 } // namespace TypeChecker

@@ -453,38 +453,17 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 
 	auto const& comps = tc.declaration_order();
 
-	std::vector<std::vector<AST::Declaration*>> value_components;
-
+	// This loop implements the [Rec] rule
 	for (auto const& component : comps) {
 
-		bool type_in_component = false;
-		bool non_type_in_component = false;
+		bool terms_only = true;
 		for (auto decl : component) {
-
-			if (tc.is_type(decl->m_meta_type)) {
-				type_in_component = true;
-			}
-
-			if (tc.is_term(decl->m_meta_type)) {
-				non_type_in_component = true;
+			if (decl->m_meta_type != MetaType::Term) {
+				terms_only = false;
 			}
 		}
 
-		// We don't deal with types and non-types in the same component.
-		//
-		// TODO: maybe we should be even more strict and reject
-		//       non-values in components of size > 1.
-		if (type_in_component && non_type_in_component) {
-			Log::fatal() << "found reference cycle with types and values";
-		}
-
-		if (!type_in_component) {
-			value_components.push_back(component);
-		}
-	}
-
-	// This loop implements the [Rec] rule
-	for (auto const& component : value_components) {
+		if (!terms_only) continue;
 
 		tc.new_nested_scope();
 
