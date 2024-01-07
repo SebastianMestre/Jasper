@@ -92,8 +92,8 @@ static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
 static MonoId get_monotype_id(AST::Expr* ast) {
 	switch(ast->type()) {
-	case ExprTag::TypeTerm:
-		return static_cast<AST::TypeTerm*>(ast)->m_value;
+	case ExprTag::TypeTerm: return static_cast<AST::TypeTerm*>(ast)->m_value;
+	case ExprTag::Identifier: return get_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value);
 	default: assert(0);
 	}
 }
@@ -254,10 +254,9 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 }
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
-	infer(ast->m_constructor, tc);
 
-	auto constructor = static_cast<AST::Constructor*>(ast->m_constructor);
-	assert(constructor->type() == ExprTag::Constructor);
+	auto constructor = ast->m_evaluated_constructor;
+	assert(constructor);
 
 	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
 
@@ -436,7 +435,6 @@ static void infer(AST::Expr* ast, TypecheckHelper& tc) {
 		DISPATCH(SequenceExpression);
 
 		IGNORE(BuiltinTypeFunction);
-		IGNORE(Constructor);
 	}
 
 	Log::fatal() << "(internal) CST type not handled in infer: "

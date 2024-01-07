@@ -233,9 +233,13 @@ struct MatchExpression : public Expr {
 	    : Expr {ExprTag::MatchExpression} {}
 };
 
+struct Constructor;
+
 struct ConstructorExpression : public Expr {
 	Expr* m_constructor;
 	std::vector<Expr*> m_args;
+
+	Constructor* m_evaluated_constructor {nullptr};
 
 	ConstructorExpression()
 	    : Expr {ExprTag::ConstructorExpression} {}
@@ -327,14 +331,13 @@ struct BuiltinTypeFunction : public Expr {
 	    : Expr {ExprTag::BuiltinTypeFunction} {}
 };
 
-struct Constructor : public Expr {
+struct Constructor : public AST {
 	MonoId m_mono;
 	InternedString m_id;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 
-	Constructor()
-	    : Expr {ExprTag::Constructor} {}
+	Constructor() {}
 };
 
 } // namespace AST

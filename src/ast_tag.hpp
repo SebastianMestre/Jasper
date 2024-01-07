@@ -22,7 +22,6 @@
 	X(StructExpression)                                                        \
 	X(TypeTerm)                                                                \
 	X(BuiltinTypeFunction)                                                     \
-	X(Constructor)
 
 #define AST_STMT_TAGS                                                          \
 	X(Block)                                                                   \
