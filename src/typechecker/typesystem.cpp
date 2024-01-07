@@ -202,23 +202,12 @@ void TypeSystemCore::ll_unify(int i, int j) {
 }
 
 int TypeSystemCore::ll_new_var() {
-	return new_constrained_var({});
-}
-
-int TypeSystemCore::new_constrained_var(Constraint c) {
 	int var_id = m_var_counter++;
-	int uf_node = m_type_var_uf.new_node();
-
-	assert(uf_node == var_id);
-	assert(m_substitution.size() == var_id);
-	assert(m_constraints.size() == var_id);
+	m_type_var_uf.new_node();
 	m_substitution.push_back(-1);
-	m_constraints.push_back(std::move(c));
-
+	m_constraints.push_back({});
 	int type_id = m_type_counter++;
-	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Var, var_id});
-
 	return type_id;
 }
 
@@ -261,4 +250,32 @@ TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
 
 bool TypeSystemCore::equals_var(MonoId t, VarId v) {
 	return ll_is_var(t) && static_cast<VarId>(ll_node_header[t].data_idx) == v;
+}
+
+
+void TypeSystemCore::add_record_constraint(VarId v) {
+	int i = static_cast<int>(v);
+	if (m_constraints[i].shape == Constraint::Shape::Unknown) {
+		m_constraints[i].shape = Constraint::Shape::Record;
+	} else if (m_constraints[i].shape != Constraint::Shape::Record) {
+		Log::fatal() << "object used both as record and variant";
+	}
+}
+
+void TypeSystemCore::add_variant_constraint(VarId v) {
+	int i = static_cast<int>(v);
+	if (m_constraints[i].shape == Constraint::Shape::Unknown) {
+		m_constraints[i].shape = Constraint::Shape::Variant;
+	} else if (m_constraints[i].shape != Constraint::Shape::Variant) {
+		Log::fatal() << "object used both as record and variant";
+	}
+}
+
+void TypeSystemCore::add_field_constraint(VarId v, InternedString name, MonoId ty) {
+	int i = static_cast<int>(v);
+	if (m_constraints[i].structure.count(name)) {
+		ll_unify(m_constraints[i].structure[name], ty);
+	} else {
+		m_constraints[i].structure[name] = ty;
+	}
 }
