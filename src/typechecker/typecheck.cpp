@@ -37,9 +37,6 @@ struct TypecheckHelper {
 
 	void unify(MonoId i, MonoId j) { core().ll_unify(i, j); }
 
-	bool is_type(MetaType i) { return i == MetaType::TypeFunction || i == MetaType::Type; }
-	bool is_term(MetaType i) { return i == MetaType::Term; }
-
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
 	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> arguments) {
@@ -134,7 +131,7 @@ static void infer(AST::Identifier* ast, TypecheckHelper& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
-	assert(tc.is_term(declaration->m_meta_type));
+	assert(declaration->m_meta_type == MetaType::Term);
 
 	ast->m_value_type = declaration->m_is_polymorphic
 		? tc.inst_fresh(declaration->m_decl_type)
