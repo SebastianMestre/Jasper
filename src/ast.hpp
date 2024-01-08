@@ -236,7 +236,6 @@ struct MatchExpression : public Expr {
 struct Constructor {
 	MonoId m_mono;
 	InternedString m_id;
-	// points to the ast node this one was made from
 
 	Constructor() {}
 };
