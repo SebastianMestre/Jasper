@@ -302,7 +302,7 @@ static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 	case ExprTag::TypeTerm:
 		return void(static_cast<AST::TypeTerm*>(ast)->m_value = tc.new_var());
 	case ExprTag::Identifier:
-		return void(stub_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value, tc));
+		return;
 	default: assert(0);
 	}
 }
