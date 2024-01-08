@@ -335,13 +335,6 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 		for (auto decl : decls) {
 			MetaType meta_type = decl->m_meta_type;
 
-#if 0
-			std::cerr << "[ Pass 2 ] top level \"" << decl->m_identifier << "\"\n";
-			std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
-#endif
-
-			assert(meta_type != MetaType::Undefined);
-
 			if (meta_type == MetaType::TypeFunction) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
