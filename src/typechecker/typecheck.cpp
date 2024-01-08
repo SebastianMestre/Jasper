@@ -252,10 +252,9 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
-	auto constructor = ast->m_evaluated_constructor;
-	assert(constructor);
+	auto& constructor = ast->m_evaluated_constructor;
 
-	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
+	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor.m_mono);
 
 	// match value arguments
 	if (tf_data.tag == TypeFunctionTag::Record) {
@@ -270,13 +269,13 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 		assert(ast->m_args.size() == 1);
 
 		infer(ast->m_args[0], tc);
-		InternedString id = constructor->m_id;
+		InternedString id = constructor.m_id;
 		MonoId constructor_type = tf_data.structure[id];
 
 		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
-	ast->m_value_type = constructor->m_mono;
+	ast->m_value_type = constructor.m_mono;
 }
 
 // this function implements 'the value restriction', a technique

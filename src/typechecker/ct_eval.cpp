@@ -26,7 +26,7 @@ void reify_types(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
 static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
 
-static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
+static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
 
 static MonoId compute_mono(AST::Expr*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::Expr*, TypeChecker&);
@@ -102,9 +102,7 @@ static void ct_eval(AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& 
 
 static void ct_eval(
     AST::ConstructorExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
 	ast->m_evaluated_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
-
 	for (auto& arg : ast->m_args)
 		ct_eval(arg, tc, alloc);
 }
@@ -122,13 +120,13 @@ static void ct_eval(AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& 
 	ast->m_value = compute_type_func(ast, tc);
 }
 
-static AST::Constructor* constructor_from_ast(
+static AST::Constructor constructor_from_ast(
     AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	MetaType meta = ast->m_meta_type;
-	auto constructor = alloc.make<AST::Constructor>();
+	auto constructor = AST::Constructor{};
 
 	if (meta == MetaType::Type) {
-		constructor->m_mono = compute_mono(ast, tc);
+		constructor.m_mono = compute_mono(ast, tc);
 	} else if (meta == MetaType::Constructor) {
 		assert(ast->type() == ExprTag::AccessExpression);
 
@@ -143,8 +141,8 @@ static AST::Constructor* constructor_from_ast(
 		tc.core().add_field_constraint(v, access->m_member, tc.core().ll_new_var());
 		tc.core().ll_unify(expected_ty, actual_ty);
 
-		constructor->m_mono = actual_ty;
-		constructor->m_id = access->m_member;
+		constructor.m_mono = actual_ty;
+		constructor.m_id = access->m_member;
 	} else {
 		Log::fatal() << "Constructor invokation on a non-constructor -- MetaType(" << int(meta) << ")";
 	}
