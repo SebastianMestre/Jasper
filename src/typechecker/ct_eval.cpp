@@ -322,13 +322,6 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 	for (auto& decl : ast->m_declarations) {
 		MetaType meta_type = decl.m_meta_type;
 
-#if 0
-		std::cerr << "[ Pass 1 ] top level \"" << decl.m_identifier << "\"\n";
-		std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
-#endif
-
-		assert(meta_type != MetaType::Undefined);
-
 		// put a dummy var where required.
 		if (meta_type == MetaType::TypeFunction) {
 			stub_type_function(decl.m_value, tc);
@@ -447,13 +440,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
-
-	std::vector<MonoId> args;
-	for (auto& arg : ast->m_args) {
-		args.push_back(compute_mono(arg, tc));
-	}
-
-	return tc.core().new_term(type_function, std::move(args));
+	return tc.core().new_term(type_function, compute_monos(ast->m_args, tc));
 }
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
