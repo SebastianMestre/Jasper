@@ -335,7 +335,6 @@ struct Constructor : public AST {
 	MonoId m_mono;
 	InternedString m_id;
 	// points to the ast node this one was made from
-	Expr* m_syntax;
 
 	Constructor() {}
 };

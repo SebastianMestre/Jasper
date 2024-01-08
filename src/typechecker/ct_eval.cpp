@@ -126,7 +126,6 @@ static AST::Constructor* constructor_from_ast(
     AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 	MetaType meta = ast->m_meta_type;
 	auto constructor = alloc.make<AST::Constructor>();
-	constructor->m_syntax = ast;
 
 	if (meta == MetaType::Type) {
 		constructor->m_mono = compute_mono(ast, tc);

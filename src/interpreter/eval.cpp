@@ -330,10 +330,6 @@ void eval(AST::BuiltinTypeFunction* ast, Interpreter& e) {
 	return eval(ast->m_syntax, e);
 }
 
-void eval(AST::Constructor* ast, Interpreter& e) {
-	return eval(ast->m_syntax, e);
-}
-
 void eval(AST::TypeTerm* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 }
