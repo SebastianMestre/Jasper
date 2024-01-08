@@ -64,7 +64,7 @@ ExitStatus execute(
 
 	if (settings.typecheck) {
 		TypeChecker::metacheck_program(ast);
-		TypeChecker::reify_types(ast, tc, ast_allocator);
+		TypeChecker::reify_types(ast, tc);
 		TypeChecker::typecheck_program(ast, tc);
 	}
 
