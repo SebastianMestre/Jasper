@@ -437,34 +437,10 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 #undef RETURN
 }
 
-static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
-	assert(ast->m_declaration);
-	assert(ast->m_meta_type == MetaType::TypeFunction);
-	auto decl = ast->m_declaration;
-	return get_type_function_id(decl->m_value);
-}
-
-static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-	return tc.core().new_record(ast->m_fields, compute_monos(ast->m_types, tc));
-}
-
-static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	return tc.core().new_variant(ast->m_constructors, compute_monos(ast->m_types, tc));
-}
-
 static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
-	assert(
-	    ast->type() == ExprTag::Identifier ||
-	    ast->type() == ExprTag::UnionExpression ||
-	    ast->type() == ExprTag::StructExpression);
-
-	if (ast->type() == ExprTag::UnionExpression) {
-		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
-	} else if (ast->type() == ExprTag::StructExpression) {
-		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
-	} else {
-		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
-	}
+	stub_type_function(ast, tc);
+	complete_type_function(ast, tc);
+	return get_type_function_id(ast);
 }
 
 static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
