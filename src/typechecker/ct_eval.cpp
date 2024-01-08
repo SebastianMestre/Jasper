@@ -17,12 +17,6 @@ using AST::StmtTag;
 
 static void ct_visit(AST::Stmt*& ast, TypeChecker& tc);
 
-static void do_the_thing(AST::Program* ast, TypeChecker& tc);
-
-void reify_types(AST::Program* ast, TypeChecker& tc) {
-	do_the_thing(ast, tc);
-}
-
 static void ct_eval(AST::Expr* ast, TypeChecker& tc);
 static void ct_visit(AST::Block* ast, TypeChecker& tc);
 
@@ -312,7 +306,7 @@ static MonoId get_monotype_id(AST::Expr* ast) {
 	}
 }
 
-static void do_the_thing(AST::Program* ast, TypeChecker& tc) {
+void reify_types(AST::Program* ast, TypeChecker& tc) {
 
 	for (auto& decl : ast->m_declarations) {
 		MetaType meta_type = decl.m_meta_type;
