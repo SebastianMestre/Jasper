@@ -262,33 +262,29 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
+std::vector<MonoId> make_vars(int count, TypeChecker& tc) {
+	std::vector<MonoId> vars(count);
+	for (int i = 0; i < count; ++i) {
+		vars[i] = tc.core().ll_new_var();
+	}
+	return vars;
+}
+
 static void stub_type_function(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
 	case ExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-
-		int n = struct_expression->m_fields.size();
-		std::vector<MonoId> ty_stubs(n);
-		for (int i = 0; i < n; ++i) {
-			ty_stubs[i] = tc.core().ll_new_var();
-		}
-
-		struct_expression->m_value =
-		    tc.core().new_record(struct_expression->m_fields, ty_stubs);
+		struct_expression->m_value = tc.core().new_record(
+		    struct_expression->m_fields,
+		    make_vars(struct_expression->m_fields.size(), tc));
 	} break;
 
 	case ExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-
-		int n = union_expression->m_constructors.size();
-		std::vector<MonoId> ty_stubs(n);
-		for (int i = 0; i < n; ++i) {
-			ty_stubs[i] = tc.core().ll_new_var();
-		}
-
-		union_expression->m_value =
-		    tc.core().new_variant(union_expression->m_constructors, ty_stubs);
+		union_expression->m_value = tc.core().new_variant(
+		    union_expression->m_constructors,
+		    make_vars(union_expression->m_constructors.size(), tc));
 		break;
 	}
 
