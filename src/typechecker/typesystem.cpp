@@ -264,7 +264,7 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
+TypeSystemCore::TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
 	return m_type_functions[tf];
 }
 

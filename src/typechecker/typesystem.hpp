@@ -23,38 +23,6 @@ struct std::hash<VarId> {
 
 
 
-enum class TypeFunctionTag { Builtin, Variant, Record };
-// Concrete type function. If it's a built-in, we use argument_count
-// to tell how many arguments it takes. Else, for variant, and record,
-// we store their structure as a hash from names to monotypes.
-//
-// Dummy type functions are for unification purposes only, but do not count
-// as 'deduced', because they were not created by the user/
-//
-// TODO: change for polymorphic approach
-struct TypeFunctionData {
-	TypeFunctionTag tag;
-	int argument_count; // -1 means variadic
-
-	std::vector<InternedString> fields;
-	std::unordered_map<InternedString, MonoId> structure;
-};
-
-// A polytype is a type where some amount of type variables can take
-// any value, and still give a valid typing.
-struct PolyData {
-	MonoId base;
-	std::vector<VarId> vars;
-};
-
-struct Constraint {
-	enum class Shape {
-		Unknown, Variant, Record
-	};
-
-	std::unordered_map<InternedString, MonoId> structure;
-	Shape shape;
-};
 
 struct TypeSystemCore {
 
@@ -116,17 +84,33 @@ struct TypeSystemCore {
 
 private:
 
-	TypeFunctionData& get_type_function_data(TypeFunctionId);
+	enum class TypeFunctionTag { Builtin, Variant, Record };
+	// Concrete type function. If it's a built-in, we use argument_count
+	// to tell how many arguments it takes. Else, for variant, and record,
+	// we store their structure as a hash from names to monotypes.
+	struct TypeFunctionData {
+		TypeFunctionTag tag;
+		int argument_count; // -1 means variadic
 
-	TypeFunctionId new_type_function(
-	    TypeFunctionTag type,
-	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure);
-	void gather_free_vars(MonoId, std::unordered_set<VarId>&);
+		std::vector<InternedString> fields;
+		std::unordered_map<InternedString, MonoId> structure;
+	};
 
-	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
-	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
-	void unify_type_function(TypeFunctionId, TypeFunctionId);
+	// A polytype is a type where some amount of type variables can take
+	// any value, and still give a valid typing.
+	struct PolyData {
+		MonoId base;
+		std::vector<VarId> vars;
+	};
+
+	struct Constraint {
+		enum class Shape {
+			Unknown, Variant, Record
+		};
+
+		std::unordered_map<InternedString, MonoId> structure;
+		Shape shape;
+	};
 
 	enum class Tag { Var, Term, };
 
@@ -139,6 +123,19 @@ private:
 		int function_id; // external id
 		std::vector<int> argument_idx;
 	};
+
+	TypeFunctionData& get_type_function_data(TypeFunctionId);
+
+	TypeFunctionId new_type_function(
+	    TypeFunctionTag type,
+	    std::vector<InternedString> fields,
+	    std::unordered_map<InternedString, MonoId> structure);
+	void gather_free_vars(MonoId, std::unordered_set<VarId>&);
+
+	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
+	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
+	void unify_type_function(TypeFunctionId, TypeFunctionId);
+
 
 	int ll_find(int i);
 	int ll_find_term(int i);
