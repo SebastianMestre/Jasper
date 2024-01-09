@@ -254,23 +254,25 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
 	auto& constructor = ast->m_evaluated_constructor;
 
-	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor.m_mono);
+	auto tf = tc.core().type_function_of(constructor.m_mono);
 
 	// match value arguments
-	if (tf_data.tag == TypeFunctionTag::Record) {
-		assert(tf_data.fields.size() == ast->m_args.size());
-		for (int i = 0; i < ast->m_args.size(); ++i) {
+	if (tc.core().is_record(tf)) {
+		auto const& fields = tc.core().fields(tf);
+		assert(fields.size() == ast->m_args.size());
+		for (int i = 0; i < fields.size(); ++i) {
 			infer(ast->m_args[i], tc);
-			MonoId field_type = tf_data.structure[tf_data.fields[i]];
+			MonoId field_type = tc.core().type_of_field(tf, fields[i]);
 			tc.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
-	} else if (tf_data.tag == TypeFunctionTag::Variant) {
+	} else if (tc.core().is_variant(tf)) {
 		assert(ast->m_args.size() == 1);
 
 		infer(ast->m_args[0], tc);
 		InternedString id = constructor.m_id;
-		MonoId constructor_type = tf_data.structure[id];
+
+		MonoId constructor_type = tc.core().type_of_field(tf, id);
 
 		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}

@@ -99,12 +99,32 @@ TypeFunctionId TypeSystemCore::create_type_function(
 	return result;
 }
 
-TypeFunctionData& TypeSystemCore::type_function_data_of(MonoId mono) {
+std::vector<InternedString> const& TypeSystemCore::fields(TypeFunctionId tf) {
+	assert(is_record(tf));
+	return get_type_function_data(tf).fields;
+}
+
+MonoId TypeSystemCore::type_of_field(TypeFunctionId tf, InternedString name) {
+	assert(is_record(tf) || is_variant(tf));
+	auto it = get_type_function_data(tf).structure.find(name);
+	assert(it != get_type_function_data(tf).structure.end());
+	return it->second;
+}
+
+bool TypeSystemCore::is_record(TypeFunctionId tf) {
+	return get_type_function_data(tf).tag == TypeFunctionTag::Record;
+}
+
+bool TypeSystemCore::is_variant(TypeFunctionId tf) {
+	return get_type_function_data(tf).tag == TypeFunctionTag::Variant;
+}
+
+TypeFunctionId TypeSystemCore::type_function_of(MonoId mono) {
 	mono = ll_find(mono);
 	assert(ll_is_term(mono) && "tried to find function of non term");
 	int t = ll_node_header[mono].data_idx;
 	TypeFunctionId tf = ll_term_data[t].function_id;
-	return get_type_function_data(tf);
+	return tf;
 }
 
 static InternedString print_a_thing(int x) {

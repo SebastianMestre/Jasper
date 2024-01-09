@@ -64,7 +64,7 @@ struct TypeSystemCore {
 
 	std::unordered_set<VarId> free_vars(MonoId);
 	void ll_unify(MonoId i, MonoId j);
-	TypeFunctionData& type_function_data_of(MonoId);
+	TypeFunctionId type_function_of(MonoId);
 	VarId get_var_id(MonoId i);
 
 	MonoId ll_new_var();
@@ -91,6 +91,11 @@ struct TypeSystemCore {
 	PolyId forall(std::vector<VarId>, MonoId);
 
 	// typefuncs
+
+	bool is_record(TypeFunctionId);
+	bool is_variant(TypeFunctionId);
+	std::vector<InternedString> const& fields(TypeFunctionId);
+	MonoId type_of_field(TypeFunctionId, InternedString);
 
 	TypeFunctionData& get_type_function_data(TypeFunctionId);
 	TypeFunctionId new_builtin_type_function(int arguments);
