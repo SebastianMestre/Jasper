@@ -15,18 +15,12 @@ namespace TypeChecker {
 using AST::ExprTag;
 using AST::StmtTag;
 
-static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc);
+static void ct_visit(AST::Stmt*& ast, TypeChecker& tc);
 
-static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc);
+static void ct_eval(AST::Expr* ast, TypeChecker& tc);
+static void ct_visit(AST::Block* ast, TypeChecker& tc);
 
-void reify_types(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	do_the_thing(ast, tc, alloc);
-}
-
-static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
-static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc);
-
-static AST::Constructor* constructor_from_ast(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc);
+static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc);
 
 static MonoId compute_mono(AST::Expr*, TypeChecker&);
 static TypeFunctionId compute_type_func(AST::Expr*, TypeChecker&);
@@ -35,57 +29,57 @@ static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChe
 
 // literals
 
-static void ct_eval(AST::ArrayLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::ArrayLiteral* ast, TypeChecker& tc) {
 	for (auto& element : ast->m_elements)
-		ct_eval(element, tc, alloc);
+		ct_eval(element, tc);
 }
 
 // expressions
 
-static void ct_eval(AST::FunctionLiteral* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::FunctionLiteral* ast, TypeChecker& tc) {
 	for (auto& arg : ast->m_args)
 		if (arg.m_type_hint)
-			ct_eval(arg.m_type_hint, tc, alloc);
+			ct_eval(arg.m_type_hint, tc);
 
-	ct_eval(ast->m_body, tc, alloc);
+	ct_eval(ast->m_body, tc);
 }
 
-static void ct_eval(AST::Identifier* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::Identifier* ast, TypeChecker& tc) {
 }
 
-static void ct_eval(AST::CallExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::CallExpression* ast, TypeChecker& tc) {
 
-	ct_eval(ast->m_callee, tc, alloc);
+	ct_eval(ast->m_callee, tc);
 
 	for (auto& arg : ast->m_args)
-		ct_eval(arg, tc, alloc);
+		ct_eval(arg, tc);
 }
 
-static void ct_eval(AST::IndexExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_callee, tc, alloc);
-	ct_eval(ast->m_index, tc, alloc);
+static void ct_eval(AST::IndexExpression* ast, TypeChecker& tc) {
+	ct_eval(ast->m_callee, tc);
+	ct_eval(ast->m_index, tc);
 }
 
-static void ct_eval(AST::TernaryExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_condition, tc, alloc);
-	ct_eval(ast->m_then_expr, tc, alloc);
-	ct_eval(ast->m_else_expr, tc, alloc);
+static void ct_eval(AST::TernaryExpression* ast, TypeChecker& tc) {
+	ct_eval(ast->m_condition, tc);
+	ct_eval(ast->m_then_expr, tc);
+	ct_eval(ast->m_else_expr, tc);
 }
 
-static void ct_eval(AST::AccessExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::AccessExpression* ast, TypeChecker& tc) {
 
 	MetaType meta_type = ast->m_meta_type;
 
 	if (meta_type == MetaType::Constructor)
 		return;
 
-	ct_eval(ast->m_target, tc, alloc);
+	ct_eval(ast->m_target, tc);
 }
 
-static void ct_eval(AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::MatchExpression* ast, TypeChecker& tc) {
 
 	if (ast->m_type_hint) {
-		ct_eval(ast->m_type_hint, tc, alloc);
+		ct_eval(ast->m_type_hint, tc);
 	}
 
 	for (auto& kv : ast->m_cases) {
@@ -93,43 +87,38 @@ static void ct_eval(AST::MatchExpression* ast, TypeChecker& tc, AST::Allocator& 
 
 		// TODO(SMestre): factor this out (it's repeated in a bunch of other places)
 		if (case_data.m_declaration.m_type_hint) {
-			ct_eval(case_data.m_declaration.m_type_hint, tc, alloc);
+			ct_eval(case_data.m_declaration.m_type_hint, tc);
 		}
 
-		ct_eval(case_data.m_expression, tc, alloc);
+		ct_eval(case_data.m_expression, tc);
 	}
 }
 
-static void ct_eval(
-    AST::ConstructorExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-
-	ast->m_evaluated_constructor = constructor_from_ast(ast->m_constructor, tc, alloc);
-
+static void ct_eval(AST::ConstructorExpression* ast, TypeChecker& tc) {
+	ast->m_evaluated_constructor = constructor_from_ast(ast->m_constructor, tc);
 	for (auto& arg : ast->m_args)
-		ct_eval(arg, tc, alloc);
+		ct_eval(arg, tc);
 }
 
-static void ct_eval(AST::SequenceExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_visit(ast->m_body, tc, alloc);
+static void ct_eval(AST::SequenceExpression* ast, TypeChecker& tc) {
+	ct_visit(ast->m_body, tc);
 }
 // types
 
-static void ct_eval(AST::StructExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::StructExpression* ast, TypeChecker& tc) {
 	ast->m_value = compute_type_func(ast, tc);
 }
 
-static void ct_eval(AST::UnionExpression* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::UnionExpression* ast, TypeChecker& tc) {
 	ast->m_value = compute_type_func(ast, tc);
 }
 
-static AST::Constructor* constructor_from_ast(
-    AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc) {
 	MetaType meta = ast->m_meta_type;
-	auto constructor = alloc.make<AST::Constructor>();
-	constructor->m_syntax = ast;
+	auto constructor = AST::Constructor{};
 
 	if (meta == MetaType::Type) {
-		constructor->m_mono = compute_mono(ast, tc);
+		constructor.m_mono = compute_mono(ast, tc);
 	} else if (meta == MetaType::Constructor) {
 		assert(ast->type() == ExprTag::AccessExpression);
 
@@ -144,8 +133,8 @@ static AST::Constructor* constructor_from_ast(
 		tc.core().add_field_constraint(v, access->m_member, tc.core().ll_new_var());
 		tc.core().ll_unify(expected_ty, actual_ty);
 
-		constructor->m_mono = actual_ty;
-		constructor->m_id = access->m_member;
+		constructor.m_mono = actual_ty;
+		constructor.m_id = access->m_member;
 	} else {
 		Log::fatal() << "Constructor invokation on a non-constructor -- MetaType(" << int(meta) << ")";
 	}
@@ -153,44 +142,44 @@ static AST::Constructor* constructor_from_ast(
 	return constructor;
 }
 
-static void ct_eval(AST::TypeTerm* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::TypeTerm* ast, TypeChecker& tc) {
 	ast->m_value = compute_mono(ast, tc);
 }
 
 // statements
 
-static void ct_visit(AST::Block* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_visit(AST::Block* ast, TypeChecker& tc) {
 	for (auto& child : ast->m_body) {
-		ct_visit(child, tc, alloc);
+		ct_visit(child, tc);
 	}
 }
 
-static void ct_visit(AST::IfElseStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_condition, tc, alloc);
-	ct_visit(ast->m_body, tc, alloc);
+static void ct_visit(AST::IfElseStatement* ast, TypeChecker& tc) {
+	ct_eval(ast->m_condition, tc);
+	ct_visit(ast->m_body, tc);
 	if (ast->m_else_body) {
-		ct_visit(ast->m_else_body, tc, alloc);
+		ct_visit(ast->m_else_body, tc);
 	}
 }
 
-static void ct_visit(AST::WhileStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_condition, tc, alloc);
-	ct_visit(ast->m_body, tc, alloc);
+static void ct_visit(AST::WhileStatement* ast, TypeChecker& tc) {
+	ct_eval(ast->m_condition, tc);
+	ct_visit(ast->m_body, tc);
 }
 
-static void ct_visit(AST::ReturnStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_value, tc, alloc);
+static void ct_visit(AST::ReturnStatement* ast, TypeChecker& tc) {
+	ct_eval(ast->m_value, tc);
 }
 
-static void ct_visit(AST::ExpressionStatement* ast, TypeChecker& tc, AST::Allocator& alloc) {
-	ct_eval(ast->m_expression, tc, alloc);
+static void ct_visit(AST::ExpressionStatement* ast, TypeChecker& tc) {
+	ct_eval(ast->m_expression, tc);
 }
 
-static void ct_visit(AST::Declaration* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_visit(AST::Declaration* ast, TypeChecker& tc) {
 	if (ast->m_type_hint)
-		ct_eval(ast->m_type_hint, tc, alloc);
+		ct_eval(ast->m_type_hint, tc);
 
-	ct_eval(ast->m_value, tc, alloc);
+	ct_eval(ast->m_value, tc);
 }
 
 static TypeFunctionId get_type_function_id(AST::Expr* ast) {
@@ -262,33 +251,29 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
+std::vector<MonoId> make_vars(int count, TypeChecker& tc) {
+	std::vector<MonoId> vars(count);
+	for (int i = 0; i < count; ++i) {
+		vars[i] = tc.core().ll_new_var();
+	}
+	return vars;
+}
+
 static void stub_type_function(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 
 	case ExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-
-		int n = struct_expression->m_fields.size();
-		std::vector<MonoId> ty_stubs(n);
-		for (int i = 0; i < n; ++i) {
-			ty_stubs[i] = tc.core().ll_new_var();
-		}
-
-		struct_expression->m_value =
-		    tc.core().new_record(struct_expression->m_fields, ty_stubs);
+		struct_expression->m_value = tc.core().new_record(
+		    struct_expression->m_fields,
+		    make_vars(struct_expression->m_fields.size(), tc));
 	} break;
 
 	case ExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-
-		int n = union_expression->m_constructors.size();
-		std::vector<MonoId> ty_stubs(n);
-		for (int i = 0; i < n; ++i) {
-			ty_stubs[i] = tc.core().ll_new_var();
-		}
-
-		union_expression->m_value =
-		    tc.core().new_variant(union_expression->m_constructors, ty_stubs);
+		union_expression->m_value = tc.core().new_variant(
+		    union_expression->m_constructors,
+		    make_vars(union_expression->m_constructors.size(), tc));
 		break;
 	}
 
@@ -306,7 +291,7 @@ static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 	case ExprTag::TypeTerm:
 		return void(static_cast<AST::TypeTerm*>(ast)->m_value = tc.new_var());
 	case ExprTag::Identifier:
-		return void(stub_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value, tc));
+		return;
 	default: assert(0);
 	}
 }
@@ -321,17 +306,10 @@ static MonoId get_monotype_id(AST::Expr* ast) {
 	}
 }
 
-static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& alloc) {
+void reify_types(AST::Program* ast, TypeChecker& tc) {
 
 	for (auto& decl : ast->m_declarations) {
 		MetaType meta_type = decl.m_meta_type;
-
-#if 0
-		std::cerr << "[ Pass 1 ] top level \"" << decl.m_identifier << "\"\n";
-		std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
-#endif
-
-		assert(meta_type != MetaType::Undefined);
 
 		// put a dummy var where required.
 		if (meta_type == MetaType::TypeFunction) {
@@ -346,13 +324,6 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 		for (auto decl : decls) {
 			MetaType meta_type = decl->m_meta_type;
 
-#if 0
-			std::cerr << "[ Pass 2 ] top level \"" << decl->m_identifier << "\"\n";
-			std::cerr << "           metatype tag is: Tag(" << int(meta_type) << ")\n";
-#endif
-
-			assert(meta_type != MetaType::Undefined);
-
 			if (meta_type == MetaType::TypeFunction) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in typefunc declaration";
@@ -366,17 +337,17 @@ static void do_the_thing(AST::Program* ast, TypeChecker& tc, AST::Allocator& all
 				tc.core().ll_unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
-					ct_eval(decl->m_type_hint, tc, alloc);
-				ct_eval(decl->m_value, tc, alloc);
+					ct_eval(decl->m_type_hint, tc);
+				ct_eval(decl->m_value, tc);
 			}
 		}
 	}
 }
 
-static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_visit(AST::Stmt*& ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
 	case StmtTag::type:                                                        \
-		return ct_visit(static_cast<AST::type*>(ast), tc, alloc)
+		return ct_visit(static_cast<AST::type*>(ast), tc)
 
 	switch (ast->tag()) {
 		DISPATCH(Block);
@@ -393,10 +364,10 @@ static void ct_visit(AST::Stmt*& ast, TypeChecker& tc, AST::Allocator& alloc) {
 #undef DISPATCH
 }
 
-static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
+static void ct_eval(AST::Expr* ast, TypeChecker& tc) {
 #define DISPATCH(type)                                                         \
 	case ExprTag::type:                                                        \
-		return ct_eval(static_cast<AST::type*>(ast), tc, alloc)
+		return ct_eval(static_cast<AST::type*>(ast), tc)
 
 #define RETURN(type)                                                           \
 	case ExprTag::type:                                                        \
@@ -437,34 +408,10 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc, AST::Allocator& alloc) {
 #undef RETURN
 }
 
-static TypeFunctionId compute_type_func(AST::Identifier* ast, TypeChecker& tc) {
-	assert(ast->m_declaration);
-	assert(ast->m_meta_type == MetaType::TypeFunction);
-	auto decl = ast->m_declaration;
-	return get_type_function_id(decl->m_value);
-}
-
-static TypeFunctionId compute_type_func(AST::StructExpression* ast, TypeChecker& tc) {
-	return tc.core().new_record(ast->m_fields, compute_monos(ast->m_types, tc));
-}
-
-static TypeFunctionId compute_type_func(AST::UnionExpression* ast, TypeChecker& tc) {
-	return tc.core().new_variant(ast->m_constructors, compute_monos(ast->m_types, tc));
-}
-
 static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
-	assert(
-	    ast->type() == ExprTag::Identifier ||
-	    ast->type() == ExprTag::UnionExpression ||
-	    ast->type() == ExprTag::StructExpression);
-
-	if (ast->type() == ExprTag::UnionExpression) {
-		return compute_type_func(static_cast<AST::UnionExpression*>(ast), tc);
-	} else if (ast->type() == ExprTag::StructExpression) {
-		return compute_type_func(static_cast<AST::StructExpression*>(ast), tc);
-	} else {
-		return compute_type_func(static_cast<AST::Identifier*>(ast), tc);
-	}
+	stub_type_function(ast, tc);
+	complete_type_function(ast, tc);
+	return get_type_function_id(ast);
 }
 
 static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
@@ -475,13 +422,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
-
-	std::vector<MonoId> args;
-	for (auto& arg : ast->m_args) {
-		args.push_back(compute_mono(arg, tc));
-	}
-
-	return tc.core().new_term(type_function, std::move(args));
+	return tc.core().new_term(type_function, compute_monos(ast->m_args, tc));
 }
 
 static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {

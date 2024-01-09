@@ -37,9 +37,6 @@ struct TypecheckHelper {
 
 	void unify(MonoId i, MonoId j) { core().ll_unify(i, j); }
 
-	bool is_type(MetaType i) { return i == MetaType::TypeFunction || i == MetaType::Type; }
-	bool is_term(MetaType i) { return i == MetaType::Term; }
-
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
 	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> arguments) {
@@ -134,7 +131,7 @@ static void infer(AST::Identifier* ast, TypecheckHelper& tc) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
 
-	assert(tc.is_term(declaration->m_meta_type));
+	assert(declaration->m_meta_type == MetaType::Term);
 
 	ast->m_value_type = declaration->m_is_polymorphic
 		? tc.inst_fresh(declaration->m_decl_type)
@@ -255,10 +252,9 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 
 static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
-	auto constructor = ast->m_evaluated_constructor;
-	assert(constructor);
+	auto& constructor = ast->m_evaluated_constructor;
 
-	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor->m_mono);
+	TypeFunctionData& tf_data = tc.core().type_function_data_of(constructor.m_mono);
 
 	// match value arguments
 	if (tf_data.tag == TypeFunctionTag::Record) {
@@ -273,13 +269,13 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 		assert(ast->m_args.size() == 1);
 
 		infer(ast->m_args[0], tc);
-		InternedString id = constructor->m_id;
+		InternedString id = constructor.m_id;
 		MonoId constructor_type = tf_data.structure[id];
 
 		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
-	ast->m_value_type = constructor->m_mono;
+	ast->m_value_type = constructor.m_mono;
 }
 
 // this function implements 'the value restriction', a technique
@@ -453,38 +449,17 @@ void typecheck_program(AST::Program* ast, TypeChecker& tc_) {
 
 	auto const& comps = tc.declaration_order();
 
-	std::vector<std::vector<AST::Declaration*>> value_components;
-
+	// This loop implements the [Rec] rule
 	for (auto const& component : comps) {
 
-		bool type_in_component = false;
-		bool non_type_in_component = false;
+		bool terms_only = true;
 		for (auto decl : component) {
-
-			if (tc.is_type(decl->m_meta_type)) {
-				type_in_component = true;
-			}
-
-			if (tc.is_term(decl->m_meta_type)) {
-				non_type_in_component = true;
+			if (decl->m_meta_type != MetaType::Term) {
+				terms_only = false;
 			}
 		}
 
-		// We don't deal with types and non-types in the same component.
-		//
-		// TODO: maybe we should be even more strict and reject
-		//       non-values in components of size > 1.
-		if (type_in_component && non_type_in_component) {
-			Log::fatal() << "found reference cycle with types and values";
-		}
-
-		if (!type_in_component) {
-			value_components.push_back(component);
-		}
-	}
-
-	// This loop implements the [Rec] rule
-	for (auto const& component : value_components) {
+		if (!terms_only) continue;
 
 		tc.new_nested_scope();
 

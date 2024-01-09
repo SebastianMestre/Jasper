@@ -7,8 +7,6 @@ using MonoId = int;
 using PolyId = int;
 using TypeVarId = int;
 
-using MetaTypeId = int;
-
 enum class MetaType { Term, Type, TypeFunction, Constructor, Undefined };
 
 namespace TypeChecker {
