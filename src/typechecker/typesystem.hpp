@@ -97,7 +97,6 @@ struct TypeSystemCore {
 	std::vector<InternedString> const& fields(TypeFunctionId);
 	MonoId type_of_field(TypeFunctionId, InternedString);
 
-	TypeFunctionData& get_type_function_data(TypeFunctionId);
 	TypeFunctionId new_builtin_type_function(int arguments);
 
 	TypeFunctionId new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
@@ -116,6 +115,8 @@ struct TypeSystemCore {
 	}
 
 private:
+
+	TypeFunctionData& get_type_function_data(TypeFunctionId);
 
 	TypeFunctionId new_type_function(
 	    TypeFunctionTag type,
