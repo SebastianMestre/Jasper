@@ -18,11 +18,11 @@ COMMON_TARGETS := \
 	log/basic_stream \
 	log/log \
 	log/stream \
+	typechecker/core \
 	typechecker/ct_eval \
 	typechecker/metacheck \
 	typechecker/typecheck \
 	typechecker/typechecker \
-	typechecker/typesystem \
 	utils/block_allocator \
 	utils/error_report \
 	utils/interned_string \

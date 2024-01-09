@@ -2,7 +2,7 @@
 
 #include "../utils/chunked_array.hpp"
 #include "../utils/interned_string.hpp"
-#include "typesystem.hpp"
+#include "core.hpp"
 
 namespace AST {
 struct Allocator;

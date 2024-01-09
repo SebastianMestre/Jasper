@@ -1,4 +1,4 @@
-#include "typesystem.hpp"
+#include "core.hpp"
 
 #include <cassert>
 #include <iostream>
