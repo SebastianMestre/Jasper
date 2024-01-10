@@ -2,8 +2,9 @@
 
 // TODO: make these type-safe
 using TermId = int;
-using MonoId = int;
 using PolyId = int;
+
+enum class Type {};
 
 enum class TypeFunc {};
 

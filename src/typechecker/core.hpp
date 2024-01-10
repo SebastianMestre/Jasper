@@ -26,20 +26,20 @@ struct TypeSystemCore {
 
 	// types
 
-	std::unordered_set<VarId> free_vars(MonoId);
-	void ll_unify(MonoId i, MonoId j);
-	TypeFunc type_function_of(MonoId);
-	VarId get_var_id(MonoId i);
+	std::unordered_set<VarId> free_vars(Type);
+	void ll_unify(Type i, Type j);
+	TypeFunc type_function_of(Type);
+	VarId get_var_id(Type i);
 
-	MonoId ll_new_var();
-	MonoId new_term(TypeFunc type_function, std::vector<MonoId> args);
+	Type ll_new_var();
+	Type new_term(TypeFunc type_function, std::vector<Type> args);
 
-	MonoId fun(std::vector<MonoId> arg_tys, MonoId res_ty) {
+	Type fun(std::vector<Type> arg_tys, Type res_ty) {
 		arg_tys.push_back(res_ty);
 		return new_term(TypeChecker::BuiltinType::Function, {arg_tys});
 	}
 
-	MonoId array(MonoId elem_ty) {
+	Type array(Type elem_ty) {
 		return new_term(TypeChecker::BuiltinType::Array, {elem_ty});
 	}
 
@@ -47,32 +47,32 @@ struct TypeSystemCore {
 
 	void add_record_constraint(VarId);
 	void add_variant_constraint(VarId);
-	void add_field_constraint(VarId, InternedString name, MonoId ty);
+	void add_field_constraint(VarId, InternedString name, Type ty);
 
 	// polytypes
 
-	MonoId inst_fresh(PolyId poly);
-	PolyId forall(std::vector<VarId>, MonoId);
+	Type inst_fresh(PolyId poly);
+	PolyId forall(std::vector<VarId>, Type);
 
 	// typefuncs
 
 	bool is_record(TypeFunc);
 	bool is_variant(TypeFunc);
 	std::vector<InternedString> const& fields(TypeFunc);
-	MonoId type_of_field(TypeFunc, InternedString);
+	Type type_of_field(TypeFunc, InternedString);
 
 	TypeFunc new_builtin_type_function(int arguments);
 
-	TypeFunc new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
-		std::unordered_map<InternedString, MonoId> structure;
+	TypeFunc new_record(std::vector<InternedString> fields, std::vector<Type> const& types) {
+		std::unordered_map<InternedString, Type> structure;
 		for (int i = 0; i < fields.size(); ++i)
 			structure[fields[i]] = types[i];
 		return new_type_function(
 		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 	}
 
-	TypeFunc new_variant(std::vector<InternedString> const& fields, std::vector<MonoId> const& types) {
-		std::unordered_map<InternedString, MonoId> structure;
+	TypeFunc new_variant(std::vector<InternedString> const& fields, std::vector<Type> const& types) {
+		std::unordered_map<InternedString, Type> structure;
 		for (int i = 0; i < fields.size(); ++i)
 			structure[fields[i]] = types[i];
 		return new_type_function(TypeFunctionTag::Variant, {}, std::move(structure));
@@ -89,13 +89,13 @@ private:
 		int argument_count; // -1 means variadic
 
 		std::vector<InternedString> fields;
-		std::unordered_map<InternedString, MonoId> structure;
+		std::unordered_map<InternedString, Type> structure;
 	};
 
 	// A polytype is a type where some amount of type variables can take
 	// any value, and still give a valid typing.
 	struct PolyData {
-		MonoId base;
+		Type base;
 		std::vector<VarId> vars;
 	};
 
@@ -104,7 +104,7 @@ private:
 			Unknown, Variant, Record
 		};
 
-		std::unordered_map<InternedString, MonoId> structure;
+		std::unordered_map<InternedString, Type> structure;
 		Shape shape;
 	};
 
@@ -117,7 +117,7 @@ private:
 
 	struct TermData {
 		TypeFunc function_id; // external id
-		std::vector<int> argument_idx;
+		std::vector<Type> argument_idx;
 	};
 
 	TypeFunctionData& data(TypeFunc);
@@ -125,33 +125,33 @@ private:
 	TypeFunc new_type_function(
 	    TypeFunctionTag type,
 	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure);
-	void gather_free_vars(MonoId, std::unordered_set<VarId>&);
+	    std::unordered_map<InternedString, Type> structure);
+	void gather_free_vars(Type, std::unordered_set<VarId>&);
 
-	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
-	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
+	Type inst_impl(Type mono, std::unordered_map<VarId, Type> const& mapping);
+	Type inst_with(PolyId poly, std::vector<Type> const& vals);
 	void unify_type_function(TypeFunc, TypeFunc);
 
-	int ll_find(int i);
+	Type ll_find(Type i);
 
-	bool ll_is_var(int i);
-	bool ll_is_term(int i);
+	bool ll_is_var(Type i);
+	bool ll_is_term(Type i);
 
-	int ll_new_term(TypeFunc f, std::vector<int> args = {});
+	Type ll_new_term(TypeFunc f, std::vector<Type> args);
 
 	TypeFunc create_type_function(
 	    TypeFunctionTag tag,
-	    int arity,
+		int arity,
 	    std::vector<InternedString> fields,
-	    std::unordered_map<InternedString, MonoId> structure);
+	    std::unordered_map<InternedString, Type> structure);
 
-	void establish_substitution(VarId var_id, int type_id);
+	void establish_substitution(VarId var_id, Type type_id);
 
-	bool occurs(VarId v, MonoId i);
-	bool equals_var(MonoId t, VarId v);
+	bool occurs(VarId v, Type i);
+	bool equals_var(Type t, VarId v);
 	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
-	bool satisfies(MonoId t, Constraint const& c);
+	bool satisfies(Type t, Constraint const& c);
 	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;
 
@@ -165,7 +165,7 @@ private:
 	std::vector<TermData> ll_term_data;
 
 	// per-var data
-	std::vector<MonoId> m_substitution;
+	std::vector<Type> m_substitution;
 	std::vector<Constraint> m_constraints;
 	UnionFind m_type_var_uf;
 

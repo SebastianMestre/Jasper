@@ -18,28 +18,28 @@ struct TypecheckHelper {
 	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
 
-	PolyId generalize(MonoId mono);
+	PolyId generalize(Type mono);
 
-	MonoId mono_int() { return tc.mono_int(); }
-	MonoId mono_float() { return tc.mono_float(); }
-	MonoId mono_string() { return tc.mono_string(); }
-	MonoId mono_boolean() { return tc.mono_boolean(); }
-	MonoId mono_unit() { return tc.mono_unit(); }
+	Type mono_int() { return tc.mono_int(); }
+	Type mono_float() { return tc.mono_float(); }
+	Type mono_string() { return tc.mono_string(); }
+	Type mono_boolean() { return tc.mono_boolean(); }
+	Type mono_unit() { return tc.mono_unit(); }
 
 	TypeSystemCore& core() { return tc.core(); }
 	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return tc.declaration_order(); }
 
-	MonoId new_var() { return tc.new_var(); }
+	Type new_var() { return tc.new_var(); }
 
 	void declare(AST::Declaration* decl) { symbol_table.declare(decl); }
 	void new_nested_scope() { symbol_table.new_nested_scope(); }
 	void end_scope() { symbol_table.end_scope(); }
 
-	void unify(MonoId i, MonoId j) { core().ll_unify(i, j); }
+	void unify(Type i, Type j) { core().ll_unify(i, j); }
 
-	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
+	Type inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
-	MonoId new_term(TypeFunc type_function, std::vector<MonoId> arguments) {
+	Type new_term(TypeFunc type_function, std::vector<Type> arguments) {
 		return core().new_term(type_function, std::move(arguments));
 	}
 
@@ -69,7 +69,7 @@ private:
 
 
 // quantifies all free variables in the given monotype
-PolyId TypecheckHelper::generalize(MonoId mono) {
+PolyId TypecheckHelper::generalize(Type mono) {
 
 	std::vector<VarId> vars;
 	for (VarId var : core().free_vars(mono)) {
@@ -87,7 +87,7 @@ static void typecheck_stmt(AST::Stmt* ast, TypecheckHelper& tc);
 
 static void process_type_hint(AST::Declaration* ast, TypecheckHelper& tc);
 
-static MonoId get_monotype_id(AST::Expr* ast) {
+static Type get_monotype_id(AST::Expr* ast) {
 	switch(ast->type()) {
 	case ExprTag::TypeTerm: return static_cast<AST::TypeTerm*>(ast)->m_value;
 	case ExprTag::Identifier: return get_monotype_id(static_cast<AST::Identifier*>(ast)->m_declaration->m_value);
@@ -142,15 +142,15 @@ static void infer(AST::Identifier* ast, TypecheckHelper& tc) {
 static void infer(AST::CallExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_callee, tc);
 
-	std::vector<MonoId> arg_types;
+	std::vector<Type> arg_types;
 	for (auto& arg : ast->m_args) {
 		infer(arg, tc);
 		arg_types.push_back(arg->m_value_type);
 	}
 
-	MonoId result_type = tc.new_var();
-	MonoId expected_callee_type = tc.core().fun(std::move(arg_types), result_type);
-	MonoId callee_type = ast->m_callee->m_value_type;
+	Type result_type = tc.new_var();
+	Type expected_callee_type = tc.core().fun(std::move(arg_types), result_type);
+	Type callee_type = ast->m_callee->m_value_type;
 	tc.unify(callee_type, expected_callee_type);
 
 	ast->m_value_type = result_type;
@@ -162,7 +162,7 @@ static void infer(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 
 	// TODO: consume return-type type-hints
 
-	std::vector<MonoId> arg_types;
+	std::vector<Type> arg_types;
 
 	for (auto& arg : ast->m_args) {
 		arg.m_value_type = tc.new_var();
@@ -206,10 +206,10 @@ static void infer(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 static void infer(AST::AccessExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_target, tc);
 
-	MonoId member_type = tc.new_var();
+	Type member_type = tc.new_var();
 
 	// constraint the target object
-	MonoId term_type = tc.core().ll_new_var();
+	Type term_type = tc.core().ll_new_var();
 	auto v = tc.core().get_var_id(term_type);
 	tc.core().add_record_constraint(v);
 	tc.core().add_field_constraint(v, ast->m_member, member_type);
@@ -224,7 +224,7 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 		tc.unify(ast->m_target.m_value_type, get_monotype_id(ast->m_type_hint));
 	}
 
-	MonoId expr_ty = tc.new_var();
+	Type expr_ty = tc.new_var();
 
 	// typecheck each case of the match expression
 	for (auto& kv : ast->m_cases) {
@@ -238,7 +238,7 @@ static void infer(AST::MatchExpression* ast, TypecheckHelper& tc) {
 	}
 
 	// constraint the matched-on object
-	MonoId expected_target_ty = tc.core().ll_new_var();
+	Type expected_target_ty = tc.core().ll_new_var();
 	auto v = tc.core().get_var_id(expected_target_ty);
 	tc.core().add_variant_constraint(v);
 	for (auto& kv : ast->m_cases) {
@@ -254,7 +254,7 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 
 	auto& constructor = ast->m_evaluated_constructor;
 
-	auto tf = tc.core().type_function_of(constructor.m_mono);
+	auto tf = tc.core().type_function_of(constructor.m_type);
 
 	// match value arguments
 	if (tc.core().is_record(tf)) {
@@ -262,7 +262,7 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 		assert(fields.size() == ast->m_args.size());
 		for (int i = 0; i < fields.size(); ++i) {
 			infer(ast->m_args[i], tc);
-			MonoId field_type = tc.core().type_of_field(tf, fields[i]);
+			Type field_type = tc.core().type_of_field(tf, fields[i]);
 			tc.unify(field_type, ast->m_args[i]->m_value_type);
 		}
 	// match the argument type with the constructor used
@@ -272,12 +272,12 @@ static void infer(AST::ConstructorExpression* ast, TypecheckHelper& tc) {
 		infer(ast->m_args[0], tc);
 		InternedString id = constructor.m_id;
 
-		MonoId constructor_type = tc.core().type_of_field(tf, id);
+		Type constructor_type = tc.core().type_of_field(tf, id);
 
 		tc.unify(constructor_type, ast->m_args[0]->m_value_type);
 	}
 
-	ast->m_value_type = constructor.m_mono;
+	ast->m_value_type = constructor.m_type;
 }
 
 // this function implements 'the value restriction', a technique

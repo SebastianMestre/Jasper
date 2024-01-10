@@ -25,13 +25,13 @@ struct TypeChecker {
 	void declare_builtin_value(InternedString const& name, PolyId);
 	void declare_builtin_typefunc(InternedString const& name, TypeFunc);
 
-	MonoId new_var();
+	Type new_var();
 
-	MonoId mono_int();
-	MonoId mono_float();
-	MonoId mono_string();
-	MonoId mono_boolean();
-	MonoId mono_unit();
+	Type mono_int();
+	Type mono_float();
+	Type mono_string();
+	Type mono_boolean();
+	Type mono_unit();
 
 	TypeSystemCore& core() { return m_core; }
 

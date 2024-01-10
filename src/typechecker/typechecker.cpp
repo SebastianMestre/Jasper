@@ -138,7 +138,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	declare_builtin_typefunc("array", BuiltinType::Array);
 }
 
-MonoId TypeChecker::new_var() {
+Type TypeChecker::new_var() {
 	return core().ll_new_var();
 }
 
@@ -166,24 +166,24 @@ void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_
 	decl->m_meta_type = MetaType::Term;
 }
 
-MonoId TypeChecker::mono_int() {
-	return 0;
+Type TypeChecker::mono_int() {
+	return Type(0);
 }
 
-MonoId TypeChecker::mono_float() {
-	return 1;
+Type TypeChecker::mono_float() {
+	return Type(1);
 }
 
-MonoId TypeChecker::mono_string() {
-	return 2;
+Type TypeChecker::mono_string() {
+	return Type(2);
 }
 
-MonoId TypeChecker::mono_boolean() {
-	return 3;
+Type TypeChecker::mono_boolean() {
+	return Type(3);
 }
 
-MonoId TypeChecker::mono_unit() {
-	return 4;
+Type TypeChecker::mono_unit() {
+	return Type(4);
 }
 
 std::vector<std::vector<AST::Declaration*>> const& TypeChecker::declaration_order() const {

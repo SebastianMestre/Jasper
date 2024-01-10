@@ -8,40 +8,40 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
-MonoId TypeSystemCore::new_term(TypeFunc tf, std::vector<int> args) {
+Type TypeSystemCore::new_term(TypeFunc tf, std::vector<Type> args) {
 	return ll_new_term(tf, std::move(args));
 }
 
-PolyId TypeSystemCore::forall(std::vector<VarId> vars, MonoId ty) {
+PolyId TypeSystemCore::forall(std::vector<VarId> vars, Type ty) {
 	PolyId poly = poly_data.size();
 	poly_data.push_back({ty, std::move(vars)});
 	return poly;
 }
 
-MonoId TypeSystemCore::inst_impl(
-    MonoId mono, std::unordered_map<VarId, MonoId> const& mapping) {
+Type TypeSystemCore::inst_impl(
+    Type mono, std::unordered_map<VarId, Type> const& mapping) {
 
 	mono = ll_find(mono);
-	NodeHeader header = ll_node_header[mono];
+	NodeHeader header = ll_node_header[int(mono)];
 
 	if (header.tag == Tag::Var) {
 		auto it = mapping.find(get_var_id(mono));
 		return it == mapping.end() ? mono : it->second;
 	} else {
 		TermId term = header.data_idx;
-		std::vector<MonoId> new_args;
-		for (MonoId arg : ll_term_data[term].argument_idx)
+		std::vector<Type> new_args;
+		for (Type arg : ll_term_data[term].argument_idx)
 			new_args.push_back(inst_impl(arg, mapping));
 		return new_term(ll_term_data[term].function_id, std::move(new_args));
 	}
 }
 
-MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
+Type TypeSystemCore::inst_with(PolyId poly, std::vector<Type> const& vals) {
 	PolyData const& data = poly_data[poly];
 
 	assert(data.vars.size() == vals.size());
 
-	std::unordered_map<VarId, MonoId> old_to_new;
+	std::unordered_map<VarId, Type> old_to_new;
 	for (int i {0}; i != data.vars.size(); ++i) {
 		old_to_new[data.vars[i]] = vals[i];
 	}
@@ -49,28 +49,28 @@ MonoId TypeSystemCore::inst_with(PolyId poly, std::vector<MonoId> const& vals) {
 	return inst_impl(data.base, old_to_new);
 }
 
-MonoId TypeSystemCore::inst_fresh(PolyId poly) {
-	std::vector<MonoId> vals;
+Type TypeSystemCore::inst_fresh(PolyId poly) {
+	std::vector<Type> vals;
 	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
 		vals.push_back(ll_new_var());
 	return inst_with(poly, vals);
 }
 
-std::unordered_set<VarId> TypeSystemCore::free_vars(MonoId mono) {
+std::unordered_set<VarId> TypeSystemCore::free_vars(Type mono) {
 	std::unordered_set<VarId> result;
 	gather_free_vars(mono, result);
 	return result;
 }
 
-void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& free_vars) {
+void TypeSystemCore::gather_free_vars(Type mono, std::unordered_set<VarId>& free_vars) {
 	mono = ll_find(mono);
-	const NodeHeader& header = ll_node_header[mono];
+	const NodeHeader& header = ll_node_header[int(mono)];
 
 	if (header.tag == Tag::Var) {
 		free_vars.insert(get_var_id(mono));
 	} else {
 		TermId term = header.data_idx;
-		for (MonoId arg : ll_term_data[term].argument_idx)
+		for (Type arg : ll_term_data[term].argument_idx)
 			gather_free_vars(arg, free_vars);
 	}
 }
@@ -84,7 +84,7 @@ TypeFunc TypeSystemCore::new_builtin_type_function(int arity) {
 TypeFunc TypeSystemCore::new_type_function(
     TypeFunctionTag type,
     std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure) {
+    std::unordered_map<InternedString, Type> structure) {
 	return create_type_function(type, 0, std::move(fields), std::move(structure));
 }
 
@@ -92,7 +92,7 @@ TypeFunc TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
     std::vector<InternedString> fields,
-    std::unordered_map<InternedString, MonoId> structure) {
+    std::unordered_map<InternedString, Type> structure) {
 	auto result = TypeFunc(m_type_functions.size());
 	m_type_functions.push_back(
 	    {tag, arity, std::move(fields), std::move(structure)});
@@ -104,7 +104,7 @@ std::vector<InternedString> const& TypeSystemCore::fields(TypeFunc tf) {
 	return data(tf).fields;
 }
 
-MonoId TypeSystemCore::type_of_field(TypeFunc tf, InternedString name) {
+Type TypeSystemCore::type_of_field(TypeFunc tf, InternedString name) {
 	assert(is_record(tf) || is_variant(tf));
 	auto it = data(tf).structure.find(name);
 	assert(it != data(tf).structure.end());
@@ -119,10 +119,10 @@ bool TypeSystemCore::is_variant(TypeFunc tf) {
 	return data(tf).tag == TypeFunctionTag::Variant;
 }
 
-TypeFunc TypeSystemCore::type_function_of(MonoId mono) {
+TypeFunc TypeSystemCore::type_function_of(Type mono) {
 	mono = ll_find(mono);
 	assert(ll_is_term(mono) && "tried to find function of non term");
-	int t = ll_node_header[mono].data_idx;
+	int t = ll_node_header[int(mono)].data_idx;
 	return ll_term_data[t].function_id;
 }
 
@@ -145,14 +145,14 @@ void TypeSystemCore::unify_type_function(TypeFunc i, TypeFunc j) {
 	Log::fatal() << "unified " << print_a_thing(i) << " with " << print_a_thing(j);
 }
 
-bool TypeSystemCore::occurs(VarId v, MonoId i) {
+bool TypeSystemCore::occurs(VarId v, Type i) {
 	i = ll_find(i);
 
 	if (ll_is_var(i))
 		return equals_var(i, v);
 
-	int ti = ll_node_header[i].data_idx;
-	for (int c : ll_term_data[ti].argument_idx)
+	int ti = ll_node_header[int(i)].data_idx;
+	for (Type c : ll_term_data[ti].argument_idx)
 		if (occurs(v, c))
 			return true;
 
@@ -179,11 +179,11 @@ void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
 	return;
 }
 
-bool TypeSystemCore::satisfies(MonoId t, Constraint const& c) {
+bool TypeSystemCore::satisfies(Type t, Constraint const& c) {
 	return true;
 }
 
-void TypeSystemCore::ll_unify(int i, int j) {
+void TypeSystemCore::ll_unify(Type i, Type j) {
 	i = ll_find(i);
 	j = ll_find(j);
 
@@ -196,7 +196,7 @@ void TypeSystemCore::ll_unify(int i, int j) {
 
 		auto vi = get_var_id(i);
 
-		if (ll_node_header[j].tag == Tag::Term) {
+		if (ll_node_header[int(j)].tag == Tag::Term) {
 			assert(!occurs(vi, j));
 			assert(satisfies(j, m_constraints[static_cast<int>(vi)]));
 			establish_substitution(vi, j);
@@ -205,8 +205,8 @@ void TypeSystemCore::ll_unify(int i, int j) {
 		}
 
 	} else {
-		int vi = ll_node_header[i].data_idx;
-		int vj = ll_node_header[j].data_idx;
+		int vi = ll_node_header[int(i)].data_idx;
+		int vj = ll_node_header[int(j)].data_idx;
 
 		if (vi != vj) {
 			TermData& i_data = ll_term_data[vi];
@@ -221,55 +221,55 @@ void TypeSystemCore::ll_unify(int i, int j) {
 	}
 }
 
-int TypeSystemCore::ll_new_var() {
+Type TypeSystemCore::ll_new_var() {
 	int var_id = m_var_counter++;
 	m_type_var_uf.new_node();
-	m_substitution.push_back(-1);
+	m_substitution.push_back(Type(-1));
 	m_constraints.push_back({});
 	int type_id = m_type_counter++;
 	ll_node_header.push_back({Tag::Var, var_id});
-	return type_id;
+	return Type(type_id);
 }
 
-int TypeSystemCore::ll_new_term(TypeFunc f, std::vector<int> args) {
+Type TypeSystemCore::ll_new_term(TypeFunc f, std::vector<Type> args) {
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size())});
 	ll_term_data.push_back({f, std::move(args)});
-	return type_id;
+	return Type(type_id);
 }
 
-int TypeSystemCore::ll_find(int i) {
+Type TypeSystemCore::ll_find(Type i) {
 	if (!ll_is_var(i)) return i;
 	VarId vi = get_var_id(i);
-	if (m_substitution[static_cast<int>(vi)] == -1) return i;
+	if (m_substitution[static_cast<int>(vi)] == Type(-1)) return i;
 	return m_substitution[static_cast<int>(vi)];
 }
 
-VarId TypeSystemCore::get_var_id(MonoId i) {
+VarId TypeSystemCore::get_var_id(Type i) {
 	assert(ll_is_var(i));
-	return static_cast<VarId>(m_type_var_uf.find(ll_node_header[i].data_idx));
+	return static_cast<VarId>(m_type_var_uf.find(ll_node_header[int(i)].data_idx));
 }
 
-void TypeSystemCore::establish_substitution(VarId var_id, int type_id) {
-	assert(m_substitution[static_cast<int>(var_id)] == -1);
+void TypeSystemCore::establish_substitution(VarId var_id, Type type_id) {
+	assert(m_substitution[static_cast<int>(var_id)] == Type(-1));
 	m_substitution[static_cast<int>(var_id)] = type_id;
 }
 
-bool TypeSystemCore::ll_is_term(int i) {
-	return ll_node_header[i].tag == Tag::Term;
+bool TypeSystemCore::ll_is_term(Type i) {
+	return ll_node_header[int(i)].tag == Tag::Term;
 }
 
-bool TypeSystemCore::ll_is_var(int i) {
-	return ll_node_header[i].tag == Tag::Var;
+bool TypeSystemCore::ll_is_var(Type i) {
+	return ll_node_header[int(i)].tag == Tag::Var;
 }
 
 TypeSystemCore::TypeFunctionData& TypeSystemCore::data(TypeFunc tf) {
 	return m_type_functions[int(tf)];
 }
 
-bool TypeSystemCore::equals_var(MonoId t, VarId v) {
-	return ll_is_var(t) && static_cast<VarId>(ll_node_header[t].data_idx) == v;
+bool TypeSystemCore::equals_var(Type t, VarId v) {
+	return ll_is_var(t) && static_cast<VarId>(ll_node_header[int(t)].data_idx) == v;
 }
 
 
@@ -291,7 +291,7 @@ void TypeSystemCore::add_variant_constraint(VarId v) {
 	}
 }
 
-void TypeSystemCore::add_field_constraint(VarId v, InternedString name, MonoId ty) {
+void TypeSystemCore::add_field_constraint(VarId v, InternedString name, Type ty) {
 	int i = static_cast<int>(v);
 	if (m_constraints[i].structure.count(name)) {
 		ll_unify(m_constraints[i].structure[name], ty);

@@ -22,10 +22,10 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc);
 
 static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc);
 
-static MonoId compute_mono(AST::Expr*, TypeChecker&);
+static Type compute_mono(AST::Expr*, TypeChecker&);
 static TypeFunc compute_type_func(AST::Expr*, TypeChecker&);
 
-static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChecker&);
+static std::vector<Type> compute_monos(std::vector<AST::Expr*> const&, TypeChecker&);
 
 // literals
 
@@ -118,22 +118,22 @@ static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc) {
 	auto constructor = AST::Constructor{};
 
 	if (meta == MetaType::Type) {
-		constructor.m_mono = compute_mono(ast, tc);
+		constructor.m_type = compute_mono(ast, tc);
 	} else if (meta == MetaType::Constructor) {
 		assert(ast->type() == ExprTag::AccessExpression);
 
 		auto access = static_cast<AST::AccessExpression*>(ast);
 
-		MonoId actual_ty = compute_mono(access->m_target, tc);
+		Type actual_ty = compute_mono(access->m_target, tc);
 
 		// constraint target type
-		MonoId expected_ty = tc.core().ll_new_var();
+		Type expected_ty = tc.core().ll_new_var();
 		auto v = tc.core().get_var_id(expected_ty);
 		tc.core().add_variant_constraint(v);
 		tc.core().add_field_constraint(v, access->m_member, tc.core().ll_new_var());
 		tc.core().ll_unify(expected_ty, actual_ty);
 
-		constructor.m_mono = actual_ty;
+		constructor.m_type = actual_ty;
 		constructor.m_id = access->m_member;
 	} else {
 		Log::fatal() << "Constructor invokation on a non-constructor -- MetaType(" << int(meta) << ")";
@@ -222,8 +222,8 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 
 		int n = names.size();
 		for (int i = 0; i < n; ++i) {
-			MonoId stub_ty = tc.core().type_of_field(tf, names[i]);
-			MonoId actual_ty = types[i];
+			Type stub_ty = tc.core().type_of_field(tf, names[i]);
+			Type actual_ty = types[i];
 			tc.core().ll_unify(stub_ty, actual_ty);
 		}
 
@@ -251,8 +251,8 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-std::vector<MonoId> make_vars(int count, TypeChecker& tc) {
-	std::vector<MonoId> vars(count);
+std::vector<Type> make_vars(int count, TypeChecker& tc) {
+	std::vector<Type> vars(count);
 	for (int i = 0; i < count; ++i) {
 		vars[i] = tc.core().ll_new_var();
 	}
@@ -296,7 +296,7 @@ static void stub_monotype_id(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-static MonoId get_monotype_id(AST::Expr* ast) {
+static Type get_monotype_id(AST::Expr* ast) {
 	switch (ast->type()) {
 	case ExprTag::TypeTerm:
 		return static_cast<AST::TypeTerm*>(ast)->m_value;
@@ -333,7 +333,7 @@ void reify_types(AST::Program* ast, TypeChecker& tc) {
 				if (decl->m_type_hint)
 					Log::fatal() << "type hint not allowed in type declaration";
 
-				MonoId mt = compute_mono(decl->m_value, tc);
+				Type mt = compute_mono(decl->m_value, tc);
 				tc.core().ll_unify(mt, get_monotype_id(decl->m_value));
 			} else {
 				if (decl->m_type_hint)
@@ -414,18 +414,18 @@ static TypeFunc compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 	return get_type_function_id(ast);
 }
 
-static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
+static Type compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 	assert(ast->m_declaration);
 	assert(ast->m_meta_type == MetaType::Type);
 	return get_monotype_id(ast->m_declaration->m_value);
 }
 
-static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
+static Type compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
 	TypeFunc type_function = compute_type_func(ast->m_callee, tc);
 	return tc.core().new_term(type_function, compute_monos(ast->m_args, tc));
 }
 
-static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
+static Type compute_mono(AST::Expr* ast, TypeChecker& tc) {
 	assert(ast);
 	assert(ast->type() == ExprTag::Identifier || ast->type() == ExprTag::TypeTerm);
 	if (ast->type() == ExprTag::Identifier) {
@@ -435,10 +435,10 @@ static MonoId compute_mono(AST::Expr* ast, TypeChecker& tc) {
 	}
 }
 
-static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const& types, TypeChecker& tc) {
+static std::vector<Type> compute_monos(std::vector<AST::Expr*> const& types, TypeChecker& tc) {
 
 	int n = types.size();
-	std::vector<MonoId> result(n);
+	std::vector<Type> result(n);
 	for (int i = 0; i < n; ++i) {
 		result[i] = compute_mono(types[i], tc);
 	}
