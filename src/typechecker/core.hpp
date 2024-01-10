@@ -10,10 +10,6 @@
 
 enum class VarId {};
 
-inline bool operator==(VarId a, VarId b) {
-	return static_cast<int>(a) == static_cast<int>(b);
-}
-
 template<>
 struct std::hash<VarId> {
 	size_t operator()(VarId v) const {
