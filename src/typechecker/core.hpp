@@ -120,6 +120,7 @@ private:
 		std::vector<Type> argument_idx;
 	};
 
+	NodeHeader& data(Type);
 	TypeFunctionData& data(TypeFunc);
 
 	TypeFunc new_type_function(
