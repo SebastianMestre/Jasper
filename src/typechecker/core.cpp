@@ -101,22 +101,22 @@ TypeFunc TypeSystemCore::create_type_function(
 
 std::vector<InternedString> const& TypeSystemCore::fields(TypeFunc tf) {
 	assert(is_record(tf));
-	return get_type_function_data(tf).fields;
+	return data(tf).fields;
 }
 
 MonoId TypeSystemCore::type_of_field(TypeFunc tf, InternedString name) {
 	assert(is_record(tf) || is_variant(tf));
-	auto it = get_type_function_data(tf).structure.find(name);
-	assert(it != get_type_function_data(tf).structure.end());
+	auto it = data(tf).structure.find(name);
+	assert(it != data(tf).structure.end());
 	return it->second;
 }
 
 bool TypeSystemCore::is_record(TypeFunc tf) {
-	return get_type_function_data(tf).tag == TypeFunctionTag::Record;
+	return data(tf).tag == TypeFunctionTag::Record;
 }
 
 bool TypeSystemCore::is_variant(TypeFunc tf) {
-	return get_type_function_data(tf).tag == TypeFunctionTag::Variant;
+	return data(tf).tag == TypeFunctionTag::Variant;
 }
 
 TypeFunc TypeSystemCore::type_function_of(MonoId mono) {
@@ -264,7 +264,7 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-TypeSystemCore::TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunc tf) {
+TypeSystemCore::TypeFunctionData& TypeSystemCore::data(TypeFunc tf) {
 	return m_type_functions[int(tf)];
 }
 

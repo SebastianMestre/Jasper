@@ -124,7 +124,7 @@ private:
 		std::vector<int> argument_idx;
 	};
 
-	TypeFunctionData& get_type_function_data(TypeFunc);
+	TypeFunctionData& data(TypeFunc);
 
 	TypeFunc new_type_function(
 	    TypeFunctionTag type,
