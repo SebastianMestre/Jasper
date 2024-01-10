@@ -149,8 +149,7 @@ AST::Declaration* TypeChecker::new_builtin_declaration(InternedString const& nam
 	return result;
 }
 
-void TypeChecker::declare_builtin_typefunc(
-    InternedString const& name, TypeFunctionId typefunc) {
+void TypeChecker::declare_builtin_typefunc(InternedString const& name, TypeFunc typefunc) {
 	auto decl = new_builtin_declaration(name);
 
 	auto handle = m_ast_allocator->make<AST::BuiltinTypeFunction>();

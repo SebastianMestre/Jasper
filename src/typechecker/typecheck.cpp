@@ -39,7 +39,7 @@ struct TypecheckHelper {
 
 	MonoId inst_fresh(PolyId i) { return tc.core().inst_fresh(i); }
 
-	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> arguments) {
+	MonoId new_term(TypeFunc type_function, std::vector<MonoId> arguments) {
 		return core().new_term(type_function, std::move(arguments));
 	}
 

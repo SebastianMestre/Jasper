@@ -303,7 +303,7 @@ struct ExpressionStatement : public Stmt {
 struct UnionExpression : public Expr {
 	std::vector<InternedString> m_constructors;
 	std::vector<Expr*> m_types;
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 
 	UnionExpression()
 	    : Expr {ExprTag::UnionExpression} {}
@@ -312,7 +312,7 @@ struct UnionExpression : public Expr {
 struct StructExpression : public Expr {
 	std::vector<InternedString> m_fields;
 	std::vector<Expr*> m_types;
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 
 	StructExpression()
 	    : Expr {ExprTag::StructExpression} {}
@@ -328,7 +328,7 @@ struct TypeTerm : public Expr {
 };
 
 struct BuiltinTypeFunction : public Expr {
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 

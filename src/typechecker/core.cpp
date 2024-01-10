@@ -8,7 +8,7 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
-MonoId TypeSystemCore::new_term(TypeFunctionId tf, std::vector<int> args) {
+MonoId TypeSystemCore::new_term(TypeFunc tf, std::vector<int> args) {
 	return ll_new_term(tf, std::move(args));
 }
 
@@ -77,57 +77,57 @@ void TypeSystemCore::gather_free_vars(MonoId mono, std::unordered_set<VarId>& fr
 
 
 
-TypeFunctionId TypeSystemCore::new_builtin_type_function(int arity) {
+TypeFunc TypeSystemCore::new_builtin_type_function(int arity) {
 	return create_type_function(TypeFunctionTag::Builtin, arity, {}, {});
 }
 
-TypeFunctionId TypeSystemCore::new_type_function(
+TypeFunc TypeSystemCore::new_type_function(
     TypeFunctionTag type,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure) {
 	return create_type_function(type, 0, std::move(fields), std::move(structure));
 }
 
-TypeFunctionId TypeSystemCore::create_type_function(
+TypeFunc TypeSystemCore::create_type_function(
     TypeFunctionTag tag,
     int arity,
     std::vector<InternedString> fields,
     std::unordered_map<InternedString, MonoId> structure) {
-	TypeFunctionId result = m_type_functions.size();
+	auto result = TypeFunc(m_type_functions.size());
 	m_type_functions.push_back(
 	    {tag, arity, std::move(fields), std::move(structure)});
 	return result;
 }
 
-std::vector<InternedString> const& TypeSystemCore::fields(TypeFunctionId tf) {
+std::vector<InternedString> const& TypeSystemCore::fields(TypeFunc tf) {
 	assert(is_record(tf));
 	return get_type_function_data(tf).fields;
 }
 
-MonoId TypeSystemCore::type_of_field(TypeFunctionId tf, InternedString name) {
+MonoId TypeSystemCore::type_of_field(TypeFunc tf, InternedString name) {
 	assert(is_record(tf) || is_variant(tf));
 	auto it = get_type_function_data(tf).structure.find(name);
 	assert(it != get_type_function_data(tf).structure.end());
 	return it->second;
 }
 
-bool TypeSystemCore::is_record(TypeFunctionId tf) {
+bool TypeSystemCore::is_record(TypeFunc tf) {
 	return get_type_function_data(tf).tag == TypeFunctionTag::Record;
 }
 
-bool TypeSystemCore::is_variant(TypeFunctionId tf) {
+bool TypeSystemCore::is_variant(TypeFunc tf) {
 	return get_type_function_data(tf).tag == TypeFunctionTag::Variant;
 }
 
-TypeFunctionId TypeSystemCore::type_function_of(MonoId mono) {
+TypeFunc TypeSystemCore::type_function_of(MonoId mono) {
 	mono = ll_find(mono);
 	assert(ll_is_term(mono) && "tried to find function of non term");
 	int t = ll_node_header[mono].data_idx;
-	TypeFunctionId tf = ll_term_data[t].function_id;
-	return tf;
+	return ll_term_data[t].function_id;
 }
 
-static InternedString print_a_thing(int x) {
+static InternedString print_a_thing(TypeFunc tf) {
+	auto x = int(tf);
 	if (x == 0) return "function";
 	if (x == 1) return "int";
 	if (x == 2) return "float";
@@ -138,7 +138,7 @@ static InternedString print_a_thing(int x) {
 	return "a user defined type";
 }
 
-void TypeSystemCore::unify_type_function(TypeFunctionId i, TypeFunctionId j) {
+void TypeSystemCore::unify_type_function(TypeFunc i, TypeFunc j) {
 	if (i == j)
 		return;
 
@@ -231,7 +231,7 @@ int TypeSystemCore::ll_new_var() {
 	return type_id;
 }
 
-int TypeSystemCore::ll_new_term(int f, std::vector<int> args) {
+int TypeSystemCore::ll_new_term(TypeFunc f, std::vector<int> args) {
 	int type_id = m_type_counter++;
 	assert(ll_node_header.size() == type_id);
 	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size())});
@@ -264,8 +264,8 @@ bool TypeSystemCore::ll_is_var(int i) {
 	return ll_node_header[i].tag == Tag::Var;
 }
 
-TypeSystemCore::TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunctionId tf) {
-	return m_type_functions[tf];
+TypeSystemCore::TypeFunctionData& TypeSystemCore::get_type_function_data(TypeFunc tf) {
+	return m_type_functions[int(tf)];
 }
 
 bool TypeSystemCore::equals_var(MonoId t, VarId v) {

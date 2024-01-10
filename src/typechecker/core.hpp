@@ -32,11 +32,11 @@ struct TypeSystemCore {
 
 	std::unordered_set<VarId> free_vars(MonoId);
 	void ll_unify(MonoId i, MonoId j);
-	TypeFunctionId type_function_of(MonoId);
+	TypeFunc type_function_of(MonoId);
 	VarId get_var_id(MonoId i);
 
 	MonoId ll_new_var();
-	MonoId new_term(TypeFunctionId type_function, std::vector<MonoId> args);
+	MonoId new_term(TypeFunc type_function, std::vector<MonoId> args);
 
 	MonoId fun(std::vector<MonoId> arg_tys, MonoId res_ty) {
 		arg_tys.push_back(res_ty);
@@ -60,14 +60,14 @@ struct TypeSystemCore {
 
 	// typefuncs
 
-	bool is_record(TypeFunctionId);
-	bool is_variant(TypeFunctionId);
-	std::vector<InternedString> const& fields(TypeFunctionId);
-	MonoId type_of_field(TypeFunctionId, InternedString);
+	bool is_record(TypeFunc);
+	bool is_variant(TypeFunc);
+	std::vector<InternedString> const& fields(TypeFunc);
+	MonoId type_of_field(TypeFunc, InternedString);
 
-	TypeFunctionId new_builtin_type_function(int arguments);
+	TypeFunc new_builtin_type_function(int arguments);
 
-	TypeFunctionId new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
+	TypeFunc new_record(std::vector<InternedString> fields, std::vector<MonoId> const& types) {
 		std::unordered_map<InternedString, MonoId> structure;
 		for (int i = 0; i < fields.size(); ++i)
 			structure[fields[i]] = types[i];
@@ -75,7 +75,7 @@ struct TypeSystemCore {
 		    TypeFunctionTag::Record, std::move(fields), std::move(structure));
 	}
 
-	TypeFunctionId new_variant(std::vector<InternedString> const& fields, std::vector<MonoId> const& types) {
+	TypeFunc new_variant(std::vector<InternedString> const& fields, std::vector<MonoId> const& types) {
 		std::unordered_map<InternedString, MonoId> structure;
 		for (int i = 0; i < fields.size(); ++i)
 			structure[fields[i]] = types[i];
@@ -120,13 +120,13 @@ private:
 	};
 
 	struct TermData {
-		int function_id; // external id
+		TypeFunc function_id; // external id
 		std::vector<int> argument_idx;
 	};
 
-	TypeFunctionData& get_type_function_data(TypeFunctionId);
+	TypeFunctionData& get_type_function_data(TypeFunc);
 
-	TypeFunctionId new_type_function(
+	TypeFunc new_type_function(
 	    TypeFunctionTag type,
 	    std::vector<InternedString> fields,
 	    std::unordered_map<InternedString, MonoId> structure);
@@ -134,19 +134,16 @@ private:
 
 	MonoId inst_impl(MonoId mono, std::unordered_map<VarId, MonoId> const& mapping);
 	MonoId inst_with(PolyId poly, std::vector<MonoId> const& vals);
-	void unify_type_function(TypeFunctionId, TypeFunctionId);
-
+	void unify_type_function(TypeFunc, TypeFunc);
 
 	int ll_find(int i);
-	int ll_find_term(int i);
-	int ll_find_function(int i);
 
 	bool ll_is_var(int i);
 	bool ll_is_term(int i);
 
-	int ll_new_term(int f, std::vector<int> args = {});
+	int ll_new_term(TypeFunc f, std::vector<int> args = {});
 
-	TypeFunctionId create_type_function(
+	TypeFunc create_type_function(
 	    TypeFunctionTag tag,
 	    int arity,
 	    std::vector<InternedString> fields,

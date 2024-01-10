@@ -23,7 +23,7 @@ static void ct_visit(AST::Block* ast, TypeChecker& tc);
 static AST::Constructor constructor_from_ast(AST::Expr* ast, TypeChecker& tc);
 
 static MonoId compute_mono(AST::Expr*, TypeChecker&);
-static TypeFunctionId compute_type_func(AST::Expr*, TypeChecker&);
+static TypeFunc compute_type_func(AST::Expr*, TypeChecker&);
 
 static std::vector<MonoId> compute_monos(std::vector<AST::Expr*> const&, TypeChecker&);
 
@@ -182,7 +182,7 @@ static void ct_visit(AST::Declaration* ast, TypeChecker& tc) {
 	ct_eval(ast->m_value, tc);
 }
 
-static TypeFunctionId get_type_function_id(AST::Expr* ast) {
+static TypeFunc get_type_function_id(AST::Expr* ast) {
 	switch (ast->type()) {
 
 	case ExprTag::StructExpression: {
@@ -215,7 +215,7 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 	switch (ast->type()) {
 	case ExprTag::StructExpression: {
 		auto struct_expression = static_cast<AST::StructExpression*>(ast);
-		TypeFunctionId tf = struct_expression->m_value;
+		TypeFunc tf = struct_expression->m_value;
 
 		auto const& names = struct_expression->m_fields;
 		auto types = compute_monos(struct_expression->m_types, tc);
@@ -231,7 +231,7 @@ static void complete_type_function(AST::Expr* ast, TypeChecker& tc) {
 
 	case ExprTag::UnionExpression: {
 		auto union_expression = static_cast<AST::UnionExpression*>(ast);
-		TypeFunctionId tf = union_expression->m_value;
+		TypeFunc tf = union_expression->m_value;
 
 		auto const& names = union_expression->m_constructors;
 		auto types = compute_monos(union_expression->m_types, tc);
@@ -408,7 +408,7 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc) {
 #undef RETURN
 }
 
-static TypeFunctionId compute_type_func(AST::Expr* ast, TypeChecker& tc) {
+static TypeFunc compute_type_func(AST::Expr* ast, TypeChecker& tc) {
 	stub_type_function(ast, tc);
 	complete_type_function(ast, tc);
 	return get_type_function_id(ast);
@@ -421,7 +421,7 @@ static MonoId compute_mono(AST::Identifier* ast, TypeChecker& tc) {
 }
 
 static MonoId compute_mono(AST::TypeTerm* ast, TypeChecker& tc) {
-	TypeFunctionId type_function = compute_type_func(ast->m_callee, tc);
+	TypeFunc type_function = compute_type_func(ast->m_callee, tc);
 	return tc.core().new_term(type_function, compute_monos(ast->m_args, tc));
 }
 
