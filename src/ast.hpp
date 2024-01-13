@@ -38,7 +38,7 @@ struct Expr : public AST {
 	    : m_type {type} {}
 
 	MetaType m_meta_type {MetaType::Undefined};
-	MonoId m_value_type {-1};
+	Type m_value_type = Type(-1);
 
 	ExprTag type() const { return m_type; }
 
@@ -69,7 +69,7 @@ struct Declaration : public Stmt {
 
 	MetaType m_meta_type {MetaType::Undefined};
 	bool m_is_polymorphic {false};
-	MonoId m_value_type {-1}; // used for non-polymorphic decls, and during unification
+	Type m_value_type = Type(-1); // used for non-polymorphic decls, and during unification
 	PolyId m_decl_type;
 
 	int m_frame_offset {INT_MIN};
@@ -234,7 +234,7 @@ struct MatchExpression : public Expr {
 };
 
 struct Constructor {
-	MonoId m_mono;
+	Type m_type;
 	InternedString m_id;
 
 	Constructor() {}
@@ -303,7 +303,7 @@ struct ExpressionStatement : public Stmt {
 struct UnionExpression : public Expr {
 	std::vector<InternedString> m_constructors;
 	std::vector<Expr*> m_types;
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 
 	UnionExpression()
 	    : Expr {ExprTag::UnionExpression} {}
@@ -312,7 +312,7 @@ struct UnionExpression : public Expr {
 struct StructExpression : public Expr {
 	std::vector<InternedString> m_fields;
 	std::vector<Expr*> m_types;
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 
 	StructExpression()
 	    : Expr {ExprTag::StructExpression} {}
@@ -321,14 +321,14 @@ struct StructExpression : public Expr {
 struct TypeTerm : public Expr {
 	Expr* m_callee;
 	std::vector<Expr*> m_args; // should these be TypeTerms?
-	MonoId m_value {-1};
+	Type m_value = Type(-1);
 
 	TypeTerm()
 	    : Expr {ExprTag::TypeTerm} {}
 };
 
 struct BuiltinTypeFunction : public Expr {
-	TypeFunctionId m_value;
+	TypeFunc m_value;
 	// points to the ast node this one was made from
 	Expr* m_syntax;
 

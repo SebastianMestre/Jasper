@@ -2,7 +2,7 @@
 
 #include "../utils/chunked_array.hpp"
 #include "../utils/interned_string.hpp"
-#include "typesystem.hpp"
+#include "core.hpp"
 
 namespace AST {
 struct Allocator;
@@ -23,15 +23,15 @@ struct TypeChecker {
 
 	AST::Declaration* new_builtin_declaration(InternedString const& name);
 	void declare_builtin_value(InternedString const& name, PolyId);
-	void declare_builtin_typefunc(InternedString const& name, TypeFunctionId);
+	void declare_builtin_typefunc(InternedString const& name, TypeFunc);
 
-	MonoId new_var();
+	Type new_var();
 
-	MonoId mono_int();
-	MonoId mono_float();
-	MonoId mono_string();
-	MonoId mono_boolean();
-	MonoId mono_unit();
+	Type mono_int();
+	Type mono_float();
+	Type mono_string();
+	Type mono_boolean();
+	Type mono_unit();
 
 	TypeSystemCore& core() { return m_core; }
 
