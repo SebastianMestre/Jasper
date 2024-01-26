@@ -29,113 +29,60 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	// TODO: refactor, figure out a nice way to build types
 	// HACK: this is an ugly hack. bear with me...
 
-	{
-		auto var_ty = new_var();
-		VarId var_id = core().get_var_id(var_ty);
+	auto a = new_var();
+	auto aid = core().get_var_id(a);
 
-		{
-			auto poly = core().forall({var_id}, var_ty);
-			declare_builtin_value("print", poly);
-		}
+	auto array_a = core().array(a);
 
-		{
-			auto array_ty = core().array(var_ty);
+	auto array_int = core().array(mono_int());
 
-			{
-				auto ty = core().fun({array_ty, var_ty}, mono_unit());
-				auto poly = core().forall({var_id}, ty);
-				declare_builtin_value("array_append", poly);
-			}
+	auto forall_a = [&](Type t) {
+		return this->core().forall({aid}, t);
+	};
 
-			{
-				auto ty = core().fun({array_ty}, mono_int());
-				auto poly = core().forall({var_id}, ty);
-				declare_builtin_value("size", poly);
-			}
+	auto mono = [&](Type t) {
+		return this->core().forall({}, t);
+	};
 
-			{
-				auto ty = core().fun({array_ty, array_ty}, array_ty);
-				auto poly = core().forall({var_id}, ty);
-				declare_builtin_value("array_extend", poly);
-			}
+	auto fun = [&](std::vector<Type> args, Type res) {
+		return this->core().fun(args, res);
+	};
 
-			{
-				auto array_ty = core().array(mono_int());
-				auto ty = core().fun({array_ty, mono_string()}, mono_string());
-				auto poly = core().forall({}, ty);
+	declare_builtin_value("print", forall_a(a));
 
-				declare_builtin_value("array_join", poly);
-			}
+	declare_builtin_value("array_append", forall_a(fun({array_a, a}, mono_unit())));
+	declare_builtin_value("array_extend", forall_a(fun({array_a, array_a}, array_a)));
+	declare_builtin_value("array_join",   mono(fun({array_int, mono_string()}, mono_string())));
+	declare_builtin_value("array_at",     forall_a(fun({array_a, mono_int()}, a)));
+	declare_builtin_value("size",         forall_a(fun({array_a}, mono_int())));
 
-			{
-				auto ty = core().fun({array_ty, mono_int()}, var_ty);
-				auto poly = core().forall({var_id}, ty);
+	declare_builtin_value("+", forall_a(fun({a, a}, a)));
+	declare_builtin_value("-", forall_a(fun({a, a}, a)));
+	declare_builtin_value("*", forall_a(fun({a, a}, a)));
+	declare_builtin_value("/", forall_a(fun({a, a}, a)));
+	declare_builtin_value(".", forall_a(fun({a, a}, a)));
+	declare_builtin_value("=", forall_a(fun({a, a}, a)));
 
-				declare_builtin_value("array_at", poly);
-			}
-		}
+	declare_builtin_value("<",  forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value(">=", forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value(">",  forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value("<=", forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value("==", forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value("!=", forall_a(fun({a, a}, mono_boolean())));
 
-		{
-			auto ty = core().fun({var_ty, var_ty}, var_ty);
-			auto poly = core().forall({var_id}, ty);
+	declare_builtin_value("&&", mono(fun({mono_boolean(), mono_boolean()}, mono_boolean())));
+	declare_builtin_value("||", mono(fun({mono_boolean(), mono_boolean()}, mono_boolean())));
 
-			declare_builtin_value("+", poly);
-			declare_builtin_value("-", poly);
-			declare_builtin_value("*", poly);
-			declare_builtin_value("/", poly);
-			declare_builtin_value(".", poly);
-			declare_builtin_value("=", poly);
-		}
+	declare_builtin_value("read_integer", mono(fun({}, mono_int())));
+	declare_builtin_value("read_number",  mono(fun({}, mono_float())));
+	declare_builtin_value("read_string",  mono(fun({}, mono_string())));
+	declare_builtin_value("read_line",    mono(fun({}, mono_string())));
 
-		{
-			auto ty = core().fun({var_ty, var_ty}, mono_boolean());
-			auto poly = core().forall({var_id}, ty);
-
-			declare_builtin_value( "<", poly);
-			declare_builtin_value(">=", poly);
-			declare_builtin_value( ">", poly);
-			declare_builtin_value("<=", poly);
-			declare_builtin_value("==", poly);
-			declare_builtin_value("!=", poly);
-		}
-
-		{
-			auto ty = core().fun({mono_boolean(), mono_boolean()}, mono_boolean());
-			auto poly = core().forall({}, ty);
-
-			declare_builtin_value("&&", poly);
-			declare_builtin_value("||", poly);
-		}
-
-		{
-			auto ty = core().fun({}, mono_int());
-			auto poly = core().forall({}, ty);
-
-			declare_builtin_value("read_integer", poly);
-		}
-
-		{
-			auto ty = core().fun({}, mono_float());
-			auto poly = core().forall({}, ty);
-
-			declare_builtin_value("read_number", poly);
-		}
-
-		{
-			auto ty = core().fun({}, mono_string());
-			auto poly = core().forall({}, ty);
-
-			declare_builtin_value("read_string", poly);
-			declare_builtin_value("read_line", poly);
-		}
-
-	}
-
-	declare_builtin_typefunc("int", BuiltinType::Int);
-	declare_builtin_typefunc("float", BuiltinType::Float);
-	declare_builtin_typefunc("string", BuiltinType::String);
+	declare_builtin_typefunc("int",     BuiltinType::Int);
+	declare_builtin_typefunc("float",   BuiltinType::Float);
+	declare_builtin_typefunc("string",  BuiltinType::String);
 	declare_builtin_typefunc("boolean", BuiltinType::Boolean);
-	declare_builtin_typefunc("array", BuiltinType::Array);
+	declare_builtin_typefunc("array",   BuiltinType::Array);
 }
 
 Type TypeChecker::new_var() {
