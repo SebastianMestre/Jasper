@@ -20,11 +20,11 @@ struct TypecheckHelper {
 
 	PolyId generalize(Type mono);
 
-	Type mono_int() { return tc.mono_int(); }
-	Type mono_float() { return tc.mono_float(); }
-	Type mono_string() { return tc.mono_string(); }
-	Type mono_boolean() { return tc.mono_boolean(); }
-	Type mono_unit() { return tc.mono_unit(); }
+	Type integer() { return tc.integer(); }
+	Type number() { return tc.number(); }
+	Type string() { return tc.string(); }
+	Type boolean() { return tc.boolean(); }
+	Type unit() { return tc.unit(); }
 
 	TypeSystemCore& core() { return tc.core(); }
 	std::vector<std::vector<AST::Declaration*>> const& declaration_order() const { return tc.declaration_order(); }
@@ -97,23 +97,23 @@ static Type get_monotype_id(AST::Expr* ast) {
 
 // Literals
 static void infer(AST::NumberLiteral* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_float();
+	ast->m_value_type = tc.number();
 }
 
 static void infer(AST::IntegerLiteral* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_int();
+	ast->m_value_type = tc.integer();
 }
 
 static void infer(AST::StringLiteral* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_string();
+	ast->m_value_type = tc.string();
 }
 
 static void infer(AST::BooleanLiteral* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_boolean();
+	ast->m_value_type = tc.boolean();
 }
 
 static void infer(AST::NullLiteral* ast, TypecheckHelper& tc) {
-	ast->m_value_type = tc.mono_unit();
+	ast->m_value_type = tc.unit();
 }
 
 static void infer(AST::ArrayLiteral* ast, TypecheckHelper& tc) {
@@ -186,14 +186,14 @@ static void infer(AST::IndexExpression* ast, TypecheckHelper& tc) {
 	auto arr = tc.core().array(var);
 	tc.unify(arr, ast->m_callee->m_value_type);
 
-	tc.unify(tc.mono_int(), ast->m_index->m_value_type);
+	tc.unify(tc.integer(), ast->m_index->m_value_type);
 
 	ast->m_value_type = var;
 }
 
 static void infer(AST::TernaryExpression* ast, TypecheckHelper& tc) {
 	infer(ast->m_condition, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.boolean());
 
 	infer(ast->m_then_expr, tc);
 	infer(ast->m_else_expr, tc);
@@ -342,7 +342,7 @@ static void typecheck_stmt(AST::Block* ast, TypecheckHelper& tc) {
 
 static void typecheck_stmt(AST::IfElseStatement* ast, TypecheckHelper& tc) {
 	infer(ast->m_condition, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.boolean());
 
 	typecheck_stmt(ast->m_body, tc);
 
@@ -354,7 +354,7 @@ static void typecheck_stmt(AST::WhileStatement* ast, TypecheckHelper& tc) {
 	// TODO: Why do while statements create a new scope?
 	tc.new_nested_scope();
 	infer(ast->m_condition, tc);
-	tc.unify(ast->m_condition->m_value_type, tc.mono_boolean());
+	tc.unify(ast->m_condition->m_value_type, tc.boolean());
 
 	typecheck_stmt(ast->m_body, tc);
 	tc.end_scope();
