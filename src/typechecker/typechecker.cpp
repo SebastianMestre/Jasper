@@ -34,7 +34,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 
 	auto array_a = core().array(a);
 
-	auto array_int = core().array(mono_int());
+	auto array_int = core().array(integer());
 
 	auto forall_a = [&](Type t) {
 		return this->core().forall({aid}, t);
@@ -50,11 +50,11 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 
 	declare_builtin_value("print", forall_a(a));
 
-	declare_builtin_value("array_append", forall_a(fun({array_a, a}, mono_unit())));
+	declare_builtin_value("array_append", forall_a(fun({array_a, a}, unit())));
 	declare_builtin_value("array_extend", forall_a(fun({array_a, array_a}, array_a)));
-	declare_builtin_value("array_join",   mono(fun({array_int, mono_string()}, mono_string())));
-	declare_builtin_value("array_at",     forall_a(fun({array_a, mono_int()}, a)));
-	declare_builtin_value("size",         forall_a(fun({array_a}, mono_int())));
+	declare_builtin_value("array_join",   mono(fun({array_int, string()}, string())));
+	declare_builtin_value("array_at",     forall_a(fun({array_a, integer()}, a)));
+	declare_builtin_value("size",         forall_a(fun({array_a}, integer())));
 
 	declare_builtin_value("+", forall_a(fun({a, a}, a)));
 	declare_builtin_value("-", forall_a(fun({a, a}, a)));
@@ -63,20 +63,20 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	declare_builtin_value(".", forall_a(fun({a, a}, a)));
 	declare_builtin_value("=", forall_a(fun({a, a}, a)));
 
-	declare_builtin_value("<",  forall_a(fun({a, a}, mono_boolean())));
-	declare_builtin_value(">=", forall_a(fun({a, a}, mono_boolean())));
-	declare_builtin_value(">",  forall_a(fun({a, a}, mono_boolean())));
-	declare_builtin_value("<=", forall_a(fun({a, a}, mono_boolean())));
-	declare_builtin_value("==", forall_a(fun({a, a}, mono_boolean())));
-	declare_builtin_value("!=", forall_a(fun({a, a}, mono_boolean())));
+	declare_builtin_value("<",  forall_a(fun({a, a}, boolean())));
+	declare_builtin_value(">=", forall_a(fun({a, a}, boolean())));
+	declare_builtin_value(">",  forall_a(fun({a, a}, boolean())));
+	declare_builtin_value("<=", forall_a(fun({a, a}, boolean())));
+	declare_builtin_value("==", forall_a(fun({a, a}, boolean())));
+	declare_builtin_value("!=", forall_a(fun({a, a}, boolean())));
 
-	declare_builtin_value("&&", mono(fun({mono_boolean(), mono_boolean()}, mono_boolean())));
-	declare_builtin_value("||", mono(fun({mono_boolean(), mono_boolean()}, mono_boolean())));
+	declare_builtin_value("&&", mono(fun({boolean(), boolean()}, boolean())));
+	declare_builtin_value("||", mono(fun({boolean(), boolean()}, boolean())));
 
-	declare_builtin_value("read_integer", mono(fun({}, mono_int())));
-	declare_builtin_value("read_number",  mono(fun({}, mono_float())));
-	declare_builtin_value("read_string",  mono(fun({}, mono_string())));
-	declare_builtin_value("read_line",    mono(fun({}, mono_string())));
+	declare_builtin_value("read_integer", mono(fun({}, integer())));
+	declare_builtin_value("read_number",  mono(fun({}, number())));
+	declare_builtin_value("read_string",  mono(fun({}, string())));
+	declare_builtin_value("read_line",    mono(fun({}, string())));
 
 	declare_builtin_typefunc("int",     BuiltinType::Int);
 	declare_builtin_typefunc("float",   BuiltinType::Float);
@@ -113,23 +113,23 @@ void TypeChecker::declare_builtin_value(InternedString const& name, PolyId poly_
 	decl->m_meta_type = MetaType::Term;
 }
 
-Type TypeChecker::mono_int() {
+Type TypeChecker::integer() {
 	return Type(0);
 }
 
-Type TypeChecker::mono_float() {
+Type TypeChecker::number() {
 	return Type(1);
 }
 
-Type TypeChecker::mono_string() {
+Type TypeChecker::string() {
 	return Type(2);
 }
 
-Type TypeChecker::mono_boolean() {
+Type TypeChecker::boolean() {
 	return Type(3);
 }
 
-Type TypeChecker::mono_unit() {
+Type TypeChecker::unit() {
 	return Type(4);
 }
 

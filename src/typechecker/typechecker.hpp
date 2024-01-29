@@ -27,11 +27,11 @@ struct TypeChecker {
 
 	Type new_var();
 
-	Type mono_int();
-	Type mono_float();
-	Type mono_string();
-	Type mono_boolean();
-	Type mono_unit();
+	Type integer();
+	Type number();
+	Type string();
+	Type boolean();
+	Type unit();
 
 	TypeSystemCore& core() { return m_core; }
 
