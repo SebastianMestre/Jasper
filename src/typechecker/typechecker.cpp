@@ -45,7 +45,7 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	};
 
 	auto fun = [&](std::vector<Type> args, Type res) {
-		return this->core().fun(args, res);
+		return this->core().fun(std::move(args), res);
 	};
 
 	declare_builtin_value("print", forall_a(a));
