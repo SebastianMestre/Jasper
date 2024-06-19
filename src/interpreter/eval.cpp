@@ -120,22 +120,23 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
-	e.m_stack.push(Value{e.global_access("=")});
+	e.m_stack.push(e.null());
 
-	// NOTE: keep callee on the stack
-	auto callee = value_of(e.m_stack.access(0));
+	auto callee = e.global_access("=")->m_value;
 	assert(is_callable_type(callee.type()));
-
-	int arg_count = 2;
 
 	eval(ast->m_target, e);
 	eval(ast->m_value, e);
 
-	e.m_stack.start_frame(arg_count);
+	e.m_stack.start_frame(2);
 
-	eval_call_callable(callee, arg_count, e);
+	auto callee_fn = callee.get_native_func();
+	auto args = e.m_stack.frame_range(0, 2);
 
-	// pop the result of the function, and clobber the callee
+	auto result = callee_fn(args, e);
+
+	e.m_stack.push(result);
+
 	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
 
 	e.m_stack.end_frame();
