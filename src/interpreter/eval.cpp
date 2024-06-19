@@ -119,15 +119,29 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::AssignmentExpression* ast, Interpreter& e) {
-	eval(ast->m_target, e);
-	eval(ast->m_value, e);
+	if (ast->m_target->type() == ExprTag::Identifier) {
+		eval(ast->m_target, e);
+		eval(ast->m_value, e);
 
-	auto value = e.m_stack.pop_unsafe();
-	auto target = e.m_stack.pop_unsafe();
+		auto value = e.m_stack.pop_unsafe();
+		auto target = e.m_stack.pop_unsafe();
 
-	e.assign(target, value);
+		e.assign(target, value);
 
-	e.m_stack.push(e.null());
+		e.m_stack.push(e.null());
+	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
+		eval(ast->m_target, e);
+		eval(ast->m_value, e);
+
+		auto value = e.m_stack.pop_unsafe();
+		auto target = e.m_stack.pop_unsafe();
+
+		e.assign(target, value);
+
+		e.m_stack.push(e.null());
+	} else {
+		assert(0);
+	}
 }
 
 void eval(AST::IndexExpression* ast, Interpreter& e) {
