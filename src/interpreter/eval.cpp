@@ -119,27 +119,15 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::AssignmentExpression* ast, Interpreter& e) {
-
-	e.m_stack.push(e.null());
-
-	auto callee = e.global_access("=")->m_value;
-	assert(is_callable_type(callee.type()));
-
 	eval(ast->m_target, e);
 	eval(ast->m_value, e);
 
-	e.m_stack.start_frame(2);
+	auto value = e.m_stack.pop_unsafe();
+	auto target = e.m_stack.pop_unsafe();
 
-	auto callee_fn = callee.get_native_func();
-	auto args = e.m_stack.frame_range(0, 2);
+	e.assign(target, value);
 
-	auto result = callee_fn(args, e);
-
-	e.m_stack.push(result);
-
-	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
-
-	e.m_stack.end_frame();
+	e.m_stack.push(e.null());
 }
 
 void eval(AST::IndexExpression* ast, Interpreter& e) {
