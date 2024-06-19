@@ -55,6 +55,12 @@ static void ct_eval(AST::CallExpression* ast, TypeChecker& tc) {
 		ct_eval(arg, tc);
 }
 
+static void ct_eval(AST::AssignmentExpression* ast, TypeChecker& tc) {
+	ct_eval(ast->m_target, tc);
+	ct_eval(ast->m_value, tc);
+}
+
+
 static void ct_eval(AST::IndexExpression* ast, TypeChecker& tc) {
 	ct_eval(ast->m_callee, tc);
 	ct_eval(ast->m_index, tc);
@@ -388,6 +394,7 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc) {
 		DISPATCH(Identifier);
 		DISPATCH(FunctionLiteral);
 		DISPATCH(CallExpression);
+		DISPATCH(AssignmentExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);

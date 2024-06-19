@@ -139,6 +139,12 @@ private:
 		return {};
 	}
 
+	[[nodiscard]] ErrorReport resolve(AST::AssignmentExpression* ast) {
+		CHECK_AND_RETURN(resolve(ast->m_target));
+		CHECK_AND_RETURN(resolve(ast->m_value));
+		return {};
+	}
+
 	[[nodiscard]] ErrorReport resolve(AST::FunctionLiteral* ast) {
 
 		ast->m_surrounding_function = functions.current();
@@ -346,6 +352,7 @@ private:
 			DISPATCH(Identifier);
 			DISPATCH(IndexExpression);
 			DISPATCH(CallExpression);
+			DISPATCH(AssignmentExpression);
 			DISPATCH(TernaryExpression);
 			DISPATCH(AccessExpression);
 			DISPATCH(MatchExpression);

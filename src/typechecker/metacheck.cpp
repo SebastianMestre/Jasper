@@ -85,6 +85,7 @@ static MetaType infer_shallow(AST::Expr* ast) {
 	case ExprTag::NullLiteral:
 	case ExprTag::FunctionLiteral:
 	case ExprTag::CallExpression:
+	case ExprTag::AssignmentExpression:
 	case ExprTag::IndexExpression:
 	case ExprTag::MatchExpression:
 	case ExprTag::TernaryExpression:
@@ -167,6 +168,12 @@ static MetaType infer(AST::CallExpression* ast) {
 	for (auto arg : ast->m_args) {
 		check(arg, MetaType::Term);
 	}
+	return ast->m_meta_type = infer_shallow(ast);
+}
+
+static MetaType infer(AST::AssignmentExpression* ast) {
+	check(ast->m_target, MetaType::Term);
+	check(ast->m_value, MetaType::Term);
 	return ast->m_meta_type = infer_shallow(ast);
 }
 
@@ -301,6 +308,7 @@ static MetaType infer(AST::Expr* ast) {
 	case ExprTag::NullLiteral: return infer(static_cast<AST::NullLiteral*>(ast));
 	case ExprTag::FunctionLiteral: return infer(static_cast<AST::FunctionLiteral*>(ast));
 	case ExprTag::CallExpression: return infer(static_cast<AST::CallExpression*>(ast));
+	case ExprTag::AssignmentExpression: return infer(static_cast<AST::AssignmentExpression*>(ast));
 	case ExprTag::IndexExpression: return infer(static_cast<AST::IndexExpression*>(ast));
 	case ExprTag::MatchExpression: return infer(static_cast<AST::MatchExpression*>(ast));
 	case ExprTag::TernaryExpression: return infer(static_cast<AST::TernaryExpression*>(ast));
@@ -312,7 +320,7 @@ static MetaType infer(AST::Expr* ast) {
 	case ExprTag::AccessExpression: return infer(static_cast<AST::AccessExpression*>(ast));
 	case ExprTag::Identifier: return infer(static_cast<AST::Identifier*>(ast));
 	case ExprTag::BuiltinTypeFunction:
-		Log::fatal() << "unexpected AST type in infer_shallow ("
+		Log::fatal() << "unexpected AST type in infer ("
 		             << AST::expr_string[int(ast->type())] << ") during infer";
 	}
 }

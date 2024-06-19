@@ -31,6 +31,12 @@ void compute_offsets(AST::CallExpression* ast, int frame_offset) {
 		compute_offsets(arg, frame_offset++);
 }
 
+void compute_offsets(AST::AssignmentExpression* ast, int frame_offset) {
+	frame_offset++; // TODO: delete
+	compute_offsets(ast->m_target, frame_offset++);
+	compute_offsets(ast->m_value, frame_offset++);
+}
+
 void compute_offsets(AST::FunctionLiteral* ast, int frame_offset) {
 	// functions start a new frame
 	frame_offset = 0;
@@ -199,6 +205,7 @@ void compute_offsets(AST::Expr* ast, int frame_offset) {
 		DISPATCH(Identifier);
 		DISPATCH(IndexExpression);
 		DISPATCH(CallExpression);
+		DISPATCH(AssignmentExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
 		DISPATCH(MatchExpression);

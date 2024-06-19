@@ -118,6 +118,29 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	e.m_stack.end_frame();
 }
 
+void eval(AST::AssignmentExpression* ast, Interpreter& e) {
+
+	e.m_stack.push(Value{e.global_access("=")});
+
+	// NOTE: keep callee on the stack
+	auto callee = value_of(e.m_stack.access(0));
+	assert(is_callable_type(callee.type()));
+
+	int arg_count = 2;
+
+	eval(ast->m_target, e);
+	eval(ast->m_value, e);
+
+	e.m_stack.start_frame(arg_count);
+
+	eval_call_callable(callee, arg_count, e);
+
+	// pop the result of the function, and clobber the callee
+	e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
+
+	e.m_stack.end_frame();
+}
+
 void eval(AST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
@@ -373,6 +396,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
+		DISPATCH(AssignmentExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);

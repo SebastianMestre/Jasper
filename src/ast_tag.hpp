@@ -11,6 +11,7 @@
 	/* All before this point are literals */                                   \
 	X(Identifier)                                                              \
 	X(CallExpression)                                                          \
+	X(AssignmentExpression)                                                    \
 	X(IndexExpression)                                                         \
 	X(AccessExpression)                                                        \
 	X(MatchExpression)                                                         \
