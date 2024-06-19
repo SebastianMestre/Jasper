@@ -118,6 +118,18 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	e.m_stack.end_frame();
 }
 
+void eval(AST::AssignmentExpression* ast, Interpreter& e) {
+	eval(ast->m_target, e);
+	eval(ast->m_value, e);
+
+	auto value = e.m_stack.pop_unsafe();
+	auto target = e.m_stack.pop_unsafe();
+
+	e.assign(target, value);
+
+	e.m_stack.push(e.null());
+}
+
 void eval(AST::IndexExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
@@ -373,6 +385,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
+		DISPATCH(AssignmentExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);

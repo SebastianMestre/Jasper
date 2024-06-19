@@ -194,6 +194,14 @@ struct CallExpression : public Expr {
 	    : Expr {ExprTag::CallExpression} {}
 };
 
+struct AssignmentExpression : public Expr {
+	Expr* m_target;
+	Expr* m_value;
+
+	AssignmentExpression()
+		: Expr {ExprTag::AssignmentExpression} {}
+};
+
 struct IndexExpression : public Expr {
 	Expr* m_callee;
 	Expr* m_index;

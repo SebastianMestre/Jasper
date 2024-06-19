@@ -106,13 +106,20 @@ static CallExpression* convert_pizza(CST::BinaryExpression* cst, Allocator& allo
 }
 
 // convert binary operators into calls
-static CallExpression* convert(CST::BinaryExpression* cst, Allocator& alloc) {
+static Expr* convert(CST::BinaryExpression* cst, Allocator& alloc) {
 	if (cst->m_op_token->m_type == TokenTag::PIZZA)
 		return convert_pizza(cst, alloc);
 
 	if (cst->m_op_token->m_type == TokenTag::DOT)
 		Log::fatal("found '.' used as a binary operator");
 	
+	if (cst->m_op_token->m_type == TokenTag::ASSIGN) {
+		auto ast = alloc.make<AssignmentExpression>();
+		ast->m_target = convert_expr(cst->m_lhs, alloc);
+		ast->m_value = convert_expr(cst->m_rhs, alloc);
+		return ast;
+	}
+
 	auto ast = alloc.make<CallExpression>();
 
 	auto identifier = alloc.make<Identifier>();

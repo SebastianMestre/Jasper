@@ -156,6 +156,16 @@ static void infer(AST::CallExpression* ast, TypecheckHelper& tc) {
 	ast->m_value_type = result_type;
 }
 
+
+static void infer(AST::AssignmentExpression* ast, TypecheckHelper& tc) {
+	infer(ast->m_target, tc);
+	infer(ast->m_value, tc);
+
+	tc.unify(ast->m_target->m_value_type, ast->m_value->m_value_type);
+
+	ast->m_value_type = ast->m_value->m_value_type;
+}
+
 // Implements [Abs] rule, extended for functions with multiple arguments
 static void infer(AST::FunctionLiteral* ast, TypecheckHelper& tc) {
 	tc.new_nested_scope();
@@ -425,6 +435,7 @@ static void infer(AST::Expr* ast, TypecheckHelper& tc) {
 
 		DISPATCH(Identifier);
 		DISPATCH(CallExpression);
+		DISPATCH(AssignmentExpression);
 		DISPATCH(IndexExpression);
 		DISPATCH(TernaryExpression);
 		DISPATCH(AccessExpression);
