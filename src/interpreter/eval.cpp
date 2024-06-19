@@ -120,17 +120,39 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 	if (ast->m_target->type() == ExprTag::Identifier) {
-		eval(ast->m_target, e);
-		eval(ast->m_value, e);
 
+		auto target_ast = static_cast<AST::Identifier*>(ast->m_target);
+
+		Value target {nullptr};
+		if (target_ast->m_origin == AST::Identifier::Origin::Local ||
+				target_ast->m_origin == AST::Identifier::Origin::Capture) {
+			if (target_ast->m_frame_offset == INT_MIN)
+				Log::fatal() << "missing layout for identifier '" << target_ast->text() << "'";
+			target = e.m_stack.frame_at(target_ast->m_frame_offset);
+		} else {
+			target = Value{e.global_access(target_ast->text())};
+		}
+
+		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
-		auto target = e.m_stack.pop_unsafe();
 
 		e.assign(target, value);
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
-		eval(ast->m_target, e);
+
+		auto target_ast = static_cast<AST::IndexExpression*>(ast->m_target);
+
+		eval(target_ast->m_callee, e);
+		eval(target_ast->m_index, e);
+
+		auto index = value_of(e.m_stack.pop_unsafe()).get_integer();
+
+		auto callee_ptr = e.m_stack.pop_unsafe();
+		auto* callee = value_as<Array>(callee_ptr);
+
+		e.m_stack.push(Value{callee->at(index)});
+
 		eval(ast->m_value, e);
 
 		auto value = e.m_stack.pop_unsafe();
