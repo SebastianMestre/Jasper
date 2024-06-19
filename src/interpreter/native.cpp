@@ -258,11 +258,6 @@ Value value_less_or_equal(ArgsType v, Interpreter& e) {
 	return Value {bool(!b)};
 }
 
-Value value_assign(ArgsType v, Interpreter& e) {
-	e.assign(v[0], v[1]);
-	return e.null();
-}
-
 Value read_integer(ArgsType v, Interpreter& e) {
 	// TODO: error handling
 	int result;
@@ -310,7 +305,6 @@ void declare_native_functions(Interpreter& env) {
 	declare(">=", value_greater_or_equal);
 	declare(">", value_greater);
 	declare("<=", value_less_or_equal);
-	declare("=", value_assign);
 	declare("==", value_equals);
 	declare("!=", value_not_equals);
 	declare("^^", value_logicxor);

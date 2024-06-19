@@ -61,7 +61,6 @@ TypeChecker::TypeChecker(AST::Allocator& allocator)
 	declare_builtin_value("*", forall_a(fun({a, a}, a)));
 	declare_builtin_value("/", forall_a(fun({a, a}, a)));
 	declare_builtin_value(".", forall_a(fun({a, a}, a)));
-	declare_builtin_value("=", forall_a(fun({a, a}, a)));
 
 	declare_builtin_value("<",  forall_a(fun({a, a}, boolean())));
 	declare_builtin_value(">=", forall_a(fun({a, a}, boolean())));
