@@ -82,9 +82,9 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset));
+		e.m_stack.push(value_of(e.m_stack.frame_at(ast->m_frame_offset)));
 	} else {
-		e.m_stack.push(Value{e.global_access(ast->text())});
+		e.m_stack.push(value_of(Value{e.global_access(ast->text())}));
 	}
 };
 
