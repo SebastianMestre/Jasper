@@ -144,21 +144,18 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		auto target_ast = static_cast<AST::IndexExpression*>(ast->m_target);
 
 		eval(target_ast->m_callee, e);
+
 		eval(target_ast->m_index, e);
-
 		auto index = value_of(e.m_stack.pop_unsafe()).get_integer();
-
-		auto callee_ptr = e.m_stack.pop_unsafe();
-		auto* callee = value_as<Array>(callee_ptr);
-
-		e.m_stack.push(Value{callee->at(index)});
 
 		eval(ast->m_value, e);
 
 		auto value = e.m_stack.pop_unsafe();
-		auto target = e.m_stack.pop_unsafe();
+		auto callee_ptr = e.m_stack.pop_unsafe();
+		auto* callee = value_as<Array>(callee_ptr);
 
-		e.assign(target, value);
+		auto ref = e.new_reference(value);
+		callee->m_value[index] = ref.get();
 
 		e.m_stack.push(e.null());
 	} else {
