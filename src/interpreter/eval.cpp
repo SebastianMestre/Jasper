@@ -134,7 +134,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
 
-		e.assign(target, value);
+		target.get_cast<Reference>()->m_value = value_of(value);
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
