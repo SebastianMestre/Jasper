@@ -33,7 +33,7 @@ Value array_append(ArgsType v, Interpreter& e) {
 	assert(v.size() > 0);
 	Array* array = value_as<Array>(v[0]);
 	for (unsigned int i = 1; i < v.size(); i++) {
-		array->append(e.new_reference(value_of(v[i])).get());
+		array->append(value_of(v[i]));
 	}
 	return Value {array};
 }
@@ -70,7 +70,7 @@ Value array_join(ArgsType v, Interpreter& e) {
 	std::stringstream result;
 	for (unsigned int i = 0; i < array->m_value.size(); i++) {
 		if (i > 0) result << sep->m_value;
-		result << array->m_value[i]->m_value.get_integer();
+		result << array->m_value[i].get_integer();
 	}
 	return Value{e.m_gc->new_string_raw(result.str())};
 }

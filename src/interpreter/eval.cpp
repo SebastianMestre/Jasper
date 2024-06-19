@@ -61,9 +61,7 @@ void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
-		auto ref = e.new_reference(Value {nullptr});
-		ref->m_value = value_of(e.m_stack.pop_unsafe());
-		result->append(ref.get());
+		result->append(e.m_stack.pop_unsafe());
 	}
 	e.m_stack.push(result.as_value());
 }
@@ -154,8 +152,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		auto callee_ptr = e.m_stack.pop_unsafe();
 		auto* callee = value_as<Array>(callee_ptr);
 
-		auto ref = e.new_reference(value);
-		callee->m_value[index] = ref.get();
+		callee->m_value[index] = value;
 
 		e.m_stack.push(e.null());
 	} else {
@@ -174,7 +171,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	auto callee_ptr = e.m_stack.pop_unsafe();
 	auto* callee = value_as<Array>(callee_ptr);
 
-	e.m_stack.push(Value{callee->at(index)});
+	e.m_stack.push(callee->at(index));
 };
 
 void eval(AST::TernaryExpression* ast, Interpreter& e) {

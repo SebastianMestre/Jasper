@@ -22,7 +22,7 @@ struct Value;
 using Identifier = InternedString;
 using StringType = std::string;
 using RecordType = std::unordered_map<Identifier, Value>;
-using ArrayType = std::vector<Reference*>;
+using ArrayType = std::vector<Value>;
 using FunctionType = AST::FunctionLiteral*;
 using NativeFunction = auto(Span<Value>, Interpreter&) -> Value;
 using CapturesType = std::vector<Reference*>;
@@ -128,8 +128,8 @@ struct Array : GcCell {
 	Array();
 	Array(ArrayType l);
 
-	void append(Reference* v);
-	Reference* at(int position);
+	void append(Value v);
+	Value at(int position);
 };
 
 struct Record : GcCell {

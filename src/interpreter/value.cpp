@@ -18,14 +18,14 @@ Array::Array(ArrayType l)
     : GcCell(ValueTag::Array)
     , m_value(std::move(l)) {}
 
-void Array::append(Reference* v) {
+void Array::append(Value v) {
 	m_value.push_back(v);
 }
 
-Reference* Array::at(int position) {
+Value Array::at(int position) {
 	if (position < 0 or position >= int(m_value.size())) {
 		// TODO: return RangeError
-		return nullptr;
+		return Value{nullptr};
 	} else {
 		return m_value[position];
 	}
@@ -147,7 +147,7 @@ static void print(NativeFunction* f, int d) {
 static void print(Array* l, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(l->type())] << '\n';
-	for (auto* child : l->m_value) {
+	for (auto child : l->m_value) {
 		print(child, d + 1);
 	}
 }
