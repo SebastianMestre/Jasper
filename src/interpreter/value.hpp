@@ -16,7 +16,7 @@ struct FunctionLiteral;
 namespace Interpreter {
 
 struct Interpreter;
-struct Reference;
+struct Variable;
 struct Value;
 
 using Identifier = InternedString;
@@ -25,7 +25,7 @@ using RecordType = std::unordered_map<Identifier, Value>;
 using ArrayType = std::vector<Value>;
 using FunctionType = AST::FunctionLiteral*;
 using NativeFunction = auto(Span<Value>, Interpreter&) -> Value;
-using CapturesType = std::vector<Reference*>;
+using CapturesType = std::vector<Variable*>;
 
 inline bool is_heap_type(ValueTag tag) {
 	return tag != ValueTag::Null && tag != ValueTag::Boolean &&
@@ -157,10 +157,10 @@ struct Function : GcCell {
 	Function(FunctionType, CapturesType);
 };
 
-struct Reference : GcCell {
+struct Variable : GcCell {
 	Value m_value;
 
-	Reference(Value value);
+	Variable(Value value);
 };
 
 struct VariantConstructor : GcCell {
@@ -183,7 +183,7 @@ template<> struct type_data<Array> { static constexpr auto tag = ValueTag::Array
 template<> struct type_data<Record> { static constexpr auto tag = ValueTag::Record; };
 template<> struct type_data<Variant> { static constexpr auto tag = ValueTag::Variant; };
 template<> struct type_data<Function> { static constexpr auto tag = ValueTag::Function; };
-template<> struct type_data<Reference> { static constexpr auto tag = ValueTag::Reference; };
+template<> struct type_data<Variable> { static constexpr auto tag = ValueTag::Variable; };
 template<> struct type_data<VariantConstructor> { static constexpr auto tag = ValueTag::VariantConstructor; };
 template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };
 

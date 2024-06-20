@@ -16,7 +16,7 @@
 	X(Function)                                                                \
 	X(NativeFunction)                                                          \
                                                                                \
-	X(Reference)                                                               \
+	X(Variable)                                                                \
                                                                                \
 	X(VariantConstructor)                                                      \
 	X(RecordConstructor)

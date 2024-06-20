@@ -8,12 +8,12 @@
 
 namespace Interpreter {
 
-void Scope::declare(const Identifier& i, Reference* v) {
+void GlobalScope::declare(const Identifier& i, Variable* v) {
 	auto insertion_result = m_declarations.insert({i, v});
 	assert(insertion_result.second);
 }
 
-Reference* Scope::access(const Identifier& i) {
+Variable* GlobalScope::access(const Identifier& i) {
 	auto v = m_declarations.find(i);
 
 	if (v == m_declarations.end()) {
@@ -24,18 +24,17 @@ Reference* Scope::access(const Identifier& i) {
 	return v->second;
 }
 
-void Interpreter::global_declare_direct(const Identifier& i, Reference* r) {
+void Interpreter::global_declare_direct(const Identifier& i, Variable* r) {
 	m_global_scope.declare(i, r);
 }
 
 void Interpreter::global_declare(const Identifier& i, Value v) {
-	if (v.type() == ValueTag::Reference)
-		assert(0 && "declared a reference!");
-	auto r = new_reference(v);
+	assert(v.type() != ValueTag::Variable);
+	auto r = new_variable(v);
 	global_declare_direct(i, r.get());
 }
 
-Reference* Interpreter::global_access(const Identifier& i) {
+Variable* Interpreter::global_access(const Identifier& i) {
 	return m_global_scope.access(i);
 }
 
@@ -139,11 +138,9 @@ gc_ptr<Error> Interpreter::new_error(std::string e) {
 	return result;
 }
 
-gc_ptr<Reference> Interpreter::new_reference(Value v) {
-	assert(
-	    v.type() != ValueTag::Reference &&
-	    "References to references are not allowed.");
-	auto result = m_gc->new_reference(v);
+gc_ptr<Variable> Interpreter::new_variable(Value v) {
+	assert(v.type() != ValueTag::Variable);
+	auto result = m_gc->new_variable(v);
 	run_gc_if_needed();
 	return result;
 }

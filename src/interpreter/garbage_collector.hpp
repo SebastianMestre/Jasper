@@ -31,7 +31,7 @@ struct GC {
 	auto new_string(std::string) -> gc_ptr<String>;
 	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
 	auto new_error(std::string) -> gc_ptr<Error>;
-	auto new_reference(Value) -> gc_ptr<Reference>;
+	auto new_variable(Value) -> gc_ptr<Variable>;
 
 	auto new_string_raw(std::string) -> String*;
 	auto new_variant_constructor_raw(InternedString) -> VariantConstructor*;

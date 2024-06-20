@@ -27,7 +27,7 @@ void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
-			auto ref = e.new_reference(e.null());
+			auto ref = e.new_variable(e.null());
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
@@ -134,7 +134,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
 
-		target.get_cast<Reference>()->m_value = value;
+		target.get_cast<Variable>()->m_value = value;
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
@@ -194,7 +194,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = value.get_cast<Reference>();
+		captures[offset] = value.get_cast<Variable>();
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
@@ -219,8 +219,8 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
-	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(Value {nullptr});
+	// We also wrap it in a variable so it can be captured
+	auto ref = e.new_variable(Value {nullptr});
 	ref->m_value = variant_value;
 	e.m_stack.access(0) = ref.as_value();
 	
@@ -295,7 +295,7 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 }
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(Value {nullptr});
+	auto ref = e.new_variable(Value {nullptr});
 	e.m_stack.push(ref.as_value());
 	if (ast->m_value) {
 		eval(ast->m_value, e);

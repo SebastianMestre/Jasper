@@ -20,7 +20,7 @@ namespace Interpreter {
 
 using ArgsType = Span<Value>;
 
-// print(vals...) prints the values or references in vals
+// print(vals...) prints the values in vals
 Value print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
 		print(value);
