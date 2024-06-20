@@ -56,12 +56,6 @@ Value Interpreter::fetch_return_value() {
 	return rv;
 }
 
-void Interpreter::assign(Value dst, Value src) {
-	// NOTE: copied by reference, matters if rhs is actually a reference
-	// TODO: change in another pr, perhaps adding Interpreter::copy_value?
-	dst.get_cast<Reference>()->m_value = value_of(src);
-}
-
 
 void Interpreter::run_gc() {
 	m_gc->unmark_all();

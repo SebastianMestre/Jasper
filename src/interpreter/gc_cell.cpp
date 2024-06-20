@@ -30,7 +30,7 @@ static void gc_visit(Array* l) {
 		return;
 
 	l->m_visited = true;
-	for (auto* child : l->m_value) {
+	for (auto child : l->m_value) {
 		gc_visit(child);
 	}
 }

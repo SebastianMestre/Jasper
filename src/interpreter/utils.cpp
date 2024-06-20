@@ -25,7 +25,7 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
 		auto ref = e.new_reference(Value {nullptr});
-		ref->m_value = value_of(e.m_stack.access(i));
+		ref->m_value = e.m_stack.access(i);
 		e.m_stack.access(i) = ref.as_value();
 	}
 
