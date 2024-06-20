@@ -31,7 +31,7 @@ Value print(ArgsType v, Interpreter& e) {
 Value array_append(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
-	Array* array = value_as<Array>(v[0]);
+	Array* array = v[0].get_cast<Array>();
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(v[i]);
 	}
@@ -43,8 +43,8 @@ Value array_append(ArgsType v, Interpreter& e) {
 Value array_extend(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
-	Array* arr1 = value_as<Array>(v[0]);
-	Array* arr2 = value_as<Array>(v[1]);
+	Array* arr1 = v[0].get_cast<Array>();
+	Array* arr2 = v[1].get_cast<Array>();
 	arr1->m_value.insert(
 	    arr1->m_value.end(), arr2->m_value.begin(), arr2->m_value.end());
 	return Value {arr1};
@@ -54,7 +54,7 @@ Value array_extend(ArgsType v, Interpreter& e) {
 Value size(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
-	Array* array = value_as<Array>(v[0]);
+	Array* array = v[0].get_cast<Array>();
 
 	return Value {int(array->m_value.size())};
 }
@@ -65,8 +65,8 @@ Value array_join(ArgsType v, Interpreter& e) {
 	// TODO make it more general
 	// TODO proper error handling
 	assert(v.size() == 2);
-	Array* array = value_as<Array>(v[0]);
-	String* sep = value_as<String>(v[1]);
+	Array* array = v[0].get_cast<Array>();
+	String* sep = v[1].get_cast<String>();
 	std::stringstream result;
 	for (unsigned int i = 0; i < array->m_value.size(); i++) {
 		if (i > 0) result << sep->m_value;
@@ -79,7 +79,7 @@ Value array_join(ArgsType v, Interpreter& e) {
 Value array_at(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
-	Array* array = value_as<Array>(v[0]);
+	Array* array = v[0].get_cast<Array>();
 	int index = v[1].get_integer();
 	assert(index >= 0);
 	assert(index < array->m_value.size());
@@ -290,6 +290,9 @@ void declare_native_functions(Interpreter& env) {
 	auto declare = [&](char const* name, NativeFunction* func) {
 		env.global_declare(name, Value {func});
 	};
+
+	env.global_declare("int", env.null());
+	env.global_declare("float", env.null());
 
 	declare("print", print);
 	declare("array_append", array_append);

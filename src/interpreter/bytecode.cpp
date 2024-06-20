@@ -86,7 +86,7 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 	}
 	case Instruction::Tag::GetGlobal: {
 		auto op = static_cast<GetGlobal const*>(punned);
-		e.m_stack.push(value_of(Interpreter::Value{e.global_access(op->m_name)}));
+		e.m_stack.push(e.global_access(op->m_name)->m_value);
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {

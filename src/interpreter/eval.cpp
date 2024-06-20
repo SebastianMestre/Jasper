@@ -82,9 +82,9 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		e.m_stack.push(value_of(e.m_stack.frame_at(ast->m_frame_offset)));
+		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset).get_cast<Variable>()->m_value);
 	} else {
-		e.m_stack.push(value_of(Value{e.global_access(ast->text())}));
+		e.m_stack.push(e.global_access(ast->text())->m_value);
 	}
 };
 
@@ -150,7 +150,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
 		auto value = e.m_stack.pop_unsafe();
 		auto callee_ptr = e.m_stack.pop_unsafe();
-		auto* callee = value_as<Array>(callee_ptr);
+		auto* callee = callee_ptr.get_cast<Array>();
 
 		callee->m_value[index] = value;
 
@@ -169,7 +169,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	auto index = e.m_stack.pop_unsafe().get_integer();
 
 	auto callee_ptr = e.m_stack.pop_unsafe();
-	auto* callee = value_as<Array>(callee_ptr);
+	auto* callee = callee_ptr.get_cast<Array>();
 
 	e.m_stack.push(callee->at(index));
 };
@@ -204,7 +204,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_target, e);
 	auto rec_ptr = e.m_stack.pop_unsafe();
-	auto rec = value_as<Record>(rec_ptr);
+	auto rec = rec_ptr.get_cast<Record>();
 	e.m_stack.push(Value{rec->m_value[ast->m_member]});
 }
 
@@ -212,7 +212,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_target, e);
 
-	auto variant = value_as<Variant>(e.m_stack.access(0));
+	auto variant = e.m_stack.access(0).get_cast<Variant>();
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;

@@ -8,19 +8,6 @@
 
 namespace Interpreter {
 
-Value value_of(Value h) {
-	if (!is_heap_type(h.type()))
-		return h;
-
-	if (h.type() != ValueTag::Variable)
-		return h;
-
-	// try unboxing recursively?
-	auto ref = h.get_cast<Variable>();
-	return ref->m_value;
-}
-
-
 void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
