@@ -33,7 +33,7 @@ Value array_append(ArgsType v, Interpreter& e) {
 	assert(v.size() > 0);
 	Array* array = value_as<Array>(v[0]);
 	for (unsigned int i = 1; i < v.size(); i++) {
-		array->append(value_of(v[i]));
+		array->append(v[i]);
 	}
 	return Value {array};
 }
@@ -87,8 +87,8 @@ Value array_at(ArgsType v, Interpreter& e) {
 }
 
 Value value_add(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
@@ -106,8 +106,8 @@ Value value_add(ArgsType v, Interpreter& e) {
 }
 
 Value value_sub(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
@@ -123,8 +123,8 @@ Value value_sub(ArgsType v, Interpreter& e) {
 }
 
 Value value_mul(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
@@ -140,8 +140,8 @@ Value value_mul(ArgsType v, Interpreter& e) {
 }
 
 Value value_div(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 	switch (lhs.type()) {
@@ -157,8 +157,8 @@ Value value_div(ArgsType v, Interpreter& e) {
 }
 
 Value value_logicand(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, &&, rhs);
@@ -169,8 +169,8 @@ Value value_logicand(ArgsType v, Interpreter& e) {
 }
 
 Value value_logicor(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, ||, rhs);
@@ -181,8 +181,8 @@ Value value_logicor(ArgsType v, Interpreter& e) {
 }
 
 Value value_logicxor(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, !=, rhs);
@@ -193,8 +193,8 @@ Value value_logicxor(ArgsType v, Interpreter& e) {
 }
 
 Value value_equals(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 
@@ -224,8 +224,8 @@ Value value_not_equals(ArgsType v, Interpreter& e) {
 }
 
 Value value_less(ArgsType v, Interpreter& e) {
-	auto lhs = value_of(v[0]);
-	auto rhs = value_of(v[1]);
+	auto lhs = v[0];
+	auto rhs = v[1];
 
 	assert(lhs.type() == rhs.type());
 

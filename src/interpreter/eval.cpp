@@ -31,7 +31,7 @@ void run(AST::Program* ast, Interpreter& e) {
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
-			ref->m_value = value_of(value);
+			ref->m_value = value;
 		}
 	}
 }
@@ -97,7 +97,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 
 	// NOTE: keep callee on the stack
-	auto callee = value_of(e.m_stack.access(0));
+	auto callee = e.m_stack.access(0);
 	assert(is_callable_type(callee.type()));
 
 	auto& arglist = ast->m_args;
@@ -134,7 +134,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
 
-		target.get_cast<Reference>()->m_value = value_of(value);
+		target.get_cast<Reference>()->m_value = value;
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
@@ -144,7 +144,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(target_ast->m_callee, e);
 
 		eval(target_ast->m_index, e);
-		auto index = value_of(e.m_stack.pop_unsafe()).get_integer();
+		auto index = e.m_stack.pop_unsafe().get_integer();
 
 		eval(ast->m_value, e);
 
@@ -166,7 +166,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	eval(ast->m_callee, e);
 	eval(ast->m_index, e);
 
-	auto index = value_of(e.m_stack.pop_unsafe()).get_integer();
+	auto index = e.m_stack.pop_unsafe().get_integer();
 
 	auto callee_ptr = e.m_stack.pop_unsafe();
 	auto* callee = value_as<Array>(callee_ptr);
@@ -178,7 +178,7 @@ void eval(AST::TernaryExpression* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
+	auto condition = e.m_stack.pop_unsafe().get_boolean();
 
 	if (condition)
 		eval(ast->m_then_expr, e);
@@ -215,7 +215,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	auto variant = value_as<Variant>(e.m_stack.access(0));
 
 	auto constructor = variant->m_constructor;
-	auto variant_value = value_of(variant->m_inner_value);
+	auto variant_value = variant->m_inner_value;
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
@@ -241,7 +241,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	// NOTE: we leave the ctor on the stack for the time being
 
 	eval(ast->m_constructor, e);
-	auto constructor = value_of(e.m_stack.access(0));
+	auto constructor = e.m_stack.access(0);
 
 	if (constructor.type() == ValueTag::RecordConstructor) {
 		auto record_constructor = constructor.get_cast<RecordConstructor>();
@@ -259,7 +259,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		RecordType record;
 		for (int i = 0; i < arg_count; ++i) {
 			record[record_constructor->m_keys[i]] =
-			    value_of(e.m_stack.access(arg_count - 1 - i));
+			    e.m_stack.access(arg_count - 1 - i);
 		}
 
 		// promote record object to heap
@@ -279,7 +279,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 		eval(ast->m_args[0], e);
 		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, value_of(e.m_stack.access(0)));
+		    variant_constructor->m_constructor, e.m_stack.access(0));
 
 		// replace ctor with variant, and pop value
 		e.m_stack.access(1) = Value{result.get()};
@@ -300,7 +300,7 @@ static void exec(AST::Declaration* ast, Interpreter& e) {
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
-		ref->m_value = value_of(value);
+		ref->m_value = value;
 	}
 };
 
@@ -318,14 +318,14 @@ static void exec(AST::ReturnStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 	eval(ast->m_value, e);
 	auto value = e.m_stack.pop_unsafe();
-	e.save_return_value(value_of(value));
+	e.save_return_value(value);
 };
 
 static void exec(AST::IfElseStatement* ast, Interpreter& e) {
 	// TODO: proper error handling
 
 	eval(ast->m_condition, e);
-	bool condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
+	bool condition = e.m_stack.pop_unsafe().get_boolean();
 
 	if (condition)
 		exec(ast->m_body, e);
@@ -336,7 +336,7 @@ static void exec(AST::IfElseStatement* ast, Interpreter& e) {
 static void exec(AST::WhileStatement* ast, Interpreter& e) {
 	while (1) {
 		eval(ast->m_condition, e);
-		auto condition = value_of(e.m_stack.pop_unsafe()).get_boolean();
+		auto condition = e.m_stack.pop_unsafe().get_boolean();
 
 		if (!condition)
 			break;
