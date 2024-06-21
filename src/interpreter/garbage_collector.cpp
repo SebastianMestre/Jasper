@@ -94,8 +94,8 @@ gc_ptr<Error> GC::new_error(std::string s) {
 	return result;
 }
 
-gc_ptr<Reference> GC::new_reference(Value v) {
-	auto result = new Reference(std::move(v));
+gc_ptr<Variable> GC::new_variable(Value v) {
+	auto result = new Variable(std::move(v));
 	m_blocks.push_back(result);
 	return result;
 }

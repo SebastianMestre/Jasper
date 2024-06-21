@@ -8,23 +8,10 @@
 
 namespace Interpreter {
 
-Value value_of(Value h) {
-	if (!is_heap_type(h.type()))
-		return h;
-
-	if (h.type() != ValueTag::Reference)
-		return h;
-
-	// try unboxing recursively?
-	auto ref = h.get_cast<Reference>();
-	return ref->m_value;
-}
-
-
 void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
-		auto ref = e.new_reference(Value {nullptr});
+		auto ref = e.new_variable(Value {nullptr});
 		ref->m_value = e.m_stack.access(i);
 		e.m_stack.access(i) = ref.as_value();
 	}

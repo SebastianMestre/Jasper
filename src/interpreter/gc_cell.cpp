@@ -61,7 +61,7 @@ static void gc_visit(Function* f) {
 		gc_visit(capture);
 }
 
-static void gc_visit(Reference* r) {
+static void gc_visit(Variable* r) {
 	if (r->m_visited)
 		return;
 
@@ -83,8 +83,8 @@ static void gc_visit(GcCell* v) {
 		return gc_visit(static_cast<Variant*>(v));
 	case ValueTag::Function:
 		return gc_visit(static_cast<Function*>(v));
-	case ValueTag::Reference:
-		return gc_visit(static_cast<Reference*>(v));
+	case ValueTag::Variable:
+		return gc_visit(static_cast<Variable*>(v));
 	case ValueTag::VariantConstructor:
 		return gc_visit(static_cast<VariantConstructor*>(v));
 	case ValueTag::RecordConstructor:

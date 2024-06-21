@@ -65,8 +65,8 @@ Function::Function(FunctionType def, CapturesType captures)
     , m_def(def)
     , m_captures(std::move(captures)) {}
 
-Reference::Reference(Value value)
-    : GcCell {ValueTag::Reference}
+Variable::Variable(Value value)
+    : GcCell {ValueTag::Variable}
     , m_value {value} {}
 
 VariantConstructor::VariantConstructor(InternedString constructor)
@@ -152,7 +152,7 @@ static void print(Array* l, int d) {
 	}
 }
 
-static void print(Reference* l, int d) {
+static void print(Variable* l, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(l->type())] << '\n';
 	print(l->m_value, d + 1);
@@ -183,8 +183,8 @@ static void print(GcCell* v, int d) {
 		return print(static_cast<Variant*>(v), d);
 	case ValueTag::Function:
 		return print(static_cast<Function*>(v), d);
-	case ValueTag::Reference:
-		return print(static_cast<Reference*>(v), d);
+	case ValueTag::Variable:
+		return print(static_cast<Variable*>(v), d);
 	case ValueTag::VariantConstructor:
 		return print(static_cast<VariantConstructor*>(v), d);
 	case ValueTag::RecordConstructor:

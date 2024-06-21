@@ -27,7 +27,7 @@ void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
-			auto ref = e.new_reference(e.null());
+			auto ref = e.new_variable(e.null());
 			e.global_declare_direct(decl->identifier_text(), ref.get());
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
@@ -82,9 +82,9 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		e.m_stack.push(value_of(e.m_stack.frame_at(ast->m_frame_offset)));
+		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset).get_cast<Variable>()->m_value);
 	} else {
-		e.m_stack.push(value_of(Value{e.global_access(ast->text())}));
+		e.m_stack.push(e.global_access(ast->text())->m_value);
 	}
 };
 
@@ -134,7 +134,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
 
-		target.get_cast<Reference>()->m_value = value;
+		target.get_cast<Variable>()->m_value = value;
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
@@ -150,7 +150,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
 		auto value = e.m_stack.pop_unsafe();
 		auto callee_ptr = e.m_stack.pop_unsafe();
-		auto* callee = value_as<Array>(callee_ptr);
+		auto* callee = callee_ptr.get_cast<Array>();
 
 		callee->m_value[index] = value;
 
@@ -169,7 +169,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	auto index = e.m_stack.pop_unsafe().get_integer();
 
 	auto callee_ptr = e.m_stack.pop_unsafe();
-	auto* callee = value_as<Array>(callee_ptr);
+	auto* callee = callee_ptr.get_cast<Array>();
 
 	e.m_stack.push(callee->at(index));
 };
@@ -194,7 +194,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = value.get_cast<Reference>();
+		captures[offset] = value.get_cast<Variable>();
 	}
 
 	auto result = e.new_function(ast, std::move(captures));
@@ -204,7 +204,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_target, e);
 	auto rec_ptr = e.m_stack.pop_unsafe();
-	auto rec = value_as<Record>(rec_ptr);
+	auto rec = rec_ptr.get_cast<Record>();
 	e.m_stack.push(Value{rec->m_value[ast->m_member]});
 }
 
@@ -212,15 +212,15 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_target, e);
 
-	auto variant = value_as<Variant>(e.m_stack.access(0));
+	auto variant = e.m_stack.access(0).get_cast<Variant>();
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
 
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
-	// We also wrap it in a reference so it can be captured
-	auto ref = e.new_reference(Value {nullptr});
+	// We also wrap it in a variable so it can be captured
+	auto ref = e.new_variable(Value {nullptr});
 	ref->m_value = variant_value;
 	e.m_stack.access(0) = ref.as_value();
 	
@@ -295,7 +295,7 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 }
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_reference(Value {nullptr});
+	auto ref = e.new_variable(Value {nullptr});
 	e.m_stack.push(ref.as_value());
 	if (ast->m_value) {
 		eval(ast->m_value, e);
