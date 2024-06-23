@@ -31,7 +31,7 @@ void Interpreter::global_declare_direct(const Identifier& i, Variable* r) {
 void Interpreter::global_declare(const Identifier& i, Value v) {
 	assert(v.type() != ValueTag::Variable);
 	push_variable(v);
-	auto r = m_stack.pop_unsafe().get_cast<Variable>();
+	auto r = m_stack.pop().get_cast<Variable>();
 	global_declare_direct(i, r);
 }
 

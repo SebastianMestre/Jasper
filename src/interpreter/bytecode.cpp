@@ -99,7 +99,7 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 
 		eval_call_callable(callee, argument_count, e);
 
-		e.m_stack.frame_at(-1) = e.m_stack.pop_unsafe();
+		e.m_stack.frame_at(-1) = e.m_stack.pop();
 		e.m_stack.end_frame();
 
 		return sizeof(*op);

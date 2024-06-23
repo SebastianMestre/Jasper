@@ -12,7 +12,7 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
 		e.push_variable(e.null());
-		auto ref = e.m_stack.pop_unsafe().get_cast<Variable>();
+		auto ref = e.m_stack.pop().get_cast<Variable>();
 		ref->m_value = e.m_stack.access(i);
 		e.m_stack.access(i) = Value{ref};
 	}

@@ -15,7 +15,7 @@ struct Stack {
 	void end_region();
 
 	void push(Value ref);
-	Value pop_unsafe();
+	Value pop();
 
 	Value& access(int offset);
 	Value& frame_at(int offset);
