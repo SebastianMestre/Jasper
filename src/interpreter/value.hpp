@@ -73,7 +73,7 @@ struct Value {
 	}
 
 	template <typename T>
-	T* get_cast();
+	T* as();
 
 	int get_integer() {
 		assert(tag == ValueTag::Integer);
@@ -188,7 +188,7 @@ template<> struct type_data<VariantConstructor> { static constexpr auto tag = Va
 template<> struct type_data<RecordConstructor> { static constexpr auto tag = ValueTag::RecordConstructor; };
 
 template <typename T>
-inline T* Value::get_cast() {
+inline T* Value::as() {
 	static_assert(std::is_base_of<GcCell, T>::value, "T is not a subclass of GcCell");
 	assert(is_heap_type(tag));
 	assert(tag == type_data<T>::tag);

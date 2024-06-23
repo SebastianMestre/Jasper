@@ -12,7 +12,7 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
 		e.push_variable(e.null());
-		auto ref = e.m_stack.pop().get_cast<Variable>();
+		auto ref = e.m_stack.pop().as<Variable>();
 		ref->m_value = e.m_stack.access(i);
 		e.m_stack.access(i) = Value{ref};
 	}
@@ -48,7 +48,7 @@ void eval_call_native_function(NativeFunction* callee, int arg_count, Interprete
 
 void eval_call_callable(Value callee, int arg_count, Interpreter& e) {
 	if (callee.type() == ValueTag::Function) {
-		eval_call_function(callee.get_cast<Function>(), arg_count, e);
+		eval_call_function(callee.as<Function>(), arg_count, e);
 	} else if (callee.type() == ValueTag::NativeFunction) {
 		eval_call_native_function(callee.get_native_func(), arg_count, e);
 	} else {

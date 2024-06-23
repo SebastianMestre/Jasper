@@ -28,7 +28,7 @@ void run(AST::Program* ast, Interpreter& e) {
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
 			e.push_variable(e.null());
-			auto ref = e.m_stack.access(0).get_cast<Variable>();
+			auto ref = e.m_stack.access(0).as<Variable>();
 			e.global_declare_direct(decl->identifier_text(), ref);
 			e.m_stack.pop();
 			eval(decl->m_value, e);
@@ -60,7 +60,7 @@ void eval(AST::NullLiteral* ast, Interpreter& e) {
 
 void eval(AST::ArrayLiteral* ast, Interpreter& e) {
 	e.push_list({});
-	auto result = e.m_stack.access(0).get_cast<Array>();
+	auto result = e.m_stack.access(0).as<Array>();
 	result->m_value.reserve(ast->m_elements.size());
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
@@ -84,7 +84,7 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset).get_cast<Variable>()->m_value);
+		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset).as<Variable>()->m_value);
 	} else {
 		e.m_stack.push(e.global_access(ast->text())->m_value);
 	}
@@ -136,7 +136,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
 
-		target.get_cast<Variable>()->m_value = value;
+		target.as<Variable>()->m_value = value;
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
@@ -152,7 +152,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
 		auto value = e.m_stack.pop();
 		auto callee_ptr = e.m_stack.pop();
-		auto* callee = callee_ptr.get_cast<Array>();
+		auto* callee = callee_ptr.as<Array>();
 
 		callee->m_value[index] = value;
 
@@ -170,7 +170,7 @@ void eval(AST::IndexExpression* ast, Interpreter& e) {
 	auto index = e.m_stack.pop().get_integer();
 
 	auto callee_ptr = e.m_stack.pop();
-	auto* callee = callee_ptr.get_cast<Array>();
+	auto* callee = callee_ptr.as<Array>();
 
 	e.m_stack.push(callee->at(index));
 };
@@ -194,7 +194,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		assert(capture.second.outer_frame_offset != INT_MIN);
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = value.get_cast<Variable>();
+		captures[offset] = value.as<Variable>();
 	}
 
 	e.push_function(ast, std::move(captures));
@@ -203,7 +203,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 void eval(AST::AccessExpression* ast, Interpreter& e) {
 	eval(ast->m_target, e);
 	auto rec_ptr = e.m_stack.pop();
-	auto rec = rec_ptr.get_cast<Record>();
+	auto rec = rec_ptr.as<Record>();
 	e.m_stack.push(Value{rec->m_value[ast->m_member]});
 }
 
@@ -211,7 +211,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// Put the matched-on variant on the top of the stack
 	eval(&ast->m_target, e);
 
-	auto variant = e.m_stack.access(0).get_cast<Variant>();
+	auto variant = e.m_stack.access(0).as<Variant>();
 
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
@@ -240,13 +240,13 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	auto constructor = e.m_stack.access(0);
 
 	if (constructor.type() == ValueTag::RecordConstructor) {
-		auto record_constructor = constructor.get_cast<RecordConstructor>();
+		auto record_constructor = constructor.as<RecordConstructor>();
 		int const arg_count = ast->m_args.size();
 
 		assert(arg_count == record_constructor->m_keys.size());
 
 		e.push_record({});
-		auto result = e.m_stack.access(0).get_cast<Record>();
+		auto result = e.m_stack.access(0).as<Record>();
 
 		for (int i = 0; i < arg_count; ++i) {
 			eval(ast->m_args[i], e);
@@ -257,7 +257,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		e.m_stack.access(1) = e.m_stack.pop();
 
 	} else if (constructor.type() == ValueTag::VariantConstructor) {
-		auto variant_constructor = constructor.get_cast<VariantConstructor>();
+		auto variant_constructor = constructor.as<VariantConstructor>();
 
 		assert(ast->m_args.size() == 1);
 
@@ -278,7 +278,7 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
 	e.push_variable(e.null());
-	auto ref = e.m_stack.access(0).get_cast<Variable>();
+	auto ref = e.m_stack.access(0).as<Variable>();
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
