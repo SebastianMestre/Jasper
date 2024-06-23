@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "gc_ptr.hpp"
 #include "value.hpp"
 
 namespace Interpreter {
@@ -24,14 +23,6 @@ struct GC {
 	int size () { return m_blocks.size(); }
 
 	void add_root(GcCell* new_root);
-
-	auto new_variant(InternedString constructor, Value v) -> gc_ptr<Variant>;
-	auto new_record(RecordType) -> gc_ptr<Record>;
-	auto new_list(ArrayType) -> gc_ptr<Array>;
-	auto new_string(std::string) -> gc_ptr<String>;
-	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
-	auto new_error(std::string) -> gc_ptr<Error>;
-	auto new_variable(Value) -> gc_ptr<Variable>;
 
 	auto new_variant_raw(InternedString constructor, Value v) -> Variant*;
 	auto new_record_raw(RecordType) -> Record*;

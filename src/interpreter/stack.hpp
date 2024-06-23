@@ -2,7 +2,6 @@
 
 #include "../utils/interned_string.hpp"
 #include "../utils/span.hpp"
-#include "gc_ptr.hpp"
 #include "value.hpp"
 
 namespace Interpreter {

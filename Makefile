@@ -51,7 +51,6 @@ INTERPRETER_TARGETS := \
 	eval \
 	execute \
 	garbage_collector \
-	gc_ptr \
 	gc_cell \
 	interpreter \
 	native \

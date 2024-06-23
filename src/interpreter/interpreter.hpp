@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gc_ptr.hpp"
 #include "stack.hpp"
 #include "value.hpp"
 

@@ -110,7 +110,6 @@ Value eval_expression(
 
 	TypeChecker::compute_offsets(ast, 0);
 
-	// TODO?: return a gc_ptr
 	eval(ast, env);
 	auto value = env.m_stack.pop_unsafe();
 	return value;
