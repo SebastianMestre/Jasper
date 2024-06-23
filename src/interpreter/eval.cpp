@@ -27,7 +27,7 @@ void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
-			auto ref = e.new_variable(e.null()).get();
+			auto ref = e.new_variable(e.null());
 			e.global_declare_direct(decl->identifier_text(), ref);
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
@@ -57,7 +57,7 @@ void eval(AST::NullLiteral* ast, Interpreter& e) {
 };
 
 void eval(AST::ArrayLiteral* ast, Interpreter& e) {
-	auto result = e.new_list({}).get();
+	auto result = e.new_list({});
 	result->m_value.reserve(ast->m_elements.size());
 	e.m_stack.push(Value{result});
 	for (auto& element : ast->m_elements) {
@@ -197,7 +197,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		captures[offset] = value.get_cast<Variable>();
 	}
 
-	auto result = e.new_function(ast, std::move(captures)).get();
+	auto result = e.new_function(ast, std::move(captures));
 	e.m_stack.push(Value{result});
 };
 
@@ -220,7 +220,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We won't pop it, because it is already lined up for the later
 	// expressions. Instead, replace the variant with its inner value.
 	// We also wrap it in a variable so it can be captured
-	auto ref = e.new_variable(Value {nullptr}).get();
+	auto ref = e.new_variable(Value {nullptr});
 	ref->m_value = variant_value;
 	e.m_stack.access(0) = Value{ref};
 	
@@ -263,7 +263,7 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		}
 
 		// promote record object to heap
-		auto result = e.m_gc->new_record(std::move(record)).get();
+		auto result = e.new_record(std::move(record));
 
 		// pop arguments
 		for (int i = 0; i < arg_count; ++i) {
@@ -278,8 +278,8 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
-		auto result = e.m_gc->new_variant(
-		    variant_constructor->m_constructor, e.m_stack.access(0)).get();
+		auto result = e.new_variant(
+		    variant_constructor->m_constructor, e.m_stack.access(0));
 
 		// replace ctor with variant, and pop value
 		e.m_stack.access(1) = Value{result};
@@ -295,7 +295,7 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 }
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_variable(Value {nullptr}).get();
+	auto ref = e.new_variable(Value {nullptr});
 	e.m_stack.push(Value{ref});
 	if (ast->m_value) {
 		eval(ast->m_value, e);
@@ -364,7 +364,7 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 		constructors.insert(
 		    {constructor, Value{e.m_gc->new_variant_constructor_raw(constructor)}});
 	}
-	auto result = e.new_record(std::move(constructors)).get();
+	auto result = e.new_record(std::move(constructors));
 	e.m_stack.push(Value{result});
 }
 
