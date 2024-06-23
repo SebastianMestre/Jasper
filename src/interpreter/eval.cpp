@@ -27,8 +27,10 @@ void run(AST::Program* ast, Interpreter& e) {
 	auto const& comps = *e.m_declaration_order;
 	for (auto const& comp : comps) {
 		for (auto decl : comp) {
-			auto ref = e.new_variable(e.null());
+			e.push_variable(e.null());
+			auto ref = e.m_stack.access(0).get_cast<Variable>();
 			e.global_declare_direct(decl->identifier_text(), ref);
+			e.m_stack.pop_unsafe();
 			eval(decl->m_value, e);
 			auto value = e.m_stack.pop_unsafe();
 			ref->m_value = value;
@@ -57,9 +59,9 @@ void eval(AST::NullLiteral* ast, Interpreter& e) {
 };
 
 void eval(AST::ArrayLiteral* ast, Interpreter& e) {
-	auto result = e.new_list({});
+	e.push_list({});
+	auto result = e.m_stack.access(0).get_cast<Array>();
 	result->m_value.reserve(ast->m_elements.size());
-	e.m_stack.push(Value{result});
 	for (auto& element : ast->m_elements) {
 		eval(element, e);
 		result->append(e.m_stack.pop_unsafe());
@@ -197,8 +199,7 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		captures[offset] = value.get_cast<Variable>();
 	}
 
-	auto result = e.new_function(ast, std::move(captures));
-	e.m_stack.push(Value{result});
+	e.push_function(ast, std::move(captures));
 };
 
 void eval(AST::AccessExpression* ast, Interpreter& e) {
@@ -217,15 +218,12 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	auto constructor = variant->m_constructor;
 	auto variant_value = variant->m_inner_value;
 
-	// We won't pop it, because it is already lined up for the later
-	// expressions. Instead, replace the variant with its inner value.
-	// We also wrap it in a variable so it can be captured
-	auto ref = e.new_variable(Value {nullptr});
-	ref->m_value = variant_value;
-	e.m_stack.access(0) = Value{ref};
+	// Replace the variant with its inner value.
+	// We also wrap it in a variable so it can be captured.
+	e.push_variable(variant_value);
+	e.m_stack.access(1) = e.m_stack.pop_unsafe();
 	
 	auto case_it = ast->m_cases.find(constructor);
-	// TODO: proper error handling
 	assert(case_it != ast->m_cases.end());
 
 	// put the result on the top of the stack
@@ -245,45 +243,31 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 
 	if (constructor.type() == ValueTag::RecordConstructor) {
 		auto record_constructor = constructor.get_cast<RecordConstructor>();
-
-		assert(ast->m_args.size() == record_constructor->m_keys.size());
-
 		int const arg_count = ast->m_args.size();
 
-		// push arguments
+		assert(arg_count == record_constructor->m_keys.size());
+
+		e.push_record({});
+		auto result = e.m_stack.access(0).get_cast<Record>();
+
 		for (int i = 0; i < arg_count; ++i) {
 			eval(ast->m_args[i], e);
+			result->m_value[record_constructor->m_keys[i]] = e.m_stack.pop_unsafe();
 		}
 
-		// store all arguments in record object
-		RecordType record;
-		for (int i = 0; i < arg_count; ++i) {
-			record[record_constructor->m_keys[i]] =
-			    e.m_stack.access(arg_count - 1 - i);
-		}
+		// remove constructor from the stack
+		e.m_stack.access(1) = e.m_stack.pop_unsafe();
 
-		// promote record object to heap
-		auto result = e.new_record(std::move(record));
-
-		// pop arguments
-		for (int i = 0; i < arg_count; ++i) {
-			e.m_stack.pop_unsafe();
-		}
-
-		// replace ctor with record
-		e.m_stack.access(0) = Value{result};
 	} else if (constructor.type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = constructor.get_cast<VariantConstructor>();
 
 		assert(ast->m_args.size() == 1);
 
 		eval(ast->m_args[0], e);
-		auto result = e.new_variant(
-		    variant_constructor->m_constructor, e.m_stack.access(0));
+		e.push_variant(variant_constructor->m_constructor, e.m_stack.pop_unsafe());
 
-		// replace ctor with variant, and pop value
-		e.m_stack.access(1) = Value{result};
-		e.m_stack.pop_unsafe();
+		// remove constructor from the stack
+		e.m_stack.access(1) = e.m_stack.pop_unsafe();
 	}
 }
 
@@ -295,8 +279,8 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 }
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
-	auto ref = e.new_variable(Value {nullptr});
-	e.m_stack.push(Value{ref});
+	e.push_variable(e.null());
+	auto ref = e.m_stack.access(0).get_cast<Variable>();
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop_unsafe();
@@ -364,8 +348,7 @@ void eval(AST::UnionExpression* ast, Interpreter& e) {
 		constructors.insert(
 		    {constructor, Value{e.m_gc->new_variant_constructor_raw(constructor)}});
 	}
-	auto result = e.new_record(std::move(constructors));
-	e.m_stack.push(Value{result});
+	e.push_record(std::move(constructors));
 }
 
 void eval(AST::BuiltinTypeFunction* ast, Interpreter& e) {

@@ -59,12 +59,12 @@ struct Interpreter {
 	void push_string(std::string);
 	void push_variant_constructor(InternedString constructor);
 	void push_record_constructor(std::vector<InternedString>);
-	auto new_list(ArrayType) -> Array*;
-	auto new_variant(InternedString constructor, Value) -> Variant*;
-	auto new_record(RecordType) -> Record*;
-	auto new_function(FunctionType, CapturesType) -> Function*;
-	auto new_error(std::string) -> Error*;
-	auto new_variable(Value) -> Variable*;
+	void push_list(ArrayType);
+	void push_variant(InternedString constructor, Value);
+	void push_record(RecordType);
+	void push_function(FunctionType, CapturesType);
+	void push_error(std::string);
+	void push_variable(Value);
 };
 
 } // namespace Interpreter

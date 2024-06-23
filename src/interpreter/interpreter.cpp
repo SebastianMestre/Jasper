@@ -30,7 +30,8 @@ void Interpreter::global_declare_direct(const Identifier& i, Variable* r) {
 
 void Interpreter::global_declare(const Identifier& i, Value v) {
 	assert(v.type() != ValueTag::Variable);
-	auto r = new_variable(v);
+	push_variable(v);
+	auto r = m_stack.pop_unsafe().get_cast<Variable>();
 	global_declare_direct(i, r);
 }
 
@@ -86,17 +87,14 @@ Value Interpreter::null() {
 
 void Interpreter::push_integer(int i) {
 	m_stack.push(Value{i});
-	run_gc_if_needed();
 }
 
 void Interpreter::push_float(float f) {
 	m_stack.push(Value{f});
-	run_gc_if_needed();
 }
 
 void Interpreter::push_boolean(bool b) {
 	m_stack.push(Value{b});
-	run_gc_if_needed();
 }
 
 void Interpreter::push_string(std::string s) {
@@ -114,41 +112,35 @@ void Interpreter::push_record_constructor(std::vector<InternedString> keys) {
 	run_gc_if_needed();
 }
 
-Array* Interpreter::new_list(ArrayType elements) {
-	auto result = m_gc->new_list(std::move(elements));
+void Interpreter::push_list(ArrayType elements) {
+	m_stack.push(Value{m_gc->new_list_raw(std::move(elements))});
 	run_gc_if_needed();
-	return result.get();
 }
 
-Variant* Interpreter::new_variant(InternedString constructor, Value v) {
-	auto result = m_gc->new_variant(std::move(constructor), v);
+void Interpreter::push_variant(InternedString constructor, Value v) {
+	m_stack.push(Value{m_gc->new_variant_raw(std::move(constructor), v)});
 	run_gc_if_needed();
-	return result.get();
 }
 
-Record* Interpreter::new_record(RecordType declarations) {
-	auto result = m_gc->new_record(std::move(declarations));
+void Interpreter::push_record(RecordType declarations) {
+	m_stack.push(Value{m_gc->new_record_raw(std::move(declarations))});
 	run_gc_if_needed();
-	return result.get();
 }
 
-Function* Interpreter::new_function(FunctionType def, CapturesType s) {
-	auto result = m_gc->new_function(def, std::move(s));
+void Interpreter::push_function(FunctionType def, CapturesType s) {
+	m_stack.push(Value{m_gc->new_function_raw(def, std::move(s))});
 	run_gc_if_needed();
-	return result.get();
 }
 
-Error* Interpreter::new_error(std::string e) {
-	auto result = m_gc->new_error(e);
+void Interpreter::push_error(std::string e) {
+	m_stack.push(Value{m_gc->new_error_raw(e)});
 	run_gc_if_needed();
-	return result.get();
 }
 
-Variable* Interpreter::new_variable(Value v) {
+void Interpreter::push_variable(Value v) {
 	assert(v.type() != ValueTag::Variable);
-	auto result = m_gc->new_variable(v);
+	m_stack.push(Value{m_gc->new_variable_raw(v)});
 	run_gc_if_needed();
-	return result.get();
 }
 
 } // namespace Interpreter

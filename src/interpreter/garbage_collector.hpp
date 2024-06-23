@@ -33,9 +33,16 @@ struct GC {
 	auto new_error(std::string) -> gc_ptr<Error>;
 	auto new_variable(Value) -> gc_ptr<Variable>;
 
+	auto new_variant_raw(InternedString constructor, Value v) -> Variant*;
+	auto new_record_raw(RecordType) -> Record*;
+	auto new_list_raw(ArrayType) -> Array*;
 	auto new_string_raw(std::string) -> String*;
+	auto new_function_raw(FunctionType, CapturesType) -> Function*;
+	auto new_error_raw(std::string) -> Error*;
+	auto new_variable_raw(Value) -> Variable*;
 	auto new_variant_constructor_raw(InternedString) -> VariantConstructor*;
 	auto new_record_constructor_raw(std::vector<InternedString>) -> RecordConstructor*;
+
 };
 
 } // namespace Interpreter

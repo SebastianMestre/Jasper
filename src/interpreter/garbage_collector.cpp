@@ -53,12 +53,20 @@ void GC::add_root(GcCell* new_root) {
 }
 
 gc_ptr<Variant> GC::new_variant(InternedString constructor, Value v) {
+	return new_variant_raw(std::move(constructor), v);
+}
+
+Variant* GC::new_variant_raw(InternedString constructor, Value v) {
 	auto result = new Variant(constructor, v);
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Record> GC::new_record(RecordType declarations) {
+	return new_record_raw(std::move(declarations));
+}
+
+Record* GC::new_record_raw(RecordType declarations) {
 	auto result = new Record;
 	result->m_value = std::move(declarations);
 	m_blocks.push_back(result);
@@ -66,6 +74,10 @@ gc_ptr<Record> GC::new_record(RecordType declarations) {
 }
 
 gc_ptr<Array> GC::new_list(ArrayType elements) {
+	return new_list_raw(std::move(elements));
+}
+
+Array* GC::new_list_raw(ArrayType elements) {
 	auto result = new Array;
 	result->m_value = std::move(elements);
 	m_blocks.push_back(result);
@@ -83,18 +95,30 @@ String* GC::new_string_raw(std::string s) {
 }
 
 gc_ptr<Function> GC::new_function(FunctionType def, CapturesType captures) {
+	return new_function_raw(def, std::move(captures));
+}
+
+Function* GC::new_function_raw(FunctionType def, CapturesType captures) {
 	auto result = new Function(std::move(def), std::move(captures));
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Error> GC::new_error(std::string s) {
+	return new_error_raw(std::move(s));
+}
+
+Error* GC::new_error_raw(std::string s) {
 	auto result = new Error(std::move(s));
 	m_blocks.push_back(result);
 	return result;
 }
 
 gc_ptr<Variable> GC::new_variable(Value v) {
+	return new_variable_raw(v);
+}
+
+Variable* GC::new_variable_raw(Value v) {
 	auto result = new Variable(std::move(v));
 	m_blocks.push_back(result);
 	return result;

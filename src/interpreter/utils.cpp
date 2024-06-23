@@ -11,7 +11,8 @@ namespace Interpreter {
 void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 
 	for (int i = 0; i < arg_count; ++i) {
-		auto ref = e.new_variable(Value {nullptr});
+		e.push_variable(e.null());
+		auto ref = e.m_stack.pop_unsafe().get_cast<Variable>();
 		ref->m_value = e.m_stack.access(i);
 		e.m_stack.access(i) = Value{ref};
 	}
