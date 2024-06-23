@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include "error.hpp"
 #include "garbage_collector.hpp"
 #include "utils.hpp"
 
@@ -129,11 +128,6 @@ void Interpreter::push_record(RecordType declarations) {
 
 void Interpreter::push_function(FunctionType def, CapturesType s) {
 	m_stack.push(Value{m_gc->new_function_raw(def, std::move(s))});
-	run_gc_if_needed();
-}
-
-void Interpreter::push_error(std::string e) {
-	m_stack.push(Value{m_gc->new_error_raw(e)});
 	run_gc_if_needed();
 }
 

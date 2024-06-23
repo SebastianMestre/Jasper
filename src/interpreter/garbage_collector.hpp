@@ -6,8 +6,6 @@
 
 namespace Interpreter {
 
-struct Error;
-
 struct GC {
   public:
 	std::vector<GcCell*> m_blocks;
@@ -29,7 +27,6 @@ struct GC {
 	auto new_list_raw(ArrayType) -> Array*;
 	auto new_string_raw(std::string) -> String*;
 	auto new_function_raw(FunctionType, CapturesType) -> Function*;
-	auto new_error_raw(std::string) -> Error*;
 	auto new_variable_raw(Value) -> Variable*;
 	auto new_variant_constructor_raw(InternedString) -> VariantConstructor*;
 	auto new_record_constructor_raw(std::vector<InternedString>) -> RecordConstructor*;

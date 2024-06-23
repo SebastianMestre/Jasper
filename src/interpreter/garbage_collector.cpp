@@ -1,7 +1,5 @@
 #include "garbage_collector.hpp"
 
-#include "error.hpp"
-
 #include <algorithm>
 #include <string>
 
@@ -80,12 +78,6 @@ String* GC::new_string_raw(std::string s) {
 
 Function* GC::new_function_raw(FunctionType def, CapturesType captures) {
 	auto result = new Function(std::move(def), std::move(captures));
-	m_blocks.push_back(result);
-	return result;
-}
-
-Error* GC::new_error_raw(std::string s) {
-	auto result = new Error(std::move(s));
 	m_blocks.push_back(result);
 	return result;
 }

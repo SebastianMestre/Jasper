@@ -16,7 +16,6 @@ struct TypeChecker;
 namespace Interpreter {
 
 struct GC;
-struct Error;
 
 struct GlobalScope {
 	std::map<InternedString, Variable*> m_declarations;
@@ -62,7 +61,6 @@ struct Interpreter {
 	void push_variant(InternedString constructor, Value);
 	void push_record(RecordType);
 	void push_function(FunctionType, CapturesType);
-	void push_error(std::string);
 	void push_variable(Value);
 };
 
