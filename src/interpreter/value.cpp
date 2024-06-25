@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include "error.hpp"
-
 namespace Interpreter {
 
 String::String()
@@ -24,7 +22,6 @@ void Array::append(Value v) {
 
 Value Array::at(int position) {
 	if (position < 0 or position >= int(m_value.size())) {
-		// TODO: return RangeError
 		return Value{nullptr};
 	} else {
 		return m_value[position];
@@ -44,7 +41,6 @@ void Record::addMember(Identifier const& id, Value v) {
 Value Record::getMember(Identifier const& id) {
 	auto it = m_value.find(id);
 	if (it == m_value.end()) {
-		// TODO: return RangeError
 		return Value {nullptr};
 	} else {
 		return it->second;
@@ -110,12 +106,6 @@ static void print(bool b, int d) {
 	std::cout << value_string[int(ValueTag::Boolean)] << ' ' << b << '\n';
 }
 
-static void print(Error* v, int d) {
-	// TODO
-	print_spaces(d);
-	std::cout << value_string[int(v->type())] << '\n';
-}
-
 static void print(Record* o, int d) {
 	print_spaces(d);
 	std::cout << value_string[int(o->type())] << '\n';
@@ -173,8 +163,6 @@ static void print(GcCell* v, int d) {
 	switch (v->type()) {
 	case ValueTag::String:
 		return print(static_cast<String*>(v), d);
-	case ValueTag::Error:
-		return print(static_cast<Error*>(v), d);
 	case ValueTag::Array:
 		return print(static_cast<Array*>(v), d);
 	case ValueTag::Record:

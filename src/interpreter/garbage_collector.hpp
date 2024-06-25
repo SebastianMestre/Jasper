@@ -2,12 +2,9 @@
 
 #include <vector>
 
-#include "gc_ptr.hpp"
 #include "value.hpp"
 
 namespace Interpreter {
-
-struct Error;
 
 struct GC {
   public:
@@ -25,17 +22,15 @@ struct GC {
 
 	void add_root(GcCell* new_root);
 
-	auto new_variant(InternedString constructor, Value v) -> gc_ptr<Variant>;
-	auto new_record(RecordType) -> gc_ptr<Record>;
-	auto new_list(ArrayType) -> gc_ptr<Array>;
-	auto new_string(std::string) -> gc_ptr<String>;
-	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
-	auto new_error(std::string) -> gc_ptr<Error>;
-	auto new_variable(Value) -> gc_ptr<Variable>;
-
+	auto new_variant_raw(InternedString constructor, Value v) -> Variant*;
+	auto new_record_raw(RecordType) -> Record*;
+	auto new_list_raw(ArrayType) -> Array*;
 	auto new_string_raw(std::string) -> String*;
+	auto new_function_raw(FunctionType, CapturesType) -> Function*;
+	auto new_variable_raw(Value) -> Variable*;
 	auto new_variant_constructor_raw(InternedString) -> VariantConstructor*;
 	auto new_record_constructor_raw(std::vector<InternedString>) -> RecordConstructor*;
+
 };
 
 } // namespace Interpreter

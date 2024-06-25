@@ -13,7 +13,7 @@
 namespace Interpreter {
 
 #define OP(type, lhs, op, rhs)                                                 \
-	(lhs).get_cast<type>()->m_value op (rhs).get_cast<type>()->m_value
+	(lhs).as<type>()->m_value op (rhs).as<type>()->m_value
 
 #define OP_(field, lhs, op, rhs)                                               \
 	Value {(lhs).field op (rhs).field}
@@ -31,7 +31,7 @@ Value print(ArgsType v, Interpreter& e) {
 Value array_append(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() > 0);
-	Array* array = v[0].get_cast<Array>();
+	Array* array = v[0].as<Array>();
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(v[i]);
 	}
@@ -43,8 +43,8 @@ Value array_append(ArgsType v, Interpreter& e) {
 Value array_extend(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 2);
-	Array* arr1 = v[0].get_cast<Array>();
-	Array* arr2 = v[1].get_cast<Array>();
+	Array* arr1 = v[0].as<Array>();
+	Array* arr2 = v[1].as<Array>();
 	arr1->m_value.insert(
 	    arr1->m_value.end(), arr2->m_value.begin(), arr2->m_value.end());
 	return Value {arr1};
@@ -54,7 +54,7 @@ Value array_extend(ArgsType v, Interpreter& e) {
 Value size(ArgsType v, Interpreter& e) {
 	// TODO proper error handling
 	assert(v.size() == 1);
-	Array* array = v[0].get_cast<Array>();
+	Array* array = v[0].as<Array>();
 
 	return Value {int(array->m_value.size())};
 }
@@ -65,25 +65,14 @@ Value array_join(ArgsType v, Interpreter& e) {
 	// TODO make it more general
 	// TODO proper error handling
 	assert(v.size() == 2);
-	Array* array = v[0].get_cast<Array>();
-	String* sep = v[1].get_cast<String>();
+	Array* array = v[0].as<Array>();
+	String* sep = v[1].as<String>();
 	std::stringstream result;
 	for (unsigned int i = 0; i < array->m_value.size(); i++) {
 		if (i > 0) result << sep->m_value;
 		result << array->m_value[i].get_integer();
 	}
 	return Value{e.m_gc->new_string_raw(result.str())};
-}
-
-// array_at(array, int i) returns the i-th element of the given array
-Value array_at(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() == 2);
-	Array* array = v[0].get_cast<Array>();
-	int index = v[1].get_integer();
-	assert(index >= 0);
-	assert(index < array->m_value.size());
-	return Value{array->m_value[index]};
 }
 
 Value value_add(ArgsType v, Interpreter& e) {
@@ -299,7 +288,6 @@ void declare_native_functions(Interpreter& env) {
 	declare("array_extend", array_extend);
 	declare("size", size);
 	declare("array_join", array_join);
-	declare("array_at", array_at);
 	declare("+", value_add);
 	declare("-", value_sub);
 	declare("*", value_mul);

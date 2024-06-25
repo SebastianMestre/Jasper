@@ -7,7 +7,6 @@
 	X(Float)                                                                   \
 	X(Boolean)                                                                 \
 	X(String)                                                                  \
-	X(Error)                                                                   \
                                                                                \
 	X(Array)                                                                   \
 	X(Record)                                                                  \

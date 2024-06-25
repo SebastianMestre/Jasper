@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 				auto ast = AST::convert_expr(parser_result.cst(), ast_allocator);
 
 				eval(ast, env);
-				auto result = env.m_stack.pop_unsafe();
+				auto result = env.m_stack.pop();
 
 				Interpreter::print(result);
 			}

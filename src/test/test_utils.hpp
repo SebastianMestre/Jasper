@@ -26,7 +26,7 @@ ExitStatus scalar_equals(Value rv, const ValueTag v_type, const NativeValue& exp
 	if (ExitStatus::Ok != fail)
 		return fail;
 
-	auto value = rv.get_cast<RuntimeValue>();
+	auto value = rv.as<RuntimeValue>();
 	if (value->m_value != expected)
 		return ExitStatus::ValueError;
 
@@ -96,7 +96,7 @@ ExitStatus array_of_size(Value rv, unsigned int size) {
 	if (ExitStatus::Ok != fail)
 		return fail;
 
-	if (rv.get_cast<Interpreter::Array>()->m_value.size() != size)
+	if (rv.as<Interpreter::Array>()->m_value.size() != size)
 		return ExitStatus::ValueError;
 
 	return ExitStatus::Ok;

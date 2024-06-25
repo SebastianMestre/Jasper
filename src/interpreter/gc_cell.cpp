@@ -1,7 +1,6 @@
 #include "gc_cell.hpp"
 
 #include "value.hpp"
-#include "error.hpp"
 
 namespace Interpreter {
 
@@ -13,9 +12,6 @@ static void gc_visit(Value h) {
 }
 
 static void gc_visit(String* v) {
-	v->m_visited = true;
-}
-static void gc_visit(Error* v) {
 	v->m_visited = true;
 }
 static void gc_visit(VariantConstructor* v) {
@@ -73,8 +69,6 @@ static void gc_visit(GcCell* v) {
 	switch (v->type()) {
 	case ValueTag::String:
 		return gc_visit(static_cast<String*>(v));
-	case ValueTag::Error:
-		return gc_visit(static_cast<Error*>(v));
 	case ValueTag::Array:
 		return gc_visit(static_cast<Array*>(v));
 	case ValueTag::Record:

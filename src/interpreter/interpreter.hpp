@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gc_ptr.hpp"
 #include "stack.hpp"
 #include "value.hpp"
 
@@ -17,7 +16,6 @@ struct TypeChecker;
 namespace Interpreter {
 
 struct GC;
-struct Error;
 
 struct GlobalScope {
 	std::map<InternedString, Variable*> m_declarations;
@@ -59,11 +57,11 @@ struct Interpreter {
 	void push_string(std::string);
 	void push_variant_constructor(InternedString constructor);
 	void push_record_constructor(std::vector<InternedString>);
-	auto new_list(ArrayType) -> gc_ptr<Array>;
-	auto new_record(RecordType) -> gc_ptr<Record>;
-	auto new_function(FunctionType, CapturesType) -> gc_ptr<Function>;
-	auto new_error(std::string) -> gc_ptr<Error>;
-	auto new_variable(Value) -> gc_ptr<Variable>;
+	void push_list(ArrayType);
+	void push_variant(InternedString constructor, Value);
+	void push_record(RecordType);
+	void push_function(FunctionType, CapturesType);
+	void push_variable(Value);
 };
 
 } // namespace Interpreter

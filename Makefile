@@ -47,11 +47,9 @@ INTERPRETER_DIR := interpreter
 INTERPRETER_ENTRY := main
 INTERPRETER_TARGETS := \
 	bytecode \
-	error \
 	eval \
 	execute \
 	garbage_collector \
-	gc_ptr \
 	gc_cell \
 	interpreter \
 	native \

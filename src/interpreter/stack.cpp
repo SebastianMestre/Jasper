@@ -34,7 +34,7 @@ void Stack::push(Value ref){
 	m_stack_ptr += 1;
 }
 
-Value Stack::pop_unsafe() {
+Value Stack::pop() {
 	Value result = m_stack.back();
 	m_stack.pop_back();
 	m_stack_ptr -= 1;
