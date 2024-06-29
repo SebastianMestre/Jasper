@@ -26,6 +26,8 @@ struct TypeSystemCore {
 
 	// types
 
+	Type apply_substitution(Type);
+
 	std::unordered_set<VarId> free_vars(Type);
 	void ll_unify(Type i, Type j);
 	TypeFunc type_function_of(Type);
@@ -132,8 +134,6 @@ private:
 	Type inst_impl(Type mono, std::unordered_map<VarId, Type> const& mapping);
 	Type inst_with(PolyId poly, std::vector<Type> const& vals);
 	void unify_type_function(TypeFunc, TypeFunc);
-
-	Type ll_find(Type i);
 
 	bool ll_is_var(Type i);
 	bool ll_is_term(Type i);

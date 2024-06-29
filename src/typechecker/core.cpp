@@ -8,6 +8,21 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
+Type TypeSystemCore::apply_substitution(Type type) {
+	if (ll_is_var(type)) {
+		VarId vi = get_var_id(type);
+		Type sub = m_substitution[static_cast<int>(vi)];
+		if (sub != Type(-1)) return apply_substitution(sub);
+		return type;
+	} else {
+		TermData& term_data = ll_term_data[data(type).data_idx];
+		for (Type& arg_type : term_data.argument_idx) {
+			arg_type = apply_substitution(arg_type);
+		}
+		return type;
+	}
+}
+
 Type TypeSystemCore::new_term(TypeFunc tf, std::vector<Type> args) {
 	return ll_new_term(tf, std::move(args));
 }
@@ -21,7 +36,7 @@ PolyId TypeSystemCore::forall(std::vector<VarId> vars, Type ty) {
 Type TypeSystemCore::inst_impl(
     Type mono, std::unordered_map<VarId, Type> const& mapping) {
 
-	mono = ll_find(mono);
+	mono = apply_substitution(mono);
 
 	if (ll_is_var(mono)) {
 		auto it = mapping.find(get_var_id(mono));
@@ -63,7 +78,7 @@ std::unordered_set<VarId> TypeSystemCore::free_vars(Type mono) {
 }
 
 void TypeSystemCore::gather_free_vars(Type mono, std::unordered_set<VarId>& free_vars) {
-	mono = ll_find(mono);
+	mono = apply_substitution(mono);
 
 	if (ll_is_var(mono)) {
 		free_vars.insert(get_var_id(mono));
@@ -120,7 +135,7 @@ bool TypeSystemCore::is_variant(TypeFunc tf) {
 }
 
 TypeFunc TypeSystemCore::type_function_of(Type mono) {
-	mono = ll_find(mono);
+	mono = apply_substitution(mono);
 	assert(ll_is_term(mono) && "tried to find function of non term");
 	int t = data(mono).data_idx;
 	return ll_term_data[t].function_id;
@@ -146,7 +161,7 @@ void TypeSystemCore::unify_type_function(TypeFunc i, TypeFunc j) {
 }
 
 bool TypeSystemCore::occurs(VarId v, Type i) {
-	i = ll_find(i);
+	i = apply_substitution(i);
 
 	if (ll_is_var(i))
 		return equals_var(i, v);
@@ -184,8 +199,8 @@ bool TypeSystemCore::satisfies(Type t, Constraint const& c) {
 }
 
 void TypeSystemCore::ll_unify(Type i, Type j) {
-	i = ll_find(i);
-	j = ll_find(j);
+	i = apply_substitution(i);
+	j = apply_substitution(j);
 
 	if (i == j) return;
 
@@ -237,13 +252,6 @@ Type TypeSystemCore::ll_new_term(TypeFunc f, std::vector<Type> args) {
 	ll_node_header.push_back({Tag::Term, static_cast<int>(ll_term_data.size())});
 	ll_term_data.push_back({f, std::move(args)});
 	return Type(type_id);
-}
-
-Type TypeSystemCore::ll_find(Type i) {
-	if (!ll_is_var(i)) return i;
-	VarId vi = get_var_id(i);
-	if (m_substitution[static_cast<int>(vi)] == Type(-1)) return i;
-	return m_substitution[static_cast<int>(vi)];
 }
 
 VarId TypeSystemCore::get_var_id(Type i) {
