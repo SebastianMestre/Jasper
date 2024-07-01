@@ -18,8 +18,6 @@ struct TypecheckHelper {
 	TypecheckHelper(TypeChecker& tc)
 	    : tc {tc} {}
 
-	PolyId generalize(Type mono);
-
 	Type integer() { return tc.integer(); }
 	Type number() { return tc.number(); }
 	Type string() { return tc.string(); }
@@ -43,11 +41,6 @@ struct TypecheckHelper {
 		return core().new_term(type_function, std::move(arguments));
 	}
 
-private:
-
-	Frontend::SymbolTable symbol_table;
-	TypeChecker& tc;
-
 	bool is_bound_to_env(VarId var) {
 
 		for (auto& kv : symbol_table.bindings()) {
@@ -57,6 +50,7 @@ private:
 			// but that's how it worked before, so not changing it right now.
 			if (decl->m_is_polymorphic) continue;
 
+			decl->m_value_type = core().apply_substitution(decl->m_value_type);
 			auto bound_type = decl->m_value_type;
 			if (core().free_vars(bound_type).count(var) != 0)
 				return true;
@@ -65,21 +59,14 @@ private:
 		return false;
 	}
 
+private:
+
+	Frontend::SymbolTable symbol_table;
+	TypeChecker& tc;
+
+
 };
 
-
-// quantifies all free variables in the given monotype
-PolyId TypecheckHelper::generalize(Type mono) {
-
-	std::vector<VarId> vars;
-	for (VarId var : core().free_vars(mono)) {
-		if (!is_bound_to_env(var)) {
-			vars.push_back(var);
-		}
-	}
-
-	return core().forall(std::move(vars), mono);
-}
 
 static void infer(AST::Expr* ast, TypecheckHelper& tc);
 
@@ -309,7 +296,18 @@ void generalize(AST::Declaration* ast, TypecheckHelper& tc) {
 
 	if (is_value_expression(ast->m_value)) {
 		ast->m_is_polymorphic = true;
-		ast->m_decl_type = tc.generalize(ast->m_value_type);
+		ast->m_value_type = tc.core().apply_substitution(ast->m_value_type);
+		Type type = ast->m_value_type;
+
+		std::vector<VarId> vars;
+		for (VarId var : tc.core().free_vars(type)) {
+			if (!tc.is_bound_to_env(var)) {
+				vars.push_back(var);
+			}
+		}
+
+		ast->m_decl_type = tc.core().forall(std::move(vars), type);
+
 	} else {
 		// if it's not a value expression, its free vars get bound
 		// to the environment instead of being generalized.

@@ -8,6 +8,22 @@
 TypeSystemCore::TypeSystemCore() {
 }
 
+Type TypeSystemCore::apply_substitution(Type type) {
+	if (ll_is_var(type)) {
+		VarId vi = get_representative_var_id(type);
+		data(type).data_idx = static_cast<int>(vi);
+		Type sub = m_substitution[static_cast<int>(vi)];
+		if (sub != Type(-1)) return apply_substitution(sub);
+		return type;
+	} else {
+		TermData& term_data = ll_term_data[data(type).data_idx];
+		for (Type& arg_type : term_data.argument_idx) {
+			arg_type = apply_substitution(arg_type);
+		}
+		return type;
+	}
+}
+
 Type TypeSystemCore::new_term(TypeFunc tf, std::vector<Type> args) {
 	return ll_new_term(tf, std::move(args));
 }
@@ -20,8 +36,6 @@ PolyId TypeSystemCore::forall(std::vector<VarId> vars, Type ty) {
 
 Type TypeSystemCore::inst_impl(
     Type mono, std::unordered_map<VarId, Type> const& mapping) {
-
-	mono = ll_find(mono);
 
 	if (ll_is_var(mono)) {
 		auto it = mapping.find(get_var_id(mono));
@@ -36,24 +50,15 @@ Type TypeSystemCore::inst_impl(
 	}
 }
 
-Type TypeSystemCore::inst_with(PolyId poly, std::vector<Type> const& vals) {
+Type TypeSystemCore::inst_fresh(PolyId poly) {
 	PolyData const& data = poly_data[poly];
-
-	assert(data.vars.size() == vals.size());
 
 	std::unordered_map<VarId, Type> old_to_new;
 	for (int i {0}; i != data.vars.size(); ++i) {
-		old_to_new[data.vars[i]] = vals[i];
+		old_to_new[data.vars[i]] = ll_new_var();
 	}
 
 	return inst_impl(data.base, old_to_new);
-}
-
-Type TypeSystemCore::inst_fresh(PolyId poly) {
-	std::vector<Type> vals;
-	for (int i {0}; i != poly_data[poly].vars.size(); ++i)
-		vals.push_back(ll_new_var());
-	return inst_with(poly, vals);
 }
 
 std::unordered_set<VarId> TypeSystemCore::free_vars(Type mono) {
@@ -63,8 +68,6 @@ std::unordered_set<VarId> TypeSystemCore::free_vars(Type mono) {
 }
 
 void TypeSystemCore::gather_free_vars(Type mono, std::unordered_set<VarId>& free_vars) {
-	mono = ll_find(mono);
-
 	if (ll_is_var(mono)) {
 		free_vars.insert(get_var_id(mono));
 	} else {
@@ -120,7 +123,7 @@ bool TypeSystemCore::is_variant(TypeFunc tf) {
 }
 
 TypeFunc TypeSystemCore::type_function_of(Type mono) {
-	mono = ll_find(mono);
+	mono = apply_substitution(mono);
 	assert(ll_is_term(mono) && "tried to find function of non term");
 	int t = data(mono).data_idx;
 	return ll_term_data[t].function_id;
@@ -146,10 +149,9 @@ void TypeSystemCore::unify_type_function(TypeFunc i, TypeFunc j) {
 }
 
 bool TypeSystemCore::occurs(VarId v, Type i) {
-	i = ll_find(i);
 
 	if (ll_is_var(i))
-		return equals_var(i, v);
+		return get_var_id(i) == v;
 
 	int ti = data(i).data_idx;
 	for (Type c : ll_term_data[ti].argument_idx)
@@ -159,24 +161,25 @@ bool TypeSystemCore::occurs(VarId v, Type i) {
 	return false;
 }
 
-void TypeSystemCore::unify_vars_left_to_right(VarId vi, VarId vj) {
-	combine_constraints_left_to_right(vi, vj);
-	m_type_var_uf.join_left_to_right(static_cast<int>(vi), static_cast<int>(vj));
-}
-
 void TypeSystemCore::combine_constraints_left_to_right(VarId vi, VarId vj) {
-	// TODO
 	auto& i_constraints = m_constraints[static_cast<int>(vi)];
 	auto& j_constraints = m_constraints[static_cast<int>(vj)];
-	for (auto const& kv : i_constraints.structure) {
-		auto it = j_constraints.structure.find(kv.first);
-		if (it == j_constraints.structure.end()) {
-			j_constraints.structure.insert(kv);
-		} else {
-			ll_unify(kv.second, it->second);
+	if (i_constraints.shape == Constraint::Shape::Unknown) {
+		assert(i_constraints.structure.empty());
+	} else if (j_constraints.shape == Constraint::Shape::Unknown) {
+		assert(j_constraints.structure.empty());
+		j_constraints = i_constraints;
+	} else {
+		assert(i_constraints.shape == j_constraints.shape);
+		for (auto const& kv : i_constraints.structure) {
+			auto it = j_constraints.structure.find(kv.first);
+			if (it == j_constraints.structure.end()) {
+				j_constraints.structure.insert(kv);
+			} else {
+				ll_unify(kv.second, it->second);
+			}
 		}
 	}
-	return;
 }
 
 bool TypeSystemCore::satisfies(Type t, Constraint const& c) {
@@ -184,8 +187,8 @@ bool TypeSystemCore::satisfies(Type t, Constraint const& c) {
 }
 
 void TypeSystemCore::ll_unify(Type i, Type j) {
-	i = ll_find(i);
-	j = ll_find(j);
+	i = apply_substitution(i);
+	j = apply_substitution(j);
 
 	if (i == j) return;
 
@@ -201,7 +204,12 @@ void TypeSystemCore::ll_unify(Type i, Type j) {
 			assert(satisfies(j, m_constraints[static_cast<int>(vi)]));
 			establish_substitution(vi, j);
 		} else {
-			unify_vars_left_to_right(vi, get_var_id(j));
+			auto vj = get_var_id(j);
+
+			if (vi == vj) return;
+
+			m_type_var_uf.join_left_to_right(static_cast<int>(vi), static_cast<int>(vj));
+			combine_constraints_left_to_right(vi, vj);
 		}
 
 	} else {
@@ -239,14 +247,12 @@ Type TypeSystemCore::ll_new_term(TypeFunc f, std::vector<Type> args) {
 	return Type(type_id);
 }
 
-Type TypeSystemCore::ll_find(Type i) {
-	if (!ll_is_var(i)) return i;
-	VarId vi = get_var_id(i);
-	if (m_substitution[static_cast<int>(vi)] == Type(-1)) return i;
-	return m_substitution[static_cast<int>(vi)];
+VarId TypeSystemCore::get_var_id(Type i) {
+	assert(ll_is_var(i));
+	return static_cast<VarId>(data(i).data_idx);
 }
 
-VarId TypeSystemCore::get_var_id(Type i) {
+VarId TypeSystemCore::get_representative_var_id(Type i) {
 	assert(ll_is_var(i));
 	return static_cast<VarId>(m_type_var_uf.find(data(i).data_idx));
 }
@@ -271,11 +277,6 @@ TypeSystemCore::NodeHeader& TypeSystemCore::data(Type ty) {
 TypeSystemCore::TypeFunctionData& TypeSystemCore::data(TypeFunc tf) {
 	return m_type_functions[int(tf)];
 }
-
-bool TypeSystemCore::equals_var(Type t, VarId v) {
-	return ll_is_var(t) && get_var_id(t) == v;
-}
-
 
 void TypeSystemCore::add_record_constraint(VarId v) {
 	int i = static_cast<int>(v);
