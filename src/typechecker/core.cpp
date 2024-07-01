@@ -151,7 +151,7 @@ void TypeSystemCore::unify_type_function(TypeFunc i, TypeFunc j) {
 bool TypeSystemCore::occurs(VarId v, Type i) {
 
 	if (ll_is_var(i))
-		return equals_var(i, v);
+		return get_var_id(i) == v;
 
 	int ti = data(i).data_idx;
 	for (Type c : ll_term_data[ti].argument_idx)
@@ -277,11 +277,6 @@ TypeSystemCore::NodeHeader& TypeSystemCore::data(Type ty) {
 TypeSystemCore::TypeFunctionData& TypeSystemCore::data(TypeFunc tf) {
 	return m_type_functions[int(tf)];
 }
-
-bool TypeSystemCore::equals_var(Type t, VarId v) {
-	return ll_is_var(t) && get_var_id(t) == v;
-}
-
 
 void TypeSystemCore::add_record_constraint(VarId v) {
 	int i = static_cast<int>(v);

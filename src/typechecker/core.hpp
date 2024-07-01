@@ -149,7 +149,6 @@ private:
 
 	VarId get_representative_var_id(Type i);
 	bool occurs(VarId v, Type i);
-	bool equals_var(Type t, VarId v);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(Type t, Constraint const& c);
 
