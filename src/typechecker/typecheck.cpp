@@ -139,9 +139,8 @@ Type infer(AST::CallExpression* ast) {
 
 Type infer(AST::AssignmentExpression* ast) {
 	Type target_type = infer(ast->m_target);
-	Type value_type = infer(ast->m_value);
-	unify(target_type, value_type);
-	return ast->m_value_type = value_type;
+	check(ast->m_value, target_type);
+	return ast->m_value_type = target_type;
 }
 
 // Implements [Abs] rule, extended for functions with multiple arguments
@@ -167,21 +166,17 @@ Type infer(AST::FunctionLiteral* ast) {
 }
 
 Type infer(AST::IndexExpression* ast) {
-	auto target_type = infer(ast->m_callee);
-	auto index_type = infer(ast->m_index);
+	auto element_type = new_var();
+	auto array_type = core().array(element_type);
+	check(ast->m_callee, array_type);
 
-	auto var = new_var();
-	auto arr = core().array(var);
-	unify(arr, target_type);
+	check(ast->m_index, integer());
 
-	unify(integer(), index_type);
-
-	return ast->m_value_type = var;
+	return ast->m_value_type = element_type;
 }
 
 Type infer(AST::TernaryExpression* ast) {
-	Type condition_type = infer(ast->m_condition);
-	unify(condition_type, boolean());
+	check(ast->m_condition, boolean());
 
 	auto then_type = infer(ast->m_then_expr);
 	auto else_type = infer(ast->m_else_expr);
@@ -192,24 +187,24 @@ Type infer(AST::TernaryExpression* ast) {
 }
 
 Type infer(AST::AccessExpression* ast) {
-	auto target_type = infer(ast->m_target);
-
-	Type member_type = new_var();
-
 	// constraint the target object
-	Type term_type = core().ll_new_var();
+	Type member_type = new_var();
+	Type term_type = new_var();
 	auto v = core().get_var_id(term_type);
 	core().add_record_constraint(v);
 	core().add_field_constraint(v, ast->m_member, member_type);
-	unify(target_type, term_type);
+	check(ast->m_target, term_type);
 
 	return ast->m_value_type = member_type;
 }
 
 Type infer(AST::MatchExpression* ast) {
-	Type target_type = infer(&ast->m_target);
+	Type target_type;
 	if (ast->m_type_hint) {
-		unify(target_type, get_monotype_id(ast->m_type_hint));
+		target_type = get_monotype_id(ast->m_type_hint);
+		check(&ast->m_target, target_type);
+	} else {
+		target_type = infer(&ast->m_target);
 	}
 
 	Type expr_ty = new_var();
@@ -249,20 +244,15 @@ Type infer(AST::ConstructorExpression* ast) {
 		auto const& fields = core().fields(tf);
 		assert(fields.size() == ast->m_args.size());
 		for (int i = 0; i < fields.size(); ++i) {
-			Type arg_type = infer(ast->m_args[i]);
 			Type field_type = core().type_of_field(tf, fields[i]);
-			unify(field_type, arg_type);
+			check(ast->m_args[i], field_type);
 		}
 	// match the argument type with the constructor used
 	} else if (core().is_variant(tf)) {
 		assert(ast->m_args.size() == 1);
-
-		auto value_type = infer(ast->m_args[0]);
 		InternedString id = constructor.m_id;
-
 		Type constructor_type = core().type_of_field(tf, id);
-
-		unify(constructor_type, value_type);
+		check(ast->m_args[0], constructor_type);
 	}
 
 	return ast->m_value_type = constructor.m_type;
@@ -311,8 +301,7 @@ void process_contents(AST::Declaration* ast) {
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
-	Type value_type = infer(ast->m_value);
-	unify(ast->m_value_type, value_type);
+	check(ast->m_value, ast->m_value_type);
 }
 
 Type infer(AST::SequenceExpression* ast) {
@@ -329,26 +318,20 @@ void typecheck_stmt(AST::Block* ast) {
 }
 
 void typecheck_stmt(AST::IfElseStatement* ast) {
-	Type condition_type = infer(ast->m_condition);
-	unify(condition_type, boolean());
-
+	check(ast->m_condition, boolean());
 	typecheck_stmt(ast->m_body);
-
 	if (ast->m_else_body)
 		typecheck_stmt(ast->m_else_body);
 }
 
 void typecheck_stmt(AST::WhileStatement* ast) {
-	Type condition_type = infer(ast->m_condition);
-	unify(condition_type, boolean());
-
+	check(ast->m_condition, boolean());
 	typecheck_stmt(ast->m_body);
 }
 
 void typecheck_stmt(AST::ReturnStatement* ast) {
-	Type value_type = infer(ast->m_value);
 	auto seq_expr = ast->m_surrounding_seq_expr;
-	unify(seq_expr->m_value_type, value_type);
+	check(ast->m_value, seq_expr->m_value_type);
 }
 
 void typecheck_stmt(AST::ExpressionStatement* ast) {
@@ -385,6 +368,11 @@ void typecheck_stmt(AST::Declaration* ast) {
 					 << AST::stmt_string[(int)ast->tag()];
 
 #undef DISPATCH
+	}
+
+	void check(AST::Expr* ast, Type expected_type) {
+		auto inferred_type = infer(ast);
+		unify(expected_type, inferred_type);
 	}
 
 	Type infer(AST::Expr* ast) {
