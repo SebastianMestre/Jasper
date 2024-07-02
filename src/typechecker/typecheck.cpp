@@ -81,77 +81,71 @@ struct TypecheckHelper {
 
 
 // Literals
-void infer(AST::NumberLiteral* ast) {
-	ast->m_value_type = number();
+Type infer(AST::NumberLiteral* ast) {
+	return ast->m_value_type = number();
 }
 
-void infer(AST::IntegerLiteral* ast) {
-	ast->m_value_type = integer();
+Type infer(AST::IntegerLiteral* ast) {
+	return ast->m_value_type = integer();
 }
 
-void infer(AST::StringLiteral* ast) {
-	ast->m_value_type = string();
+Type infer(AST::StringLiteral* ast) {
+	return ast->m_value_type = string();
 }
 
-void infer(AST::BooleanLiteral* ast) {
-	ast->m_value_type = boolean();
+Type infer(AST::BooleanLiteral* ast) {
+	return ast->m_value_type = boolean();
 }
 
-void infer(AST::NullLiteral* ast) {
-	ast->m_value_type = unit();
+Type infer(AST::NullLiteral* ast) {
+	return ast->m_value_type = unit();
 }
 
-void infer(AST::ArrayLiteral* ast) {
+Type infer(AST::ArrayLiteral* ast) {
 	auto element_type = new_var();
 	for (auto& element : ast->m_elements) {
-		infer(element);
-		unify(element_type, element->m_value_type);
+		unify(element_type, infer(element));
 	}
 
-	ast->m_value_type = core().array(element_type);
+	return ast->m_value_type = core().array(element_type);
 }
 
 // Implements [Var] rule
-void infer(AST::Identifier* ast) {
+Type infer(AST::Identifier* ast) {
 	AST::Declaration* declaration = ast->m_declaration;
 	assert(declaration);
-
 	assert(declaration->m_meta_type == MetaType::Term);
-
-	ast->m_value_type = declaration->m_is_polymorphic
+	return ast->m_value_type = declaration->m_is_polymorphic
 		? inst_fresh(declaration->m_decl_type)
 		: declaration->m_value_type;
 }
 
 // Implements [App] rule, extended for functions with multiple arguments
-void infer(AST::CallExpression* ast) {
-	infer(ast->m_callee);
+Type infer(AST::CallExpression* ast) {
+
+	Type callee_type = infer(ast->m_callee);
 
 	std::vector<Type> arg_types;
 	for (auto& arg : ast->m_args) {
-		infer(arg);
-		arg_types.push_back(arg->m_value_type);
+		arg_types.push_back(infer(arg));
 	}
-
 	Type result_type = new_var();
 	Type expected_callee_type = core().fun(std::move(arg_types), result_type);
-	Type callee_type = ast->m_callee->m_value_type;
+
 	unify(callee_type, expected_callee_type);
 
-	ast->m_value_type = result_type;
+	return ast->m_value_type = result_type;
 }
 
-void infer(AST::AssignmentExpression* ast) {
-	infer(ast->m_target);
-	infer(ast->m_value);
-
-	unify(ast->m_target->m_value_type, ast->m_value->m_value_type);
-
-	ast->m_value_type = ast->m_value->m_value_type;
+Type infer(AST::AssignmentExpression* ast) {
+	Type target_type = infer(ast->m_target);
+	Type value_type = infer(ast->m_value);
+	unify(target_type, value_type);
+	return ast->m_value_type = value_type;
 }
 
 // Implements [Abs] rule, extended for functions with multiple arguments
-void infer(AST::FunctionLiteral* ast) {
+Type infer(AST::FunctionLiteral* ast) {
 	new_nested_scope();
 
 	// TODO: consume return-type type-hints
@@ -165,40 +159,40 @@ void infer(AST::FunctionLiteral* ast) {
 		declare(&arg);
 	}
 
-	infer(ast->m_body);
-
-	ast->m_value_type = core().fun(std::move(arg_types), ast->m_body->m_value_type);
+	Type body_type = infer(ast->m_body);
 
 	end_scope();
+
+	return ast->m_value_type = core().fun(std::move(arg_types), body_type);
 }
 
-void infer(AST::IndexExpression* ast) {
-	infer(ast->m_callee);
-	infer(ast->m_index);
+Type infer(AST::IndexExpression* ast) {
+	auto target_type = infer(ast->m_callee);
+	auto index_type = infer(ast->m_index);
 
 	auto var = new_var();
 	auto arr = core().array(var);
-	unify(arr, ast->m_callee->m_value_type);
+	unify(arr, target_type);
 
-	unify(integer(), ast->m_index->m_value_type);
+	unify(integer(), index_type);
 
-	ast->m_value_type = var;
+	return ast->m_value_type = var;
 }
 
-void infer(AST::TernaryExpression* ast) {
-	infer(ast->m_condition);
-	unify(ast->m_condition->m_value_type, boolean());
+Type infer(AST::TernaryExpression* ast) {
+	Type condition_type = infer(ast->m_condition);
+	unify(condition_type, boolean());
 
-	infer(ast->m_then_expr);
-	infer(ast->m_else_expr);
+	auto then_type = infer(ast->m_then_expr);
+	auto else_type = infer(ast->m_else_expr);
 
-	unify(ast->m_then_expr->m_value_type, ast->m_else_expr->m_value_type);
+	unify(then_type, else_type);
 
-	ast->m_value_type = ast->m_then_expr->m_value_type;
+	return ast->m_value_type = then_type;
 }
 
-void infer(AST::AccessExpression* ast) {
-	infer(ast->m_target);
+Type infer(AST::AccessExpression* ast) {
+	auto target_type = infer(ast->m_target);
 
 	Type member_type = new_var();
 
@@ -207,15 +201,15 @@ void infer(AST::AccessExpression* ast) {
 	auto v = core().get_var_id(term_type);
 	core().add_record_constraint(v);
 	core().add_field_constraint(v, ast->m_member, member_type);
-	unify(ast->m_target->m_value_type, term_type);
+	unify(target_type, term_type);
 
-	ast->m_value_type = member_type;
+	return ast->m_value_type = member_type;
 }
 
-void infer(AST::MatchExpression* ast) {
-	infer(&ast->m_target);
+Type infer(AST::MatchExpression* ast) {
+	Type target_type = infer(&ast->m_target);
 	if (ast->m_type_hint) {
-		unify(ast->m_target.m_value_type, get_monotype_id(ast->m_type_hint));
+		unify(target_type, get_monotype_id(ast->m_type_hint));
 	}
 
 	Type expr_ty = new_var();
@@ -227,8 +221,8 @@ void infer(AST::MatchExpression* ast) {
 		case_data.m_declaration.m_value_type = new_var();
 		process_type_hint(&case_data.m_declaration);
 
-		infer(case_data.m_expression);
-		unify(expr_ty, case_data.m_expression->m_value_type);
+		Type case_result_type = infer(case_data.m_expression);
+		unify(expr_ty, case_result_type);
 	}
 
 	// constraint the matched-on object
@@ -239,12 +233,12 @@ void infer(AST::MatchExpression* ast) {
 		auto& case_data = kv.second;
 		core().add_field_constraint(v, kv.first, case_data.m_declaration.m_value_type);
 	}
-	unify(ast->m_target.m_value_type, expected_target_ty);
+	unify(target_type, expected_target_ty);
 
-	ast->m_value_type = expr_ty;
+	return ast->m_value_type = expr_ty;
 }
 
-void infer(AST::ConstructorExpression* ast) {
+Type infer(AST::ConstructorExpression* ast) {
 
 	auto& constructor = ast->m_evaluated_constructor;
 
@@ -255,23 +249,23 @@ void infer(AST::ConstructorExpression* ast) {
 		auto const& fields = core().fields(tf);
 		assert(fields.size() == ast->m_args.size());
 		for (int i = 0; i < fields.size(); ++i) {
-			infer(ast->m_args[i]);
+			Type arg_type = infer(ast->m_args[i]);
 			Type field_type = core().type_of_field(tf, fields[i]);
-			unify(field_type, ast->m_args[i]->m_value_type);
+			unify(field_type, arg_type);
 		}
 	// match the argument type with the constructor used
 	} else if (core().is_variant(tf)) {
 		assert(ast->m_args.size() == 1);
 
-		infer(ast->m_args[0]);
+		auto value_type = infer(ast->m_args[0]);
 		InternedString id = constructor.m_id;
 
 		Type constructor_type = core().type_of_field(tf, id);
 
-		unify(constructor_type, ast->m_args[0]->m_value_type);
+		unify(constructor_type, value_type);
 	}
 
-	ast->m_value_type = constructor.m_type;
+	return ast->m_value_type = constructor.m_type;
 }
 
 void generalize(AST::Declaration* ast) {
@@ -317,13 +311,14 @@ void process_contents(AST::Declaration* ast) {
 
 	// it would be nicer to check this at an earlier stage
 	assert(ast->m_value);
-	infer(ast->m_value);
-	unify(ast->m_value_type, ast->m_value->m_value_type);
+	Type value_type = infer(ast->m_value);
+	unify(ast->m_value_type, value_type);
 }
 
-void infer(AST::SequenceExpression* ast) {
+Type infer(AST::SequenceExpression* ast) {
 	ast->m_value_type = new_var();
 	typecheck_stmt(ast->m_body);
+	return ast->m_value_type;
 }
 
 void typecheck_stmt(AST::Block* ast) {
@@ -334,8 +329,8 @@ void typecheck_stmt(AST::Block* ast) {
 }
 
 void typecheck_stmt(AST::IfElseStatement* ast) {
-	infer(ast->m_condition);
-	unify(ast->m_condition->m_value_type, boolean());
+	Type condition_type = infer(ast->m_condition);
+	unify(condition_type, boolean());
 
 	typecheck_stmt(ast->m_body);
 
@@ -344,18 +339,16 @@ void typecheck_stmt(AST::IfElseStatement* ast) {
 }
 
 void typecheck_stmt(AST::WhileStatement* ast) {
-	infer(ast->m_condition);
-	unify(ast->m_condition->m_value_type, boolean());
+	Type condition_type = infer(ast->m_condition);
+	unify(condition_type, boolean());
 
 	typecheck_stmt(ast->m_body);
 }
 
 void typecheck_stmt(AST::ReturnStatement* ast) {
-	infer(ast->m_value);
-
-	auto mono = ast->m_value->m_value_type;
+	Type value_type = infer(ast->m_value);
 	auto seq_expr = ast->m_surrounding_seq_expr;
-	unify(seq_expr->m_value_type, mono);
+	unify(seq_expr->m_value_type, value_type);
 }
 
 void typecheck_stmt(AST::ExpressionStatement* ast) {
@@ -394,14 +387,14 @@ void typecheck_stmt(AST::Declaration* ast) {
 #undef DISPATCH
 	}
 
-	void infer(AST::Expr* ast) {
+	Type infer(AST::Expr* ast) {
 #define DISPATCH(type)                                                         \
 	case ExprTag::type:                                                        \
 		return infer(static_cast<AST::type*>(ast));
 
 #define IGNORE(type)                                                           \
 	case ExprTag::type:                                                        \
-		return;
+		assert(0); break;
 
 		switch (ast->type()) {
 			DISPATCH(NumberLiteral);
