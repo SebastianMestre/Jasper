@@ -344,13 +344,10 @@ void typecheck_stmt(AST::IfElseStatement* ast) {
 }
 
 void typecheck_stmt(AST::WhileStatement* ast) {
-	// TODO: Why do while statements create a new scope?
-	new_nested_scope();
 	infer(ast->m_condition);
 	unify(ast->m_condition->m_value_type, boolean());
 
 	typecheck_stmt(ast->m_body);
-	end_scope();
 }
 
 void typecheck_stmt(AST::ReturnStatement* ast) {
