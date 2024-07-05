@@ -343,7 +343,6 @@ void typecheck_stmt(AST::Declaration* ast) {
 	// put a typevar in the decl to allow recursive definitions
 	ast->m_value_type = new_var();
 	process_contents(ast);
-	generalize(ast);
 	declare(ast);
 }
 
@@ -467,8 +466,6 @@ private:
 
 	Frontend::SymbolTable symbol_table;
 	TypeChecker& tc;
-
-
 };
 
 void typecheck_program(AST::Program* ast, TypeChecker& tc) {
