@@ -26,6 +26,8 @@ struct TypeSystemCore {
 
 	// types
 
+	Type apply_substitution(Type);
+
 	std::unordered_set<VarId> free_vars(Type);
 	void ll_unify(Type i, Type j);
 	TypeFunc type_function_of(Type);
@@ -130,10 +132,7 @@ private:
 	void gather_free_vars(Type, std::unordered_set<VarId>&);
 
 	Type inst_impl(Type mono, std::unordered_map<VarId, Type> const& mapping);
-	Type inst_with(PolyId poly, std::vector<Type> const& vals);
 	void unify_type_function(TypeFunc, TypeFunc);
-
-	Type ll_find(Type i);
 
 	bool ll_is_var(Type i);
 	bool ll_is_term(Type i);
@@ -148,11 +147,12 @@ private:
 
 	void establish_substitution(VarId var_id, Type type_id);
 
+	VarId get_representative_var_id(Type i);
 	bool occurs(VarId v, Type i);
-	bool equals_var(Type t, VarId v);
-	void unify_vars_left_to_right(VarId vi, VarId vj);
 	void combine_constraints_left_to_right(VarId vi, VarId vj);
 	bool satisfies(Type t, Constraint const& c);
+
+
 	// per-func data
 	std::vector<TypeFunctionData> m_type_functions;
 
