@@ -363,8 +363,8 @@ void typecheck_stmt(AST::Declaration* ast) {
 
 		}
 
-		Log::fatal() << "(internal) CST type not handled in typecheck_stmt: "
-					 << AST::stmt_string[(int)ast->tag()];
+		Log::internal_error() << "Unhandled statement type in typecheck_stmt: "
+		                      << AST::stmt_string[int(ast->tag())];
 
 #undef DISPATCH
 	}
@@ -405,8 +405,8 @@ void typecheck_stmt(AST::Declaration* ast) {
 			IGNORE(BuiltinTypeFunction);
 		}
 
-		Log::fatal() << "(internal) CST type not handled in infer: "
-					 << AST::expr_string[(int)ast->type()];
+		Log::internal_error() << "Unhandled expression type in infer: "
+		                      << AST::expr_string[int(ast->type())];
 
 #undef DISPATCH
 #undef IGNORE

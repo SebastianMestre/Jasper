@@ -408,8 +408,8 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc) {
 		REJECT(BuiltinTypeFunction);
 	}
 
-	Log::fatal() << "(internal) Unhandled case in ct_eval : "
-	             << AST::expr_string[int(ast->type())];
+	Log::internal_error() << "Unhandled expression type in ct_eval: "
+	                      << AST::expr_string[int(ast->type())];
 
 #undef DISPATCH
 #undef RETURN
