@@ -101,7 +101,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	// NOTE: keep callee on the stack
 	auto callee = e.m_stack.access(0);
 	if (!is_callable_type(callee.type())) {
-		Log::fatal() << "Attempted to call a non-callable value";
+		Log::internal_error() << "Typechecker failed to reject call to a non-callable value";
 	}
 
 	auto& arglist = ast->m_args;
