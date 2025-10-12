@@ -1,4 +1,5 @@
 #include "../utils/span.hpp"
+#include "../log/log.hpp"
 #include "garbage_collector.hpp"
 #include "interpreter.hpp"
 #include "utils.hpp"
@@ -29,8 +30,9 @@ Value print(ArgsType v, Interpreter& e) {
 
 // array_append(arr, vals...) appends the values in vals to the array
 Value array_append(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() > 0);
+	if (v.size() == 0) {
+		Log::fatal() << "array_append requires at least one argument";
+	}
 	Array* array = v[0].as<Array>();
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(v[i]);
@@ -41,8 +43,9 @@ Value array_append(ArgsType v, Interpreter& e) {
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
 Value array_extend(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() == 2);
+	if (v.size() != 2) {
+		Log::internal_error() << "Typechecker failed to catch wrong argument count for array_extend()";
+	}
 	Array* arr1 = v[0].as<Array>();
 	Array* arr2 = v[1].as<Array>();
 	arr1->m_value.insert(
@@ -52,8 +55,9 @@ Value array_extend(ArgsType v, Interpreter& e) {
 
 // size(array) returns the size of the array
 Value size(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() == 1);
+	if (v.size() != 1) {
+		Log::internal_error() << "Typechecker failed to catch wrong argument count for size()";
+	}
 	Array* array = v[0].as<Array>();
 
 	return Value {int(array->m_value.size())};
@@ -62,9 +66,9 @@ Value size(ArgsType v, Interpreter& e) {
 // array_join(array, string) returns a string with
 // the array values separated by the string element
 Value array_join(ArgsType v, Interpreter& e) {
-	// TODO make it more general
-	// TODO proper error handling
-	assert(v.size() == 2);
+	if (v.size() != 2) {
+		Log::internal_error() << "Typechecker failed to catch wrong argument count for array_join()";
+	}
 	Array* array = v[0].as<Array>();
 	String* sep = v[1].as<String>();
 	std::stringstream result;
@@ -79,7 +83,9 @@ Value value_add(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in addition";
+	}
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return OP_(as_integer, lhs, +, rhs);
@@ -88,9 +94,8 @@ Value value_add(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
 	default:
-		std::cerr << "ERROR: can't add values of type "
+		Log::internal_error() << "Typechecker failed to catch invalid addition of type "
 		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
 	}
 }
 
@@ -98,16 +103,17 @@ Value value_sub(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in subtraction";
+	}
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, -, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, -, rhs)};
 	default:
-		std::cerr << "ERROR: can't add values of type "
+		Log::internal_error() << "Typechecker failed to catch invalid subtraction of type "
 		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
 	}
 }
 
@@ -115,16 +121,17 @@ Value value_mul(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in multiplication";
+	}
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, *, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, *, rhs)};
 	default:
-		std::cerr << "ERROR: can't multiply values of type "
+		Log::internal_error() << "Typechecker failed to catch invalid multiplication of type "
 		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
 	}
 }
 
@@ -132,16 +139,17 @@ Value value_div(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in division";
+	}
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, /, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, /, rhs)};
 	default:
-		std::cerr << "ERROR: can't divide values of type "
+		Log::internal_error() << "Typechecker failed to catch invalid division of type "
 		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
 	}
 }
 
@@ -151,10 +159,9 @@ Value value_logicand(ArgsType v, Interpreter& e) {
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, &&, rhs);
-	std::cerr << "ERROR: logical and operator not defined for types "
+	Log::internal_error() << "Typechecker failed to catch invalid logical and operation between types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
 }
 
 Value value_logicor(ArgsType v, Interpreter& e) {
@@ -163,10 +170,9 @@ Value value_logicor(ArgsType v, Interpreter& e) {
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, ||, rhs);
-	std::cerr << "ERROR: logical or operator not defined for types "
+	Log::internal_error() << "Typechecker failed to catch invalid logical or operation between types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
 }
 
 Value value_logicxor(ArgsType v, Interpreter& e) {
@@ -175,17 +181,18 @@ Value value_logicxor(ArgsType v, Interpreter& e) {
 
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, !=, rhs);
-	std::cerr << "ERROR: exclusive or operator not defined for types "
+	Log::internal_error() << "Typechecker failed to catch invalid exclusive or operation between types "
 	          << value_string[static_cast<int>(lhs.type())] << " and "
 	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
 }
 
 Value value_equals(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in equality comparison";
+	}
 
 	switch (lhs.type()) {
 	case ValueTag::Null:
@@ -199,10 +206,9 @@ Value value_equals(ArgsType v, Interpreter& e) {
 	case ValueTag::Boolean:
 		return OP_(as_boolean, lhs, ==, rhs);
 	default: {
-		std::cerr << "ERROR: can't compare equality of types "
+		Log::internal_error() << "Typechecker failed to catch invalid equality comparison between types "
 		          << value_string[static_cast<int>(lhs.type())] << " and "
 		          << value_string[static_cast<int>(rhs.type())];
-		assert(0);
 	}
 	}
 }
@@ -216,7 +222,9 @@ Value value_less(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 
-	assert(lhs.type() == rhs.type());
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in comparison";
+	}
 
 	switch (lhs.type()) {
 	case ValueTag::Integer:
@@ -226,9 +234,8 @@ Value value_less(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {OP(String, lhs, <, rhs)};
 	default:
-		std::cerr << "ERROR: can't compare values of type "
+		Log::internal_error() << "Typechecker failed to catch invalid comparison of type "
 		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
 	}
 }
 

@@ -457,8 +457,8 @@ Expr* convert_expr(CST::Expr* cst, Allocator& alloc) {
 		DISPATCH(TypeTerm);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in convert_expr: "
-	             << cst_string[(int)cst->type()];
+	Log::internal_error() << "CST type not handled in convert_expr: "
+	                      << cst_string[(int)cst->type()];
 
 #undef DISPATCH
 }
@@ -482,8 +482,8 @@ static Stmt* convert_stmt(CST::Stmt* cst, Allocator& alloc) {
 		DISPATCH(BlockFuncDeclaration);
 	}
 
-	Log::fatal() << "(internal) CST type not handled in convert_stmt: "
-	             << cst_string[(int)cst->type()];
+	Log::internal_error() << "CST type not handled in convert_stmt: "
+	                      << cst_string[(int)cst->type()];
 
 #undef DISPATCH
 }

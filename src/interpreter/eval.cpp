@@ -100,7 +100,9 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 	// NOTE: keep callee on the stack
 	auto callee = e.m_stack.access(0);
-	assert(is_callable_type(callee.type()));
+	if (!is_callable_type(callee.type())) {
+		Log::fatal() << "Attempted to call a non-callable value";
+	}
 
 	auto& arglist = ast->m_args;
 	int arg_count = arglist.size();
@@ -158,7 +160,7 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
 		e.m_stack.push(e.null());
 	} else {
-		assert(0);
+		Log::internal_error() << "Parser/typechecker failed to catch invalid assignment target - only variables and array elements are valid";
 	}
 }
 
@@ -191,7 +193,9 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 	CapturesType captures;
 	captures.assign(ast->m_captures.size(), nullptr);
 	for (auto const& capture : ast->m_captures) {
-		assert(capture.second.outer_frame_offset != INT_MIN);
+		if (capture.second.outer_frame_offset == INT_MIN) {
+			Log::internal_error() << "Capture frame offset not computed - compute_offsets should have set this";
+		}
 		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
 		captures[offset] = value.as<Variable>();
@@ -222,7 +226,9 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	e.m_stack.access(1) = e.m_stack.pop();
 	
 	auto case_it = ast->m_cases.find(constructor);
-	assert(case_it != ast->m_cases.end());
+	if (case_it == ast->m_cases.end()) {
+		Log::internal_error() << "Match expression missing case for constructor";
+	}
 
 	// put the result on the top of the stack
 	eval(case_it->second.m_expression, e);
@@ -243,7 +249,9 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 		auto record_constructor = constructor.as<RecordConstructor>();
 		int const arg_count = ast->m_args.size();
 
-		assert(arg_count == record_constructor->m_keys.size());
+		if (arg_count != record_constructor->m_keys.size()) {
+			Log::internal_error() << "Record constructor argument count mismatch";
+		}
 
 		e.push_record({});
 		auto result = e.m_stack.access(0).as<Record>();
@@ -259,7 +267,9 @@ void eval(AST::ConstructorExpression* ast, Interpreter& e) {
 	} else if (constructor.type() == ValueTag::VariantConstructor) {
 		auto variant_constructor = constructor.as<VariantConstructor>();
 
-		assert(ast->m_args.size() == 1);
+		if (ast->m_args.size() != 1) {
+			Log::internal_error() << "Variant constructor must have exactly one argument";
+		}
 
 		eval(ast->m_args[0], e);
 		e.push_variant(variant_constructor->m_constructor, e.m_stack.pop());
@@ -369,7 +379,7 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 		DISPATCH(ExpressionStatement);
 	}
 
-	assert(false);
+	Log::internal_error() << "Unhandled statement type in exec: " << AST::stmt_string[int(ast->tag())];
 #undef DISPATCH
 }
 
@@ -408,8 +418,8 @@ void eval(AST::Expr* ast, Interpreter& e) {
 		DISPATCH(BuiltinTypeFunction);
 	}
 
-	Log::fatal() << "(internal) unhandled case in eval: "
-	             << AST::expr_string[(int)ast->type()];
+	Log::internal_error() << "unhandled case in eval: "
+	                      << AST::expr_string[(int)ast->type()];
 
 #undef DISPATCH
 }

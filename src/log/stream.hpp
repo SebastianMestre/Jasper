@@ -19,4 +19,9 @@ struct FatalStream : public LogStream {
 	[[noreturn]] ~FatalStream();
 };
 
+struct InternalErrorStream : public LogStream {
+	InternalErrorStream();
+	[[noreturn]] ~InternalErrorStream();
+};
+
 } // namespace Log

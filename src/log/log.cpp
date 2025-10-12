@@ -20,6 +20,10 @@ FatalStream fatal() {
 	return FatalStream();
 }
 
+InternalErrorStream internal_error() {
+	return InternalErrorStream();
+}
+
 
 void info(std::string const& str) {
 	std::clog << "[ Info ] " << str << "\n";
@@ -35,6 +39,11 @@ void error(std::string const& str) {
 
 void fatal(std::string const& str) {
 	std::cerr << "[ Fatal Error ] " << str << "\n";
+	exit(1);
+}
+
+void internal_error(std::string const& str) {
+	std::cerr << "[ Internal Error ] " << str << "\n";
 	exit(1);
 }
 

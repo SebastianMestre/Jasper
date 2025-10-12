@@ -29,4 +29,14 @@ FatalStream::~FatalStream() {
 	exit(1);
 }
 
+InternalErrorStream::InternalErrorStream()
+    : LogStream {std::cerr} {
+	std::cerr << "[ Internal Error ] ";
+}
+
+InternalErrorStream::~InternalErrorStream() {
+	std::cerr << "\n";
+	exit(1);
+}
+
 } // namespace Log
