@@ -363,7 +363,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 
 		}
 
-		Log::missing_case("typecheck_stmt", AST::stmt_string[int(ast->tag())]);
+		Log::missing_case("typecheck_stmt", ast->tag_string());
 
 #undef DISPATCH
 	}
@@ -404,7 +404,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 			IGNORE(BuiltinTypeFunction);
 		}
 
-		Log::missing_case("infer", AST::expr_string[int(ast->type())]);
+		Log::missing_case("infer", ast->type_string());
 
 #undef DISPATCH
 #undef IGNORE

@@ -98,8 +98,7 @@ static void print(float v, int d) {
 
 static void print(String* v, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(v->type())] << ' ' << '"' << v->m_value
-	          << '"' << '\n';
+	std::cout << v->type_string() << ' ' << '"' << v->m_value << '"' << '\n';
 }
 
 static void print(bool b, int d) {
@@ -109,7 +108,7 @@ static void print(bool b, int d) {
 
 static void print(Record* o, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(o->type())] << '\n';
+	std::cout << o->type_string() << '\n';
 	for (auto& kv : o->m_value){
 		print_spaces(d+1);
 		std::cerr << kv.first << " := \n";
@@ -119,14 +118,14 @@ static void print(Record* o, int d) {
 
 static void print(Variant* m, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(m->type())] << " " << m->m_constructor << '\n';
+	std::cout << m->type_string() << " " << m->m_constructor << '\n';
 	print(m->m_inner_value, d);
 }
 
 static void print(Function* f, int d) {
 	// TODO
 	print_spaces(d);
-	std::cout << value_string[int(f->type())] << '\n';
+	std::cout << f->type_string() << '\n';
 }
 
 static void print(NativeFunction* f, int d) {
@@ -137,7 +136,7 @@ static void print(NativeFunction* f, int d) {
 
 static void print(Array* l, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(l->type())] << '\n';
+	std::cout << l->type_string() << '\n';
 	for (auto child : l->m_value) {
 		print(child, d + 1);
 	}
@@ -145,18 +144,18 @@ static void print(Array* l, int d) {
 
 static void print(Variable* l, int d) {
 	print_spaces(d);
-	std::cout << value_string[int(l->type())] << '\n';
+	std::cout << l->type_string() << '\n';
 	print(l->m_value, d + 1);
 }
 
 static void print(RecordConstructor* l, int d) {
 	print_spaces(d);
-	std::cout << "RecordConstructor\n";
+	std::cout << l->type_string() << '\n';
 }
 
 static void print(VariantConstructor* l, int d) {
 	print_spaces(d);
-	std::cout << "VariantConstructor\n";
+	std::cout << l->type_string() << '\n';
 }
 
 static void print(GcCell* v, int d) {
@@ -179,7 +178,7 @@ static void print(GcCell* v, int d) {
 	case ValueTag::RecordConstructor:
 		return print(static_cast<RecordConstructor*>(v), d);
 	default:
-		Log::missing_case("print", value_string[int(v->type())]);
+		Log::missing_case("print", v->type_string());
 	}
 }
 
@@ -199,7 +198,7 @@ void print(Value h, int d) {
 		print_spaces(d);
 		return void(std::cout << "(null)\n");
 	default:
-		Log::missing_case("print", value_string[int(h.type())]);
+		Log::missing_case("print", h.type_string());
 	}
 }
 

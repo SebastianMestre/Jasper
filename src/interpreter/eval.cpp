@@ -19,7 +19,7 @@ namespace Interpreter {
 
 using AST::StmtTag;
 using AST::ExprTag;
- 
+
 static void exec(AST::Stmt* ast, Interpreter& e);
 static void exec(AST::Declaration* ast, Interpreter& e);
 
@@ -379,7 +379,7 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 		DISPATCH(ExpressionStatement);
 	}
 
-	Log::missing_case("exec", AST::stmt_string[(int)ast->tag()]);
+	Log::missing_case("exec", ast->tag_string());
 #undef DISPATCH
 }
 
@@ -418,7 +418,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 		DISPATCH(BuiltinTypeFunction);
 	}
 
-	Log::missing_case("eval", AST::expr_string[(int)ast->type()]);
+	Log::missing_case("eval", ast->type_string());
 
 #undef DISPATCH
 }

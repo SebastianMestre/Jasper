@@ -408,7 +408,7 @@ static void ct_eval(AST::Expr* ast, TypeChecker& tc) {
 		REJECT(BuiltinTypeFunction);
 	}
 
-	Log::missing_case("ct_eval", AST::expr_string[int(ast->type())]);
+	Log::missing_case("ct_eval", ast->type_string());
 
 #undef DISPATCH
 #undef RETURN

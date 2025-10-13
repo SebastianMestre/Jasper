@@ -44,7 +44,7 @@ void assert_type_equality(Value& lhs, Value& rhs, const std::string& operation) 
 
 [[noreturn]] static void assert_valid_operation_type(Value& value, const std::string& operation) {
 	Log::internal_error() << "Typechecker failed to catch invalid " << operation << " of type "
-	                      << value_string[static_cast<int>(value.type())];
+	                      << value.type_string();
 }
 
 // print(vals...) prints the values in vals
@@ -194,10 +194,6 @@ Value value_equals(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 	assert_type_equality(lhs, rhs, "value_equals");
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in equality comparison";
-	}
-
 	switch (lhs.type()) {
 	case ValueTag::Null:
 		return Value {true};
@@ -210,9 +206,7 @@ Value value_equals(ArgsType v, Interpreter& e) {
 	case ValueTag::Boolean:
 		return OP_(as_boolean, lhs, ==, rhs);
 	default: {
-		Log::internal_error() << "Typechecker failed to catch invalid equality comparison between types "
-		          << value_string[static_cast<int>(lhs.type())] << " and "
-		          << value_string[static_cast<int>(rhs.type())];
+		assert_valid_operation_type(lhs, "equility comparison");
 	}
 	}
 }

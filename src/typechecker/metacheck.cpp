@@ -106,7 +106,7 @@ static MetaType infer_shallow(AST::Expr* ast) {
 
 	case ExprTag::BuiltinTypeFunction:
 		Log::fatal() << "unexpected AST type in infer_shallow ("
-		             << AST::expr_string[int(ast->type())] << ") during infer";
+		             << ast->type_string() << ") during infer";
 	}
 }
 
@@ -320,7 +320,7 @@ static MetaType infer(AST::Expr* ast) {
 	case ExprTag::AccessExpression: return infer(static_cast<AST::AccessExpression*>(ast));
 	case ExprTag::Identifier: return infer(static_cast<AST::Identifier*>(ast));
 	case ExprTag::BuiltinTypeFunction:
-		Log::missing_case("infer", AST::expr_string[int(ast->type())]);
+		Log::missing_case("infer", ast->type_string());
 	}
 }
 

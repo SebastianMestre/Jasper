@@ -102,6 +102,10 @@ struct Value {
 		}
 		return tag;
 	}
+	
+	const char* type_string() {
+		return value_string[(int)type()];
+	}
 
 	ValueTag tag;
 	union {

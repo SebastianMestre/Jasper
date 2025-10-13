@@ -328,7 +328,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::missing_case("resolve_stmt", AST::stmt_string[int(ast->tag())]);
+		Log::missing_case("resolve_stmt", ast->tag_string());
 	}
 
 	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
@@ -366,7 +366,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::missing_case("resolve", AST::expr_string[int(ast->type())]);
+		Log::missing_case("resolve", ast->type_string());
 	}
 
 	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {

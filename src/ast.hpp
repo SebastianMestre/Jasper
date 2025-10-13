@@ -42,6 +42,8 @@ struct Expr : public AST {
 
 	ExprTag type() const { return m_type; }
 
+	const char* type_string() const { return expr_string[(int)m_type]; }
+
 protected:
 	ExprTag m_type;
 };
@@ -51,6 +53,8 @@ struct Stmt : public AST {
 		: m_tag{tag} {}
 
 	StmtTag tag() const { return m_tag; }
+
+	const char* tag_string() const { return stmt_string[(int)m_tag]; }
 
 protected:
 	StmtTag m_tag;

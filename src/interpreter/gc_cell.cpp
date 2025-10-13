@@ -85,7 +85,7 @@ static void gc_visit(GcCell* v) {
 	case ValueTag::RecordConstructor:
 		return gc_visit(static_cast<RecordConstructor*>(v));
 	default:
-		Log::missing_case("gc_visit", value_string[int(v->type())]);
+		Log::missing_case("gc_visit", v->type_string());
 	}
 }
 
