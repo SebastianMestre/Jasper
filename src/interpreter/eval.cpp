@@ -390,7 +390,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 		return eval(static_cast<AST::type*>(ast), e)
 
 #ifdef DEBUG
-	Log::info() << "case in eval: " << ast_expr_string[(int)ast->type()];
+	Log::info() << "case in eval: " << ast->type_string();
 #endif
 
 	switch (ast->type()) {
