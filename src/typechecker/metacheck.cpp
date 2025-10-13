@@ -320,8 +320,7 @@ static MetaType infer(AST::Expr* ast) {
 	case ExprTag::AccessExpression: return infer(static_cast<AST::AccessExpression*>(ast));
 	case ExprTag::Identifier: return infer(static_cast<AST::Identifier*>(ast));
 	case ExprTag::BuiltinTypeFunction:
-		Log::fatal() << "unexpected AST type in infer ("
-		             << AST::expr_string[int(ast->type())] << ") during infer";
+		Log::missing_case("infer", AST::expr_string[int(ast->type())]);
 	}
 }
 

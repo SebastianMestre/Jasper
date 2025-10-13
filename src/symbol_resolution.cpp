@@ -328,7 +328,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::internal_error() << "Unhandled case in resolve_stmt '" << AST::stmt_string[int(ast->tag())] << "'";
+		Log::missing_case("resolve_stmt", AST::stmt_string[int(ast->tag())]);
 	}
 
 	[[nodiscard]] ErrorReport resolve(AST::Expr* ast) {
@@ -366,7 +366,7 @@ private:
 
 #undef DO_NOTHING
 #undef DISPATCH
-		Log::internal_error() << "Unhandled case in resolve '" << AST::expr_string[int(ast->type())] << "'";
+		Log::missing_case("resolve", AST::expr_string[int(ast->type())]);
 	}
 
 	[[nodiscard]] ErrorReport resolve_program(AST::Program* ast) {

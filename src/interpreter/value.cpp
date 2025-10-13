@@ -179,7 +179,7 @@ static void print(GcCell* v, int d) {
 	case ValueTag::RecordConstructor:
 		return print(static_cast<RecordConstructor*>(v), d);
 	default:
-		Log::internal_error() << "Unhandled heap value type in print: " << value_string[int(v->type())];
+		Log::missing_case("print", value_string[int(v->type())]);
 	}
 }
 
@@ -199,7 +199,7 @@ void print(Value h, int d) {
 		print_spaces(d);
 		return void(std::cout << "(null)\n");
 	default:
-		Log::internal_error() << "Unhandled value type in print: " << value_string[int(h.type())];
+		Log::missing_case("print", value_string[int(h.type())]);
 	}
 }
 

@@ -379,7 +379,7 @@ static void exec(AST::Stmt* ast, Interpreter& e) {
 		DISPATCH(ExpressionStatement);
 	}
 
-	Log::internal_error() << "Unhandled statement type in exec: " << AST::stmt_string[int(ast->tag())];
+	Log::missing_case("exec", AST::stmt_string[(int)ast->tag()]);
 #undef DISPATCH
 }
 
@@ -418,8 +418,7 @@ void eval(AST::Expr* ast, Interpreter& e) {
 		DISPATCH(BuiltinTypeFunction);
 	}
 
-	Log::internal_error() << "unhandled case in eval: "
-	                      << AST::expr_string[(int)ast->type()];
+	Log::missing_case("eval", AST::expr_string[(int)ast->type()]);
 
 #undef DISPATCH
 }

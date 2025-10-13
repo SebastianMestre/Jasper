@@ -120,8 +120,7 @@ static void process_stmt(AST::Stmt* ast, int frame_offset) {
 	}
 
 #undef DISPATCH
-	Log::internal_error() << "Unhandled case in compute_offsets/process_stmt ("
-	                      << AST::stmt_string[(int)ast->tag()] << ")";
+	Log::missing_case("compute_offsets/process_stmt", AST::stmt_string[(int)ast->tag()]);
 }
 
 
@@ -220,8 +219,7 @@ void compute_offsets(AST::Expr* ast, int frame_offset) {
 
 #undef DO_NOTHING
 #undef DISPATCH
-	Log::internal_error() << "Unhandled case in compute_offsets ("
-	                      << AST::expr_string[(int)ast->type()] << ")";
+	Log::missing_case("compute_offsets", AST::expr_string[(int)ast->type()]);
 }
 
 void compute_offsets_program(AST::Program* ast, int frame_offset) {

@@ -47,4 +47,8 @@ void internal_error(std::string const& str) {
 	exit(1);
 }
 
+void missing_case(std::string const& function_name, std::string const& ast_type) {
+	internal_error() << "Unhandled case in " << function_name << " (" << ast_type << ")";
+}
+
 } // namespace Log

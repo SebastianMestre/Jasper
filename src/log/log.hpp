@@ -18,4 +18,7 @@ void error(std::string const&);
 [[noreturn]] void fatal(std::string const&);
 [[noreturn]] void internal_error(std::string const&);
 
+// Missing case handlers for switch statements
+[[noreturn]] void missing_case(std::string const& function_name, std::string const& ast_type);
+
 } // namespace Log

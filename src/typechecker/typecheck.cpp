@@ -363,8 +363,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 
 		}
 
-		Log::internal_error() << "Unhandled statement type in typecheck_stmt: "
-		                      << AST::stmt_string[int(ast->tag())];
+		Log::missing_case("typecheck_stmt", AST::stmt_string[int(ast->tag())]);
 
 #undef DISPATCH
 	}
@@ -405,8 +404,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 			IGNORE(BuiltinTypeFunction);
 		}
 
-		Log::internal_error() << "Unhandled expression type in infer: "
-		                      << AST::expr_string[int(ast->type())];
+		Log::missing_case("infer", AST::expr_string[int(ast->type())]);
 
 #undef DISPATCH
 #undef IGNORE
