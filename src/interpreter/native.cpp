@@ -205,9 +205,8 @@ Value value_equals(ArgsType v, Interpreter& e) {
 		return Value {OP(String, lhs, ==, rhs)};
 	case ValueTag::Boolean:
 		return OP_(as_boolean, lhs, ==, rhs);
-	default: {
+	default:
 		assert_valid_operation_type(lhs, "equility comparison");
-	}
 	}
 }
 
@@ -221,7 +220,6 @@ Value value_less(ArgsType v, Interpreter& e) {
 	auto lhs = v[0];
 	auto rhs = v[1];
 	assert_type_equality(lhs, rhs, "value_less");
-
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return OP_(as_integer, lhs, <, rhs);

@@ -224,7 +224,7 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 	// We also wrap it in a variable so it can be captured.
 	e.push_variable(variant_value);
 	e.m_stack.access(1) = e.m_stack.pop();
-	
+
 	auto case_it = ast->m_cases.find(constructor);
 	if (case_it == ast->m_cases.end()) {
 		Log::internal_error() << "Match expression missing case for constructor";

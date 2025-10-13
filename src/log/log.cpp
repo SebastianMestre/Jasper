@@ -26,26 +26,25 @@ InternalErrorStream internal_error() {
 
 
 void info(std::string const& str) {
-	std::clog << "[ Info ] " << str << "\n";
+	info() << str << "\n";
 }
 
 void warning(std::string const& str) {
-	std::clog << "[ Warning ] " << str << "\n";
+	warning() << str << "\n";
 }
 
 void error(std::string const& str) {
-	std::cerr << "[ Error ] " << str << "\n";
+	error() << str << "\n";
 }
 
 void fatal(std::string const& str) {
-	std::cerr << "[ Fatal Error ] " << str << "\n";
-	exit(1);
+	fatal() << str << "\n";
 }
 
 void internal_error(std::string const& str) {
-	std::cerr << "[ Internal Error ] " << str << "\n";
-	exit(1);
+	internal_error() << str << "\n";
 }
+
 
 void missing_case(std::string const& function_name, std::string const& ast_type) {
 	internal_error() << "Unhandled case in " << function_name << " (" << ast_type << ")";
