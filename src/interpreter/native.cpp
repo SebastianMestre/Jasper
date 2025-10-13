@@ -21,6 +21,32 @@ namespace Interpreter {
 
 using ArgsType = Span<Value>;
 
+static void assert_argument_count(ArgsType v, int expected, const std::string& function_name) {
+	if (v.size() != expected) {
+		Log::internal_error() << "Typechecker failed to catch wrong argument count for " << function_name
+		                      << ", expected " << expected << ", but got " << v.size();
+	}
+}
+
+static void runtime_check_variadic(ArgsType v, int expected, const std::string& function_name) {
+	if (v.size() < expected) {
+		Log::fatal() << "Runtime check failed for function " << function_name
+		             << ": wrong argument count, expected at least " << expected
+		             << ", but got " << v.size();
+	}
+}
+
+void assert_type_equality(Value& lhs, Value& rhs, const std::string& operation) {
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in " << operation;
+	}
+}
+
+[[noreturn]] static void assert_valid_operation_type(Value& value, const std::string& operation) {
+	Log::internal_error() << "Typechecker failed to catch invalid " << operation << " of type "
+	                      << value_string[static_cast<int>(value.type())];
+}
+
 // print(vals...) prints the values in vals
 Value print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
@@ -30,9 +56,7 @@ Value print(ArgsType v, Interpreter& e) {
 
 // array_append(arr, vals...) appends the values in vals to the array
 Value array_append(ArgsType v, Interpreter& e) {
-	if (v.size() == 0) {
-		Log::fatal() << "array_append requires at least one argument";
-	}
+	runtime_check_variadic(v, 1, "array_append");
 	Array* array = v[0].as<Array>();
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(v[i]);
@@ -43,9 +67,7 @@ Value array_append(ArgsType v, Interpreter& e) {
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
 Value array_extend(ArgsType v, Interpreter& e) {
-	if (v.size() != 2) {
-		Log::internal_error() << "Typechecker failed to catch wrong argument count for array_extend()";
-	}
+	assert_argument_count(v, 2, "array_extend");
 	Array* arr1 = v[0].as<Array>();
 	Array* arr2 = v[1].as<Array>();
 	arr1->m_value.insert(
@@ -55,9 +77,7 @@ Value array_extend(ArgsType v, Interpreter& e) {
 
 // size(array) returns the size of the array
 Value size(ArgsType v, Interpreter& e) {
-	if (v.size() != 1) {
-		Log::internal_error() << "Typechecker failed to catch wrong argument count for size()";
-	}
+	assert_argument_count(v, 1, "size");
 	Array* array = v[0].as<Array>();
 
 	return Value {int(array->m_value.size())};
@@ -66,9 +86,7 @@ Value size(ArgsType v, Interpreter& e) {
 // array_join(array, string) returns a string with
 // the array values separated by the string element
 Value array_join(ArgsType v, Interpreter& e) {
-	if (v.size() != 2) {
-		Log::internal_error() << "Typechecker failed to catch wrong argument count for array_join()";
-	}
+	assert_argument_count(v, 2, "array_join");
 	Array* array = v[0].as<Array>();
 	String* sep = v[1].as<String>();
 	std::stringstream result;
@@ -80,12 +98,10 @@ Value array_join(ArgsType v, Interpreter& e) {
 }
 
 Value value_add(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_add");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in addition";
-	}
+	assert_type_equality(lhs, rhs, "value_add");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return OP_(as_integer, lhs, +, rhs);
@@ -94,102 +110,90 @@ Value value_add(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
 	default:
-		Log::internal_error() << "Typechecker failed to catch invalid addition of type "
-		          << value_string[static_cast<int>(lhs.type())];
+		assert_valid_operation_type(lhs, "addition");
 	}
 }
 
 Value value_sub(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_sub");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in subtraction";
-	}
+	assert_type_equality(lhs, rhs, "value_sub");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, -, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, -, rhs)};
 	default:
-		Log::internal_error() << "Typechecker failed to catch invalid subtraction of type "
-		          << value_string[static_cast<int>(lhs.type())];
+		assert_valid_operation_type(lhs, "subtraction");
 	}
 }
 
 Value value_mul(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_mul");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in multiplication";
-	}
+	assert_type_equality(lhs, rhs, "value_mul");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, *, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, *, rhs)};
 	default:
-		Log::internal_error() << "Typechecker failed to catch invalid multiplication of type "
-		          << value_string[static_cast<int>(lhs.type())];
+		assert_valid_operation_type(lhs, "multiplication");
 	}
 }
 
 Value value_div(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_div");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in division";
-	}
+	assert_type_equality(lhs, rhs, "value_div");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, /, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, /, rhs)};
 	default:
-		Log::internal_error() << "Typechecker failed to catch invalid division of type "
-		          << value_string[static_cast<int>(lhs.type())];
+		assert_valid_operation_type(lhs, "division");
 	}
 }
 
 Value value_logicand(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicand");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicand");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, &&, rhs);
-	Log::internal_error() << "Typechecker failed to catch invalid logical and operation between types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
+	assert_valid_operation_type(lhs, "logical and operation");
 }
 
 Value value_logicor(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicor");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicor");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, ||, rhs);
-	Log::internal_error() << "Typechecker failed to catch invalid logical or operation between types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
+	assert_valid_operation_type(lhs, "logical or operation");
 }
 
 Value value_logicxor(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicxor");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicxor");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, !=, rhs);
-	Log::internal_error() << "Typechecker failed to catch invalid exclusive or operation between types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
+	assert_valid_operation_type(lhs, "exclusive or operation");
 }
 
 Value value_equals(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_equals");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_equals");
 	if (lhs.type() != rhs.type()) {
 		Log::internal_error() << "Typechecker failed to catch type mismatch in equality comparison";
 	}
@@ -219,12 +223,10 @@ Value value_not_equals(ArgsType v, Interpreter& e) {
 }
 
 Value value_less(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_less");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	if (lhs.type() != rhs.type()) {
-		Log::internal_error() << "Typechecker failed to catch type mismatch in comparison";
-	}
+	assert_type_equality(lhs, rhs, "value_less");
 
 	switch (lhs.type()) {
 	case ValueTag::Integer:
@@ -234,8 +236,7 @@ Value value_less(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {OP(String, lhs, <, rhs)};
 	default:
-		Log::internal_error() << "Typechecker failed to catch invalid comparison of type "
-		          << value_string[static_cast<int>(lhs.type())];
+		assert_valid_operation_type(lhs, "comparison");
 	}
 }
 
@@ -255,30 +256,30 @@ Value value_less_or_equal(ArgsType v, Interpreter& e) {
 }
 
 Value read_integer(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_integer");
 	int result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {result};
 }
 
 Value read_number(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_number");
 	float result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {result};
 }
 
 Value read_line(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_line");
 	std::string result;
-	std::getline(std::cin, result);
+	std::getline(std::cin, result); // TODO: error handling
 	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 
 Value read_string(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_string");
 	std::string result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 
