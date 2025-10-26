@@ -1,6 +1,7 @@
 #include "bytecode.hpp"
 
 #include "utils.hpp"
+#include "value.hpp"
 
 #include <cstring>
 
@@ -39,11 +40,14 @@ void emit_instruction(BasicBlock& b, InstructionType instruction) {
 }
 
 static ErrorReport compile_identifier(BasicBlock& b, AST::Identifier* expr) {
-	if (expr->m_origin != AST::Identifier::Origin::Global)
-		return failure();
-
-	emit_instruction(b, GetGlobal {expr->m_text});
-	return success();
+	if (expr->m_origin == AST::Identifier::Origin::Local ||
+	    expr->m_origin == AST::Identifier::Origin::Capture) {
+		emit_instruction(b, GetLocal {expr->m_frame_offset});
+		return success();
+	} else {
+		emit_instruction(b, GetGlobal {expr->m_text});
+		return success();
+	}
 }
 
 static ErrorReport compile_call_expression(BasicBlock& b, AST::CallExpression* expr) {
@@ -79,14 +83,19 @@ ErrorReport visit(BasicBlock& b, AST::Expr* expr) {
 static int decode(char const* stream, Interpreter::Interpreter& e) {
 	Instruction const* punned = reinterpret_cast<Instruction const*>(stream);
 	switch (punned->tag()) {
-	case Instruction::Tag::NewInteger: {
-		auto op = static_cast<NewInteger const*>(punned);
-		e.push_integer(op->m_value);
-		return sizeof(*op);
-	}
 	case Instruction::Tag::GetGlobal: {
 		auto op = static_cast<GetGlobal const*>(punned);
 		e.m_stack.push(e.global_access(op->m_name)->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::GetLocal: {
+		auto op = static_cast<GetLocal const*>(punned);
+		e.m_stack.push(e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::NewInteger: {
+		auto op = static_cast<NewInteger const*>(punned);
+		e.push_integer(op->m_value);
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {

@@ -8,7 +8,12 @@
 namespace Bytecode {
 
 struct Instruction {
-	enum class Tag { GetGlobal, NewInteger, Call };
+	enum class Tag {
+		GetGlobal,
+	    GetLocal,
+	    NewInteger,
+	    Call,
+	};
 
 	Instruction(Tag tag)
 	    : m_tag {tag} {}
@@ -24,6 +29,14 @@ struct GetGlobal : Instruction {
 	    , m_name {name} {}
 
 	InternedString m_name;
+};
+
+struct GetLocal : Instruction {
+	GetLocal(int frame_offset)
+	    : Instruction {Tag::GetLocal}
+	    , m_frame_offset {frame_offset} {}
+
+	int m_frame_offset;
 };
 
 struct Call : Instruction {
