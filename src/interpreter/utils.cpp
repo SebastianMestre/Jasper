@@ -18,7 +18,9 @@ void eval_call_function(Function* callee, int arg_count, Interpreter& e) {
 	}
 
 	// TODO: error handling ?
-	assert(callee->m_def->m_args.size() == arg_count);
+	if (callee->m_def->m_args.size() != arg_count) {
+		Log::internal_error() << "Function argument count mismatch";
+	}
 
 	if (!callee->m_def->tried_compilation) {
 		callee->m_def->tried_compilation = true;

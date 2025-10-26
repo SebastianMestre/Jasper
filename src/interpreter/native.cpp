@@ -1,4 +1,5 @@
 #include "../utils/span.hpp"
+#include "../log/log.hpp"
 #include "garbage_collector.hpp"
 #include "interpreter.hpp"
 #include "utils.hpp"
@@ -20,6 +21,32 @@ namespace Interpreter {
 
 using ArgsType = Span<Value>;
 
+static void assert_argument_count(ArgsType v, int expected, const std::string& function_name) {
+	if (v.size() != expected) {
+		Log::internal_error() << "Typechecker failed to catch wrong argument count for " << function_name
+		                      << ", expected " << expected << ", but got " << v.size();
+	}
+}
+
+static void runtime_check_variadic(ArgsType v, int expected, const std::string& function_name) {
+	if (v.size() < expected) {
+		Log::fatal() << "Runtime check failed for function " << function_name
+		             << ": wrong argument count, expected at least " << expected
+		             << ", but got " << v.size();
+	}
+}
+
+void assert_type_equality(Value& lhs, Value& rhs, const std::string& operation) {
+	if (lhs.type() != rhs.type()) {
+		Log::internal_error() << "Typechecker failed to catch type mismatch in " << operation;
+	}
+}
+
+[[noreturn]] static void assert_valid_operation_type(Value& value, const std::string& operation) {
+	Log::internal_error() << "Typechecker failed to catch invalid " << operation << " of type "
+	                      << value.type_string();
+}
+
 // print(vals...) prints the values in vals
 Value print(ArgsType v, Interpreter& e) {
 	for (auto value : v)
@@ -29,8 +56,7 @@ Value print(ArgsType v, Interpreter& e) {
 
 // array_append(arr, vals...) appends the values in vals to the array
 Value array_append(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() > 0);
+	runtime_check_variadic(v, 1, "array_append");
 	Array* array = v[0].as<Array>();
 	for (unsigned int i = 1; i < v.size(); i++) {
 		array->append(v[i]);
@@ -41,8 +67,7 @@ Value array_append(ArgsType v, Interpreter& e) {
 // array_extend(arr1, arr2) appends the values in arr2 to
 // arr1
 Value array_extend(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() == 2);
+	assert_argument_count(v, 2, "array_extend");
 	Array* arr1 = v[0].as<Array>();
 	Array* arr2 = v[1].as<Array>();
 	arr1->m_value.insert(
@@ -52,8 +77,7 @@ Value array_extend(ArgsType v, Interpreter& e) {
 
 // size(array) returns the size of the array
 Value size(ArgsType v, Interpreter& e) {
-	// TODO proper error handling
-	assert(v.size() == 1);
+	assert_argument_count(v, 1, "size");
 	Array* array = v[0].as<Array>();
 
 	return Value {int(array->m_value.size())};
@@ -62,9 +86,7 @@ Value size(ArgsType v, Interpreter& e) {
 // array_join(array, string) returns a string with
 // the array values separated by the string element
 Value array_join(ArgsType v, Interpreter& e) {
-	// TODO make it more general
-	// TODO proper error handling
-	assert(v.size() == 2);
+	assert_argument_count(v, 2, "array_join");
 	Array* array = v[0].as<Array>();
 	String* sep = v[1].as<String>();
 	std::stringstream result;
@@ -76,10 +98,10 @@ Value array_join(ArgsType v, Interpreter& e) {
 }
 
 Value value_add(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_add");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
+	assert_type_equality(lhs, rhs, "value_add");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return OP_(as_integer, lhs, +, rhs);
@@ -88,105 +110,90 @@ Value value_add(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {e.m_gc->new_string_raw(OP(String, lhs, +, rhs))};
 	default:
-		std::cerr << "ERROR: can't add values of type "
-		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
+		assert_valid_operation_type(lhs, "addition");
 	}
 }
 
 Value value_sub(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_sub");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
+	assert_type_equality(lhs, rhs, "value_sub");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, -, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, -, rhs)};
 	default:
-		std::cerr << "ERROR: can't add values of type "
-		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
+		assert_valid_operation_type(lhs, "subtraction");
 	}
 }
 
 Value value_mul(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_mul");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
+	assert_type_equality(lhs, rhs, "value_mul");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, *, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, *, rhs)};
 	default:
-		std::cerr << "ERROR: can't multiply values of type "
-		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
+		assert_valid_operation_type(lhs, "multiplication");
 	}
 }
 
 Value value_div(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_div");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
+	assert_type_equality(lhs, rhs, "value_div");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return {OP_(as_integer, lhs, /, rhs)};
 	case ValueTag::Float:
 		return {OP_(as_float, lhs, /, rhs)};
 	default:
-		std::cerr << "ERROR: can't divide values of type "
-		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
+		assert_valid_operation_type(lhs, "division");
 	}
 }
 
 Value value_logicand(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicand");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicand");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, &&, rhs);
-	std::cerr << "ERROR: logical and operator not defined for types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
+	assert_valid_operation_type(lhs, "logical and operation");
 }
 
 Value value_logicor(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicor");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicor");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, ||, rhs);
-	std::cerr << "ERROR: logical or operator not defined for types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
+	assert_valid_operation_type(lhs, "logical or operation");
 }
 
 Value value_logicxor(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_logicxor");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
+	assert_type_equality(lhs, rhs, "value_logicxor");
 	if (lhs.type() == ValueTag::Boolean and rhs.type() == ValueTag::Boolean)
 		return OP_(as_boolean, lhs, !=, rhs);
-	std::cerr << "ERROR: exclusive or operator not defined for types "
-	          << value_string[static_cast<int>(lhs.type())] << " and "
-	          << value_string[static_cast<int>(rhs.type())];
-	assert(0);
+	assert_valid_operation_type(lhs, "exclusive or operation");
 }
 
 Value value_equals(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_equals");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
-
+	assert_type_equality(lhs, rhs, "value_equals");
 	switch (lhs.type()) {
 	case ValueTag::Null:
 		return Value {true};
@@ -198,12 +205,8 @@ Value value_equals(ArgsType v, Interpreter& e) {
 		return Value {OP(String, lhs, ==, rhs)};
 	case ValueTag::Boolean:
 		return OP_(as_boolean, lhs, ==, rhs);
-	default: {
-		std::cerr << "ERROR: can't compare equality of types "
-		          << value_string[static_cast<int>(lhs.type())] << " and "
-		          << value_string[static_cast<int>(rhs.type())];
-		assert(0);
-	}
+	default:
+		assert_valid_operation_type(lhs, "equility comparison");
 	}
 }
 
@@ -213,11 +216,10 @@ Value value_not_equals(ArgsType v, Interpreter& e) {
 }
 
 Value value_less(ArgsType v, Interpreter& e) {
+	assert_argument_count(v, 2, "value_less");
 	auto lhs = v[0];
 	auto rhs = v[1];
-
-	assert(lhs.type() == rhs.type());
-
+	assert_type_equality(lhs, rhs, "value_less");
 	switch (lhs.type()) {
 	case ValueTag::Integer:
 		return OP_(as_integer, lhs, <, rhs);
@@ -226,9 +228,7 @@ Value value_less(ArgsType v, Interpreter& e) {
 	case ValueTag::String:
 		return Value {OP(String, lhs, <, rhs)};
 	default:
-		std::cerr << "ERROR: can't compare values of type "
-		          << value_string[static_cast<int>(lhs.type())];
-		assert(0);
+		assert_valid_operation_type(lhs, "comparison");
 	}
 }
 
@@ -248,30 +248,30 @@ Value value_less_or_equal(ArgsType v, Interpreter& e) {
 }
 
 Value read_integer(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_integer");
 	int result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {result};
 }
 
 Value read_number(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_number");
 	float result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {result};
 }
 
 Value read_line(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_line");
 	std::string result;
-	std::getline(std::cin, result);
+	std::getline(std::cin, result); // TODO: error handling
 	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 
 Value read_string(ArgsType v, Interpreter& e) {
-	// TODO: error handling
+	assert_argument_count(v, 0, "read_string");
 	std::string result;
-	std::cin >> result;
+	std::cin >> result; // TODO: error handling
 	return Value {e.m_gc->new_string_raw(std::move(result))};
 }
 

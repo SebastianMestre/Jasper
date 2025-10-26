@@ -363,8 +363,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 
 		}
 
-		Log::fatal() << "(internal) CST type not handled in typecheck_stmt: "
-					 << AST::stmt_string[(int)ast->tag()];
+		Log::missing_case("typecheck_stmt", ast->tag_string());
 
 #undef DISPATCH
 	}
@@ -405,8 +404,7 @@ void typecheck_stmt(AST::Declaration* ast) {
 			IGNORE(BuiltinTypeFunction);
 		}
 
-		Log::fatal() << "(internal) CST type not handled in infer: "
-					 << AST::expr_string[(int)ast->type()];
+		Log::missing_case("infer", ast->type_string());
 
 #undef DISPATCH
 #undef IGNORE

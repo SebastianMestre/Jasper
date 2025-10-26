@@ -1,5 +1,6 @@
 #include "gc_cell.hpp"
 
+#include "../log/log.hpp"
 #include "value.hpp"
 
 namespace Interpreter {
@@ -84,7 +85,7 @@ static void gc_visit(GcCell* v) {
 	case ValueTag::RecordConstructor:
 		return gc_visit(static_cast<RecordConstructor*>(v));
 	default:
-		assert(0);
+		Log::missing_case("gc_visit", v->type_string());
 	}
 }
 

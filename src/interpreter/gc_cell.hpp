@@ -19,6 +19,10 @@ struct GcCell {
 		return m_tag;
 	}
 
+	const char* type_string() const {
+		return value_string[(int)m_tag];
+	}
+
 	void visit();
 
 	virtual ~GcCell() = default;
