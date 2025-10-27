@@ -21,6 +21,7 @@ struct BytecodeBuilder {
 	int current_basic_block {-1};
 	std::vector<BasicBlock> blocks;
 
+
 	ErrorReport compile_identifier(AST::Identifier* expr) {
 		if (expr->m_origin == AST::Identifier::Origin::Local ||
 			expr->m_origin == AST::Identifier::Origin::Capture) {
@@ -65,6 +66,29 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
+
+		int then_block = new_block();
+		int else_block = new_block();
+		int after_block = new_block();
+
+		visit(expr->m_condition);
+		emit_instruction(JumpIfFalse {else_block});
+		emit_instruction(Jump {then_block});
+
+		set_current_block(then_block);
+		visit(expr->m_then_expr);
+		emit_instruction(Jump {after_block});
+
+		set_current_block(else_block);
+		visit(expr->m_else_expr);
+		emit_instruction(Jump {after_block});
+
+		set_current_block(after_block);
+
+		return success();
+	}
+
 	ErrorReport visit(AST::Expr* expr) {
 		switch (expr->type()) {
 		case AST::ExprTag::Identifier:
@@ -79,6 +103,8 @@ struct BytecodeBuilder {
 			return compile_null_literal(static_cast<AST::NullLiteral*>(expr));
 		case AST::ExprTag::CallExpression:
 			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
+		case AST::ExprTag::TernaryExpression:
+			return compile_ternary_expression(static_cast<AST::TernaryExpression*>(expr));
 		}
 		return failure();
 	}
@@ -105,6 +131,7 @@ struct BytecodeBuilder {
 		return old_block;
 	}
 };
+
 
 Writer<Executable> compile(AST::Expr* expr) {
 	BytecodeBuilder builder;
