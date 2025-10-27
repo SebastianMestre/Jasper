@@ -17,89 +17,110 @@ static ErrorReport visit(BasicBlock&, AST::Expr*);
 static ErrorReport success() { return {}; }
 static ErrorReport failure() { return {"Failed to generate bytecode"}; }
 
+struct BytecodeBuilder {
+	int current_basic_block {-1};
+	std::vector<BasicBlock> blocks;
+
+	ErrorReport compile_identifier(AST::Identifier* expr) {
+		if (expr->m_origin == AST::Identifier::Origin::Local ||
+			expr->m_origin == AST::Identifier::Origin::Capture) {
+			emit_instruction(GetLocal {expr->m_frame_offset});
+			return success();
+		} else {
+			emit_instruction(GetGlobal {expr->m_text});
+			return success();
+		}
+	}
+
+	ErrorReport compile_call_expression(AST::CallExpression* expr) {
+		auto status1 = visit(expr->m_callee);
+		if (!status1.ok()) return status1;
+
+		for (auto arg : expr->m_args) {
+			auto status2 = visit(arg);
+			if (!status2.ok()) return status2;
+		}
+
+		emit_instruction(Call {expr->m_args.size()});
+		return success();
+	}
+
+	ErrorReport compile_integer_literal(AST::IntegerLiteral* expr) {
+		emit_instruction(NewInteger {expr->m_value});
+		return success();
+	}
+
+	ErrorReport compile_boolean_literal(AST::BooleanLiteral* expr) {
+		emit_instruction(NewBoolean {expr->m_value});
+		return success();
+	}
+
+	ErrorReport compile_number_literal(AST::NumberLiteral* expr) {
+		emit_instruction(NewNumber {expr->value()});
+		return success();
+	}
+
+	ErrorReport compile_null_literal(AST::NullLiteral* expr) {
+		emit_instruction(NewNull {});
+		return success();
+	}
+
+	ErrorReport visit(AST::Expr* expr) {
+		switch (expr->type()) {
+		case AST::ExprTag::Identifier:
+			return compile_identifier(static_cast<AST::Identifier*>(expr));
+		case AST::ExprTag::IntegerLiteral:
+			return compile_integer_literal(static_cast<AST::IntegerLiteral*>(expr));
+		case AST::ExprTag::BooleanLiteral:
+			return compile_boolean_literal(static_cast<AST::BooleanLiteral*>(expr));
+		case AST::ExprTag::NumberLiteral:
+			return compile_number_literal(static_cast<AST::NumberLiteral*>(expr));
+		case AST::ExprTag::NullLiteral:
+			return compile_null_literal(static_cast<AST::NullLiteral*>(expr));
+		case AST::ExprTag::CallExpression:
+			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
+		}
+		return failure();
+	}
+
+	template<typename InstructionType>
+	void emit_instruction(InstructionType instruction) {
+		auto& block = blocks[current_basic_block];
+		auto& bytecode = block.bytecode;
+		auto byte_count = sizeof(instruction);
+		char buffer[byte_count];
+		memcpy(buffer, &instruction, byte_count);
+		for (int i = 0; i < byte_count; ++i)
+			bytecode.push_back(buffer[i]);
+	}
+
+	int new_block() {
+		blocks.push_back(BasicBlock {});
+		return blocks.size() - 1;
+	}
+
+	int set_current_block(int block) {
+		int old_block = current_basic_block;
+		current_basic_block = block;
+		return old_block;
+	}
+};
+
 Writer<Executable> compile(AST::Expr* expr) {
+	BytecodeBuilder builder;
 	Executable result;
-	BasicBlock main_block;
-	ErrorReport status = visit(main_block, expr);
-	if (status.ok()) {
-	} else {
+	int main_block = builder.new_block();
+	builder.set_current_block(main_block);
+	ErrorReport status = builder.visit(expr);
+	if (!status.ok()) {
 		return status;
 	}
 
-	result.blocks.push_back(std::move(main_block));
+	result.blocks = std::move(builder.blocks);
 	return make_writer(std::move(result));
 }
 
-template<typename InstructionType>
-void emit_instruction(BasicBlock& b, InstructionType instruction) {
-	constexpr auto byte_count = sizeof(instruction);
-	char buffer[byte_count];
-	memcpy(buffer, &instruction, byte_count);
-	for (int i = 0; i < byte_count; ++i)
-		b.bytecode.push_back(buffer[i]);
-}
 
-static ErrorReport compile_identifier(BasicBlock& b, AST::Identifier* expr) {
-	if (expr->m_origin == AST::Identifier::Origin::Local ||
-	    expr->m_origin == AST::Identifier::Origin::Capture) {
-		emit_instruction(b, GetLocal {expr->m_frame_offset});
-		return success();
-	} else {
-		emit_instruction(b, GetGlobal {expr->m_text});
-		return success();
-	}
-}
-
-static ErrorReport compile_call_expression(BasicBlock& b, AST::CallExpression* expr) {
-	auto status1 = visit(b, expr->m_callee);
-	if (!status1.ok()) return status1;
-
-	for (auto arg : expr->m_args) {
-		auto status2 = visit(b, arg);
-		if (!status2.ok()) return status2;
-	}
-
-	emit_instruction(b, Call {expr->m_args.size()});
-	return success();
-}
-
-static ErrorReport compile_integer_literal(BasicBlock& b, AST::IntegerLiteral* expr) {
-	emit_instruction(b, NewInteger {expr->m_value});
-	return success();
-}
-
-static ErrorReport compile_boolean_literal(BasicBlock& b, AST::BooleanLiteral* expr) {
-	emit_instruction(b, NewBoolean {expr->m_value});
-	return success();
-}
-
-static ErrorReport compile_number_literal(BasicBlock& b, AST::NumberLiteral* expr) {
-	emit_instruction(b, NewNumber {expr->value()});
-	return success();
-}
-
-static ErrorReport compile_null_literal(BasicBlock& b, AST::NullLiteral* expr) {
-	emit_instruction(b, NewNull {});
-	return success();
-}
-
-ErrorReport visit(BasicBlock& b, AST::Expr* expr) {
-	switch (expr->type()) {
-	case AST::ExprTag::Identifier:
-		return compile_identifier(b, static_cast<AST::Identifier*>(expr));
-	case AST::ExprTag::IntegerLiteral:
-		return compile_integer_literal(b, static_cast<AST::IntegerLiteral*>(expr));
-	case AST::ExprTag::BooleanLiteral:
-		return compile_boolean_literal(b, static_cast<AST::BooleanLiteral*>(expr));
-	case AST::ExprTag::NumberLiteral:
-		return compile_number_literal(b, static_cast<AST::NumberLiteral*>(expr));
-	case AST::ExprTag::NullLiteral:
-		return compile_null_literal(b, static_cast<AST::NullLiteral*>(expr));
-	case AST::ExprTag::CallExpression:
-		return compile_call_expression(b, static_cast<AST::CallExpression*>(expr));
-	}
-	return failure();
-}
 
 static int decode(char const* stream, Interpreter::Interpreter& e) {
 	Instruction const* punned = reinterpret_cast<Instruction const*>(stream);
