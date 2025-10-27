@@ -16,6 +16,8 @@ struct Instruction {
 		NewNumber,
 		NewNull,
 	    Call,
+		Jump,
+		JumpIfFalse,
 	};
 
 	Instruction(Tag tag)
@@ -77,6 +79,22 @@ struct NewNumber : Instruction {
 struct NewNull : Instruction {
 	NewNull()
 	    : Instruction {Tag::NewNull} {}
+};
+
+struct Jump : Instruction {
+	Jump(int target_block)
+	    : Instruction {Tag::Jump}
+	    , m_target_block {target_block} {}
+
+	int m_target_block;
+};
+
+struct JumpIfFalse : Instruction {
+	JumpIfFalse(int target_block)
+	    : Instruction {Tag::JumpIfFalse}
+	    , m_target_block {target_block} {}
+
+	int m_target_block;
 };
 
 struct BasicBlock {

@@ -170,14 +170,34 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 
 		return sizeof(*op);
 	}
+	case Instruction::Tag::Jump: {
+		auto op = static_cast<Jump const*>(punned);
+		return -op->m_target_block;
+	}
+	case Instruction::Tag::JumpIfFalse: {
+		auto op = static_cast<JumpIfFalse const*>(punned);
+		if (e.m_stack.pop().get_boolean() == false) {
+			return -op->m_target_block;
+		} else {
+			return sizeof(*op);
+		}
+	}
 	}
 	return 1024;
 }
 
 void execute(Executable const& exe, Interpreter::Interpreter& e) {
+	int current_block = 0;
 	int cursor = 0;
-	while (cursor < exe.blocks[0].bytecode.size()) {
-		cursor += decode(&exe.blocks[0].bytecode[cursor], e);
+	while (cursor < exe.blocks[current_block].bytecode.size()) {
+		int offset = decode(&exe.blocks[current_block].bytecode[cursor], e);
+		if (offset < 0) { // this indicates we need to jump to a different block
+			int target_block = -offset;
+			current_block = target_block;
+			cursor = 0;
+		} else {
+			cursor += offset;
+		}
 	}
 }
 
