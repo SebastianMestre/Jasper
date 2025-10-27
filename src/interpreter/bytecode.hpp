@@ -10,8 +10,11 @@ namespace Bytecode {
 struct Instruction {
 	enum class Tag {
 		GetGlobal,
-	    GetLocal,
-	    NewInteger,
+		GetLocal,
+		NewInteger,
+		NewBoolean,
+		NewNumber,
+		NewNull,
 	    Call,
 	};
 
@@ -53,6 +56,27 @@ struct NewInteger : Instruction {
 	    , m_value {value} {}
 
 	int m_value;
+};
+
+struct NewBoolean : Instruction {
+	NewBoolean(bool value)
+	    : Instruction {Tag::NewBoolean}
+	    , m_value {value} {}
+
+	bool m_value;
+};
+
+struct NewNumber : Instruction {
+	NewNumber(float value)
+	    : Instruction {Tag::NewNumber}
+	    , m_value {value} {}
+
+	float m_value;
+};
+
+struct NewNull : Instruction {
+	NewNull()
+	    : Instruction {Tag::NewNull} {}
 };
 
 struct BasicBlock {

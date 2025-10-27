@@ -68,12 +68,33 @@ static ErrorReport compile_integer_literal(BasicBlock& b, AST::IntegerLiteral* e
 	return success();
 }
 
+static ErrorReport compile_boolean_literal(BasicBlock& b, AST::BooleanLiteral* expr) {
+	emit_instruction(b, NewBoolean {expr->m_value});
+	return success();
+}
+
+static ErrorReport compile_number_literal(BasicBlock& b, AST::NumberLiteral* expr) {
+	emit_instruction(b, NewNumber {expr->value()});
+	return success();
+}
+
+static ErrorReport compile_null_literal(BasicBlock& b, AST::NullLiteral* expr) {
+	emit_instruction(b, NewNull {});
+	return success();
+}
+
 ErrorReport visit(BasicBlock& b, AST::Expr* expr) {
 	switch (expr->type()) {
 	case AST::ExprTag::Identifier:
 		return compile_identifier(b, static_cast<AST::Identifier*>(expr));
 	case AST::ExprTag::IntegerLiteral:
 		return compile_integer_literal(b, static_cast<AST::IntegerLiteral*>(expr));
+	case AST::ExprTag::BooleanLiteral:
+		return compile_boolean_literal(b, static_cast<AST::BooleanLiteral*>(expr));
+	case AST::ExprTag::NumberLiteral:
+		return compile_number_literal(b, static_cast<AST::NumberLiteral*>(expr));
+	case AST::ExprTag::NullLiteral:
+		return compile_null_literal(b, static_cast<AST::NullLiteral*>(expr));
 	case AST::ExprTag::CallExpression:
 		return compile_call_expression(b, static_cast<AST::CallExpression*>(expr));
 	}
@@ -96,6 +117,21 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 	case Instruction::Tag::NewInteger: {
 		auto op = static_cast<NewInteger const*>(punned);
 		e.push_integer(op->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::NewBoolean: {
+		auto op = static_cast<NewBoolean const*>(punned);
+		e.push_boolean(op->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::NewNumber: {
+		auto op = static_cast<NewNumber const*>(punned);
+		e.push_float(op->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::NewNull: {
+		auto op = static_cast<NewNull const*>(punned);
+		e.m_stack.push(e.null());
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {
