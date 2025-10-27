@@ -8,7 +8,15 @@
 namespace Bytecode {
 
 struct Instruction {
-	enum class Tag { GetGlobal, NewInteger, Call };
+	enum class Tag {
+		GetGlobal,
+		GetLocal,
+		NewInteger,
+		NewBoolean,
+		NewNumber,
+		NewNull,
+	    Call,
+	};
 
 	Instruction(Tag tag)
 	    : m_tag {tag} {}
@@ -26,6 +34,14 @@ struct GetGlobal : Instruction {
 	InternedString m_name;
 };
 
+struct GetLocal : Instruction {
+	GetLocal(int frame_offset)
+	    : Instruction {Tag::GetLocal}
+	    , m_frame_offset {frame_offset} {}
+
+	int m_frame_offset;
+};
+
 struct Call : Instruction {
 	Call(int argument_count)
 	    : Instruction {Tag::Call}
@@ -40,6 +56,27 @@ struct NewInteger : Instruction {
 	    , m_value {value} {}
 
 	int m_value;
+};
+
+struct NewBoolean : Instruction {
+	NewBoolean(bool value)
+	    : Instruction {Tag::NewBoolean}
+	    , m_value {value} {}
+
+	bool m_value;
+};
+
+struct NewNumber : Instruction {
+	NewNumber(float value)
+	    : Instruction {Tag::NewNumber}
+	    , m_value {value} {}
+
+	float m_value;
+};
+
+struct NewNull : Instruction {
+	NewNull()
+	    : Instruction {Tag::NewNull} {}
 };
 
 struct BasicBlock {
