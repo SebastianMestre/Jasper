@@ -73,6 +73,17 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_index_expression(AST::IndexExpression* expr) {
+		auto status1 = visit(expr->m_callee);
+		if (!status1.ok()) return status1;
+
+		auto status2 = visit(expr->m_index);
+		if (!status2.ok()) return status2;
+
+		emit_instruction(IndexAccess {});
+		return success();
+	}
+
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
 		int then_block = new_block();
@@ -113,6 +124,8 @@ struct BytecodeBuilder {
 			return compile_null_literal(static_cast<AST::NullLiteral*>(expr));
 		case AST::ExprTag::ArrayLiteral:
 			return compile_array_literal(static_cast<AST::ArrayLiteral*>(expr));
+		case AST::ExprTag::IndexExpression:
+			return compile_index_expression(static_cast<AST::IndexExpression*>(expr));
 		case AST::ExprTag::CallExpression:
 			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
 		case AST::ExprTag::TernaryExpression:
@@ -208,6 +221,14 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		for (int i = 0; i < element_count - 1; ++i) {
 			e.m_stack.pop();
 		}
+		return sizeof(*op);
+	}
+	case Instruction::Tag::IndexAccess: {
+		auto op = static_cast<IndexAccess const*>(punned);
+		auto index = e.m_stack.pop().get_integer();
+		auto callee_ptr = e.m_stack.pop();
+		auto* callee = callee_ptr.as<Interpreter::Array>();
+		e.m_stack.push(callee->at(index));
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {

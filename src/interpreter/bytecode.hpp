@@ -16,6 +16,7 @@ struct Instruction {
 		NewNumber,
 		NewNull,
 		NewArray,
+		IndexAccess,
 		Call,
 		Jump,
 		JumpIfFalse,
@@ -88,6 +89,11 @@ struct NewArray : Instruction {
 	    , m_element_count {element_count} {}
 
 	int m_element_count;
+};
+
+struct IndexAccess : Instruction {
+	IndexAccess()
+	    : Instruction {Tag::IndexAccess} {}
 };
 
 struct Jump : Instruction {
