@@ -12,8 +12,6 @@ Writer<T> make_writer(T x) {
 
 namespace Bytecode {
 
-static ErrorReport visit(BasicBlock&, AST::Expr*);
-
 static ErrorReport success() { return {}; }
 static ErrorReport failure() { return {"Failed to generate bytecode"}; }
 
@@ -66,6 +64,15 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_array_literal(AST::ArrayLiteral* expr) {
+		for (auto element : expr->m_elements) {
+			auto status = visit(element);
+			if (!status.ok()) return status;
+		}
+		emit_instruction(NewArray {expr->m_elements.size()});
+		return success();
+	}
+
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
 		int then_block = new_block();
@@ -101,6 +108,8 @@ struct BytecodeBuilder {
 			return compile_number_literal(static_cast<AST::NumberLiteral*>(expr));
 		case AST::ExprTag::NullLiteral:
 			return compile_null_literal(static_cast<AST::NullLiteral*>(expr));
+		case AST::ExprTag::ArrayLiteral:
+			return compile_array_literal(static_cast<AST::ArrayLiteral*>(expr));
 		case AST::ExprTag::CallExpression:
 			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
 		case AST::ExprTag::TernaryExpression:
@@ -180,6 +189,22 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 	case Instruction::Tag::NewNull: {
 		auto op = static_cast<NewNull const*>(punned);
 		e.m_stack.push(e.null());
+		return sizeof(*op);
+	}
+	case Instruction::Tag::NewArray: {
+		auto op = static_cast<NewArray const*>(punned);
+		e.push_list({});
+		int element_count = op->m_element_count;
+		auto result = e.m_stack.access(0).as<Interpreter::Array>();
+		result->m_value.reserve(element_count);
+		for (int i = 0; i < element_count; ++i) {
+			result->append(e.m_stack.access(element_count - i));
+		}
+		// now we remove the elements from beneath the array, leaving only the array on the stack
+		e.m_stack.access(element_count) = e.m_stack.pop();
+		for (int i = 0; i < element_count - 1; ++i) {
+			e.m_stack.pop();
+		}
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {
