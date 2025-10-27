@@ -79,16 +79,19 @@ struct BytecodeBuilder {
 		int else_block = new_block();
 		int after_block = new_block();
 
-		visit(expr->m_condition);
+		auto status1 = visit(expr->m_condition);
+		if (!status1.ok()) return status1;
 		emit_instruction(JumpIfFalse {else_block});
 		emit_instruction(Jump {then_block});
 
 		set_current_block(then_block);
-		visit(expr->m_then_expr);
+		auto status2 = visit(expr->m_then_expr);
+		if (!status2.ok()) return status2;
 		emit_instruction(Jump {after_block});
 
 		set_current_block(else_block);
-		visit(expr->m_else_expr);
+		auto status3 = visit(expr->m_else_expr);
+		if (!status3.ok()) return status3;
 		emit_instruction(Jump {after_block});
 
 		set_current_block(after_block);
