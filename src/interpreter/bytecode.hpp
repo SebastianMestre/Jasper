@@ -15,7 +15,9 @@ struct Instruction {
 		NewBoolean,
 		NewNumber,
 		NewNull,
-	    Call,
+		NewArray,
+		IndexAccess,
+		Call,
 		Jump,
 		JumpIfFalse,
 	};
@@ -79,6 +81,19 @@ struct NewNumber : Instruction {
 struct NewNull : Instruction {
 	NewNull()
 	    : Instruction {Tag::NewNull} {}
+};
+
+struct NewArray : Instruction {
+	NewArray(int element_count)
+	    : Instruction {Tag::NewArray}
+	    , m_element_count {element_count} {}
+
+	int m_element_count;
+};
+
+struct IndexAccess : Instruction {
+	IndexAccess()
+	    : Instruction {Tag::IndexAccess} {}
 };
 
 struct Jump : Instruction {

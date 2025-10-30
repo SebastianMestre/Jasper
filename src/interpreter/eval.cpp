@@ -165,15 +165,11 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 }
 
 void eval(AST::IndexExpression* ast, Interpreter& e) {
-
 	eval(ast->m_callee, e);
 	eval(ast->m_index, e);
-
 	auto index = e.m_stack.pop().get_integer();
-
 	auto callee_ptr = e.m_stack.pop();
 	auto* callee = callee_ptr.as<Array>();
-
 	e.m_stack.push(callee->at(index));
 };
 
