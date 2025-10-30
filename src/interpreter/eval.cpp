@@ -98,25 +98,16 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 
 	eval(ast->m_callee, e);
 
-	// NOTE: keep callee on the stack
-	auto callee = e.m_stack.access(0);
-	if (!is_callable_type(callee.type())) {
-		Log::internal_error() << "Typechecker failed to reject call to a non-callable value";
-	}
-
 	auto& arglist = ast->m_args;
-	int arg_count = arglist.size();
-
 	for (auto expr : arglist)
 		eval(expr, e);
 
-	e.m_stack.start_frame(arg_count);
+	int argument_count = arglist.size();
 
-	eval_call_callable(callee, arg_count, e);
-
-	// pop the result of the function, and clobber the callee
+	auto callee = e.m_stack.access(argument_count);
+	e.m_stack.start_frame(argument_count);
+	eval_call_callable(callee, argument_count, e);
 	e.m_stack.frame_at(-1) = e.m_stack.pop();
-
 	e.m_stack.end_frame();
 }
 
@@ -284,11 +275,10 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
 	e.push_variable(e.null());
-	auto ref = e.m_stack.access(0).as<Variable>();
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
-		ref->m_value = value;
+		e.m_stack.frame_at(ast->m_frame_offset).as<Variable>()->m_value = value;
 	}
 };
 
