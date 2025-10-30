@@ -11,6 +11,7 @@ struct Instruction {
 	enum class Tag {
 		GetGlobal,
 		GetLocal,
+		SetLocal,
 		NewInteger,
 		NewBoolean,
 		NewNumber,
@@ -41,6 +42,14 @@ struct GetGlobal : Instruction {
 struct GetLocal : Instruction {
 	GetLocal(int frame_offset)
 	    : Instruction {Tag::GetLocal}
+	    , m_frame_offset {frame_offset} {}
+
+	int m_frame_offset;
+};
+
+struct SetLocal : Instruction {
+	SetLocal(int frame_offset)
+	    : Instruction {Tag::SetLocal}
 	    , m_frame_offset {frame_offset} {}
 
 	int m_frame_offset;

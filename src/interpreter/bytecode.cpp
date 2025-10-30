@@ -84,6 +84,24 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_assignment_expression(AST::AssignmentExpression* expr) {
+
+		auto status = visit(expr->m_value);
+		if (!status.ok()) return status;
+
+		if (expr->m_target->type() == AST::ExprTag::Identifier) {
+			auto target = static_cast<AST::Identifier*>(expr->m_target);
+			
+			if (target->m_origin == AST::Identifier::Origin::Local ||
+			    target->m_origin == AST::Identifier::Origin::Capture) {
+				emit_instruction(SetLocal {target->m_frame_offset});
+				return success();
+			}
+		}
+		
+		return failure();
+	}
+
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
 		int then_block = new_block();
@@ -126,6 +144,8 @@ struct BytecodeBuilder {
 			return compile_array_literal(static_cast<AST::ArrayLiteral*>(expr));
 		case AST::ExprTag::IndexExpression:
 			return compile_index_expression(static_cast<AST::IndexExpression*>(expr));
+		case AST::ExprTag::AssignmentExpression:
+			return compile_assignment_expression(static_cast<AST::AssignmentExpression*>(expr));
 		case AST::ExprTag::CallExpression:
 			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
 		case AST::ExprTag::TernaryExpression:
@@ -185,6 +205,13 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 	case Instruction::Tag::GetLocal: {
 		auto op = static_cast<GetLocal const*>(punned);
 		e.m_stack.push(e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::SetLocal: {
+		auto op = static_cast<SetLocal const*>(punned);
+		auto value = e.m_stack.pop();
+		e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value = value;
+		e.m_stack.push(e.null());
 		return sizeof(*op);
 	}
 	case Instruction::Tag::NewInteger: {
