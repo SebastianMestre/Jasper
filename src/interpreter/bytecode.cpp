@@ -2,6 +2,7 @@
 
 #include "utils.hpp"
 #include "value.hpp"
+#include "../log/log.hpp"
 
 #include <cstring>
 
@@ -17,6 +18,8 @@ static ErrorReport failure() { return {"Failed to generate bytecode"}; }
 
 struct BytecodeBuilder {
 	int current_basic_block {-1};
+	int current_return_target {-1};
+	int current_region_depth {0};
 	std::vector<BasicBlock> blocks;
 
 
@@ -84,6 +87,25 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_assignment_expression(AST::AssignmentExpression* expr) {
+
+		auto status = visit(expr->m_value);
+		if (!status.ok()) return status;
+
+		if (expr->m_target->type() == AST::ExprTag::Identifier) {
+			auto target = static_cast<AST::Identifier*>(expr->m_target);
+
+			if (target->m_origin == AST::Identifier::Origin::Local ||
+			    target->m_origin == AST::Identifier::Origin::Capture) {
+				emit_instruction(SetLocal {target->m_frame_offset});
+				emit_instruction(NewNull {});
+				return success();
+			}
+		}
+
+		return failure();
+	}
+
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
 		int then_block = new_block();
@@ -110,6 +132,95 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_sequence_expression(AST::SequenceExpression* expr) {
+		int end_block = new_block();
+
+		int old_return_target = current_return_target;
+		int old_region_depth = current_region_depth;
+		current_return_target = end_block;
+		current_region_depth = 0;
+
+		auto status = compile_block(expr->m_body);
+		if (!status.ok()) {
+			current_return_target = old_return_target;
+			current_region_depth = old_region_depth;
+			return status;
+		}
+
+		emit_instruction(Jump {end_block});
+
+		set_current_block(end_block);
+
+		emit_instruction(FetchReturn {});
+
+		current_return_target = old_return_target;
+		current_region_depth = old_region_depth;
+
+		return success();
+	}
+
+	ErrorReport compile_block(AST::Block* block) {
+		emit_instruction(StartRegion {});
+		current_region_depth++;
+
+		for (auto stmt : block->m_body) {
+			auto status = compile_stmt(stmt);
+			if (!status.ok()) return status;
+		}
+
+		emit_instruction(EndRegion {});
+		current_region_depth--;
+
+		return success();
+	}
+
+	ErrorReport compile_declaration(AST::Declaration* decl) {
+		emit_instruction(PushVariable {});
+		if (decl->m_value) {
+			auto status = visit(decl->m_value);
+			if (!status.ok()) return status;
+			emit_instruction(SetLocal {decl->m_frame_offset});
+		}
+		return success();
+	}
+
+	ErrorReport compile_return_statement(AST::ReturnStatement* ret) {
+		auto status = visit(ret->m_value);
+		if (!status.ok()) return status;
+
+		emit_instruction(SaveReturn {});
+
+		for (int i = 0; i < current_region_depth; ++i) {
+			emit_instruction(EndRegion {});
+		}
+
+		if (current_return_target == -1) {
+			Log::fatal() << "Return outside of sequence expression";
+		}
+		emit_instruction(Jump {current_return_target});
+
+		return success();
+	}
+
+	ErrorReport compile_expression_statement(AST::ExpressionStatement* stmt) {
+		return failure();
+	}
+
+	ErrorReport compile_stmt(AST::Stmt* stmt) {
+		switch (stmt->tag()) {
+		case AST::StmtTag::Declaration:
+			return compile_declaration(static_cast<AST::Declaration*>(stmt));
+		case AST::StmtTag::Block:
+			return compile_block(static_cast<AST::Block*>(stmt));
+		case AST::StmtTag::ReturnStatement:
+			return compile_return_statement(static_cast<AST::ReturnStatement*>(stmt));
+		case AST::StmtTag::ExpressionStatement:
+			return compile_expression_statement(static_cast<AST::ExpressionStatement*>(stmt));
+		default:
+			return failure();  // Unsupported statement type
+		}
+	}
+
 	ErrorReport visit(AST::Expr* expr) {
 		switch (expr->type()) {
 		case AST::ExprTag::Identifier:
@@ -126,10 +237,14 @@ struct BytecodeBuilder {
 			return compile_array_literal(static_cast<AST::ArrayLiteral*>(expr));
 		case AST::ExprTag::IndexExpression:
 			return compile_index_expression(static_cast<AST::IndexExpression*>(expr));
+		case AST::ExprTag::AssignmentExpression:
+			return compile_assignment_expression(static_cast<AST::AssignmentExpression*>(expr));
 		case AST::ExprTag::CallExpression:
 			return compile_call_expression(static_cast<AST::CallExpression*>(expr));
 		case AST::ExprTag::TernaryExpression:
 			return compile_ternary_expression(static_cast<AST::TernaryExpression*>(expr));
+		case AST::ExprTag::SequenceExpression:
+			return compile_sequence_expression(static_cast<AST::SequenceExpression*>(expr));
 		}
 		return failure();
 	}
@@ -187,6 +302,17 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		e.m_stack.push(e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value);
 		return sizeof(*op);
 	}
+	case Instruction::Tag::SetLocal: {
+		auto op = static_cast<SetLocal const*>(punned);
+		auto value = e.m_stack.pop();
+		e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value = value;
+		return sizeof(*op);
+	}
+	case Instruction::Tag::PushVariable: {
+		auto op = static_cast<PushVariable const*>(punned);
+		e.push_variable(e.null());
+		return sizeof(*op);
+	}
 	case Instruction::Tag::NewInteger: {
 		auto op = static_cast<NewInteger const*>(punned);
 		e.push_integer(op->m_value);
@@ -236,11 +362,8 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		int argument_count = op->m_argument_count;
 
 		auto callee = e.m_stack.access(argument_count);
-
 		e.m_stack.start_frame(argument_count);
-
 		eval_call_callable(callee, argument_count, e);
-
 		e.m_stack.frame_at(-1) = e.m_stack.pop();
 		e.m_stack.end_frame();
 
@@ -257,6 +380,35 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		} else {
 			return sizeof(*op);
 		}
+	}
+	case Instruction::Tag::Pop: {
+		auto op = static_cast<Pop const*>(punned);
+		e.m_stack.pop();
+		return sizeof(*op);
+	}
+	case Instruction::Tag::SaveReturn: {
+		auto op = static_cast<SaveReturn const*>(punned);
+		auto value = e.m_stack.pop();
+		e.save_return_value(value);
+		return sizeof(*op);
+	}
+	case Instruction::Tag::FetchReturn: {
+		auto op = static_cast<FetchReturn const*>(punned);
+		if (!e.m_returning) {
+			e.save_return_value(Interpreter::Value{});
+		}
+		e.m_stack.push(e.fetch_return_value());
+		return sizeof(*op);
+	}
+	case Instruction::Tag::StartRegion: {
+		auto op = static_cast<StartRegion const*>(punned);
+		e.m_stack.start_region();
+		return sizeof(*op);
+	}
+	case Instruction::Tag::EndRegion: {
+		auto op = static_cast<EndRegion const*>(punned);
+		e.m_stack.end_region();
+		return sizeof(*op);
 	}
 	}
 	return 1024;

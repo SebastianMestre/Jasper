@@ -11,6 +11,8 @@ struct Instruction {
 	enum class Tag {
 		GetGlobal,
 		GetLocal,
+		SetLocal,
+		PushVariable,
 		NewInteger,
 		NewBoolean,
 		NewNumber,
@@ -20,6 +22,11 @@ struct Instruction {
 		Call,
 		Jump,
 		JumpIfFalse,
+		Pop,
+		SaveReturn,
+		FetchReturn,
+		StartRegion,
+		EndRegion,
 	};
 
 	Instruction(Tag tag)
@@ -44,6 +51,19 @@ struct GetLocal : Instruction {
 	    , m_frame_offset {frame_offset} {}
 
 	int m_frame_offset;
+};
+
+struct SetLocal : Instruction {
+	SetLocal(int frame_offset)
+	    : Instruction {Tag::SetLocal}
+	    , m_frame_offset {frame_offset} {}
+
+	int m_frame_offset;
+};
+
+struct PushVariable : Instruction {
+	PushVariable()
+	    : Instruction {Tag::PushVariable} {}
 };
 
 struct Call : Instruction {
@@ -110,6 +130,31 @@ struct JumpIfFalse : Instruction {
 	    , m_target_block {target_block} {}
 
 	int m_target_block;
+};
+
+struct Pop : Instruction {
+	Pop()
+	    : Instruction {Tag::Pop} {}
+};
+
+struct SaveReturn : Instruction {
+	SaveReturn()
+	    : Instruction {Tag::SaveReturn} {}
+};
+
+struct FetchReturn : Instruction {
+	FetchReturn()
+	    : Instruction {Tag::FetchReturn} {}
+};
+
+struct StartRegion : Instruction {
+	StartRegion()
+	    : Instruction {Tag::StartRegion} {}
+};
+
+struct EndRegion : Instruction {
+	EndRegion()
+	    : Instruction {Tag::EndRegion} {}
 };
 
 struct BasicBlock {
