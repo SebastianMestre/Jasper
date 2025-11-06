@@ -108,16 +108,13 @@ struct BytecodeBuilder {
 
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
-		int then_block = new_block();
 		int else_block = new_block();
 		int after_block = new_block();
 
 		auto status1 = visit(expr->m_condition);
 		if (!status1.ok()) return status1;
 		emit_instruction(JumpIfFalse {else_block});
-		emit_instruction(Jump {then_block});
 
-		set_current_block(then_block);
 		auto status2 = visit(expr->m_then_expr);
 		if (!status2.ok()) return status2;
 		emit_instruction(Jump {after_block});
@@ -210,18 +207,17 @@ struct BytecodeBuilder {
 	}
 
 	ErrorReport compile_if_else_statement(AST::IfElseStatement* stmt) {
-		int then_block = new_block();
+
 		int after_block = new_block();
 
 		auto status1 = visit(stmt->m_condition);
 		if (!status1.ok()) return status1;
 
 		if (stmt->m_else_body) {
+
 			int else_block = new_block();
 			emit_instruction(JumpIfFalse {else_block});
-			emit_instruction(Jump {then_block});
 
-			set_current_block(then_block);
 			auto status2 = compile_stmt(stmt->m_body);
 			if (!status2.ok()) return status2;
 			emit_instruction(Jump {after_block});
@@ -232,9 +228,7 @@ struct BytecodeBuilder {
 			emit_instruction(Jump {after_block});
 		} else {
 			emit_instruction(JumpIfFalse {after_block});
-			emit_instruction(Jump {then_block});
 
-			set_current_block(then_block);
 			auto status2 = compile_stmt(stmt->m_body);
 			if (!status2.ok()) return status2;
 			emit_instruction(Jump {after_block});
