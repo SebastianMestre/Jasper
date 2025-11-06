@@ -203,7 +203,10 @@ struct BytecodeBuilder {
 	}
 
 	ErrorReport compile_expression_statement(AST::ExpressionStatement* stmt) {
-		return failure();
+		auto status = visit(stmt->m_expression);
+		if (!status.ok()) return status;
+		emit_instruction(Pop {});
+		return success();
 	}
 
 	ErrorReport compile_if_else_statement(AST::IfElseStatement* stmt) {
