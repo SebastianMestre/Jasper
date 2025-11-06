@@ -206,6 +206,45 @@ struct BytecodeBuilder {
 		return failure();
 	}
 
+	ErrorReport compile_if_else_statement(AST::IfElseStatement* stmt) {
+		int then_block = new_block();
+		int after_block = new_block();
+
+		// Evaluate the condition
+		auto status1 = visit(stmt->m_condition);
+		if (!status1.ok()) return status1;
+
+		if (stmt->m_else_body) {
+			// If-else with both branches
+			int else_block = new_block();
+			emit_instruction(JumpIfFalse {else_block});
+			emit_instruction(Jump {then_block});
+
+			set_current_block(then_block);
+			auto status2 = compile_stmt(stmt->m_body);
+			if (!status2.ok()) return status2;
+			emit_instruction(Jump {after_block});
+
+			set_current_block(else_block);
+			auto status3 = compile_stmt(stmt->m_else_body);
+			if (!status3.ok()) return status3;
+			emit_instruction(Jump {after_block});
+		} else {
+			// If without else - jump directly to after_block if false
+			emit_instruction(JumpIfFalse {after_block});
+			emit_instruction(Jump {then_block});
+
+			set_current_block(then_block);
+			auto status2 = compile_stmt(stmt->m_body);
+			if (!status2.ok()) return status2;
+			emit_instruction(Jump {after_block});
+		}
+
+		set_current_block(after_block);
+
+		return success();
+	}
+
 	ErrorReport compile_stmt(AST::Stmt* stmt) {
 		switch (stmt->tag()) {
 		case AST::StmtTag::Declaration:
@@ -214,6 +253,8 @@ struct BytecodeBuilder {
 			return compile_block(static_cast<AST::Block*>(stmt));
 		case AST::StmtTag::ReturnStatement:
 			return compile_return_statement(static_cast<AST::ReturnStatement*>(stmt));
+		case AST::StmtTag::IfElseStatement:
+			return compile_if_else_statement(static_cast<AST::IfElseStatement*>(stmt));
 		case AST::StmtTag::ExpressionStatement:
 			return compile_expression_statement(static_cast<AST::ExpressionStatement*>(stmt));
 		default:
