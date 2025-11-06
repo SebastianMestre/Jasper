@@ -387,9 +387,11 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 			result->append(e.m_stack.access(element_count - i));
 		}
 		// now we remove the elements from beneath the array, leaving only the array on the stack
-		e.m_stack.access(element_count) = e.m_stack.pop();
-		for (int i = 0; i < element_count - 1; ++i) {
-			e.m_stack.pop();
+		if (element_count > 0) {
+			e.m_stack.access(element_count) = e.m_stack.pop();
+			for (int i = 0; i < element_count - 1; ++i) {
+				e.m_stack.pop();
+			}
 		}
 		return sizeof(*op);
 	}
