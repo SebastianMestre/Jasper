@@ -108,16 +108,13 @@ struct BytecodeBuilder {
 
 	ErrorReport compile_ternary_expression(AST::TernaryExpression* expr) {
 
-		int then_block = new_block();
 		int else_block = new_block();
 		int after_block = new_block();
 
 		auto status1 = visit(expr->m_condition);
 		if (!status1.ok()) return status1;
 		emit_instruction(JumpIfFalse {else_block});
-		emit_instruction(Jump {then_block});
 
-		set_current_block(then_block);
 		auto status2 = visit(expr->m_then_expr);
 		if (!status2.ok()) return status2;
 		emit_instruction(Jump {after_block});
@@ -203,7 +200,63 @@ struct BytecodeBuilder {
 	}
 
 	ErrorReport compile_expression_statement(AST::ExpressionStatement* stmt) {
-		return failure();
+		auto status = visit(stmt->m_expression);
+		if (!status.ok()) return status;
+		emit_instruction(Pop {});
+		return success();
+	}
+
+	ErrorReport compile_if_else_statement(AST::IfElseStatement* stmt) {
+
+		int after_block = new_block();
+
+		auto status1 = visit(stmt->m_condition);
+		if (!status1.ok()) return status1;
+
+		if (stmt->m_else_body) {
+
+			int else_block = new_block();
+			emit_instruction(JumpIfFalse {else_block});
+
+			auto status2 = compile_stmt(stmt->m_body);
+			if (!status2.ok()) return status2;
+			emit_instruction(Jump {after_block});
+
+			set_current_block(else_block);
+			auto status3 = compile_stmt(stmt->m_else_body);
+			if (!status3.ok()) return status3;
+			emit_instruction(Jump {after_block});
+		} else {
+			emit_instruction(JumpIfFalse {after_block});
+
+			auto status2 = compile_stmt(stmt->m_body);
+			if (!status2.ok()) return status2;
+			emit_instruction(Jump {after_block});
+		}
+
+		set_current_block(after_block);
+
+		return success();
+	}
+
+	ErrorReport compile_while_statement(AST::WhileStatement* stmt) {
+		int condition_block = new_block();
+		int after_block = new_block();
+
+		emit_instruction(Jump {condition_block});
+
+		set_current_block(condition_block);
+		auto status1 = visit(stmt->m_condition);
+		if (!status1.ok()) return status1;
+		emit_instruction(JumpIfFalse {after_block});
+		
+		auto status2 = compile_stmt(stmt->m_body);
+		if (!status2.ok()) return status2;
+		emit_instruction(Jump {condition_block});
+
+		set_current_block(after_block);
+
+		return success();
 	}
 
 	ErrorReport compile_stmt(AST::Stmt* stmt) {
@@ -214,10 +267,14 @@ struct BytecodeBuilder {
 			return compile_block(static_cast<AST::Block*>(stmt));
 		case AST::StmtTag::ReturnStatement:
 			return compile_return_statement(static_cast<AST::ReturnStatement*>(stmt));
+		case AST::StmtTag::IfElseStatement:
+			return compile_if_else_statement(static_cast<AST::IfElseStatement*>(stmt));
+		case AST::StmtTag::WhileStatement:
+			return compile_while_statement(static_cast<AST::WhileStatement*>(stmt));
 		case AST::StmtTag::ExpressionStatement:
 			return compile_expression_statement(static_cast<AST::ExpressionStatement*>(stmt));
 		default:
-			return failure();  // Unsupported statement type
+			return failure();
 		}
 	}
 
@@ -342,10 +399,13 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		for (int i = 0; i < element_count; ++i) {
 			result->append(e.m_stack.access(element_count - i));
 		}
-		// now we remove the elements from beneath the array, leaving only the array on the stack
-		e.m_stack.access(element_count) = e.m_stack.pop();
-		for (int i = 0; i < element_count - 1; ++i) {
-			e.m_stack.pop();
+
+		// remove the elements from beneath the array, leaving only the array on the stack
+		if (element_count > 0) {
+			e.m_stack.access(element_count) = e.m_stack.pop();
+			for (int i = 0; i < element_count - 1; ++i) {
+				e.m_stack.pop();
+			}
 		}
 		return sizeof(*op);
 	}

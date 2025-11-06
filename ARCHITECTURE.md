@@ -43,15 +43,26 @@ We use Pratt parsing to do infix operator precedence parsing.
 
 ## Evaluation
 
-Our interpreter works by walking over the AST, and storing values in a software
-stack. The values are managed by our own garbage collector.
+Our interpreter supports two execution modes:
+
+1. **Tree-walk interpreter** - The primary execution mode that walks over the AST,
+evaluating expressions and following control flow. Variables and intermediate
+values are stored in a software stack.
+
+2. **Bytecode interpreter** - A newer alternative execution mode that compiles the
+AST into bytecode instructions organized in basic blocks, which are then executed
+by a bytecode VM. This is implemented in `src/interpreter/bytecode.cpp`.
+
+All values are managed by our own garbage collector.
 
 # Project structure
 
 To build the project, we use a makefile that lives on the root of the repo. All
 the other interesting files are within the `src/` directory.
 
-The tree-walk interpreter lives in the `src/interpreter/` directory.
+The interpreter lives in the `src/interpreter/` directory, which includes both
+the tree-walk interpreter (`eval.cpp`, `execute.cpp`) and the bytecode compiler
+and evaluation code (`bytecode.cpp`).
 
 There are a few generally useful data structures in the `src/utils/` directory,
 and some more project-specific ones in the `src/algorithms/` directory.
