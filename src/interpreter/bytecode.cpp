@@ -213,12 +213,10 @@ struct BytecodeBuilder {
 		int then_block = new_block();
 		int after_block = new_block();
 
-		// Evaluate the condition
 		auto status1 = visit(stmt->m_condition);
 		if (!status1.ok()) return status1;
 
 		if (stmt->m_else_body) {
-			// If-else with both branches
 			int else_block = new_block();
 			emit_instruction(JumpIfFalse {else_block});
 			emit_instruction(Jump {then_block});
@@ -233,7 +231,6 @@ struct BytecodeBuilder {
 			if (!status3.ok()) return status3;
 			emit_instruction(Jump {after_block});
 		} else {
-			// If without else - jump directly to after_block if false
 			emit_instruction(JumpIfFalse {after_block});
 			emit_instruction(Jump {then_block});
 
@@ -283,7 +280,7 @@ struct BytecodeBuilder {
 		case AST::StmtTag::ExpressionStatement:
 			return compile_expression_statement(static_cast<AST::ExpressionStatement*>(stmt));
 		default:
-			return failure();  // Unsupported statement type
+			return failure();
 		}
 	}
 
@@ -408,7 +405,8 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		for (int i = 0; i < element_count; ++i) {
 			result->append(e.m_stack.access(element_count - i));
 		}
-		// now we remove the elements from beneath the array, leaving only the array on the stack
+
+		// remove the elements from beneath the array, leaving only the array on the stack
 		if (element_count > 0) {
 			e.m_stack.access(element_count) = e.m_stack.pop();
 			for (int i = 0; i < element_count - 1; ++i) {
