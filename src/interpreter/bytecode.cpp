@@ -248,6 +248,26 @@ struct BytecodeBuilder {
 		return success();
 	}
 
+	ErrorReport compile_while_statement(AST::WhileStatement* stmt) {
+		int condition_block = new_block();
+		int after_block = new_block();
+
+		emit_instruction(Jump {condition_block});
+
+		set_current_block(condition_block);
+		auto status1 = visit(stmt->m_condition);
+		if (!status1.ok()) return status1;
+		emit_instruction(JumpIfFalse {after_block});
+		
+		auto status2 = compile_stmt(stmt->m_body);
+		if (!status2.ok()) return status2;
+		emit_instruction(Jump {condition_block});
+
+		set_current_block(after_block);
+
+		return success();
+	}
+
 	ErrorReport compile_stmt(AST::Stmt* stmt) {
 		switch (stmt->tag()) {
 		case AST::StmtTag::Declaration:
@@ -258,6 +278,8 @@ struct BytecodeBuilder {
 			return compile_return_statement(static_cast<AST::ReturnStatement*>(stmt));
 		case AST::StmtTag::IfElseStatement:
 			return compile_if_else_statement(static_cast<AST::IfElseStatement*>(stmt));
+		case AST::StmtTag::WhileStatement:
+			return compile_while_statement(static_cast<AST::WhileStatement*>(stmt));
 		case AST::StmtTag::ExpressionStatement:
 			return compile_expression_statement(static_cast<AST::ExpressionStatement*>(stmt));
 		default:
