@@ -89,10 +89,10 @@ struct BytecodeBuilder {
 
 	ErrorReport compile_assignment_expression(AST::AssignmentExpression* expr) {
 
-		auto status = visit(expr->m_value);
-		if (!status.ok()) return status;
-
 		if (expr->m_target->type() == AST::ExprTag::Identifier) {
+			auto status = visit(expr->m_value);
+			if (!status.ok()) return status;
+
 			auto target = static_cast<AST::Identifier*>(expr->m_target);
 
 			if (target->m_origin == AST::Identifier::Origin::Local ||
@@ -101,6 +101,21 @@ struct BytecodeBuilder {
 				emit_instruction(NewNull {});
 				return success();
 			}
+		} else if (expr->m_target->type() == AST::ExprTag::IndexExpression) {
+			auto target = static_cast<AST::IndexExpression*>(expr->m_target);
+
+			auto status1 = visit(target->m_callee);
+			if (!status1.ok()) return status1;
+
+			auto status2 = visit(target->m_index);
+			if (!status2.ok()) return status2;
+
+			auto status3 = visit(expr->m_value);
+			if (!status3.ok()) return status3;
+
+			emit_instruction(IndexAssignment {});
+			emit_instruction(NewNull {});
+			return success();
 		}
 
 		return failure();
@@ -415,6 +430,15 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		auto callee_ptr = e.m_stack.pop();
 		auto* callee = callee_ptr.as<Interpreter::Array>();
 		e.m_stack.push(callee->at(index));
+		return sizeof(*op);
+	}
+	case Instruction::Tag::IndexAssignment: {
+		auto op = static_cast<IndexAssignment const*>(punned);
+		auto value = e.m_stack.pop();
+		auto index = e.m_stack.pop().get_integer();
+		auto callee_ptr = e.m_stack.pop();
+		auto* callee = callee_ptr.as<Interpreter::Array>();
+		callee->m_value[index] = value;
 		return sizeof(*op);
 	}
 	case Instruction::Tag::Call: {

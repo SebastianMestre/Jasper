@@ -19,6 +19,7 @@ struct Instruction {
 		NewNull,
 		NewArray,
 		IndexAccess,
+		IndexAssignment,
 		Call,
 		Jump,
 		JumpIfFalse,
@@ -114,6 +115,11 @@ struct NewArray : Instruction {
 struct IndexAccess : Instruction {
 	IndexAccess()
 	    : Instruction {Tag::IndexAccess} {}
+};
+
+struct IndexAssignment : Instruction {
+	IndexAssignment()
+	    : Instruction {Tag::IndexAssignment} {}
 };
 
 struct Jump : Instruction {
