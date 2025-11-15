@@ -66,6 +66,10 @@ void Interpreter::run_gc() {
 		}
 	});
 
+	m_stack.for_each_local([generation](Variable* p) {
+		p->visit(generation);
+	});
+
 	for (auto& p : m_global_scope.m_declarations)
 		p.second->visit(generation);
 

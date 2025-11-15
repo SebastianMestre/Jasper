@@ -84,7 +84,7 @@ void eval(AST::Identifier* ast, Interpreter& e) {
 	    ast->m_origin == AST::Identifier::Origin::Capture) {
 		if (ast->m_frame_offset == INT_MIN)
 			Log::fatal() << "missing layout for identifier '" << ast->text() << "'";
-		e.m_stack.push(e.m_stack.frame_at(ast->m_frame_offset).as<Variable>()->m_value);
+		e.m_stack.push(e.m_stack.access_frame(ast->m_frame_offset)->m_value);
 	} else {
 		e.m_stack.push(e.global_access(ast->text())->m_value);
 	}
@@ -105,10 +105,7 @@ void eval(AST::CallExpression* ast, Interpreter& e) {
 	int argument_count = arglist.size();
 
 	auto callee = e.m_stack.access(argument_count);
-	e.m_stack.start_frame(argument_count);
 	eval_call_callable(callee, argument_count, e);
-	e.m_stack.frame_at(-1) = e.m_stack.pop();
-	e.m_stack.end_frame();
 }
 
 void eval(AST::AssignmentExpression* ast, Interpreter& e) {
@@ -116,20 +113,20 @@ void eval(AST::AssignmentExpression* ast, Interpreter& e) {
 
 		auto target_ast = static_cast<AST::Identifier*>(ast->m_target);
 
-		Value target {nullptr};
+		Variable* target {nullptr};
 		if (target_ast->m_origin == AST::Identifier::Origin::Local ||
 				target_ast->m_origin == AST::Identifier::Origin::Capture) {
 			if (target_ast->m_frame_offset == INT_MIN)
 				Log::fatal() << "missing layout for identifier '" << target_ast->text() << "'";
-			target = e.m_stack.frame_at(target_ast->m_frame_offset);
+			target = e.m_stack.access_frame(target_ast->m_frame_offset);
 		} else {
-			target = Value{e.global_access(target_ast->text())};
+			target = e.global_access(target_ast->text());
 		}
 
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
 
-		target.as<Variable>()->m_value = value;
+		target->m_value = value;
 
 		e.m_stack.push(e.null());
 	} else if (ast->m_target->type() == ExprTag::IndexExpression) {
@@ -183,9 +180,9 @@ void eval(AST::FunctionLiteral* ast, Interpreter& e) {
 		if (capture.second.outer_frame_offset == INT_MIN) {
 			Log::internal_error() << "Capture frame offset not computed - compute_offsets should have set this";
 		}
-		auto value = e.m_stack.frame_at(capture.second.outer_frame_offset);
+		auto value = e.m_stack.access_frame(capture.second.outer_frame_offset);
 		auto offset = capture.second.inner_frame_offset - ast->m_args.size();
-		captures[offset] = value.as<Variable>();
+		captures[offset] = value;
 	}
 
 	e.push_function(ast, std::move(captures));
@@ -209,21 +206,18 @@ void eval(AST::MatchExpression* ast, Interpreter& e) {
 
 	// Replace the variant with its inner value.
 	// We also wrap it in a variable so it can be captured.
-	e.push_variable(variant_value);
-	e.m_stack.access(1) = e.m_stack.pop();
+	e.m_stack.push_local(e.m_gc->new_variable_raw(variant_value));
+	e.m_stack.pop();
 
 	auto case_it = ast->m_cases.find(constructor);
 	if (case_it == ast->m_cases.end()) {
 		Log::internal_error() << "Match expression missing case for constructor";
 	}
 
-	// put the result on the top of the stack
 	eval(case_it->second.m_expression, e);
 
-	// evil tinkering with the stack internals
-	// (we just delete the variant value from behind the result)
-	e.m_stack.access(1) = e.m_stack.access(0);
-	e.m_stack.pop();
+	// delete the variant
+	e.m_stack.pop_local();
 }
 
 void eval(AST::ConstructorExpression* ast, Interpreter& e) {
@@ -274,11 +268,11 @@ void eval(AST::SequenceExpression* ast, Interpreter& e) {
 }
 
 static void exec(AST::Declaration* ast, Interpreter& e) {
-	e.push_variable(e.null());
+	e.m_stack.push_local(e.m_gc->new_variable_raw(e.null()));
 	if (ast->m_value) {
 		eval(ast->m_value, e);
 		auto value = e.m_stack.pop();
-		e.m_stack.frame_at(ast->m_frame_offset).as<Variable>()->m_value = value;
+		e.m_stack.access_frame(ast->m_frame_offset)->m_value = value;
 	}
 };
 

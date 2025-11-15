@@ -11,7 +11,7 @@ void Stack::start_frame(int size) {
 	m_frame_ptr = m_stack_ptr - size;
 }
 
-void Stack::end_frame(){
+void Stack::end_frame() {
 	m_frame_ptr = m_fp_stack.back();
 	m_fp_stack.pop_back();
 
@@ -26,37 +26,49 @@ void Stack::end_region() {
 	m_stack_ptr = m_sp_stack.back();
 	m_sp_stack.pop_back();
 
-	m_stack.resize(m_stack_ptr);
+	m_locals.resize(m_stack_ptr);
 }
 
-void Stack::push(Value ref){
-	m_stack.push_back(ref);
-	m_stack_ptr += 1;
+void Stack::push(Value ref) {
+	m_temps.push_back(ref);
 }
 
 Value Stack::pop() {
-	Value result = m_stack.back();
-	m_stack.pop_back();
-	m_stack_ptr -= 1;
+	auto result = m_temps.back();
+	m_temps.pop_back();
 	return result;
 }
 
 Value& Stack::access(int offset) {
-	return m_stack[m_stack_ptr - 1 - offset];
+	return m_temps[m_temps.size() - 1 - offset];
 }
 
-Value& Stack::frame_at(int offset) {
+Variable* Stack::access_frame(int offset) {
 	assert(m_frame_ptr + offset >= 0);
 	assert(m_frame_ptr + offset < m_stack_ptr);
-	return m_stack[m_frame_ptr + offset];
+	return m_locals[m_frame_ptr + offset];
 }
 
-Span<Value> Stack::frame_range(int offset, int length) {
+void Stack::push_local(Variable* ref) {
+	m_locals.push_back(ref);
+	m_stack_ptr += 1;
+}
+
+Variable* Stack::pop_local() {
+	auto result = m_locals.back();
+	m_locals.pop_back();
+	m_stack_ptr -= 1;
+	return result;
+}
+
+Span<Value> Stack::stack_range(int offset, int length) {
 	if (length > 0) {
-		assert(m_frame_ptr + offset >= 0);
-		assert(m_frame_ptr + offset + length <= m_stack_ptr);
+		assert(offset >= 0);
+		assert(offset <= m_temps.size());
+		assert(length >= 0);
+		assert(length <= offset);
 	}
-	auto start_address = &m_stack[m_frame_ptr + offset];
+	auto start_address = &m_temps[m_temps.size() - offset];
 	return {start_address, length};
 }
 

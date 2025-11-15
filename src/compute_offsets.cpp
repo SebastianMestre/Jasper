@@ -26,14 +26,14 @@ void compute_offsets(AST::Identifier* ast, int frame_offset) {
 
 
 void compute_offsets(AST::CallExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_callee, frame_offset++);
+	compute_offsets(ast->m_callee, frame_offset);
 	for (auto& arg : ast->m_args)
-		compute_offsets(arg, frame_offset++);
+		compute_offsets(arg, frame_offset);
 }
 
 void compute_offsets(AST::AssignmentExpression* ast, int frame_offset) {
-	compute_offsets(ast->m_target, frame_offset++);
-	compute_offsets(ast->m_value, frame_offset++);
+	compute_offsets(ast->m_target, frame_offset);
+	compute_offsets(ast->m_value, frame_offset);
 }
 
 void compute_offsets(AST::FunctionLiteral* ast, int frame_offset) {

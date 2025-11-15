@@ -1,5 +1,6 @@
 #include "bytecode.hpp"
 
+#include "garbage_collector.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 #include "../log/log.hpp"
@@ -371,18 +372,18 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 	}
 	case Instruction::Tag::GetLocal: {
 		auto op = static_cast<GetLocal const*>(punned);
-		e.m_stack.push(e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value);
+		e.m_stack.push(e.m_stack.access_frame(op->m_frame_offset)->m_value);
 		return sizeof(*op);
 	}
 	case Instruction::Tag::SetLocal: {
 		auto op = static_cast<SetLocal const*>(punned);
 		auto value = e.m_stack.pop();
-		e.m_stack.frame_at(op->m_frame_offset).as<Interpreter::Variable>()->m_value = value;
+		e.m_stack.access_frame(op->m_frame_offset)->m_value = value;
 		return sizeof(*op);
 	}
 	case Instruction::Tag::PushVariable: {
 		auto op = static_cast<PushVariable const*>(punned);
-		e.push_variable(e.null());
+		e.m_stack.push_local(e.m_gc->new_variable_raw(e.null()));
 		return sizeof(*op);
 	}
 	case Instruction::Tag::NewInteger: {
@@ -446,10 +447,7 @@ static int decode(char const* stream, Interpreter::Interpreter& e) {
 		int argument_count = op->m_argument_count;
 
 		auto callee = e.m_stack.access(argument_count);
-		e.m_stack.start_frame(argument_count);
 		eval_call_callable(callee, argument_count, e);
-		e.m_stack.frame_at(-1) = e.m_stack.pop();
-		e.m_stack.end_frame();
 
 		return sizeof(*op);
 	}
