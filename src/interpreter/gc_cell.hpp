@@ -2,15 +2,15 @@
 
 #include "value_tag.hpp"
 
+#include <cstdint>
+
 namespace Interpreter {
 
 struct GcCell {
-  protected:
+protected:
 	ValueTag m_tag;
-
-  public:
-	bool m_visited = false;
-	int m_cpp_refcount = 0;
+	uint8_t gc_bits = 0;
+public:
 
 	GcCell(ValueTag type)
 	    : m_tag(type) {}
@@ -23,7 +23,9 @@ struct GcCell {
 		return value_string[(int)m_tag];
 	}
 
-	void visit();
+	void visit(int generation);
+	void mark(int generation) { gc_bits = (generation & 1) | 2; }
+	bool is_marked(int generation) const { return gc_bits == (generation & 1) | 2; }
 
 	virtual ~GcCell() = default;
 };

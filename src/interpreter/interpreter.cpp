@@ -57,19 +57,20 @@ Value Interpreter::fetch_return_value() {
 
 
 void Interpreter::run_gc() {
-	m_gc->unmark_all();
-	m_gc->mark_roots();
 
-	m_stack.for_each([](Value p) {
+	int generation = m_gc->generation();
+
+	m_stack.for_each([generation](Value p) {
 		if (is_heap_type(p.type())) {
-			p.get()->visit();
+			p.get()->visit(generation);
 		}
 	});
 
 	for (auto& p : m_global_scope.m_declarations)
-		p.second->visit();
+		p.second->visit(generation);
 
 	m_gc->sweep();
+	m_gc->end_generation();
 }
 
 void Interpreter::run_gc_if_needed(){
