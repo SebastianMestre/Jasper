@@ -7,20 +7,17 @@
 namespace Interpreter {
 
 struct GC {
-  public:
+public:
 	std::vector<GcCell*> m_blocks;
-	std::vector<GcCell*> m_roots;
+	int m_generation = 0;
 
 	GC();
 	~GC();
 
-	void unmark_all();
-	void mark_roots();
+	int generation() const { return m_generation; }
+	void end_generation() { ++m_generation; }
 	void sweep();
-	void sweep_all();
 	int size () { return m_blocks.size(); }
-
-	void add_root(GcCell* new_root);
 
 	auto new_variant_raw(InternedString constructor, Value v) -> Variant*;
 	auto new_record_raw(RecordType) -> Record*;

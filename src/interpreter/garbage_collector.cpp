@@ -9,27 +9,14 @@ GC::GC() {
 }
 
 GC::~GC() {
-	sweep_all();
-}
-
-void GC::unmark_all() {
 	for (auto* block : m_blocks) {
-		block->m_visited = false;
+		delete block;
 	}
-}
-
-void GC::mark_roots() {
-	for (auto* root : m_roots)
-		root->visit();
-
-	for (auto* val : m_blocks)
-		if (val->m_cpp_refcount != 0)
-			val->visit();
 }
 
 void GC::sweep() {
 	for (auto*& block : m_blocks) {
-		if (not block->m_visited) {
+		if (not block->is_marked(m_generation)) {
 			delete block;
 			block = nullptr;
 		}
@@ -39,15 +26,6 @@ void GC::sweep() {
 
 	m_blocks.erase(
 	    std::remove_if(m_blocks.begin(), m_blocks.end(), is_null), m_blocks.end());
-}
-
-void GC::sweep_all() {
-	unmark_all();
-	sweep();
-}
-
-void GC::add_root(GcCell* new_root) {
-	m_roots.push_back(new_root);
 }
 
 Variant* GC::new_variant_raw(InternedString constructor, Value v) {
