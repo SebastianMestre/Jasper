@@ -1,0 +1,31 @@
+// Test to exercise the garbage collector
+// Creates many arrays with allocations to trigger GC
+
+gc_stress_test := fn () {
+	count := 0;
+	for (i := 0; i < 100; i = i + 1) {
+		// Create a new array on each iteration
+		A := array {};
+		// Append an element
+		array_append(A, i);
+		// Access it to ensure it's used
+		count = count + size(A);
+	}
+	return count;
+};
+
+// Create nested arrays to further stress GC
+nested_arrays := fn () {
+	result := 0;
+	for (i := 0; i < 50; i = i + 1) {
+		outer := array {};
+		for (j := 0; j < 10; j = j + 1) {
+			inner := array {j};
+			array_append(outer, inner);
+		}
+		result = result + size(outer);
+	}
+	return result;
+};
+
+__invoke := fn() => 0;
