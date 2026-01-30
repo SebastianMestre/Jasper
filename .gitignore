@@ -2,3 +2,9 @@ build
 bin
 source.jp
 .vscode
+
+# Coverage artifacts
+*.gcda
+*.gcno
+coverage_report/
+coverage.info

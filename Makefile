@@ -77,6 +77,10 @@ else ifeq ($(MODE),tuning)
 else ifeq ($(MODE),dev)
   CXXFLAGS += -O0
   BUILD_DIR := $(BUILD_BASE_DIR)/dev
+else ifeq ($(MODE),coverage)
+  CXXFLAGS += -O0 --coverage
+  LIBS += -lgcov
+  BUILD_DIR := $(BUILD_BASE_DIR)/coverage
 else
   CXXFLAGS += -O3 -DNDEBUG
   BUILD_DIR := $(BUILD_BASE_DIR)/release
