@@ -24,8 +24,8 @@ public:
 	}
 
 	void visit(int generation);
-	void mark(int generation) { gc_bits = (generation & 1) | 2; }
-	bool is_marked(int generation) const { return gc_bits == (generation & 1) | 2; }
+	void mark(int generation) { gc_bits = ((generation & 1) | 2); }
+	bool is_marked(int generation) const { return gc_bits == ((generation & 1) | 2); }
 
 	virtual ~GcCell() = default;
 };

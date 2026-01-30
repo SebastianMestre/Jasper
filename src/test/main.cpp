@@ -144,6 +144,12 @@ void interpreter_tests(Test::Tester& tests) {
 	            EQUALS("issue232_2()", 7),
 	            EQUALS("issue240_1", 10),
 	            EQUALS("issue240_2", 8)}));
+
+	    tests.add_test(std::make_unique<Test::InterpreterTestSet>(
+	        "tests/gc_stress.jp",
+	        Testers {
+	            EQUALS("gc_stress_test()", 100),
+	            EQUALS("nested_arrays()", 500)}));
 }
 
 void tarjan_algorithm_tests(Test::Tester& tester) {

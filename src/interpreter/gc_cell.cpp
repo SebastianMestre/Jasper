@@ -8,8 +8,12 @@ namespace Interpreter {
 static void gc_visit(GcCell* v, int generation);
 
 static void gc_visit(Value h, int generation) {
-	if (is_heap_type(h.type()))
-		return gc_visit(h.get(), generation);
+	if (!is_heap_type(h.tag)) {
+		return;
+	}
+
+	auto* cell = h.get();
+	cell->visit(generation);
 }
 
 static void gc_visit(String* v, int generation) { }
