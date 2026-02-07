@@ -39,6 +39,7 @@ COMMON_TARGETS := \
 	frontend_context \
 	lexer \
 	parser \
+	pretty_print \
 	symbol_resolution \
 	symbol_table \
 	token

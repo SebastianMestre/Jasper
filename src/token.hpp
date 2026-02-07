@@ -12,3 +12,5 @@ struct Token {
 	/* source code representation of token */
 	InternedString m_text;
 };
+
+std::ostream& operator<<(std::ostream& out, Token const* token);
