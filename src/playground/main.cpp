@@ -8,6 +8,7 @@
 #include "../cst_allocator.hpp"
 #include "../lexer.hpp"
 #include "../parser.hpp"
+#include "../pretty_print.hpp"
 
 int main(int argc, char** argv) {
 
@@ -42,8 +43,7 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 
-		// CST::print(parse_result.cst(), 0);
-		std::cout << "\n";
+		std::cout << CST::pretty_print(parse_result.cst());
 	}
 
 	return 0;
