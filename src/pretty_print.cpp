@@ -1,7 +1,8 @@
-#include <sstream>
+#include "pretty_print.hpp"
 
 #include "log/log.hpp"
-#include "pretty_print.hpp"
+
+#include <sstream>
 
 namespace CST {
 
@@ -257,7 +258,8 @@ static void pp(const StructExpression* cst, std::ostream& out) {
 
 static void pp(const Program* cst, std::ostream& out) {
 	for (const auto* decl : cst->m_declarations) {
-		pp(decl, out); out << "\n";
+		pp(decl, out);
+		out << "\n";
 	}
 }
 
@@ -310,8 +312,12 @@ static void pp(const CST* cst, std::ostream& out) {
 	}
 
 #undef DISPATCH
-	// TODO: better type string
-	Log::missing_case("pp", "" /* cst->type_string() */);
+
+	assert(false && "Unknown CST node type in pretty printer");
+}
+
+void pretty_print(const CST* cst, std::ostream& out) {
+	pp(cst, out);
 }
 
 std::string pretty_print(CST* cst) {

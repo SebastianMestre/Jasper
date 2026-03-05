@@ -1,7 +1,14 @@
 #pragma once
 
+#include <ostream>
 #include <string>
 
 #include "./cst.hpp"
 
-std::string pretty_print(CST::CST&);
+namespace CST {
+
+void pretty_print(const CST*, std::ostream&);
+
+std::string pretty_print(const CST*);
+
+} // namespace CST
