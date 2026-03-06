@@ -9,14 +9,16 @@ namespace CST {
 static void pp(const CST* cst, std::ostream& out);
 
 static void pp(const NumberLiteral* cst, std::ostream& out) {
-	if (cst->m_sign)
+	if (cst->m_sign) {
 		out << cst->m_sign;
+	}
 	out << cst->m_token;
 }
 
 static void pp(const IntegerLiteral* cst, std::ostream& out) {
-	if (cst->m_sign)
+	if (cst->m_sign) {
 		out << cst->m_sign;
+	}
 	out << cst->m_token;
 }
 
@@ -35,8 +37,9 @@ static void pp(const NullLiteral* cst, std::ostream& out) {
 static void comma_separated_values(
     const std::vector<Expr*>& elements, std::ostream& out) {
 	for (size_t i = 0; i < elements.size(); ++i) {
-		if (i > 0)
+		if (i > 0) {
 			out << ", ";
+		}
 		out << elements[i];
 	}
 }
@@ -50,27 +53,31 @@ static void pp(const ArrayLiteral* cst, std::ostream& out) {
 
 static void pp_decl_data(DeclarationData dd, std::ostream& out) {
 	out << dd.m_identifier_token;
-	if (dd.m_type_hint)
+	if (dd.m_type_hint) {
 		out << ": ";
-	pp(dd.m_type_hint, out);
-	if (dd.m_value)
+		pp(dd.m_type_hint, out);
+	}
+	if (dd.m_value) {
 		out << " = ";
-	pp(dd.m_value, out);
+		pp(dd.m_value, out);
+	}
 	out << ";";
 }
 
 static void comma_separated_args(
     const std::vector<DeclarationData>& args, std::ostream& out) {
 	for (size_t i = 0; i < args.size(); ++i) {
-		if (i > 0)
+		if (i > 0) {
 			out << ", ";
+		}
 		pp_decl_data(args[i], out);
 	}
 }
 
 static void pp_statements(const std::vector<Stmt*>& stmts, std::ostream& out) {
-	for (const auto* stmt : stmts)
+	for (const auto* stmt : stmts) {
 		pp(stmt, out);
+	}
 }
 
 static void pp(const FunctionLiteral* cst, std::ostream& out) {
@@ -129,13 +136,15 @@ static void pp(const AccessExpression* cst, std::ostream& out) {
 
 static void pp(const MatchExpression* cst, std::ostream& out) {
 	out << "match (" << cst->m_matchee.m_token;
-	if (cst->m_type_hint)
+	if (cst->m_type_hint) {
 		out << ": " << cst->m_type_hint;
+	}
 	out << ") {";
 	for (const auto m_case : cst->m_cases) {
 		out << m_case.m_name << " { " << m_case.m_identifier;
-		if (m_case.m_type_hint)
+		if (m_case.m_type_hint) {
 			out << ": " << m_case.m_type_hint;
+		}
 		out << " } =>";
 		pp(m_case.m_expression, out);
 		out << ";\n";
@@ -234,8 +243,9 @@ static void pp(const TypeVar* cst, std::ostream& out) {
 static void comma_separated_identifiers(
     const std::vector<Identifier>& identifiers, std::ostream& out) {
 	for (size_t i = 0; i < identifiers.size(); ++i) {
-		if (i > 0)
+		if (i > 0) {
 			out << ", ";
+		}
 		out << identifiers[i].m_token;
 	}
 }
@@ -320,7 +330,7 @@ void pretty_print(const CST* cst, std::ostream& out) {
 	pp(cst, out);
 }
 
-std::string pretty_print(CST* cst) {
+std::string pretty_print(const CST* cst) {
 	std::stringstream s;
 	pp(cst, s);
 	return s.str();
